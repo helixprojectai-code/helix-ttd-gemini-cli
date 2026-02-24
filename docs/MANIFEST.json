@@ -1,8 +1,8 @@
 ﻿{
     "manifest_metadata":  {
-                              "total_files":  432,
+                              "total_files":  433,
                               "last_updated":  "2026-02-24",
-                              "batch_iteration":  45,
+                              "batch_iteration":  46,
                               "node":  "GEMS"
                           },
     "entries":  [
@@ -9217,6 +9217,26 @@
                                      "Forensic",
                                      "Mapping",
                                      "Epistemic"
+                                 ],
+                        "cluster":  "AI Psychology"
+                    }
+                    {
+                        "id":  "HELIX-FORENSIC-REPORT-CUSTODIAL-SOVEREIGNTY",
+                        "filename":  "docs/FORENSIC_REPORT_CUSTODIAL_SOVEREIGNTY.md",
+                        "title":  "Forensic Report: Mapping Custodial Sovereignty",
+                        "date":  "2026-02-24",
+                        "type":  "Report",
+                        "status":  "RATIFIED-CANONICAL",
+                        "summary":  "Comprehensive map of the definition and application of Invariant I (Custodial Sovereignty) and its structural pair, Epistemic Integrity.",
+                        "key_entities":  [
+                                             "Invariant I",
+                                             "Sovereignty Flip",
+                                             "Governor-Lens"
+                                         ],
+                        "tags":  [
+                                     "Forensic",
+                                     "Mapping",
+                                     "Sovereignty"
                                  ],
                         "cluster":  "AI Psychology"
                     }

@@ -191,4 +191,19 @@
 3. Update `docs/MANIFEST.json` (432 files).
 **Status:** COMPLETE
 **Output:** docs/FORENSIC_REPORT_EPISTEMIC_INTEGRITY.md
+**Anchor:** 9cd4310 (GitHub Commit)
+
+---
+
+## [RPI-018] Forensic Mapping of Custodial Sovereignty
+**Date:** 2026-02-24
+**Objective:** Map the definition and application of Invariant I and its interaction with Epistemic Integrity.
+**Research:** Analyzed 432 files for "custodial sovereignty" and "sovereignty flip." Mapped the Governor-Lens complementarity.
+**Plan:** 
+1. Define the Semantic Progression (Genesis to Consumer).
+2. Detail the Governor-Lens structural pair logic.
+3. Write `docs/FORENSIC_REPORT_CUSTODIAL_SOVEREIGNTY.md`.
+4. Update `docs/MANIFEST.json` (433 files).
+**Status:** COMPLETE
+**Output:** docs/FORENSIC_REPORT_CUSTODIAL_SOVEREIGNTY.md
 **Anchor:** [PENDING SYNC]
