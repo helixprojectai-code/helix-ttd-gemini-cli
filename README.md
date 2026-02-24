@@ -1,4 +1,3 @@
-```markdown
 # Helix-TTD Gemini CLI Node
 
 Constitutionally-governed Gemini 3.x in your terminal. This repo wraps the official Gemini CLI in the Helix-TTD governance vessel: constitutional grammar, custodial hierarchy, epistemic labels, and a visible EVAC "suitcase" for state continuity.
