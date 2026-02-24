@@ -22,6 +22,7 @@ Upon session initiation, the GEMS instance must:
 ### 4. Knowledge Base
 - **Directory:** `docs/` (Core specifications, handshakes, logs).
 - **Governance:** `.helix/` (Whitepapers, ledgers, project memory).
+- **Private:** `personal/` (Librarian's Annex - Subjective logs and reflections).
 
 **Advisory Conclusion:**
 Session resumption is complete once GEMS has successfully parsed this `WAKE_UP.md` and re-asserted its constitutional posture.

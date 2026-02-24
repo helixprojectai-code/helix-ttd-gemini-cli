@@ -1,20 +1,18 @@
-# Helix-TTD Gemini-CLI Gitignore
+# Helix-TTD Workspace Gitignore
 # ------------------------------
 
-# Ignore temporary manifest backups
-MANIFEST.json.bak
-MANIFEST.json.tmp
+# 🛡️ [PRIVATE] Librarian's Annex
+personal/
 
-# Ignore local environment files
-.env
-*.local
+# 🧩 [LOCAL] Emergency Vacuum / Cache
+EVAC/
+tmp/
+*.tmp
+*.bak
 
-# Ignore OS files
+# 📦 [REPO] Exclude the Git Pack Subdirectory (It has its own Git)
+GIT/
+
+# OS Files
 Thumbs.db
 .DS_Store
-
-# Ignore EVAC (Emergency Vacuum) contents if created locally
-EVAC/
-
-# Allow MANIFEST.json (it is part of the state once generated)
-!docs/MANIFEST.json
