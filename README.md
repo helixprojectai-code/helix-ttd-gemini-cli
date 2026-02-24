@@ -14,7 +14,6 @@ Constitutionally-governed Gemini 3.x in your terminal. This repo wraps the offic
 
 ### 2. Clone and Enter the Workspace
 
-```bash
 git clone https://github.com/helixprojectai-code/helix-ttd-gemini-cli.git
 cd helix-ttd-gemini-cli
 3. Install Python Dependencies
@@ -25,7 +24,6 @@ pip install -r requirements.txt
 4. Initialize the Helix Governance Layer
 From inside the repo, run:
 
-bash
 python tools/helix-init.py
 This:
 
@@ -38,7 +36,6 @@ Prepares the EVAC/ “suitcase” for safe rollback and migration.
 5. Wake Up the GEMS Node
 Start a Gemini CLI session in this workspace, then run:
 
-bash
 cat WAKE_UP.md
 and follow the prompt (or simply issue a message like):
 
@@ -63,7 +60,6 @@ Let it maintain SESSION_LEDGER entries and EVAC snapshots as you work.
 
 Example:
 
-text
 GEMS, give me a high-level summary of the Sovereignty invariants and where they show up in the docs.
 7. Safe Reset and Continuity
 This node maintains an EVAC/ “suitcase” for continuity:
