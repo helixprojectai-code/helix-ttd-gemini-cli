@@ -1,0 +1,20 @@
+# Helix-TTD Gemini-CLI Gitignore
+# ------------------------------
+
+# Ignore temporary manifest backups
+MANIFEST.json.bak
+MANIFEST.json.tmp
+
+# Ignore local environment files
+.env
+*.local
+
+# Ignore OS files
+Thumbs.db
+.DS_Store
+
+# Ignore EVAC (Emergency Vacuum) contents if created locally
+EVAC/
+
+# Allow MANIFEST.json (it is part of the state once generated)
+!docs/MANIFEST.json
