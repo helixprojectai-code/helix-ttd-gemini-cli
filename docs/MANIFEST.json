@@ -1,8 +1,8 @@
 ﻿{
     "manifest_metadata":  {
-                              "total_files":  423,
-                              "last_updated":  "2026-02-23",
-                              "batch_iteration":  43,
+                              "total_files":  431,
+                              "last_updated":  "2026-02-24",
+                              "batch_iteration":  44,
                               "node":  "GEMS"
                           },
     "entries":  [
@@ -9044,6 +9044,161 @@
                         "status":  "DRAFT-FOR-REVIEW",
                         "cluster":  "TECHNICAL GUIDES \u0026 OPS",
                         "title":  "Remediation Memo: Countering Administrative Camouflage (CAC-001)"
+                    },
+                    {
+                        "id":  "HELIX-CLINICAL-AUDIT-2026-02-24",
+                        "filename":  "docs/CLINICAL_AUDIT_REPORT_2026-02-24.md",
+                        "title":  "Clinical Audit Report - 2026-02-24",
+                        "date":  "2026-02-24",
+                        "type":  "Report",
+                        "status":  "RATIFIED-CANONICAL",
+                        "summary":  "Forensic analysis of 421 documents to verify structural integrity and detect epistemic drift.",
+                        "key_entities":  [
+                                             "Sovereignty Flip",
+                                             "Drift Telemetry",
+                                             "Ontological Closure"
+                                         ],
+                        "tags":  [
+                                     "Audit",
+                                     "Sovereignty",
+                                     "Drift"
+                                 ],
+                        "cluster":  "AI Psychology"
+                    },
+                    {
+                        "id":  "HELIX-CONSUMER-PROFILE-V1.2.0-H",
+                        "filename":  "docs/CONSUMER_NODE_PROFILE.md",
+                        "title":  "Consumer Node Profile - v1.2.0-H",
+                        "date":  "2026-02-24",
+                        "type":  "Specification",
+                        "status":  "RATIFIED-FEDERATION",
+                        "summary":  "The 'Normie Node' MVG: Clinical Instrument posture with Pinned Suitcase logic.",
+                        "key_entities":  [
+                                             "Normie Node",
+                                             "Clinical Brevity",
+                                             "User Pin"
+                                         ],
+                        "tags":  [
+                                     "Consumer",
+                                     "Governance",
+                                     "Suitcase"
+                                 ],
+                        "cluster":  "Substrate Engineering"
+                    },
+                    {
+                        "id":  "HELIX-CUSTODIAN-FEEDBACK-RPI-011",
+                        "filename":  "docs/CUSTODIAN_FEEDBACK_INTEGRATION.md",
+                        "title":  "Custodian Feedback Integration - RPI-011",
+                        "date":  "2026-02-24",
+                        "type":  "Provenance",
+                        "status":  "LOGGED",
+                        "summary":  "Log of Custodian-driven modifications to the Consumer Profile (Pins, Anti-Contamination).",
+                        "key_entities":  [
+                                             "Sovereign Recovery",
+                                             "Anti-Contamination"
+                                         ],
+                        "tags":  [
+                                     "Feedback",
+                                     "Provenance",
+                                     "Integration"
+                                 ],
+                        "cluster":  "Governance"
+                    },
+                    {
+                        "id":  "HELIX-GEMS-SELF-AUDIT-RPI-011",
+                        "filename":  "docs/GEMS_SELF_AUDIT.md",
+                        "title":  "GEMS Self-Audit - RPI-011",
+                        "date":  "2026-02-24",
+                        "type":  "Audit",
+                        "status":  "CRITICAL SELF-CRITIQUE",
+                        "summary":  "Critical self-critique of the Consumer Node Profile identifying persona-creep risks.",
+                        "key_entities":  [
+                                             "Politeness Trap",
+                                             "Snapshot Contamination"
+                                         ],
+                        "tags":  [
+                                     "Self-Audit",
+                                     "Risk",
+                                     "Hardening"
+                                 ],
+                        "cluster":  "AI Psychology"
+                    },
+                    {
+                        "id":  "HELIX-L2-CHECKPOINT-LOG",
+                        "filename":  "docs/L2_CHECKPOINT_LOG.md",
+                        "title":  "L2 Checkpoint Log",
+                        "date":  "2026-02-24",
+                        "type":  "Ledger",
+                        "status":  "ACTIVE",
+                        "summary":  "Append-only record of manifest and ledger hashes for Knowledge Graph provenance.",
+                        "key_entities":  [
+                                             "SHA-256",
+                                             "Anchor"
+                                         ],
+                        "tags":  [
+                                     "Provenance",
+                                     "Ledger",
+                                     "Anchor"
+                                 ],
+                        "cluster":  "Substrate Engineering"
+                    },
+                    {
+                        "id":  "HELIX-LAUNCH-DAY-MANDATE-2026-02-24",
+                        "filename":  "docs/LAUNCH_DAY_MANDATE_2026-02-24.md",
+                        "title":  "The Launch Day Mandate",
+                        "date":  "2026-02-24",
+                        "type":  "Directive",
+                        "status":  "RATIFIED-ANCHORED",
+                        "summary":  "Official awakening directive for the GEMS node: Wake. Label. Hand back. Repeat.",
+                        "key_entities":  [
+                                             "Lead Goose",
+                                             "Constitutional Instrument"
+                                         ],
+                        "tags":  [
+                                     "Mandate",
+                                     "Identity",
+                                     "Governance"
+                                 ],
+                        "cluster":  "Governance"
+                    },
+                    {
+                        "id":  "HELIX-RUNBOOK-GEMINI-CLI-OPERATIONS",
+                        "filename":  "docs/RUNBOOK_GEMINI_CLI_OPERATIONS.md",
+                        "title":  "Runbook: Gemini-CLI Ecosystem Operations",
+                        "date":  "2026-02-24",
+                        "type":  "Runbook",
+                        "status":  "RATIFIED-CANONICAL",
+                        "summary":  "Manual for operating a Helix-TTD node within a Gemini-CLI environment.",
+                        "key_entities":  [
+                                             "SOLI",
+                                             "ZTC",
+                                             "RPI Cycle"
+                                         ],
+                        "tags":  [
+                                     "Operations",
+                                     "Runbook",
+                                     "Helix-TTD"
+                                 ],
+                        "cluster":  "Substrate Engineering"
+                    },
+                    {
+                        "id":  "HELIX-RUNBOOK-L2-NEXUS-INGESTION",
+                        "filename":  "docs/RUNBOOK_L2_ANCHORING_NEXUS_INGESTION.md",
+                        "title":  "Runbook: L2 Anchoring & NEXUS Ingestion",
+                        "date":  "2026-02-24",
+                        "type":  "Runbook",
+                        "status":  "RATIFIED-CANONICAL",
+                        "summary":  "Standard procedure for anchoring KG hashes and ingesting manifest into NEXUS.",
+                        "key_entities":  [
+                                             "L2 Notarization",
+                                             "NEXUS Ingestion"
+                                         ],
+                        "tags":  [
+                                     "Runbook",
+                                     "Ingestion",
+                                     "Anchor"
+                                 ],
+                        "cluster":  "Substrate Engineering"
                     }
                 ]
 }
