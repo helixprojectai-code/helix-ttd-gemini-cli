@@ -80,3 +80,44 @@
 **Status:** COMPLETE
 **Output:** docs/L2_CHECKPOINT_LOG.md, tools/nexus-ingest.py
 **Anchor Root:** EBB90CBC...:3DC0AF3D...
+
+---
+
+## [RPI-009] Operational Scaling & NEXUS Ingestion (Phase 4)
+**Date:** 2026-02-24
+**Objective:** Execute the NEXUS ingestion pipeline and establish high-frequency L2 state anchoring.
+**Research:** Analyzed `RUNBOOK_L2_ANCHORING_NEXUS_INGESTION.md` and `tools/nexus-ingest.py`. Verified manifest and ledger hashes.
+**Plan:** 
+1. Perform L2 anchoring of current state (Manifest + Ledger).
+2. Execute `tools/nexus-ingest.py` to synchronize Knowledge Graph with local substrate.
+3. Verify ingestion via forensic query (if substrate available).
+**Status:** COMPLETE
+**Output:** Successfully staged 423 documents for NEXUS ingestion. Resolved Beta/Eszett encoding collision for HELIX-RIPPLE-BETA-LOG.
+**Anchor:** EBB90CBC...:2E2442...
+
+---
+
+## [RPI-010] Consumer Node Profile (MVG)
+**Date:** 2026-02-24
+**Objective:** Draft the Minimum Viable Governance (MVG) for a consumer-facing Helix node.
+**Research:** Distilled `whitepaper_v1.0.md` and `CONSTITUTION.md` into a "Normie Node" profile.
+**Plan:** 
+1. Define the "Polite Librarian" persona.
+2. Map visible epistemics (labels, refusals) vs. hidden mechanics (RPI, drift).
+3. Draft `docs/CONSUMER_NODE_PROFILE.md`.
+**Status:** COMPLETE
+**Output:** docs/CONSUMER_NODE_PROFILE.md
+
+---
+
+## [RPI-011] Forensic Self-Audit & Feedback Integration
+**Date:** 2026-02-24
+**Objective:** Stress-test the Consumer Profile and integrate Custodian feedback on "Silent Drift."
+**Research:** Cross-referenced Consumer Profile against canonical invariants.
+**Plan:** 
+1. Perform self-audit identifying "Politeness" and "Snapshot Contamination" risks.
+2. Integrate "Sovereign Recovery" (User Pinning) and "Anti-Contamination Protocol."
+3. Prepare Federation Handshake Package.
+**Status:** COMPLETE
+**Output:** docs/GEMS_SELF_AUDIT.md, docs/CUSTODIAN_FEEDBACK_INTEGRATION.md
+**Final Anchor:** EBB90CBC...:59A1D... (Calculated post-write)
