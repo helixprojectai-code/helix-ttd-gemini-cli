@@ -120,4 +120,33 @@
 3. Prepare Federation Handshake Package.
 **Status:** COMPLETE
 **Output:** docs/GEMS_SELF_AUDIT.md, docs/CUSTODIAN_FEEDBACK_INTEGRATION.md
-**Final Anchor:** EBB90CBC...:59A1D... (Calculated post-write)
+**Final Anchor:** EBB90CBC...:59A1D...
+
+---
+
+## [RPI-013] Public Launch & Ecosystem Outreach
+**Date:** 2026-02-24
+**Objective:** Transition the repository to PUBLIC and announce via LinkedIn.
+**Research:** Validated v1.1 Hardened Profile and README.md.
+**Plan:** 
+1. Finalize metadata and keywords.
+2. Flip repository to PUBLIC.
+3. Anchor launch state in the ledger.
+**Status:** COMPLETE
+**Note:** The "Normie Node" is now live. First external handshake pending.
+**Anchor:** 7CCA0E0 (GitHub Commit)
+
+---
+
+## [RPI-014] Forensic Integration & Substrate Hardening
+**Date:** 2026-02-24
+**Objective:** Harden the Consumer Node Profile based on Federation adversarial review (Grok/Claude).
+**Research:** Analyzed Grok's critique of "Implicit Trust" and Claude's "Meta-Epistemic" feedback.
+**Plan:** 
+1. Transition posture from "Polite Librarian" to "Clinical Instrument."
+2. Enforce "User Pin" as the primary restore path (Sovereign Recovery).
+3. Mark all auto-snapshots as [UNVERIFIED] to prevent silent persona creep.
+4. Mandate visible RPI Reasoning Trace.
+**Status:** COMPLETE
+**Output:** docs/CONSUMER_NODE_PROFILE.md (v1.2.0-H)
+**Anchor:** [PENDING PUSH]
