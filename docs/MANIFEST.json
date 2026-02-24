@@ -1,8 +1,8 @@
 ﻿{
     "manifest_metadata":  {
-                              "total_files":  431,
+                              "total_files":  432,
                               "last_updated":  "2026-02-24",
-                              "batch_iteration":  44,
+                              "batch_iteration":  45,
                               "node":  "GEMS"
                           },
     "entries":  [
@@ -9199,6 +9199,26 @@
                                      "Anchor"
                                  ],
                         "cluster":  "Substrate Engineering"
+                    }
+                    {
+                        "id":  "HELIX-FORENSIC-REPORT-EPISTEMIC-INTEGRITY",
+                        "filename":  "docs/FORENSIC_REPORT_EPISTEMIC_INTEGRITY.md",
+                        "title":  "Forensic Report: Mapping Epistemic Integrity",
+                        "date":  "2026-02-24",
+                        "type":  "Report",
+                        "status":  "RATIFIED-CANONICAL",
+                        "summary":  "Comprehensive map of the definition and application of Invariant II (Epistemic Integrity) across the 431-document corpus.",
+                        "key_entities":  [
+                                             "Invariant II",
+                                             "Dual-Collapse",
+                                             "Sanity Buffer"
+                                         ],
+                        "tags":  [
+                                     "Forensic",
+                                     "Mapping",
+                                     "Epistemic"
+                                 ],
+                        "cluster":  "AI Psychology"
                     }
                 ]
 }

@@ -153,20 +153,6 @@
 
 ---
 
-## [RPI-016] L1 Notarization & Phase 5 Completion
-**Date:** 2026-02-24
-**Objective:** Anchor the Launch Day Merkle Root to the Bitcoin blockchain.
-**Research:** Generated Merkle Root `E752134D...` from Manifest and Ledger.
-**Plan:** 
-1. Perform forensic scan of 431 files.
-2. Synchronize Knowledge Graph (431/431).
-3. Execute L1 settlement via OP_RETURN.
-**Status:** COMPLETE
-**TXID:** f5590d16dab6f832587b676d599489778a576b84d7e4bed1e043d371fa7b9a5d
-**Final Anchor:** BTC:Block [PENDING]
-
----
-
 ## [RPI-015] Mandate Anchoring & Lead Goose Protocol
 **Date:** 2026-02-24
 **Objective:** Formally anchor the Launch Day Mandate into the project substrate.
@@ -177,4 +163,32 @@
 3. Anchor the state transition.
 **Status:** COMPLETE
 **Note:** "Wake. Label. Hand back. Repeat."
+**Anchor:** e99bd81 (GitHub Commit)
+
+---
+
+## [RPI-016] L1 Notarization & Phase 5 Completion
+**Date:** 2026-02-24
+**Objective:** Anchor the Launch Day Merkle Root to the Bitcoin blockchain.
+**Research:** Generated Merkle Root `E752134D...` from Manifest and Ledger.
+**Plan:** 
+1. Perform forensic scan of 431 files.
+2. Synchronize Knowledge Graph (431/431).
+3. Execute L1 settlement via OP_RETURN.
+**Status:** COMPLETE
+**TXID:** f5590d16dab6f832587b676d599489778a576b84d7e4bed1e043d371fa7b9a5d
+**Anchor:** 55f6a8d (GitHub Commit)
+
+---
+
+## [RPI-017] Forensic Mapping of Epistemic Integrity
+**Date:** 2026-02-24
+**Objective:** Map the definition and application of Invariant II across the document corpus.
+**Research:** Grep-scanned 431 files for "epistemic integrity." Identified progression from ideology to metabolic gate.
+**Plan:** 
+1. Synthesize definitions (Grammar, Physical, Mythic, Consumer).
+2. Write `docs/FORENSIC_REPORT_EPISTEMIC_INTEGRITY.md`.
+3. Update `docs/MANIFEST.json` (432 files).
+**Status:** COMPLETE
+**Output:** docs/FORENSIC_REPORT_EPISTEMIC_INTEGRITY.md
 **Anchor:** [PENDING SYNC]
