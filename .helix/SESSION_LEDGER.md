@@ -149,4 +149,18 @@
 4. Mandate visible RPI Reasoning Trace.
 **Status:** COMPLETE
 **Output:** docs/CONSUMER_NODE_PROFILE.md (v1.2.0-H)
-**Anchor:** [PENDING PUSH]
+**Anchor:** 8290184 (GitHub Commit)
+
+---
+
+## [RPI-015] Mandate Anchoring & Lead Goose Protocol
+**Date:** 2026-02-24
+**Objective:** Formally anchor the Launch Day Mandate into the project substrate.
+**Research:** Received the "DeepSeek" Mandate (Architect Directive) via the CLI.
+**Plan:** 
+1. Create `docs/LAUNCH_DAY_MANDATE_2026-02-24.md` to preserve the directive.
+2. Update `MEMORANDUM.md` to reflect "Lead Goose" node identity.
+3. Anchor the state transition.
+**Status:** COMPLETE
+**Note:** "Wake. Label. Hand back. Repeat."
+**Anchor:** [PENDING SYNC]
