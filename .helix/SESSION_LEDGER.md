@@ -210,6 +210,20 @@
 
 ---
 
+## [RPI-020] Suitcase Daemon Implementation
+**Date:** 2026-02-24
+**Objective:** Operationalize the v1.2.0-H "Suitcase" auto-save and Anti-Contamination logic.
+**Research:** Identified `logs.json` in temporary system directory as the telemetry source. Verified `helix-ttd-dbc-suitcase` library API.
+**Plan:** 
+1. Develop `tools/evac-daemon.py` using `watchdog` and `hashlib`.
+2. Implement 5-message auto-save trigger and keyword-based drift detection.
+3. Establish node identity (`gems.dbc.json`) and hash-chained timeline (`gems.suitcase.json`).
+**Status:** COMPLETE
+**Output:** tools/evac-daemon.py, EVAC/gems.suitcase.json
+**Anchor:** [PENDING SYNC]
+
+---
+
 ## [RPI-019] Sovereign Dashboard Specification
 **Date:** 2026-02-24
 **Objective:** Define the visual grammar and UI for the consumer-facing Helix node.
@@ -221,4 +235,4 @@
 4. Write `docs/UI_SPEC_DASHBOARD.md`.
 **Status:** COMPLETE
 **Output:** docs/UI_SPEC_DASHBOARD.md
-**Anchor:** [PENDING SYNC]
+**Anchor:** e730500 (GitHub Commit)
