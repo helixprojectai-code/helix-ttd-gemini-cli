@@ -9575,12 +9575,13 @@
                         "title":  "L1 Anchor: Phase 6 Initiation",
                         "date":  "2026-02-25",
                         "type":  "Log",
-                        "status":  "PENDING-OP_RETURN",
-                        "summary":  "Bitcoin L1 Anchor preparation for Phase 6 initiation and the v1.2.0-H validation series.",
+                        "status":  "SETTLED-CANONICAL",
+                        "summary":  "Bitcoin L1 Anchor settled for Phase 6 initiation and the v1.2.0-H validation series.",
                         "key_entities":  [
                                              "L1 Anchor",
                                              "Phase 6",
-                                             "OP_RETURN"
+                                             "OP_RETURN",
+                                             "23adf971..."
                                          ],
                         "tags":  [
                                      "L1-Anchor",

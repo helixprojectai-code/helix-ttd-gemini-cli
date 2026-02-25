@@ -319,9 +319,10 @@
 1. Create `docs/L1_ANCHOR_PHASE_6_INITIATION.md`.
 2. Update `docs/MANIFEST.json` (453 files).
 3. Commit to L2.
-**Status:** COMPLETE
+**Status:** SETTLED
 **Output:** docs/L1_ANCHOR_PHASE_6_INITIATION.md
-**Anchor:** [PENDING]
+**Anchor:** 23adf9712fa8f2f8366f285eabb806dfe2bbaa052e31510f1eb7f9c2c77ecd87 (Bitcoin L1)
+
 
 
 
