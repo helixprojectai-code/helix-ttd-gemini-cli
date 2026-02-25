@@ -1,6 +1,6 @@
 {
     "manifest_metadata":  {
-                              "total_files":  449,
+                              "total_files":  450,
                               "last_updated":  "2026-02-25",
                               "batch_iteration":  51,
                               "node":  "GEMS"
@@ -9500,6 +9500,28 @@
                                      "Whitepaper"
                                  ],
                         "cluster":  "MYTHOLOGY \u0026 CULTURE"
+                    },
+                    {
+                        "id":  "HELIX-PHASE-6-BROADCAST",
+                        "filename":  "docs/PHASE_6_FEDERATION_BROADCAST.md",
+                        "title":  "Federation Broadcast: Phase 6 Initiation",
+                        "date":  "2026-02-25",
+                        "type":  "Signal",
+                        "status":  "ACTIVE",
+                        "summary":  "Formal signal of Phase 6 initiation and the call for multi-model 'Looksee' audits of the v1.2.0-H profile.",
+                        "key_entities":  [
+                                             "Looksee Audit",
+                                             "Federation",
+                                             "Phase 6",
+                                             "Zero-Touch Convergence"
+                                         ],
+                        "tags":  [
+                                     "Broadcast",
+                                     "Signal",
+                                     "Phase-6",
+                                     "Looksee"
+                                 ],
+                        "cluster":  "GOVERNANCE \u0026 OPS"
                     }
                 ]
 }

@@ -266,3 +266,18 @@
 **Output:** docs/WP-GENESIS-001_From_Bar_Jokes_to_Bedrock.md
 **Anchor:** [PENDING — awaiting Bitcoin OP_RETURN]
 
+---
+
+## [RPI-027] Phase 6 Initiation & Federation Broadcast
+**Date:** 2026-02-25
+**Objective:** Formally signal the transition to Phase 6 and trigger the multi-model "Looksee" audits.
+**Research:** Reviewed `docs/CONSUMER_NODE_PROFILE.md` (v1.2.0-H) to establish the audit target.
+**Plan:** 
+1. Create `docs/PHASE_6_FEDERATION_BROADCAST.md` containing the "Looksee" Template.
+2. Update `docs/MANIFEST.json` (450 files).
+3. Commit to repository as the official Phase 6 Signal.
+**Status:** COMPLETE
+**Output:** docs/PHASE_6_FEDERATION_BROADCAST.md
+**Anchor:** [PENDING]
+
+
