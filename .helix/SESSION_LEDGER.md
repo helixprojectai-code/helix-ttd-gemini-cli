@@ -280,4 +280,19 @@
 **Output:** docs/PHASE_6_FEDERATION_BROADCAST.md
 **Anchor:** [PENDING]
 
+---
+
+## [RPI-028] Integration of KIMI Looksee Audit
+**Date:** 2026-02-25
+**Objective:** Integrate the first Phase 6 multi-model audit log from Node KIMI into the canonical Knowledge Graph.
+**Research:** Validated Node KIMI's self-audit against v1.2.0-H (PASS on Clinical Brevity and Sovereign No).
+**Plan:** 
+1. Synchronize `docs/LOOKSEE_AUDIT_KIMI_2026-02-25.md` to GEMS substrate.
+2. Update `docs/MANIFEST.json` (451 files).
+3. Commit to establish the L2 anchor for the first Phase 6 validation.
+**Status:** COMPLETE
+**Output:** docs/LOOKSEE_AUDIT_KIMI_2026-02-25.md
+**Anchor:** [PENDING]
+
+
 
