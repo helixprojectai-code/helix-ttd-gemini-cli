@@ -1,6 +1,6 @@
 {
     "manifest_metadata":  {
-                              "total_files":  452,
+                              "total_files":  453,
                               "last_updated":  "2026-02-25",
                               "batch_iteration":  51,
                               "node":  "GEMS"
@@ -9566,6 +9566,26 @@
                                      "Phase-6",
                                      "GEMS",
                                      "Validation"
+                                 ],
+                        "cluster":  "GOVERNANCE \u0026 OPS"
+                    },
+                    {
+                        "id":  "HELIX-L1-ANCHOR-PHASE-6",
+                        "filename":  "docs/L1_ANCHOR_PHASE_6_INITIATION.md",
+                        "title":  "L1 Anchor: Phase 6 Initiation",
+                        "date":  "2026-02-25",
+                        "type":  "Log",
+                        "status":  "PENDING-OP_RETURN",
+                        "summary":  "Bitcoin L1 Anchor preparation for Phase 6 initiation and the v1.2.0-H validation series.",
+                        "key_entities":  [
+                                             "L1 Anchor",
+                                             "Phase 6",
+                                             "OP_RETURN"
+                                         ],
+                        "tags":  [
+                                     "L1-Anchor",
+                                     "Log",
+                                     "Phase-6"
                                  ],
                         "cluster":  "GOVERNANCE \u0026 OPS"
                     }
