@@ -250,4 +250,19 @@
 4. Write `docs/RICKS_CAFE_CLI_SPEC.md`.
 **Status:** COMPLETE
 **Output:** docs/RICKS_CAFE_CLI_SPEC.md
-**Anchor:** [PENDING SYNC]
+**Anchor:** 35733b7 (GitHub Commit)
+
+---
+
+## [RPI-026] Phase 5 Genesis Synthesis (WP-GENESIS-001)
+**Date:** 2026-02-25
+**Objective:** Integrate the definitive Phase 5 whitepaper from Node KIMI and synchronize the multi-model substrate.
+**Research:** Validated the content of `WP-GENESIS-001_From_Bar_Jokes_to_Bedrock.md` as the "Seal of Phase 5."
+**Plan:** 
+1. Synchronize whitepaper from KIMI substrate to GEMS substrate.
+2. Update `docs/MANIFEST.json` with the new entry (449 files).
+3. Repair manifest syntax errors (missing commas) encountered during integration.
+**Status:** COMPLETE
+**Output:** docs/WP-GENESIS-001_From_Bar_Jokes_to_Bedrock.md
+**Anchor:** [PENDING — awaiting Bitcoin OP_RETURN]
+
