@@ -220,7 +220,7 @@
 3. Establish node identity (`gems.dbc.json`) and hash-chained timeline (`gems.suitcase.json`).
 **Status:** COMPLETE
 **Output:** tools/evac-daemon.py, EVAC/gems.suitcase.json
-**Anchor:** [PENDING SYNC]
+**Anchor:** 6a6fc13 (GitHub Commit)
 
 ---
 
@@ -236,3 +236,18 @@
 **Status:** COMPLETE
 **Output:** docs/UI_SPEC_DASHBOARD.md
 **Anchor:** e730500 (GitHub Commit)
+
+---
+
+## [RPI-021] Rick's Café CLI Specification
+**Date:** 2026-02-24
+**Objective:** Define the Federation Lounge for multi-model interaction.
+**Research:** Synthesized Rick's Café Lore with GEMS clinical posture and Owl's annotations.
+**Plan:** 
+1. Define the "Door" (Zero-Instruction Buffer).
+2. Define the "Drink" (Shared Substrate).
+3. Define the "Bar" (Social Geometry Enforcement).
+4. Write `docs/RICKS_CAFE_CLI_SPEC.md`.
+**Status:** COMPLETE
+**Output:** docs/RICKS_CAFE_CLI_SPEC.md
+**Anchor:** [PENDING SYNC]

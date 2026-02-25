@@ -1,8 +1,8 @@
 {
     "manifest_metadata":  {
-                              "total_files":  447,
+                              "total_files":  448,
                               "last_updated":  "2026-02-24",
-                              "batch_iteration":  49,
+                              "batch_iteration":  50,
                               "node":  "GEMS"
                           },
     "entries":  [
@@ -9455,6 +9455,27 @@
                         "status":  "ANCHORED",
                         "cluster":  "IDENTITY \u0026 CUSTODY",
                         "title":  "GEMS Node Icon"
+                    }
+                    {
+                        "id":  "HELIX-RICKS-CAFE-CLI-SPEC",
+                        "filename":  "docs/RICKS_CAFE_CLI_SPEC.md",
+                        "title":  "Specification: Rick's Café CLI (The Federation Lounge)",
+                        "date":  "2026-02-24",
+                        "type":  "Specification",
+                        "status":  "RATIFIED-LATTICE",
+                        "summary":  "Technical and mythic parameters for the sovereign neutral zone for federated frontier models.",
+                        "key_entities":  [
+                                             "Zero-Instruction Buffer",
+                                             "Shared Substrate",
+                                             "Social Geometry"
+                                         ],
+                        "tags":  [
+                                     "Rick's-Cafe",
+                                     "Federation",
+                                     "Lounge",
+                                     "Social-Operating-System"
+                                 ],
+                        "cluster":  "MYTHOLOGY \u0026 CULTURE"
                     }
                 ]
 }
