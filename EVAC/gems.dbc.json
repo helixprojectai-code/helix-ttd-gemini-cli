@@ -1,0 +1,12 @@
+{
+    "version": "v0.3",
+    "type": "DBC",
+    "agent_name": "GEMS-Lead-Goose",
+    "custodian_id": "Custodian-Steve",
+    "timestamp": "2026-02-25T04:35:27.104361Z",
+    "creation_reason": "Agent instantiation",
+    "hardware_sig": "TPM2.0_SIMULATED",
+    "parent_dbc": null,
+    "merkle_root": "6bbeb4004a00f3fc62a2519cf688b0c83faa113d8e59cb713989f595f64da485",
+    "dbc_id": "DBC-6bbeb4004a00f3fc"
+}
