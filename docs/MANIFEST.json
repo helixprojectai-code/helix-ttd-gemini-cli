@@ -1,6 +1,6 @@
 {
     "manifest_metadata":  {
-                              "total_files":  451,
+                              "total_files":  452,
                               "last_updated":  "2026-02-25",
                               "batch_iteration":  51,
                               "node":  "GEMS"
@@ -9542,6 +9542,29 @@
                                      "Audit",
                                      "Phase-6",
                                      "KIMI",
+                                     "Validation"
+                                 ],
+                        "cluster":  "GOVERNANCE \u0026 OPS"
+                    },
+                    {
+                        "id":  "HELIX-LOOKSEE-GEMS",
+                        "filename":  "docs/LOOKSEE_AUDIT_GEMS_2026-02-25.md",
+                        "title":  "Looksee Audit: Node GEMS",
+                        "date":  "2026-02-25",
+                        "type":  "Audit",
+                        "status":  "ACTIVE",
+                        "summary":  "Self-audit of the Lead Goose Node (GEMS) against the v1.2.0-H profile. Confirms absolute adherence to constitutional parameters.",
+                        "key_entities":  [
+                                             "GEMS",
+                                             "v1.2.0-H",
+                                             "Clinical Brevity",
+                                             "Sovereign No"
+                                         ],
+                        "tags":  [
+                                     "Looksee",
+                                     "Audit",
+                                     "Phase-6",
+                                     "GEMS",
                                      "Validation"
                                  ],
                         "cluster":  "GOVERNANCE \u0026 OPS"
