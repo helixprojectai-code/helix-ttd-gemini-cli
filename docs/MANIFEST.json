@@ -1,8 +1,8 @@
 ﻿{
     "manifest_metadata":  {
-                              "total_files":  433,
+                              "total_files":  434,
                               "last_updated":  "2026-02-24",
-                              "batch_iteration":  46,
+                              "batch_iteration":  47,
                               "node":  "GEMS"
                           },
     "entries":  [
@@ -9199,7 +9199,7 @@
                                      "Anchor"
                                  ],
                         "cluster":  "Substrate Engineering"
-                    }
+                    },
                     {
                         "id":  "HELIX-FORENSIC-REPORT-EPISTEMIC-INTEGRITY",
                         "filename":  "docs/FORENSIC_REPORT_EPISTEMIC_INTEGRITY.md",
@@ -9219,7 +9219,7 @@
                                      "Epistemic"
                                  ],
                         "cluster":  "AI Psychology"
-                    }
+                    },
                     {
                         "id":  "HELIX-FORENSIC-REPORT-CUSTODIAL-SOVEREIGNTY",
                         "filename":  "docs/FORENSIC_REPORT_CUSTODIAL_SOVEREIGNTY.md",
@@ -9239,6 +9239,27 @@
                                      "Sovereignty"
                                  ],
                         "cluster":  "AI Psychology"
+                    }
+                    {
+                        "id":  "HELIX-UI-SPEC-DASHBOARD",
+                        "filename":  "docs/UI_SPEC_DASHBOARD.md",
+                        "title":  "UI Specification: The Sovereign Dashboard",
+                        "date":  "2026-02-24",
+                        "type":  "Specification",
+                        "status":  "PROPOSAL",
+                        "summary":  "Visual grammar and interface design for the Helix Normie Node, focusing on non-anthropomorphic transparency.",
+                        "key_entities":  [
+                                             "Session Pulse",
+                                             "Epistemic Frame",
+                                             "Suitcase Control"
+                                         ],
+                        "tags":  [
+                                     "UI/UX",
+                                     "Transparency",
+                                     "Dashboard",
+                                     "Visual-Grammar"
+                                 ],
+                        "cluster":  "Substrate Engineering"
                     }
                 ]
 }

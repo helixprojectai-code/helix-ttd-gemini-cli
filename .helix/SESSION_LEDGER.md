@@ -206,4 +206,19 @@
 4. Update `docs/MANIFEST.json` (433 files).
 **Status:** COMPLETE
 **Output:** docs/FORENSIC_REPORT_CUSTODIAL_SOVEREIGNTY.md
+**Anchor:** 395e145 (GitHub Commit)
+
+---
+
+## [RPI-019] Sovereign Dashboard Specification
+**Date:** 2026-02-24
+**Objective:** Define the visual grammar and UI for the consumer-facing Helix node.
+**Research:** Synthesized "Human Interface Layer" from whitepaper and hardened profile requirements.
+**Plan:** 
+1. Define the "Clinical Bench" visual posture (no avatars).
+2. Specify Component A (Session Pulse) and B (Epistemic Frame).
+3. Specify Component C (Suitcase Control) and D (Reasoning Trace).
+4. Write `docs/UI_SPEC_DASHBOARD.md`.
+**Status:** COMPLETE
+**Output:** docs/UI_SPEC_DASHBOARD.md
 **Anchor:** [PENDING SYNC]
