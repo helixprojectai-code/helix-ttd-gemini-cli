@@ -194,7 +194,7 @@ jobs:
         run: |
           echo "=== VALIDATING CONSTITUTIONAL GRAMMAR ==="
           python -c "
-          from code.constitutional_compliance import validate_file
+          from constitutional_compliance import validate_file
           import os
           
           errors = 0
