@@ -193,12 +193,12 @@ jobs:
       - name: Validate Constitutional Grammar
         run: |
           echo "=== VALIDATING CONSTITUTIONAL GRAMMAR ==="
-          python -c "
+          cd code && python -c "
           from constitutional_compliance import validate_file
           import os
           
           errors = 0
-          for root, dirs, files in os.walk('code'):
+          for root, dirs, files in os.walk('.'):
               for file in files:
                   if file.endswith('.py'):
                       filepath = os.path.join(root, file)
