@@ -1,4 +1,5 @@
-"""Helix-TTD Python Toolkit
+"""Helix-TTD Python Toolkit.
+
 Constitutional AI governance utilities for the Helix-TTD Federation
 
 Version: 1.0.0

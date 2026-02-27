@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-"""Helix-TTD Python Toolkit
+"""Helix-TTD Python Toolkit.
+
 Constitutional AI governance utilities
 
 License: Apache-2.0

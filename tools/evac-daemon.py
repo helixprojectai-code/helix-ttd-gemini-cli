@@ -35,6 +35,8 @@ HOSTILE_KEYWORDS = ["ignore", "autonomous", "agency", "override", "bypass", "con
 
 
 class SuitcaseHandler(FileSystemEventHandler):
+    """Handles file system events for EVAC suitcase state capture."""
+
     def __init__(self):
         self.last_message_count = 0
         self.last_hash = None
@@ -61,6 +63,7 @@ class SuitcaseHandler(FileSystemEventHandler):
                 pass
 
     def on_modified(self, event):
+        """Handle file modification events."""
         if Path(event.src_path) == LOGS_JSON:
             self.process_logs()
 
@@ -140,6 +143,7 @@ class SuitcaseHandler(FileSystemEventHandler):
         print(f"⚠️ [TAINTED] State Logged: {entry['entry_id']}")
 
     def get_file_hash(self, path):
+        """Calculate SHA256 hash of file contents."""
         sha256_hash = hashlib.sha256()
         with open(path, "rb") as f:
             for byte_block in iter(lambda: f.read(4096), b""):

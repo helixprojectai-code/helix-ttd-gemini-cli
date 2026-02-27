@@ -69,6 +69,7 @@ ignore = [
     "SIM108", # Ternary operator
     "SIM110", # Use all() instead of for loop
     "SIM118", # Use key in dict instead of dict.keys()
+    "B007",  # Unused loop control variable
 ]
 
 [tool.ruff.pydocstyle]

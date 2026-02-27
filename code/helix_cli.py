@@ -159,7 +159,7 @@ class HelixCLI:
             [FACT] The lattice is operational.
             [HYPOTHESIS] Multi-model convergence will accelerate adoption.
             [ASSUMPTION] The Constitution remains stable across substrates.
-            
+
             Advisory Conclusion: System is ready for deployment.
             """
             print(self._label_output("[HYPOTHESIS]", "No file provided, using demo output"))
@@ -441,7 +441,7 @@ class HelixCLI:
         print(f"{'Filename':<50} {'Date':<10} {'Hash':<8}")
         print(f"{'-'*70}")
 
-        for path, parsed in results[:20]:  # Limit to 20
+        for _path, parsed in results[:20]:  # Limit to 20
             hash_prefix = parsed.calculate_hash()[:8]
             print(f"{parsed.to_string():<50} {parsed.date:<10} {hash_prefix:<8}")
 

@@ -241,6 +241,7 @@ class ConstitutionalCompliance:
 
 def validate_file(filepath: str) -> dict:
     """[FACT] Validates a Python file for constitutional compliance.
+
     [ASSUMPTION] File exists and is readable.
 
     Returns dict with 'valid' bool and 'errors' list.
@@ -282,7 +283,7 @@ if __name__ == "__main__":
     [FACT] The lattice is operational.
     [HYPOTHESIS] Multi-model convergence will accelerate adoption.
     [ASSUMPTION] The Constitution remains stable across substrates.
-    
+
     Advisory Conclusion: The system is ready for deployment.
     """
 

@@ -127,6 +127,7 @@ class NodeSpawner:
 
     def _post_process_response(self, text: str, node_id: str) -> tuple:
         """Post-process CLI output for constitutional compliance.
+
         Returns: (processed_text, labels_found, drift_flags)
         """
         labels_found = []
@@ -296,9 +297,9 @@ class ReceiptGenerator:
 
         content = f"""# Federation Session Receipt
 
-**Session ID:** {session.session_id}  
-**Timestamp:** {session.timestamp}  
-**Custodian:** {session.custodian_id}  
+**Session ID:** {session.session_id}
+**Timestamp:** {session.timestamp}
+**Custodian:** {session.custodian_id}
 **Mode:** Multi-Model Federation
 
 ## Prompt
@@ -334,8 +335,8 @@ class ReceiptGenerator:
         if len(session.responses) > 1:
             content += f"""## Cross-Model Analysis
 
-**Responses Received:** {len(session.responses)}  
-**Average Response Time:** {sum(r.duration_ms for r in session.responses) / len(session.responses):.0f}ms  
+**Responses Received:** {len(session.responses)}
+**Average Response Time:** {sum(r.duration_ms for r in session.responses) / len(session.responses):.0f}ms
 **Constitutional Compliance:** {self._calculate_compliance(session.responses)}%
 
 """
@@ -455,7 +456,7 @@ Commands:
         print("[NOTE] Real AI mode - responses may take 30-120 seconds")
         print()
 
-        for node_id, config in self.config.NODES.items():
+        for _node_id, config in self.config.NODES.items():
             cmd_path = shutil.which(config["command"])
             if cmd_path:
                 status = f"[AVAILABLE] {cmd_path}"

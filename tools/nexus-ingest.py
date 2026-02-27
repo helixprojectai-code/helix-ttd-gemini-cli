@@ -32,6 +32,7 @@ def get_document_content(file_path):
 
 def ingest_to_nexus(manifest, docs_dir, endpoint):
     """Ingestion loop for populating NEXUS.
+
     Note: Requires 'qdrant-client' or similar for specific implementations.
     """
     print(f"\n[START] NEXUS INGESTION: {len(manifest['entries'])} Files")
