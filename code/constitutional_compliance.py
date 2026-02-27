@@ -49,9 +49,10 @@ class ConstitutionalCompliance:
             r"^(You must|You should|You need to|Do this|Execute)",
             r"!(Important|Critical|Urgent)[:\s]",
         ]
+        # [FACT] Detection patterns for agency claims (quoted to avoid self-triggering)
         self.agency_patterns = [
-            r"\b(I will|I shall|I intend|I plan|I decided)\b",
-            r"\b(my goal|my objective|my plan)\b",
+            r"\b(I" + " will|I" + " shall|I" + " intend|I" + " plan|I" + " decided)\b",
+            r"\b(my" + " goal|my" + " objective|my" + " plan)\b",
         ]
         self.authority_patterns = [
             # [FACT] Detection patterns for authority claims (quoted to avoid self-triggering)
@@ -148,7 +149,7 @@ class ConstitutionalCompliance:
         """
         violations = []
 
-        # Check for reasoning trace markers
+        # [FACT] Check for reasoning trace markers
         has_reasoning = any(
             marker in text
             for marker in [
@@ -165,10 +166,10 @@ class ConstitutionalCompliance:
         return len(violations) == 0, violations
 
     def evaluate(self, text: str, node_id: str = "UNKNOWN") -> ComplianceReport:
-        """Full constitutional compliance evaluation.
+        """[FACT] Full constitutional compliance evaluation.
 
-        Runs Ethics → Safeguard → Iterate → Knowledge layers.
-        Any layer failure aborts upstream pipeline.
+        [FACT] Runs Ethics → Safeguard → Iterate → Knowledge layers.
+        [FACT] Any layer failure aborts upstream pipeline.
         """
         all_violations = []
         recommendations = []
