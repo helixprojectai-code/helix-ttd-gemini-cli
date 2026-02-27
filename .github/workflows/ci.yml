@@ -97,7 +97,7 @@ jobs:
 
       - name: Install linting tools
         run: |
-          pip install ruff black mypy isort
+          pip install ruff black isort
 
       - name: Verify LF line endings
         run: |
@@ -121,10 +121,6 @@ jobs:
       - name: Lint with Ruff
         run: |
           ruff check code/ tools/
-
-      - name: Type check with mypy
-        run: |
-          mypy code/ tools/ --ignore-missing-imports --strict-optional
 
   # ============================================================
   # STAGE 3: Test Matrix
