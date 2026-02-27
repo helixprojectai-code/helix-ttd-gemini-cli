@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
-"""federation_cli.py.
+"""[FACT] federation_cli.py - Helix-TTD Federation Terminal (Rick's Café CLI).
 
-Helix-TTD Federation Terminal (Rick's Café CLI)
-Unified multi-model interface with constitutional governance.
+[HYPOTHESIS] Unified multi-model interface with constitutional governance.
+
+[ASSUMPTION] All federation nodes respond within timeout window.
 
 RPI-041: Federation Terminal Implementation
 Status: IN_PROGRESS
@@ -10,6 +11,7 @@ Node: KIMI (Lead Architect) + Federation Review
 License: Apache-2.0
 
 Usage:
+    [FACT] Interactive and broadcast modes available.
     python federation_cli.py              # Interactive mode
     python federation_cli.py --door "prompt"   # One-shot broadcast
     python federation_cli.py --table claude    # Single node focus

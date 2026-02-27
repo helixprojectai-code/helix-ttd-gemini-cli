@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
-"""constitutional_compliance.py
+"""[FACT] constitutional_compliance.py - Helix-TTD Constitutional Compliance Checker.
 
-Helix-TTD Constitutional Compliance Checker
-Validates outputs against the Four Immutable Invariants and Nine Principles.
+[HYPOTHESIS] Validates outputs against the Four Immutable Invariants and Nine Principles.
+
+[ASSUMPTION] Detection patterns are for analysis only, not claims by this AI.
 
 Status: RATIFIED
 Node: KIMI (Lead Architect / Scribe)

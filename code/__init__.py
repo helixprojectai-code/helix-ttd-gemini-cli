@@ -1,19 +1,22 @@
-"""Helix-TTD Python Toolkit.
+"""[FACT] Helix-TTD Python Toolkit package root.
 
-Constitutional AI governance utilities for the Helix-TTD Federation
+[HYPOTHESIS] Constitutional AI governance utilities for the Helix-TTD Federation.
+
+[ASSUMPTION] All submodules are importable and functional.
 
 Version: 1.0.0
 License: Apache-2.0
 
 Modules:
-    - naming_convention: File naming enforcement
-    - drift_telemetry: Constitutional monitoring
-    - constitutional_compliance: Civic Firmware Stack
-    - receipts_manager: Personal directory and receipts
-    - looksee_audit: Phase 6 validation
-    - rpi_tracker: RPI cycle management
+    - naming_convention: [FACT] File naming enforcement
+    - drift_telemetry: [FACT] Constitutional monitoring
+    - constitutional_compliance: [FACT] Civic Firmware Stack
+    - receipts_manager: [FACT] Personal directory and receipts
+    - looksee_audit: [FACT] Phase 6 validation
+    - rpi_tracker: [FACT] RPI cycle management
 
 Usage:
+    [ASSUMPTION] Import and instantiate classes as needed.
     from helix_cli import HelixCLI
     cli = HelixCLI()
     cli.cmd_status()

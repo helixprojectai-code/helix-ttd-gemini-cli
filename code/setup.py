@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
-"""Helix-TTD Python Toolkit.
+"""[FACT] Helix-TTD Python Toolkit setup configuration.
 
-Constitutional AI governance utilities
+[HYPOTHESIS] Constitutional AI governance utilities package.
+
+[ASSUMPTION] README.md exists and contains package description.
 
 License: Apache-2.0
 """

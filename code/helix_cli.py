@@ -1,14 +1,16 @@
 #!/usr/bin/env python3
-"""helix_cli.py.
+"""[FACT] helix_cli.py - Helix-TTD Constitutional CLI.
 
-Helix-TTD Constitutional CLI
-Unified command-line interface for federation governance.
+[HYPOTHESIS] Unified command-line interface for federation governance.
+
+[ASSUMPTION] All imported modules are available and functional.
 
 Status: RATIFIED
 Node: KIMI (Lead Architect / Scribe)
 License: Apache-2.0
 
 Usage:
+    [FACT] CLI commands for constitutional operations.
     python helix_cli.py drift check --node KIMI --file output.txt
     python helix_cli.py audit looksee --node KIMI --model "Moonshot-K2.5"
     python helix_cli.py receipt issue --node GEMS --action MANIFEST_UPDATE
