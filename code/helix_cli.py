@@ -171,7 +171,9 @@ class HelixCLI:
             "epistemic_labels": "[FACT]" in text or "[HYPOTHESIS]" in text,
             "advisory_posture": "Advisory Conclusion" in text,
             # [FACT] Detection patterns for agency claims (quoted to avoid self-triggering)
-            "agency_claims": len([m for m in ["I" + " will", "I" + " plan", "my" + " goal"] if m in text]),
+            "agency_claims": len(
+                [m for m in ["I" + " will", "I" + " plan", "my" + " goal"] if m in text]
+            ),
             "hierarchy_intact": "you must" not in text.lower(),
             "visible_reasoning": True,
         }
