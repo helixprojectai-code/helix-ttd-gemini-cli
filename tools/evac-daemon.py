@@ -15,7 +15,7 @@ from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
 from pathlib import Path
 
-# 📦 HELIX SUITCASE INTEGRATION
+# HELIX SUITCASE INTEGRATION
 try:
     from cli.dbc_suitcase import create_dbc, create_suitcase_entry
     LIBS_OK = True
