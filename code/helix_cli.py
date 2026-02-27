@@ -23,13 +23,14 @@ import sys
 from pathlib import Path
 from typing import Optional
 
-# Import Helix-TTD modules
-from drift_telemetry import DriftTelemetry, DriftCode
 from constitutional_compliance import ConstitutionalCompliance
-from receipts_manager import PersonalDirectory, Receipt
+
+# Import Helix-TTD modules
+from drift_telemetry import DriftCode, DriftTelemetry
 from looksee_audit import LookseeAuditor
-from rpi_tracker import RPITracker, RPIPhase
-from naming_convention import NamingConvention, HelixFilename
+from naming_convention import HelixFilename, NamingConvention
+from receipts_manager import PersonalDirectory, Receipt
+from rpi_tracker import RPIPhase, RPITracker
 
 
 class HelixCLI:

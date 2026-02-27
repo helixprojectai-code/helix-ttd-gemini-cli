@@ -12,7 +12,7 @@ License: Apache-2.0
 
 import json
 import time
-from dataclasses import dataclass, asdict
+from dataclasses import asdict, dataclass
 from datetime import datetime
 from enum import Enum
 from pathlib import Path

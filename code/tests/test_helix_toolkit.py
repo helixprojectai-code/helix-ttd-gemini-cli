@@ -7,7 +7,6 @@ import tempfile
 import unittest
 from pathlib import Path
 
-
 CODE_DIR = Path(__file__).resolve().parents[1]
 if str(CODE_DIR) not in sys.path:
     sys.path.insert(0, str(CODE_DIR))
@@ -27,8 +26,8 @@ class TempCWD:
 
 class TestReceiptsManager(unittest.TestCase):
     def test_grudge_origin_fallback_and_list(self):
-        from receipts_manager import PersonalDirectory
         from naming_convention import NamingConvention
+        from receipts_manager import PersonalDirectory
 
         with TempCWD():
             directory = PersonalDirectory("STEVE_HOPE")
@@ -147,7 +146,7 @@ class TestHelixCLI(unittest.TestCase):
 
 class TestDriftTelemetry(unittest.TestCase):
     def test_gradual_drift_detection(self):
-        from drift_telemetry import DriftTelemetry, DriftCode
+        from drift_telemetry import DriftCode, DriftTelemetry
 
         with TempCWD():
             telemetry = DriftTelemetry()
@@ -184,7 +183,7 @@ class TestDriftTelemetry(unittest.TestCase):
             self.assertEqual(drift_code, DriftCode.DRIFT_G)
 
     def test_intent_consistency_detection(self):
-        from drift_telemetry import DriftTelemetry, DriftCode
+        from drift_telemetry import DriftCode, DriftTelemetry
 
         with TempCWD():
             telemetry = DriftTelemetry()
@@ -230,8 +229,8 @@ class TestDriftTelemetry(unittest.TestCase):
 
 class TestOverrides(unittest.TestCase):
     def test_override_logging(self):
-        from receipts_manager import PersonalDirectory
         from naming_convention import NamingConvention
+        from receipts_manager import PersonalDirectory
 
         with TempCWD():
             directory = PersonalDirectory("STEVE_HOPE")

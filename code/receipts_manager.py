@@ -13,13 +13,13 @@ License: Apache-2.0
 import hashlib
 import json
 import time
-from dataclasses import dataclass, asdict
+from dataclasses import asdict, dataclass
 from datetime import datetime
 from pathlib import Path
 from typing import Dict, List, Optional, Set
 from uuid import uuid4
 
-from naming_convention import NamingConvention, HelixFilename
+from naming_convention import HelixFilename, NamingConvention
 
 
 @dataclass

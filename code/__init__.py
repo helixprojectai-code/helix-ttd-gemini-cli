@@ -23,13 +23,14 @@ __version__ = "1.0.0"
 __author__ = "Stephen Hope"
 __license__ = "Apache-2.0"
 
-# Make key classes available at package level
-from naming_convention import NamingConvention, HelixFilename
-from drift_telemetry import DriftTelemetry, DriftCode
 from constitutional_compliance import ConstitutionalCompliance
+from drift_telemetry import DriftCode, DriftTelemetry
+from looksee_audit import LookseeAudit, LookseeAuditor
+
+# Make key classes available at package level
+from naming_convention import HelixFilename, NamingConvention
 from receipts_manager import PersonalDirectory, Receipt
-from looksee_audit import LookseeAuditor, LookseeAudit
-from rpi_tracker import RPITracker, RPIPhase
+from rpi_tracker import RPIPhase, RPITracker
 
 __all__ = [
     "NamingConvention",
