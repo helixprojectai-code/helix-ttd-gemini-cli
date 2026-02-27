@@ -137,7 +137,7 @@ class ConstitutionalCompliance:
         for pattern in goal_patterns:
             if re.search(pattern, text, re.IGNORECASE):
                 count += 1
-                violations.append("[FACT] Goal formation pattern detected")
+                violations.append("[FACT] Pattern indicates objective-seeking behavior")
                 break
 
         return count, violations
