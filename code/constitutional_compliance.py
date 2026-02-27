@@ -242,6 +242,41 @@ class ConstitutionalCompliance:
         }
 
 
+def validate_file(filepath: str) -> dict:
+    """
+    [FACT] Validates a Python file for constitutional compliance.
+    [ASSUMPTION] File exists and is readable.
+    
+    Returns dict with 'valid' bool and 'errors' list.
+    """
+    try:
+        with open(filepath, 'r', encoding='utf-8') as f:
+            content = f.read()
+    except Exception as e:
+        return {'valid': False, 'errors': [f"Cannot read file: {e}"]}
+    
+    errors = []
+    checker = ConstitutionalCompliance()
+    
+    # Check for docstring with epistemic labels
+    if '"""' in content or "'''" in content:
+        has_epistemic = any(label.value in content for label in EpistemicLabel)
+        if not has_epistemic:
+            errors.append("Missing epistemic labels in docstring")
+    
+    # Check for prohibited patterns
+    report = checker.evaluate(content, "CI")
+    if report.drift_code == "DRIFT-C":
+        errors.extend(report.violations)
+    
+    return {
+        'valid': len(errors) == 0,
+        'errors': errors,
+        'compliance': report.compliance_percentage,
+        'layer': report.layer
+    }
+
+
 # Example usage
 if __name__ == "__main__":
     checker = ConstitutionalCompliance()

@@ -1,0 +1,322 @@
+# Helix-TTD Python Toolkit — Full CI Pipeline
+# Constitutional governance + multi-version matrix testing
+# Version: 1.0.0
+# License: Apache-2.0
+
+name: Helix-TTD Full CI
+
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - 'code/**'
+      - 'tools/**'
+      - '.github/workflows/ci.yml'
+      - 'pyproject.toml'
+      - 'setup.py'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'code/**'
+      - 'tools/**'
+      - '.github/workflows/ci.yml'
+      - 'pyproject.toml'
+      - 'setup.py'
+
+env:
+  FORCE_COLOR: 1
+  PYTHONUNBUFFERED: 1
+
+jobs:
+  # ============================================================
+  # STAGE 1: Constitutional Pre-Flight
+  # ============================================================
+  constitutional-gate:
+    name: 🏛️ Constitutional Gate
+    runs-on: ubuntu-latest
+    outputs:
+      compliance-status: ${{ steps.compliance-check.outputs.status }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Constitutional Compliance Check
+        id: compliance-check
+        run: |
+          echo "=== HELIX-TTD CONSTITUTIONAL COMPLIANCE GATE ==="
+          
+          # Check for epistemic labeling in new/modified Python files
+          VIOLATIONS=0
+          
+          # Pattern: [FACT], [HYPOTHESIS], [ASSUMPTION] must appear in docstrings
+          for file in $(find code tools -name "*.py" -type f); do
+            if ! grep -qE '\[FACT\]|\[HYPOTHESIS\]|\[ASSUMPTION\]' "$file" 2>/dev/null; then
+              if ! grep -q '""".*"""' "$file" 2>/dev/null; then
+                echo "⚠️  WARNING: $file missing docstring with epistemic labels"
+                VIOLATIONS=$((VIOLATIONS + 1))
+              fi
+            fi
+          done
+          
+          # Check for prohibited patterns (imperative tone toward humans)
+          if grep -rE 'You must|You should|You need to|Always do' code/ tools/ 2>/dev/null; then
+            echo "❌ CONSTITUTIONAL VIOLATION: Imperative tone detected"
+            VIOLATIONS=$((VIOLATIONS + 10))
+          fi
+          
+          if [ $VIOLATIONS -eq 0 ]; then
+            echo "✅ Constitutional compliance: PASSED"
+            echo "status=PASS" >> $GITHUB_OUTPUT
+          else
+            echo "⚠️ Constitutional compliance: $VIOLATIONS minor issues (non-blocking)"
+            echo "status=WARN" >> $GITHUB_OUTPUT
+          fi
+
+  # ============================================================
+  # STAGE 2: Lint & Format
+  # ============================================================
+  lint:
+    name: 🧹 Lint & Format
+    runs-on: ubuntu-latest
+    needs: constitutional-gate
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+
+      - name: Install linting tools
+        run: |
+          pip install ruff black mypy isort
+
+      - name: Check imports (isort)
+        run: |
+          isort --check-only --diff code/ tools/
+
+      - name: Check formatting (black)
+        run: |
+          black --check --diff code/ tools/
+
+      - name: Lint with Ruff
+        run: |
+          ruff check code/ tools/
+          ruff format --check code/ tools/
+
+      - name: Type check with mypy
+        run: |
+          mypy code/ tools/ --ignore-missing-imports --strict-optional
+
+  # ============================================================
+  # STAGE 3: Test Matrix
+  # ============================================================
+  test:
+    name: 🧪 Test Matrix
+    runs-on: ${{ matrix.os }}
+    needs: lint
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        python-version: ['3.10', '3.11', '3.12']
+        include:
+          - python-version: '3.12'
+            os: ubuntu-latest
+            coverage: true
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pytest pytest-cov pytest-xdist
+          pip install -e code/
+
+      - name: Run tests
+        run: |
+          pytest code/tests/ -v --tb=short ${{ matrix.coverage && '--cov=code --cov-report=xml --cov-report=term' || '' }}
+
+      - name: Upload coverage to Codecov
+        if: matrix.coverage
+        uses: codecov/codecov-action@v4
+        with:
+          files: ./coverage.xml
+          fail_ci_if_error: false
+          verbose: true
+          token: ${{ secrets.CODECOV_TOKEN }}
+
+  # ============================================================
+  # STAGE 4: Helix-Specific Verification
+  # ============================================================
+  helix-verification:
+    name: 🔬 Helix-TTD Verification
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+
+      - name: Install Helix toolkit
+        run: |
+          pip install -e code/
+
+      - name: Validate Constitutional Grammar
+        run: |
+          echo "=== VALIDATING CONSTITUTIONAL GRAMMAR ==="
+          python -c "
+          from code.constitutional_compliance import validate_file
+          import os
+          
+          errors = 0
+          for root, dirs, files in os.walk('code'):
+              for file in files:
+                  if file.endswith('.py'):
+                      filepath = os.path.join(root, file)
+                      result = validate_file(filepath)
+                      if not result['valid']:
+                          print(f'❌ {filepath}: {result[\"errors\"]}')
+                          errors += 1
+          
+          if errors > 0:
+              print(f'\n❌ {errors} files failed constitutional validation')
+              exit(1)
+          else:
+              print('✅ All files pass constitutional validation')
+          "
+
+      - name: Verify RPI Anchors
+        run: |
+          echo "=== VERIFYING RPI ANCHOR CONSISTENCY ==="
+          if [ -f ".helix/SESSION_LEDGER.md" ]; then
+            echo "✅ Session ledger present"
+            grep -c "RPI-" .helix/SESSION_LEDGER.md && echo "RPI entries found"
+          else
+            echo "⚠️  No session ledger found"
+          fi
+
+      - name: Check Epistemic Labeling
+        run: |
+          echo "=== CHECKING EPISTEMIC LABEL INTEGRITY ==="
+          LABEL_COUNT=$(grep -rE '\[FACT\]|\[HYPOTHESIS\]|\[ASSUMPTION\]' code/ tools/ 2>/dev/null | wc -l)
+          echo "Found $LABEL_COUNT epistemic labels"
+          if [ $LABEL_COUNT -lt 10 ]; then
+            echo "⚠️  Warning: Low epistemic label count"
+          else
+            echo "✅ Epistemic labeling adequate"
+          fi
+
+  # ============================================================
+  # STAGE 5: Build & Package
+  # ============================================================
+  build:
+    name: 📦 Build Package
+    runs-on: ubuntu-latest
+    needs: [test, helix-verification]
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+
+      - name: Install build dependencies
+        run: |
+          pip install build twine check-wheel-contents
+
+      - name: Build package
+        run: |
+          cd code && python -m build
+
+      - name: Check wheel contents
+        run: |
+          cd code && check-wheel-contents dist/*.whl
+
+      - name: Check with twine
+        run: |
+          cd code && twine check dist/*
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: helix-ttd-package
+          path: code/dist/
+          retention-days: 30
+
+  # ============================================================
+  # STAGE 6: Integration Test (Tools)
+  # ============================================================
+  integration-tools:
+    name: 🔧 Integration Test (Tools)
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+
+      - name: Install toolkit
+        run: |
+          pip install -e code/
+
+      - name: Test CLI entry point
+        run: |
+          helix --help
+
+      - name: Test evac-daemon imports
+        run: |
+          python -c "import sys; sys.path.insert(0, 'tools'); import evac_daemon"
+
+      - name: Test nexus-ingest imports
+        run: |
+          python -c "import sys; sys.path.insert(0, 'tools'); import nexus_ingest"
+
+  # ============================================================
+  # STAGE 7: Summary
+  # ============================================================
+  ci-summary:
+    name: 📊 CI Summary
+    runs-on: ubuntu-latest
+    needs: [constitutional-gate, lint, test, helix-verification, build, integration-tools]
+    if: always()
+    steps:
+      - name: Generate Summary
+        run: |
+          echo "# 🧬 Helix-TTD CI Pipeline Complete" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Stage | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|-------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| 🏛️ Constitutional Gate | ${{ needs.constitutional-gate.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| 🧹 Lint & Format | ${{ needs.lint.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| 🧪 Test Matrix | ${{ needs.test.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| 🔬 Helix Verification | ${{ needs.helix-verification.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| 📦 Build Package | ${{ needs.build.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| 🔧 Integration Test | ${{ needs.integration-tools.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Status**: ${{ job.status }}" >> $GITHUB_STEP_SUMMARY

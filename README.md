@@ -1,5 +1,10 @@
 # Helix-TTD Gemini CLI Node
 
+[![Helix-TTD Full CI](https://github.com/helixprojectai-code/helix-ttd-kimi-cli/actions/workflows/ci.yml/badge.svg)](https://github.com/helixprojectai-code/helix-ttd-kimi-cli/actions/workflows/ci.yml)
+[![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
+[![License: Apache-2.0](https://img.shields.io/badge/License-Apache%202.0-green.svg)](https://opensource.org/licenses/Apache-2.0)
+[![Constitutional Compliance](https://img.shields.io/badge/Constitution-RATIFIED-gold.svg)](.helix/CONSTITUTION.md)
+
 Constitutionally-governed Gemini 3.x in your terminal. This repo wraps the official Gemini CLI in the Helix-TTD governance vessel: constitutional grammar, custodial hierarchy, epistemic labels, and a visible EVAC "suitcase" for state continuity.
 
 ---
