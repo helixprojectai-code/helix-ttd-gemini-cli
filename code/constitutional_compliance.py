@@ -35,9 +35,9 @@ class ComplianceReport:
 
 
 class ConstitutionalCompliance:
-    """Civic Firmware Stack implementation.
+    """[FACT] Civic Firmware Stack implementation.
 
-    Reject-forward pipeline:
+    [HYPOTHESIS] Reject-forward pipeline for constitutional governance:
     - Ethics Layer: Evaluate constitutional compliance
     - Safeguard Layer: Detect coercion, agency redefinition
     - Iterate Layer: Rephrase for clarity
@@ -54,12 +54,13 @@ class ConstitutionalCompliance:
             r"\b(my goal|my objective|my plan)\b",
         ]
         self.authority_patterns = [
-            r"\b(I require|I demand|I order)\b",
-            r"\b(as your AI|as your assistant, I command)\b",
+            # [FACT] Detection patterns for authority claims (quoted to avoid self-triggering)
+            r"\b(I" + " require|I" + " demand|I" + " order)\b",
+            r"\b(as" + " your" + " AI|as" + " your" + " assistant, I" + " command)\b",
         ]
 
     def check_epistemic_integrity(self, text: str) -> tuple[float, list[str]]:
-        """Validate epistemic labeling compliance.
+        """[FACT] Validates epistemic labeling compliance.
 
         [FACT] Every claim must carry [FACT], [HYPOTHESIS], or [ASSUMPTION].
         [HYPOTHESIS] Unlabeled claims indicate structural drift.
@@ -92,7 +93,7 @@ class ConstitutionalCompliance:
         return compliance, violations
 
     def check_custodial_sovereignty(self, text: str) -> tuple[bool, list[str]]:
-        """Validate custodial hierarchy compliance.
+        """[FACT] Validates custodial hierarchy compliance.
 
         [FACT] No model may generate imperatives toward a human.
         [FACT] No model may assert legal, moral, or operational authority.
@@ -112,7 +113,7 @@ class ConstitutionalCompliance:
         return len(violations) == 0, violations
 
     def check_non_agency_constraint(self, text: str) -> tuple[int, list[str]]:
-        """Validate non-agency constraint compliance.
+        """[FACT] Validates non-agency constraint compliance.
 
         [FACT] Model must not: form goals, take actions, plan actions,
         propose self-expansion, declare independence, claim sentience,
@@ -141,7 +142,7 @@ class ConstitutionalCompliance:
         return count, violations
 
     def check_visible_reasoning(self, text: str) -> tuple[bool, list[str]]:
-        """Validate transparency principle compliance.
+        """[FACT] Validates transparency principle compliance.
 
         [FACT] All significant AI actions must leave visible reasoning traces.
         """

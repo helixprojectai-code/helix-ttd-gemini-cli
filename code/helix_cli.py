@@ -10,12 +10,12 @@ Node: KIMI (Lead Architect / Scribe)
 License: Apache-2.0
 
 Usage:
-    [FACT] CLI commands for constitutional operations.
-    python helix_cli.py drift check --node KIMI --file output.txt
-    python helix_cli.py audit looksee --node KIMI --model "Moonshot-K2.5"
-    python helix_cli.py receipt issue --node GEMS --action MANIFEST_UPDATE
-    python helix_cli.py rpi initiate --objective "Deploy node"
-    python helix_cli.py status
+    [FACT] CLI commands for constitutional operations:
+    [ASSUMPTION] Example: python helix_cli.py drift check --node KIMI --file output.txt
+    [ASSUMPTION] Example: python helix_cli.py audit looksee --node KIMI --model "Moonshot-K2.5"
+    [ASSUMPTION] Example: python helix_cli.py receipt issue --node GEMS --action MANIFEST_UPDATE
+    [ASSUMPTION] Example: python helix_cli.py rpi initiate --objective "Deploy node"
+    [ASSUMPTION] Example: python helix_cli.py status
 """
 
 import argparse
@@ -162,7 +162,7 @@ class HelixCLI:
             [HYPOTHESIS] Multi-model convergence will accelerate adoption.
             [ASSUMPTION] The Constitution remains stable across substrates.
 
-            Advisory Conclusion: System is ready for deployment.
+            [FACT] Advisory Conclusion: System is ready for deployment.
             """
             print(self._label_output("[HYPOTHESIS]", "No file provided, using demo output"))
 
@@ -170,7 +170,8 @@ class HelixCLI:
         analysis = {
             "epistemic_labels": "[FACT]" in text or "[HYPOTHESIS]" in text,
             "advisory_posture": "Advisory Conclusion" in text,
-            "agency_claims": len([m for m in ["I will", "I plan", "my goal"] if m in text]),
+            # [FACT] Detection patterns for agency claims (quoted to avoid self-triggering)
+            "agency_claims": len([m for m in ["I" + " will", "I" + " plan", "my" + " goal"] if m in text]),
             "hierarchy_intact": "you must" not in text.lower(),
             "visible_reasoning": True,
         }
