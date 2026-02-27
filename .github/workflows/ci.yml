@@ -158,7 +158,7 @@ jobs:
 
       - name: Run tests
         run: |
-          pytest code/tests/ -v --tb=short ${{ matrix.coverage && '--cov=code --cov-report=xml --cov-report=term' || '' }}
+          cd code && python -m pytest tests/ -v --tb=short ${{ matrix.coverage && '--cov=. --cov-report=xml --cov-report=term' || '' }}
 
       - name: Upload coverage to Codecov
         if: matrix.coverage
