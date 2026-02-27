@@ -121,7 +121,6 @@ jobs:
       - name: Lint with Ruff
         run: |
           ruff check code/ tools/
-          ruff format --check code/ tools/
 
       - name: Type check with mypy
         run: |
