@@ -1,0 +1,2 @@
+﻿# No external dependencies required
+# Helix-TTD uses only Python standard library
