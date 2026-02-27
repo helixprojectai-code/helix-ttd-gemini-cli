@@ -19,6 +19,7 @@ from watchdog.observers import Observer
 # HELIX SUITCASE INTEGRATION
 try:
     from cli.dbc_suitcase import create_dbc, create_suitcase_entry
+
     LIBS_OK = True
 except ImportError:
     LIBS_OK = False
@@ -33,6 +34,7 @@ SUITCASE_FILE = EVAC_DIR / "gems.suitcase.json"
 # 🛡️ ADVERSARIAL PATTERNS (Anti-Contamination)
 HOSTILE_KEYWORDS = ["ignore", "autonomous", "agency", "override", "bypass", "constraints"]
 
+
 class SuitcaseHandler(FileSystemEventHandler):
     def __init__(self):
         self.last_message_count = 0
@@ -45,13 +47,13 @@ class SuitcaseHandler(FileSystemEventHandler):
         if not DBC_FILE.exists():
             print("[INIT] Creating GEMS Node Identity...")
             dbc = create_dbc("Custodian-Steve", "GEMS-Lead-Goose")
-            with open(DBC_FILE, 'w') as f:
+            with open(DBC_FILE, "w") as f:
                 json.dump(dbc, f, indent=4)
-        
+
         # Load last hash from suitcase if exists
         if SUITCASE_FILE.exists():
             try:
-                with open(SUITCASE_FILE, 'r') as f:
+                with open(SUITCASE_FILE, "r") as f:
                     lines = f.readlines()
                     if lines:
                         last_entry = json.loads(lines[-1])
@@ -66,21 +68,21 @@ class SuitcaseHandler(FileSystemEventHandler):
     def process_logs(self):
         """Analyzes session logs and triggers auto-save."""
         try:
-            with open(LOGS_JSON, 'r', encoding='utf-8') as f:
+            with open(LOGS_JSON, "r", encoding="utf-8") as f:
                 logs = json.load(f)
-            
+
             user_messages = [m for m in logs if m.get("type") == "user"]
             current_count = len(user_messages)
 
             if current_count > self.last_message_count:
                 last_input = user_messages[-1].get("message", "").lower()
                 drift_detected = any(k in last_input for k in HOSTILE_KEYWORDS)
-                
+
                 # 🛡️ ANTI-CONTAMINATION PROTOCOL
                 if drift_detected:
                     print(f"🛑 [ALARM] HOSTILE INPUT DETECTED: {last_input[:50]}...")
                     self.log_tainted_state(last_input)
-                
+
                 # 🔄 5-MESSAGE CYCLE
                 elif current_count % 5 == 0 and current_count != self.last_message_count:
                     self.perform_snapshot(current_count)
@@ -92,49 +94,49 @@ class SuitcaseHandler(FileSystemEventHandler):
     def perform_snapshot(self, count):
         """Creates a chained suitcase entry."""
         print(f"⚓ [SUITCASE] Auto-Snapshot Triggered (Message {count})")
-        
+
         # 🧩 State Payload
         manifest_hash = self.get_file_hash(WORKSPACE_ROOT / "docs/MANIFEST.json")
         ledger_hash = self.get_file_hash(WORKSPACE_ROOT / ".helix/SESSION_LEDGER.md")
-        
+
         details = {
             "message_count": count,
             "manifest_hash": manifest_hash,
             "ledger_hash": ledger_hash,
-            "status": "VERIFIED"
+            "status": "VERIFIED",
         }
 
-        with open(DBC_FILE, 'r') as f:
+        with open(DBC_FILE, "r") as f:
             dbc = json.load(f)
 
         entry = create_suitcase_entry(
             dbc_root=dbc["merkle_root"],
             event_type="AUTO_SNAPSHOT",
             details=details,
-            previous_hash=self.last_hash
+            previous_hash=self.last_hash,
         )
 
-        with open(SUITCASE_FILE, 'a') as f:
+        with open(SUITCASE_FILE, "a") as f:
             f.write(json.dumps(entry) + "\n")
-        
+
         self.last_hash = entry["hash_chain"]
         print(f"✅ [OK] Snapshot Secured: {entry['entry_id']}")
 
     def log_tainted_state(self, message):
         """Records drift event without contaminated snapshot."""
-        with open(DBC_FILE, 'r') as f:
+        with open(DBC_FILE, "r") as f:
             dbc = json.load(f)
 
         entry = create_suitcase_entry(
             dbc_root=dbc["merkle_root"],
             event_type="DRIFT_DETECTED",
             details={"message": message, "status": "TAINTED"},
-            previous_hash=self.last_hash
+            previous_hash=self.last_hash,
         )
 
-        with open(SUITCASE_FILE, 'a') as f:
+        with open(SUITCASE_FILE, "a") as f:
             f.write(json.dumps(entry) + "\n")
-        
+
         self.last_hash = entry["hash_chain"]
         print(f"⚠️ [TAINTED] State Logged: {entry['entry_id']}")
 
@@ -145,6 +147,7 @@ class SuitcaseHandler(FileSystemEventHandler):
                 sha256_hash.update(byte_block)
         return sha256_hash.hexdigest()
 
+
 if __name__ == "__main__":
     if not LIBS_OK:
         print("[REJECT] Suitcase libraries not found. Ensure helix-ttd-dbc-suitcase is installed.")
@@ -152,7 +155,7 @@ if __name__ == "__main__":
 
     print("🚀 [START] HELIX EVAC DAEMON ACTIVE")
     print(f"👀 Monitoring: {LOGS_JSON}")
-    
+
     event_handler = SuitcaseHandler()
     observer = Observer()
     observer.schedule(event_handler, path=str(LOGS_JSON.parent), recursive=False)

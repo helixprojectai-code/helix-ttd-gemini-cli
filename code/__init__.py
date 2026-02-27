@@ -34,7 +34,7 @@ from rpi_tracker import RPIPhase, RPITracker
 
 __all__ = [
     "NamingConvention",
-    "HelixFilename", 
+    "HelixFilename",
     "DriftTelemetry",
     "DriftCode",
     "ConstitutionalCompliance",

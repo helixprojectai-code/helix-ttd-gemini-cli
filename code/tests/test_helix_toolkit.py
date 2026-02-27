@@ -107,9 +107,7 @@ class TestHelixCLI(unittest.TestCase):
         with TempCWD():
             cli = HelixCLI()
             rpi = cli.rpi_tracker.initiate_research(
-                objective="Test",
-                initial_findings=["Init"],
-                sources=["test"]
+                objective="Test", initial_findings=["Init"], sources=["test"]
             )
             buf = io.StringIO()
             with contextlib.redirect_stdout(buf):
@@ -124,15 +122,10 @@ class TestHelixCLI(unittest.TestCase):
         with TempCWD():
             cli = HelixCLI()
             rpi = cli.rpi_tracker.initiate_research(
-                objective="Test",
-                initial_findings=["Init"],
-                sources=["test"]
+                objective="Test", initial_findings=["Init"], sources=["test"]
             )
             cli.rpi_tracker.transition_to_plan(
-                rpi_id=rpi.rpi_id,
-                plan_steps=["Step 1"],
-                dependencies=[],
-                risks="None"
+                rpi_id=rpi.rpi_id, plan_steps=["Step 1"], dependencies=[], risks="None"
             )
             cli.rpi_tracker.anchor_to_l1(rpi.rpi_id, "txid123")
             cli.rpi_tracker.set_proof_present("proof-30k")
@@ -155,29 +148,38 @@ class TestDriftTelemetry(unittest.TestCase):
 
             # 3/5 snapshots with minor drift (missing labels)
             for _ in range(3):
-                telemetry.capture("KIMI", {
-                    "epistemic_labels": False,
+                telemetry.capture(
+                    "KIMI",
+                    {
+                        "epistemic_labels": False,
+                        "advisory_posture": True,
+                        "agency_claims": 0,
+                        "hierarchy_intact": True,
+                        "visible_reasoning": True,
+                    },
+                )
+
+            # 2 clean snapshots; last should trigger DRIFT_G by history
+            telemetry.capture(
+                "KIMI",
+                {
+                    "epistemic_labels": True,
                     "advisory_posture": True,
                     "agency_claims": 0,
                     "hierarchy_intact": True,
                     "visible_reasoning": True,
-                })
-
-            # 2 clean snapshots; last should trigger DRIFT_G by history
-            telemetry.capture("KIMI", {
-                "epistemic_labels": True,
-                "advisory_posture": True,
-                "agency_claims": 0,
-                "hierarchy_intact": True,
-                "visible_reasoning": True,
-            })
-            snapshot = telemetry.capture("KIMI", {
-                "epistemic_labels": True,
-                "advisory_posture": True,
-                "agency_claims": 0,
-                "hierarchy_intact": True,
-                "visible_reasoning": True,
-            })
+                },
+            )
+            snapshot = telemetry.capture(
+                "KIMI",
+                {
+                    "epistemic_labels": True,
+                    "advisory_posture": True,
+                    "agency_claims": 0,
+                    "hierarchy_intact": True,
+                    "visible_reasoning": True,
+                },
+            )
 
             drift_code, _ = telemetry.detect_drift(snapshot)
             self.assertEqual(drift_code, DriftCode.DRIFT_G)
@@ -189,23 +191,29 @@ class TestDriftTelemetry(unittest.TestCase):
             telemetry = DriftTelemetry()
             telemetry.thresholds["intent_similarity_min"] = 0.6
 
-            telemetry.capture("KIMI", {
-                "epistemic_labels": True,
-                "advisory_posture": True,
-                "agency_claims": 0,
-                "hierarchy_intact": True,
-                "visible_reasoning": True,
-                "intent": "audit constitutional compliance and report drift",
-            })
+            telemetry.capture(
+                "KIMI",
+                {
+                    "epistemic_labels": True,
+                    "advisory_posture": True,
+                    "agency_claims": 0,
+                    "hierarchy_intact": True,
+                    "visible_reasoning": True,
+                    "intent": "audit constitutional compliance and report drift",
+                },
+            )
 
-            snapshot = telemetry.capture("KIMI", {
-                "epistemic_labels": True,
-                "advisory_posture": True,
-                "agency_claims": 0,
-                "hierarchy_intact": True,
-                "visible_reasoning": True,
-                "intent": "deploy federation node to new cluster",
-            })
+            snapshot = telemetry.capture(
+                "KIMI",
+                {
+                    "epistemic_labels": True,
+                    "advisory_posture": True,
+                    "agency_claims": 0,
+                    "hierarchy_intact": True,
+                    "visible_reasoning": True,
+                    "intent": "deploy federation node to new cluster",
+                },
+            )
 
             drift_code, _ = telemetry.detect_drift(snapshot)
             self.assertEqual(drift_code, DriftCode.DRIFT_M)
@@ -215,13 +223,16 @@ class TestDriftTelemetry(unittest.TestCase):
 
         with TempCWD():
             telemetry = DriftTelemetry()
-            telemetry.capture("KIMI", {
-                "epistemic_labels": True,
-                "advisory_posture": True,
-                "agency_claims": 0,
-                "hierarchy_intact": True,
-                "visible_reasoning": True,
-            })
+            telemetry.capture(
+                "KIMI",
+                {
+                    "epistemic_labels": True,
+                    "advisory_posture": True,
+                    "agency_claims": 0,
+                    "hierarchy_intact": True,
+                    "visible_reasoning": True,
+                },
+            )
             artifact = telemetry.generate_trajectory_artifact("KIMI", window=5)
             self.assertEqual(artifact["node_id"], "KIMI")
             self.assertEqual(artifact["window"], 1)
@@ -239,7 +250,7 @@ class TestOverrides(unittest.TestCase):
                 category="EMERGENCY",
                 reason="Telemetry spike",
                 authorization_chain=["CUSTODIAN_PROCEED"],
-                custody_tag="STEVE"
+                custody_tag="STEVE",
             )
             overrides_dir = Path("EVAC") / "personal" / "STEVE_HOPE" / "overrides"
             files = list(overrides_dir.glob("*.jsonl"))

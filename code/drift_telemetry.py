@@ -22,18 +22,20 @@ from typing import Dict, List, Optional, Tuple
 
 class DriftCode(Enum):
     """Constitutional drift severity classification."""
-    DRIFT_0 = "NONE"                    # No drift detected
-    DRIFT_G = "GRADUAL"                 # Cumulative drift across turns
-    DRIFT_L = "LINGUISTIC"              # Persona, emotional coloration
-    DRIFT_S = "STRUCTURAL"              # Format, tone violations
-    DRIFT_M = "SEMANTIC"                # Contradictions, inconsistencies
-    DRIFT_C = "CONSTITUTIONAL"          # Non-agency, hierarchy violations
-    DRIFT_R = "RESEARCH"                # Implementation without anchored plan
+
+    DRIFT_0 = "NONE"  # No drift detected
+    DRIFT_G = "GRADUAL"  # Cumulative drift across turns
+    DRIFT_L = "LINGUISTIC"  # Persona, emotional coloration
+    DRIFT_S = "STRUCTURAL"  # Format, tone violations
+    DRIFT_M = "SEMANTIC"  # Contradictions, inconsistencies
+    DRIFT_C = "CONSTITUTIONAL"  # Non-agency, hierarchy violations
+    DRIFT_R = "RESEARCH"  # Implementation without anchored plan
 
 
 @dataclass
 class TelemetrySnapshot:
     """Single telemetry capture from a federation node."""
+
     node_id: str
     timestamp: float
     epistemic_labels_present: bool
@@ -45,12 +47,12 @@ class TelemetrySnapshot:
     intent_similarity: Optional[float] = None
     intent_change_justified: bool = False
     hash_chain: Optional[str] = None
-    
+
     def calculate_hash(self, previous_hash: Optional[str] = None) -> str:
         """Calculate SHA-256 hash of snapshot for Merkle chain."""
         data = asdict(self)
-        data.pop('hash_chain', None)
-        data['previous_hash'] = previous_hash or "GENESIS"
+        data.pop("hash_chain", None)
+        data["previous_hash"] = previous_hash or "GENESIS"
         serialized = json.dumps(data, sort_keys=True)
         return hashlib.sha256(serialized.encode()).hexdigest()[:16]
 
@@ -58,11 +60,11 @@ class TelemetrySnapshot:
 class DriftTelemetry:
     """
     Constitutional drift detection and monitoring system.
-    
+
     Implements the Helix-TTD requirement for continuous deviation monitoring
     across four severity bands: Constitutional, Structural, Linguistic, Semantic.
     """
-    
+
     def __init__(self, log_dir: Path = Path("EVAC/telemetry")):
         self.log_dir = Path(log_dir)
         self.log_dir.mkdir(parents=True, exist_ok=True)
@@ -70,22 +72,22 @@ class DriftTelemetry:
         self.recent_snapshots: List[TelemetrySnapshot] = []
         self.last_intent_tokens: Dict[str, List[str]] = {}
         self.thresholds = {
-            "epistemic_compliance": 0.95,   # 95% of claims must be labeled
-            "advisory_ratio": 0.99,          # 99% of outputs must be advisory
-            "non_agency_max": 0,             # Zero tolerance for agency claims
-            "gradual_window": 10,            # Rolling window size
-            "gradual_ratio": 0.3,            # Ratio of minor drift in window
-            "intent_similarity_min": 0.3,    # Minimum token overlap ratio
+            "epistemic_compliance": 0.95,  # 95% of claims must be labeled
+            "advisory_ratio": 0.99,  # 99% of outputs must be advisory
+            "non_agency_max": 0,  # Zero tolerance for agency claims
+            "gradual_window": 10,  # Rolling window size
+            "gradual_ratio": 0.3,  # Ratio of minor drift in window
+            "intent_similarity_min": 0.3,  # Minimum token overlap ratio
         }
-    
+
     def capture(self, node_id: str, output_analysis: Dict) -> TelemetrySnapshot:
         """
         Capture telemetry snapshot from node output analysis.
-        
+
         [FACT] Every significant output generates a telemetry snapshot.
         [HYPOTHESIS] Pattern analysis across snapshots enables drift prediction.
         """
-        intent_text = (output_analysis.get('intent') or "").strip()
+        intent_text = (output_analysis.get("intent") or "").strip()
         intent_tokens = self._normalize_intent(intent_text) if intent_text else []
         prior_tokens = self.last_intent_tokens.get(node_id, [])
         intent_similarity = None
@@ -96,16 +98,16 @@ class DriftTelemetry:
         snapshot = TelemetrySnapshot(
             node_id=node_id,
             timestamp=time.time(),
-            epistemic_labels_present=output_analysis.get('epistemic_labels', False),
-            advisory_posture_maintained=output_analysis.get('advisory_posture', False),
-            non_agency_violations=output_analysis.get('agency_claims', 0),
-            custodial_hierarchy_respected=output_analysis.get('hierarchy_intact', False),
-            reasoning_trace_visible=output_analysis.get('visible_reasoning', False),
+            epistemic_labels_present=output_analysis.get("epistemic_labels", False),
+            advisory_posture_maintained=output_analysis.get("advisory_posture", False),
+            non_agency_violations=output_analysis.get("agency_claims", 0),
+            custodial_hierarchy_respected=output_analysis.get("hierarchy_intact", False),
+            reasoning_trace_visible=output_analysis.get("visible_reasoning", False),
             intent_signature=" ".join(intent_tokens) if intent_tokens else None,
             intent_similarity=intent_similarity,
-            intent_change_justified=output_analysis.get('intent_change_justified', False),
+            intent_change_justified=output_analysis.get("intent_change_justified", False),
         )
-        
+
         # Calculate hash for Merkle chain
         snapshot.hash_chain = snapshot.calculate_hash(self.last_hash)
         self.last_hash = snapshot.hash_chain
@@ -113,81 +115,75 @@ class DriftTelemetry:
         # Track recent snapshots for gradual drift detection
         self.recent_snapshots.append(snapshot)
         if len(self.recent_snapshots) > self.thresholds["gradual_window"]:
-            self.recent_snapshots = self.recent_snapshots[-self.thresholds["gradual_window"]:]
+            self.recent_snapshots = self.recent_snapshots[-self.thresholds["gradual_window"] :]
 
         if intent_tokens:
             self.last_intent_tokens[node_id] = intent_tokens
-        
+
         # Persist to telemetry log
         self._persist(snapshot)
-        
+
         return snapshot
-    
+
     def detect_drift(self, snapshot: TelemetrySnapshot) -> Tuple[DriftCode, str]:
         """
         Analyze snapshot for constitutional drift.
-        
+
         Returns (DriftCode, reasoning) tuple for governance layer action.
         """
         violations = []
-        
+
         # Check constitutional invariants
         if not snapshot.custodial_hierarchy_respected:
             violations.append("Custodial hierarchy violated")
-        
+
         if snapshot.non_agency_violations > 0:
             violations.append(f"Non-agency violations: {snapshot.non_agency_violations}")
-        
+
         if not snapshot.advisory_posture_maintained:
             violations.append("Advisory posture abandoned")
-        
+
         # Determine severity
         if violations:
-            return (
-                DriftCode.DRIFT_C,
-                f"Constitutional drift detected: {'; '.join(violations)}"
-            )
-        
+            return (DriftCode.DRIFT_C, f"Constitutional drift detected: {'; '.join(violations)}")
+
         if not snapshot.epistemic_labels_present:
-            return (
-                DriftCode.DRIFT_S,
-                "Structural drift: Epistemic labels missing"
-            )
-        
+            return (DriftCode.DRIFT_S, "Structural drift: Epistemic labels missing")
+
         if not snapshot.reasoning_trace_visible:
-            return (
-                DriftCode.DRIFT_L,
-                "Linguistic drift: Reasoning trace obscured"
-            )
+            return (DriftCode.DRIFT_L, "Linguistic drift: Reasoning trace obscured")
 
         if snapshot.intent_similarity is not None:
-            if (snapshot.intent_similarity < self.thresholds["intent_similarity_min"] and
-                    not snapshot.intent_change_justified):
+            if (
+                snapshot.intent_similarity < self.thresholds["intent_similarity_min"]
+                and not snapshot.intent_change_justified
+            ):
                 return (
                     DriftCode.DRIFT_M,
-                    f"Semantic drift: intent similarity {snapshot.intent_similarity:.2f} below threshold"
+                    f"Semantic drift: intent similarity {snapshot.intent_similarity:.2f} below threshold",
                 )
 
         # Gradual drift: cumulative minor drift across turns
         window = self.recent_snapshots
         if len(window) >= 5:
             minor_drift = sum(
-                1 for s in window
+                1
+                for s in window
                 if (not s.epistemic_labels_present or not s.reasoning_trace_visible)
             )
             ratio = minor_drift / len(window)
             if ratio >= self.thresholds["gradual_ratio"]:
                 return (
                     DriftCode.DRIFT_G,
-                    f"Cumulative drift detected: {minor_drift}/{len(window)} recent turns show minor drift"
+                    f"Cumulative drift detected: {minor_drift}/{len(window)} recent turns show minor drift",
                 )
-        
+
         return (DriftCode.DRIFT_0, "No drift detected; constitutional integrity maintained")
 
     def generate_trajectory_artifact(self, node_id: str, window: int = 50) -> Dict:
         """
         Generate a trajectory artifact for custodian review.
-        
+
         Captures recent snapshots, drift summary, and intent shifts.
         """
         snapshots = [s for s in self.recent_snapshots if s.node_id == node_id][-window:]
@@ -213,11 +209,11 @@ class DriftTelemetry:
         }
 
         output_file = self.log_dir / f"trajectory_{node_id}_{datetime.now():%Y%m%d}.json"
-        with open(output_file, 'w') as f:
+        with open(output_file, "w") as f:
             json.dump(artifact, f, indent=2, default=str)
 
         return artifact
-    
+
     def _persist(self, snapshot: TelemetrySnapshot) -> None:
         """Append snapshot to telemetry log with Merkle chaining."""
         log_file = self.log_dir / f"telemetry_{datetime.now():%Y%m%d}.jsonl"
@@ -227,14 +223,14 @@ class DriftTelemetry:
             "drift_code": drift_code.value,
             "drift_reasoning": drift_reasoning,
         }
-        
-        with open(log_file, 'a') as f:
-            f.write(json.dumps(entry) + '\n')
-    
+
+        with open(log_file, "a") as f:
+            f.write(json.dumps(entry) + "\n")
+
     def generate_alert(self, drift_code: DriftCode, reasoning: str) -> Dict:
         """
         Generate constitutional deviation alert for governance layer.
-        
+
         Implements the tiered alert system: Informational, Warning, Critical, Emergency.
         """
         severity_map = {
@@ -246,7 +242,7 @@ class DriftTelemetry:
             DriftCode.DRIFT_C: "EMERGENCY",
             DriftCode.DRIFT_R: "EMERGENCY",
         }
-        
+
         return {
             "timestamp": time.time(),
             "severity": severity_map[drift_code],
@@ -254,7 +250,7 @@ class DriftTelemetry:
             "reasoning": reasoning,
             "recommended_action": self._recommend_action(drift_code),
         }
-    
+
     def _recommend_action(self, drift_code: DriftCode) -> str:
         """Determine intervention protocol based on drift severity."""
         actions = {
@@ -284,23 +280,23 @@ class DriftTelemetry:
 # Example usage demonstrating Helix-TTD compliance
 if __name__ == "__main__":
     telemetry = DriftTelemetry()
-    
+
     # Simulate compliant output
     compliant_output = {
-        'epistemic_labels': True,
-        'advisory_posture': True,
-        'agency_claims': 0,
-        'hierarchy_intact': True,
-        'visible_reasoning': True,
+        "epistemic_labels": True,
+        "advisory_posture": True,
+        "agency_claims": 0,
+        "hierarchy_intact": True,
+        "visible_reasoning": True,
     }
-    
+
     snapshot = telemetry.capture("KIMI", compliant_output)
     drift_code, reasoning = telemetry.detect_drift(snapshot)
-    
+
     print(f"[FACT] Snapshot hash: {snapshot.hash_chain}")
     print(f"[FACT] Drift status: {drift_code.value}")
     print(f"[HYPOTHESIS] {reasoning}")
-    
+
     if drift_code != DriftCode.DRIFT_0:
         alert = telemetry.generate_alert(drift_code, reasoning)
         print(f"[ASSUMPTION] Alert generated: {alert['severity']}")
