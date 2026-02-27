@@ -26,6 +26,8 @@ on:
 env:
   FORCE_COLOR: 1
   PYTHONUNBUFFERED: 1
+  # Force LF line endings for consistent cross-platform behavior
+  GIT_CONFIG_GLOBAL: "core.autocrlf=false"
 
 jobs:
   # ============================================================
@@ -94,6 +96,17 @@ jobs:
       - name: Install linting tools
         run: |
           pip install ruff black mypy isort
+
+      - name: Verify LF line endings
+        run: |
+          echo "=== VERIFYING LINE ENDINGS ==="
+          # Check for CRLF in Python files
+          if grep -rI $'\r' code/ tools/ 2>/dev/null; then
+            echo "❌ ERROR: CRLF line endings detected"
+            exit 1
+          else
+            echo "✅ All files have LF line endings"
+          fi
 
       - name: Check imports (isort)
         run: |
