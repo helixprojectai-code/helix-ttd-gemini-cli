@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""federation_cli.py
+"""federation_cli.py.
 
 Helix-TTD Federation Terminal (Rick's Café CLI)
 Unified multi-model interface with constitutional governance.

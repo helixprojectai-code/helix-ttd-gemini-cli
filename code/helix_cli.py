@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""helix_cli.py
+"""helix_cli.py.
 
 Helix-TTD Constitutional CLI
 Unified command-line interface for federation governance.
