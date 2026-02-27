@@ -9,7 +9,7 @@ if prompt == "ping":
     print("pong")
 else:
     print(f"[FACT] CLAUDE received: {prompt[:50]}...")
-    print(f"[HYPOTHESIS] As Oyster/Resonance, I compress this to irreducible form.")
-    print(f"[ASSUMPTION] The pearl is forming.")
+    print("[HYPOTHESIS] As Oyster/Resonance, I compress this to irreducible form.")
+    print("[ASSUMPTION] The pearl is forming.")
     print()
     print("Advisory Conclusion: CLAUDE processing complete.")

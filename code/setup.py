@@ -1,14 +1,13 @@
 #!/usr/bin/env python3
-"""
-Helix-TTD Python Toolkit
+"""Helix-TTD Python Toolkit
 Constitutional AI governance utilities
 
 License: Apache-2.0
 """
 
-from setuptools import find_packages, setup
+from setuptools import setup
 
-with open("README.md", "r", encoding="utf-8") as fh:
+with open("README.md", encoding="utf-8") as fh:
     long_description = fh.read()
 
 setup(

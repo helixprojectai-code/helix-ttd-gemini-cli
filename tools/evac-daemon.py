@@ -9,7 +9,6 @@
 
 import hashlib
 import json
-import os
 import time
 from pathlib import Path
 
@@ -53,12 +52,12 @@ class SuitcaseHandler(FileSystemEventHandler):
         # Load last hash from suitcase if exists
         if SUITCASE_FILE.exists():
             try:
-                with open(SUITCASE_FILE, "r") as f:
+                with open(SUITCASE_FILE) as f:
                     lines = f.readlines()
                     if lines:
                         last_entry = json.loads(lines[-1])
                         self.last_hash = last_entry.get("hash_chain")
-            except:
+            except Exception:
                 pass
 
     def on_modified(self, event):
@@ -68,7 +67,7 @@ class SuitcaseHandler(FileSystemEventHandler):
     def process_logs(self):
         """Analyzes session logs and triggers auto-save."""
         try:
-            with open(LOGS_JSON, "r", encoding="utf-8") as f:
+            with open(LOGS_JSON, encoding="utf-8") as f:
                 logs = json.load(f)
 
             user_messages = [m for m in logs if m.get("type") == "user"]
@@ -106,7 +105,7 @@ class SuitcaseHandler(FileSystemEventHandler):
             "status": "VERIFIED",
         }
 
-        with open(DBC_FILE, "r") as f:
+        with open(DBC_FILE) as f:
             dbc = json.load(f)
 
         entry = create_suitcase_entry(
@@ -124,7 +123,7 @@ class SuitcaseHandler(FileSystemEventHandler):
 
     def log_tainted_state(self, message):
         """Records drift event without contaminated snapshot."""
-        with open(DBC_FILE, "r") as f:
+        with open(DBC_FILE) as f:
             dbc = json.load(f)
 
         entry = create_suitcase_entry(

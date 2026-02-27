@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
-"""
-rpi_tracker.py
+"""rpi_tracker.py
 
 Helix-TTD RPI (Research/Plan/Implementation) Cycle Tracker
 Ensures all structural modifications follow constitutional research requirements.
@@ -17,7 +16,6 @@ from dataclasses import asdict, dataclass
 from datetime import datetime
 from enum import Enum
 from pathlib import Path
-from typing import Dict, List, Optional
 
 
 class RPIPhase(Enum):
@@ -31,8 +29,7 @@ class RPIPhase(Enum):
 
 @dataclass
 class RPIEntry:
-    """
-    Research/Plan/Implementation cycle entry.
+    """Research/Plan/Implementation cycle entry.
 
     [FACT] All structural modifications must follow RPI cycle.
     [FACT] Document hash must be anchored to Bitcoin L1 before implementation.
@@ -43,28 +40,27 @@ class RPIEntry:
     objective: str
 
     # Research Phase
-    research_findings: List[str]
-    source_documents: List[str]
+    research_findings: list[str]
+    source_documents: list[str]
 
     # Plan Phase
-    plan_steps: List[str]
-    dependencies: List[str]
+    plan_steps: list[str]
+    dependencies: list[str]
     risk_assessment: str
 
     # Implementation Phase
     implementation_status: str
-    output_files: List[str]
+    output_files: list[str]
 
     # Anchoring
-    l1_anchor: Optional[str] = None  # Bitcoin TXID
-    l2_commit: Optional[str] = None  # Git commit hash
+    l1_anchor: str | None = None  # Bitcoin TXID
+    l2_commit: str | None = None  # Git commit hash
 
     status: RPIPhase = RPIPhase.RESEARCH
 
 
 class RPITracker:
-    """
-    Constitutional research layer enforcement.
+    """Constitutional research layer enforcement.
 
     Layer 0 of Civic Firmware Stack: All structural modifications to
     Habitat logic or Engine Room must be preceded by RPI Research/Plan cycle.
@@ -72,10 +68,10 @@ class RPITracker:
 
     def __init__(self, ledger_path: Path = Path(".helix/SESSION_LEDGER.md")):
         self.ledger_path = Path(ledger_path)
-        self.entries: List[RPIEntry] = []
+        self.entries: list[RPIEntry] = []
         self._load_existing()
         self.proof_present: bool = False
-        self.proof_reference: Optional[str] = None
+        self.proof_reference: str | None = None
         self.proof_required: bool = True
 
     def set_proof_present(self, proof_reference: str) -> None:
@@ -89,15 +85,14 @@ class RPITracker:
             return
 
         # Parse existing markdown ledger for RPI entries
-        content = self.ledger_path.read_text()
+        _content = self.ledger_path.read_text()  # noqa: F841
         # Simple parsing - in production would use proper markdown parser
         # This is a demonstration of structure
 
     def initiate_research(
-        self, objective: str, initial_findings: List[str], sources: List[str]
+        self, objective: str, initial_findings: list[str], sources: list[str]
     ) -> RPIEntry:
-        """
-        Begin RPI cycle with Research phase.
+        """Begin RPI cycle with Research phase.
 
         [FACT] Research must precede Plan. Plan must precede Implementation.
         [HYPOTHESIS] Premature implementation causes constitutional drift.
@@ -124,10 +119,9 @@ class RPITracker:
         return entry
 
     def transition_to_plan(
-        self, rpi_id: str, plan_steps: List[str], dependencies: List[str], risks: str
-    ) -> Optional[RPIEntry]:
-        """
-        Transition from Research to Plan phase.
+        self, rpi_id: str, plan_steps: list[str], dependencies: list[str], risks: str
+    ) -> RPIEntry | None:
+        """Transition from Research to Plan phase.
 
         [FACT] Plan requires explicit steps, dependencies, and risk assessment.
         """
@@ -146,9 +140,8 @@ class RPITracker:
         self._update_ledger()
         return entry
 
-    def anchor_to_l1(self, rpi_id: str, bitcoin_txid: str) -> Optional[RPIEntry]:
-        """
-        Anchor RPI plan to Bitcoin Layer 1.
+    def anchor_to_l1(self, rpi_id: str, bitcoin_txid: str) -> RPIEntry | None:
+        """Anchor RPI plan to Bitcoin Layer 1.
 
         [FACT] Plan hash must be anchored before implementation.
         [HYPOTHESIS] Bitcoin anchoring prevents retroactive plan modification.
@@ -165,9 +158,8 @@ class RPITracker:
         self._update_ledger()
         return entry
 
-    def transition_to_implementation(self, rpi_id: str, l2_commit_hash: str) -> Optional[RPIEntry]:
-        """
-        Begin Implementation phase.
+    def transition_to_implementation(self, rpi_id: str, l2_commit_hash: str) -> RPIEntry | None:
+        """Begin Implementation phase.
 
         [FACT] Implementation requires L1 anchor and L2 commit.
         [ASSUMPTION] Double-Merkle topology ensures traceability.
@@ -192,7 +184,7 @@ class RPITracker:
         self._update_ledger()
         return entry
 
-    def complete_implementation(self, rpi_id: str, output_files: List[str]) -> Optional[RPIEntry]:
+    def complete_implementation(self, rpi_id: str, output_files: list[str]) -> RPIEntry | None:
         """Mark RPI cycle as complete."""
         entry = self._find_entry(rpi_id)
         if not entry:
@@ -208,7 +200,7 @@ class RPITracker:
         self._update_ledger()
         return entry
 
-    def _find_entry(self, rpi_id: str) -> Optional[RPIEntry]:
+    def _find_entry(self, rpi_id: str) -> RPIEntry | None:
         """Find RPI entry by ID."""
         for entry in self.entries:
             if entry.rpi_id == rpi_id:
@@ -241,13 +233,12 @@ class RPITracker:
         with open(tracking_file, "w") as f:
             json.dump(data, f, indent=2, default=str)
 
-    def get_active_cycles(self) -> List[RPIEntry]:
+    def get_active_cycles(self) -> list[RPIEntry]:
         """Get all non-completed RPI cycles."""
         return [e for e in self.entries if e.status != RPIPhase.COMPLETE]
 
-    def validate_no_dr(self, rpi_id: str) -> Dict:
-        """
-        Validate RPI-001 compliance (Research Violation check).
+    def validate_no_dr(self, rpi_id: str) -> dict:
+        """Validate RPI-001 compliance (Research Violation check).
 
         [FACT] DRIFT-R indicates attempted implementation without anchored plan.
         """
@@ -264,7 +255,7 @@ class RPITracker:
             return {
                 "drift_code": "DRIFT-R",
                 "violation": "Implementation without L1 anchor",
-                "remediation": f"Halt implementation. Anchor plan hash to Bitcoin before proceeding.",
+                "remediation": "Halt implementation. Anchor plan hash to Bitcoin before proceeding.",
             }
 
         return {"drift_code": "DRIFT-0", "violation": None, "remediation": None}
@@ -300,7 +291,7 @@ if __name__ == "__main__":
         risks="None identified - routine integration",
     )
 
-    print(f"[HYPOTHESIS] Plan phase complete")
+    print("[HYPOTHESIS] Plan phase complete")
 
     # Check for DRIFT-R
     validation = tracker.validate_no_dr(rpi.rpi_id)

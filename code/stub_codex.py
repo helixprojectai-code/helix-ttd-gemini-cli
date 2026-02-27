@@ -9,7 +9,7 @@ if prompt == "ping":
     print("pong")
 else:
     print(f"[FACT] CODEX received: {prompt[:50]}...")
-    print(f"[HYPOTHESIS] As Logic-Architect, I verify edge cases.")
-    print(f"[ASSUMPTION] Formal proof achievable.")
+    print("[HYPOTHESIS] As Logic-Architect, I verify edge cases.")
+    print("[ASSUMPTION] Formal proof achievable.")
     print()
     print("Advisory Conclusion: CODEX verification complete.")

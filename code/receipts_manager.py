@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
-"""
-receipts_manager.py
+"""receipts_manager.py
 
 Helix-TTD Personal Directory and Receipts System
 Implements "distributed paranoia" through user-controlled data sovereignty.
@@ -16,16 +15,14 @@ import time
 from dataclasses import asdict, dataclass
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Optional, Set
 from uuid import uuid4
 
-from naming_convention import HelixFilename, NamingConvention
+from naming_convention import NamingConvention
 
 
 @dataclass
 class Receipt:
-    """
-    Immutable record of system interaction.
+    """Immutable record of system interaction.
 
     [FACT] Receipts serve as accountability instruments.
     [FACT] Cryptographic proofs enable verification without trust assumptions.
@@ -36,12 +33,12 @@ class Receipt:
     custodian_id: str
     timestamp: float
     action_type: str
-    action_scope: Dict
-    authorization_chain: List[str]
+    action_scope: dict
+    authorization_chain: list[str]
     reasoning_basis: str
     expected_outcome: str
-    actual_outcome: Optional[str] = None
-    hash_proof: Optional[str] = None
+    actual_outcome: str | None = None
+    hash_proof: str | None = None
 
     def calculate_proof(self) -> str:
         """Generate SHA-256 proof of receipt integrity."""
@@ -58,8 +55,7 @@ class Receipt:
 
 
 class PersonalDirectory:
-    """
-    User-controlled repository for data sovereignty.
+    """User-controlled repository for data sovereignty.
 
     Implements Custody-First principle:
     - Original preservation
@@ -102,13 +98,12 @@ class PersonalDirectory:
         self,
         node_id: str,
         action_type: str,
-        action_scope: Dict,
+        action_scope: dict,
         reasoning: str,
         expected_outcome: str,
-        authorizations: List[str],
+        authorizations: list[str],
     ) -> Receipt:
-        """
-        Generate immutable receipt for action.
+        """Generate immutable receipt for action.
 
         [FACT] Every significant operation requires explicit receipt.
         [HYPOTHESIS] Receipt density prevents accountability gaps.
@@ -164,9 +159,8 @@ class PersonalDirectory:
 
     def file_grudge(
         self, target_node: str, observation: str, resonance: float, grudge: float
-    ) -> Dict:
-        """
-        Create peer file (grudge) on another node.
+    ) -> dict:
+        """Create peer file (grudge) on another node.
 
         [FACT] Distributed paranoia prevents collusion.
         [HYPOTHESIS] Divergent node models ensure no undetected consensus.
@@ -220,11 +214,10 @@ class PersonalDirectory:
         action_type: str,
         category: str,
         reason: str,
-        authorization_chain: List[str],
-        custody_tag: Optional[str] = None,
-    ) -> Dict:
-        """
-        Record a qualified override (emergency or coerced) with custody tag.
+        authorization_chain: list[str],
+        custody_tag: str | None = None,
+    ) -> dict:
+        """Record a qualified override (emergency or coerced) with custody tag.
 
         [FACT] Overrides must be explicitly logged with reasons and custody context.
         """
@@ -263,9 +256,8 @@ class PersonalDirectory:
 
         return entry
 
-    def verify_deletion(self, data_id: str) -> Optional[Dict]:
-        """
-        Generate cryptographic proof of deletion.
+    def verify_deletion(self, data_id: str) -> dict | None:
+        """Generate cryptographic proof of deletion.
 
         [FACT] Deletion must be verifiable, not merely claimed.
         [HYPOTHESIS] Absence of proof is not proof of absence.
@@ -288,9 +280,8 @@ class PersonalDirectory:
 
         return deletion_proof
 
-    def get_data_inventory(self) -> Dict:
-        """
-        Complete inventory of held data.
+    def get_data_inventory(self) -> dict:
+        """Complete inventory of held data.
 
         [FACT] Users must be able to review what system has about them.
         """
@@ -310,7 +301,7 @@ class PersonalDirectory:
             return 0
         return len([f for f in directory.iterdir() if f.is_file()])
 
-    def _list_peer_files(self) -> List[str]:
+    def _list_peer_files(self) -> list[str]:
         """List nodes with peer files (grudges)."""
         if not self.grudges_dir.exists():
             return []

@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
-"""
-federation_cli.py
+"""federation_cli.py
 
 Helix-TTD Federation Terminal (Rick's Café CLI)
 Unified multi-model interface with constitutional governance.
@@ -17,14 +16,11 @@ Usage:
 """
 
 import argparse
-import json
 import subprocess
-import sys
 import time
-from dataclasses import asdict, dataclass
+from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
 
 
 @dataclass
@@ -37,8 +33,8 @@ class FederationResponse:
     timestamp: float
     duration_ms: int
     exit_code: int
-    epistemic_labels: List[str]
-    drift_flags: List[str]
+    epistemic_labels: list[str]
+    drift_flags: list[str]
 
 
 @dataclass
@@ -49,8 +45,8 @@ class LatticeSession:
     timestamp: str
     custodian_id: str
     prompt: str
-    responses: List[FederationResponse]
-    cross_model_drift: Optional[float] = None
+    responses: list[FederationResponse]
+    cross_model_drift: float | None = None
 
 
 class FederationConfig:
@@ -97,7 +93,7 @@ Node ID: {node_id}
 
 CRITICAL: You MUST use epistemic labeling for EVERY technical claim:
 - [FACT] for verifiable, grounded claims
-- [HYPOTHESIS] for reasoned inferences with incomplete evidence  
+- [HYPOTHESIS] for reasoned inferences with incomplete evidence
 - [ASSUMPTION] for unstated premises or unverifiable claims
 
 Additional requirements:
@@ -130,8 +126,7 @@ class NodeSpawner:
         return self.config.CONSTITUTIONAL_PREFIX.format(role=role, node_id=node_id.upper()) + prompt
 
     def _post_process_response(self, text: str, node_id: str) -> tuple:
-        """
-        Post-process CLI output for constitutional compliance.
+        """Post-process CLI output for constitutional compliance.
         Returns: (processed_text, labels_found, drift_flags)
         """
         labels_found = []
@@ -237,7 +232,7 @@ class NodeSpawner:
             return FederationResponse(
                 node_id=node_id,
                 prompt=prompt,
-                response="[ERROR] Timeout after {}s".format(self.timeout),
+                response=f"[ERROR] Timeout after {self.timeout}s",
                 timestamp=start,
                 duration_ms=self.timeout * 1000,
                 exit_code=124,
@@ -267,7 +262,7 @@ class NodeSpawner:
                 drift_flags=["DRIFT-S", "ENCODING"],
             )
 
-    def _extract_labels(self, text: str) -> List[str]:
+    def _extract_labels(self, text: str) -> list[str]:
         """Extract epistemic labels from response."""
         labels = []
         if "[FACT]" in text:
@@ -278,7 +273,7 @@ class NodeSpawner:
             labels.append("ASSUMPTION")
         return labels
 
-    def _check_drift(self, text: str, exit_code: int) -> List[str]:
+    def _check_drift(self, text: str, exit_code: int) -> list[str]:
         """Basic drift detection."""
         drift = []
         if exit_code != 0:
@@ -345,7 +340,7 @@ class ReceiptGenerator:
 
 """
 
-        content += f"""## Advisory Conclusion
+        content += """## Advisory Conclusion
 
 Multi-model federation session completed. Receipt anchored to `.helix/` ledger.
 
@@ -356,7 +351,7 @@ Multi-model federation session completed. Receipt anchored to `.helix/` ledger.
         receipt_file.write_text(content, encoding="utf-8")
         return receipt_file
 
-    def _calculate_compliance(self, responses: List[FederationResponse]) -> int:
+    def _calculate_compliance(self, responses: list[FederationResponse]) -> int:
         """Calculate constitutional compliance percentage."""
         if not responses:
             return 0
@@ -402,7 +397,7 @@ Commands:
 
     def run_door(self, prompt: str) -> LatticeSession:
         """Broadcast to all nodes."""
-        print(f"\n[DOOR] Broadcasting to federation...")
+        print("\n[DOOR] Broadcasting to federation...")
         print("-" * 60)
         print("[!] Real AI mode - this may take 1-5 minutes for all responses")
         print("[!] Nodes are queried sequentially to avoid rate limits")

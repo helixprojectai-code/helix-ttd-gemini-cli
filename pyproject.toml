@@ -62,7 +62,13 @@ select = [
 ignore = [
     "D100",  # Missing docstring in public module
     "D104",  # Missing docstring in public package
+    "D107",  # Missing docstring in __init__
+    "D415",  # First line should end with punctuation
     "E501",  # Line too long (handled by formatter)
+    "SIM102", # Nested if statements
+    "SIM108", # Ternary operator
+    "SIM110", # Use all() instead of for loop
+    "SIM118", # Use key in dict instead of dict.keys()
 ]
 
 [tool.ruff.pydocstyle]

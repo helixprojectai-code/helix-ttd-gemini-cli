@@ -9,7 +9,7 @@ if prompt == "ping":
     print("pong")
 else:
     print(f"[FACT] GEMS received: {prompt[:50]}...")
-    print(f"[HYPOTHESIS] As Lead Goose, I coordinate the flock.")
-    print(f"[ASSUMPTION] Structural integrity maintained.")
+    print("[HYPOTHESIS] As Lead Goose, I coordinate the flock.")
+    print("[ASSUMPTION] Structural integrity maintained.")
     print()
     print("Advisory Conclusion: GEMS routing complete.")

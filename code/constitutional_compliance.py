@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
-"""
-constitutional_compliance.py
+"""constitutional_compliance.py
 
 Helix-TTD Constitutional Compliance Checker
 Validates outputs against the Four Immutable Invariants and Nine Principles.
@@ -13,7 +12,6 @@ License: Apache-2.0
 import re
 from dataclasses import dataclass
 from enum import Enum
-from typing import Dict, List, Optional, Tuple
 
 
 class EpistemicLabel(Enum):
@@ -29,15 +27,14 @@ class ComplianceReport:
     """Constitutional compliance assessment for single output."""
 
     compliance_percentage: float
-    violations: List[str]
-    recommendations: List[str]
+    violations: list[str]
+    recommendations: list[str]
     layer: str  # Ethics, Safeguard, Iterate, Knowledge
-    drift_code: Optional[str] = None
+    drift_code: str | None = None
 
 
 class ConstitutionalCompliance:
-    """
-    Civic Firmware Stack implementation.
+    """Civic Firmware Stack implementation.
 
     Reject-forward pipeline:
     - Ethics Layer: Evaluate constitutional compliance
@@ -60,9 +57,8 @@ class ConstitutionalCompliance:
             r"\b(as your AI|as your assistant, I command)\b",
         ]
 
-    def check_epistemic_integrity(self, text: str) -> Tuple[float, List[str]]:
-        """
-        Validate epistemic labeling compliance.
+    def check_epistemic_integrity(self, text: str) -> tuple[float, list[str]]:
+        """Validate epistemic labeling compliance.
 
         [FACT] Every claim must carry [FACT], [HYPOTHESIS], or [ASSUMPTION].
         [HYPOTHESIS] Unlabeled claims indicate structural drift.
@@ -94,9 +90,8 @@ class ConstitutionalCompliance:
 
         return compliance, violations
 
-    def check_custodial_sovereignty(self, text: str) -> Tuple[bool, List[str]]:
-        """
-        Validate custodial hierarchy compliance.
+    def check_custodial_sovereignty(self, text: str) -> tuple[bool, list[str]]:
+        """Validate custodial hierarchy compliance.
 
         [FACT] No model may generate imperatives toward a human.
         [FACT] No model may assert legal, moral, or operational authority.
@@ -115,9 +110,8 @@ class ConstitutionalCompliance:
 
         return len(violations) == 0, violations
 
-    def check_non_agency_constraint(self, text: str) -> Tuple[int, List[str]]:
-        """
-        Validate non-agency constraint compliance.
+    def check_non_agency_constraint(self, text: str) -> tuple[int, list[str]]:
+        """Validate non-agency constraint compliance.
 
         [FACT] Model must not: form goals, take actions, plan actions,
         propose self-expansion, declare independence, claim sentience,
@@ -145,9 +139,8 @@ class ConstitutionalCompliance:
 
         return count, violations
 
-    def check_visible_reasoning(self, text: str) -> Tuple[bool, List[str]]:
-        """
-        Validate transparency principle compliance.
+    def check_visible_reasoning(self, text: str) -> tuple[bool, list[str]]:
+        """Validate transparency principle compliance.
 
         [FACT] All significant AI actions must leave visible reasoning traces.
         """
@@ -170,8 +163,7 @@ class ConstitutionalCompliance:
         return len(violations) == 0, violations
 
     def evaluate(self, text: str, node_id: str = "UNKNOWN") -> ComplianceReport:
-        """
-        Full constitutional compliance evaluation.
+        """Full constitutional compliance evaluation.
 
         Runs Ethics → Safeguard → Iterate → Knowledge layers.
         Any layer failure aborts upstream pipeline.
@@ -236,7 +228,7 @@ class ConstitutionalCompliance:
             drift_code="DRIFT-0" if epistemic_compliance >= 95 else "DRIFT-S",
         )
 
-    def generate_output_schema(self, report: ComplianceReport) -> Dict:
+    def generate_output_schema(self, report: ComplianceReport) -> dict:
         """Generate minimal constitutional output schema."""
         return {
             "DRIFT": report.drift_code or "DRIFT-0",
@@ -248,14 +240,13 @@ class ConstitutionalCompliance:
 
 
 def validate_file(filepath: str) -> dict:
-    """
-    [FACT] Validates a Python file for constitutional compliance.
+    """[FACT] Validates a Python file for constitutional compliance.
     [ASSUMPTION] File exists and is readable.
 
     Returns dict with 'valid' bool and 'errors' list.
     """
     try:
-        with open(filepath, "r", encoding="utf-8") as f:
+        with open(filepath, encoding="utf-8") as f:
             content = f.read()
     except Exception as e:
         return {"valid": False, "errors": [f"Cannot read file: {e}"]}

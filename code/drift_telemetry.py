@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
-"""
-drift_telemetry.py
+"""drift_telemetry.py
 
 Helix-TTD Drift Telemetry System
 Monitors constitutional, structural, linguistic, and semantic drift across federation nodes.
@@ -17,7 +16,6 @@ from dataclasses import asdict, dataclass
 from datetime import datetime
 from enum import Enum
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
 
 
 class DriftCode(Enum):
@@ -43,12 +41,12 @@ class TelemetrySnapshot:
     non_agency_violations: int
     custodial_hierarchy_respected: bool
     reasoning_trace_visible: bool
-    intent_signature: Optional[str] = None
-    intent_similarity: Optional[float] = None
+    intent_signature: str | None = None
+    intent_similarity: float | None = None
     intent_change_justified: bool = False
-    hash_chain: Optional[str] = None
+    hash_chain: str | None = None
 
-    def calculate_hash(self, previous_hash: Optional[str] = None) -> str:
+    def calculate_hash(self, previous_hash: str | None = None) -> str:
         """Calculate SHA-256 hash of snapshot for Merkle chain."""
         data = asdict(self)
         data.pop("hash_chain", None)
@@ -58,8 +56,7 @@ class TelemetrySnapshot:
 
 
 class DriftTelemetry:
-    """
-    Constitutional drift detection and monitoring system.
+    """Constitutional drift detection and monitoring system.
 
     Implements the Helix-TTD requirement for continuous deviation monitoring
     across four severity bands: Constitutional, Structural, Linguistic, Semantic.
@@ -68,9 +65,9 @@ class DriftTelemetry:
     def __init__(self, log_dir: Path = Path("EVAC/telemetry")):
         self.log_dir = Path(log_dir)
         self.log_dir.mkdir(parents=True, exist_ok=True)
-        self.last_hash: Optional[str] = None
-        self.recent_snapshots: List[TelemetrySnapshot] = []
-        self.last_intent_tokens: Dict[str, List[str]] = {}
+        self.last_hash: str | None = None
+        self.recent_snapshots: list[TelemetrySnapshot] = []
+        self.last_intent_tokens: dict[str, list[str]] = {}
         self.thresholds = {
             "epistemic_compliance": 0.95,  # 95% of claims must be labeled
             "advisory_ratio": 0.99,  # 99% of outputs must be advisory
@@ -80,9 +77,8 @@ class DriftTelemetry:
             "intent_similarity_min": 0.3,  # Minimum token overlap ratio
         }
 
-    def capture(self, node_id: str, output_analysis: Dict) -> TelemetrySnapshot:
-        """
-        Capture telemetry snapshot from node output analysis.
+    def capture(self, node_id: str, output_analysis: dict) -> TelemetrySnapshot:
+        """Capture telemetry snapshot from node output analysis.
 
         [FACT] Every significant output generates a telemetry snapshot.
         [HYPOTHESIS] Pattern analysis across snapshots enables drift prediction.
@@ -125,9 +121,8 @@ class DriftTelemetry:
 
         return snapshot
 
-    def detect_drift(self, snapshot: TelemetrySnapshot) -> Tuple[DriftCode, str]:
-        """
-        Analyze snapshot for constitutional drift.
+    def detect_drift(self, snapshot: TelemetrySnapshot) -> tuple[DriftCode, str]:
+        """Analyze snapshot for constitutional drift.
 
         Returns (DriftCode, reasoning) tuple for governance layer action.
         """
@@ -180,9 +175,8 @@ class DriftTelemetry:
 
         return (DriftCode.DRIFT_0, "No drift detected; constitutional integrity maintained")
 
-    def generate_trajectory_artifact(self, node_id: str, window: int = 50) -> Dict:
-        """
-        Generate a trajectory artifact for custodian review.
+    def generate_trajectory_artifact(self, node_id: str, window: int = 50) -> dict:
+        """Generate a trajectory artifact for custodian review.
 
         Captures recent snapshots, drift summary, and intent shifts.
         """
@@ -227,9 +221,8 @@ class DriftTelemetry:
         with open(log_file, "a") as f:
             f.write(json.dumps(entry) + "\n")
 
-    def generate_alert(self, drift_code: DriftCode, reasoning: str) -> Dict:
-        """
-        Generate constitutional deviation alert for governance layer.
+    def generate_alert(self, drift_code: DriftCode, reasoning: str) -> dict:
+        """Generate constitutional deviation alert for governance layer.
 
         Implements the tiered alert system: Informational, Warning, Critical, Emergency.
         """
@@ -264,12 +257,12 @@ class DriftTelemetry:
         }
         return actions.get(drift_code, "Escalate to Custodian")
 
-    def _normalize_intent(self, text: str) -> List[str]:
+    def _normalize_intent(self, text: str) -> list[str]:
         cleaned = "".join([c.lower() if c.isalnum() or c.isspace() else " " for c in text])
         tokens = [t for t in cleaned.split() if len(t) > 2]
         return sorted(set(tokens))
 
-    def _intent_similarity(self, a: List[str], b: List[str]) -> float:
+    def _intent_similarity(self, a: list[str], b: list[str]) -> float:
         set_a = set(a)
         set_b = set(b)
         if not set_a and not set_b:

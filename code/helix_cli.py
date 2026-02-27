@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
-"""
-helix_cli.py
+"""helix_cli.py
 
 Helix-TTD Constitutional CLI
 Unified command-line interface for federation governance.
@@ -18,24 +17,21 @@ Usage:
 """
 
 import argparse
-import json
 import sys
 from pathlib import Path
-from typing import Optional
 
 from constitutional_compliance import ConstitutionalCompliance
 
 # Import Helix-TTD modules
 from drift_telemetry import DriftCode, DriftTelemetry
 from looksee_audit import LookseeAuditor
-from naming_convention import HelixFilename, NamingConvention
-from receipts_manager import PersonalDirectory, Receipt
-from rpi_tracker import RPIPhase, RPITracker
+from naming_convention import NamingConvention
+from receipts_manager import PersonalDirectory
+from rpi_tracker import RPITracker
 
 
 class HelixCLI:
-    """
-    Constitutional command-line interface for Helix-TTD Federation.
+    """Constitutional command-line interface for Helix-TTD Federation.
 
     Implements the four invariant constraints at the CLI layer:
     - Custodial Sovereignty: Human approval required for significant actions
@@ -110,7 +106,7 @@ class HelixCLI:
             print(f"   Status: {config['status']}")
             print(f"   Location: {config['location']}")
 
-        print(f"\n" + self._label_output("[FACT]", f"Total nodes: {len(self.FEDERATION_NODES)}"))
+        print("\n" + self._label_output("[FACT]", f"Total nodes: {len(self.FEDERATION_NODES)}"))
 
         active = sum(1 for n in self.FEDERATION_NODES.values() if n["status"] == "ACTIVE")
         print(
@@ -147,7 +143,7 @@ class HelixCLI:
         print("\n" + self._label_output("[ASSUMPTION]", "Constitutional integrity: MAINTAINED"))
         return 0
 
-    def cmd_drift_check(self, node_id: str, file_path: Optional[str] = None) -> int:
+    def cmd_drift_check(self, node_id: str, file_path: str | None = None) -> int:
         """Check output for constitutional drift."""
         node_id = node_id.upper()
         print(self._label_output("[FACT]", f"Initiating drift check for node: {node_id}"))
@@ -205,7 +201,7 @@ class HelixCLI:
         print(self._label_output("[FACT]", f"Drift Summary: {artifact['drift_summary']}"))
         return 0
 
-    def cmd_compliance_check(self, file_path: Optional[str] = None) -> int:
+    def cmd_compliance_check(self, file_path: str | None = None) -> int:
         """Full constitutional compliance evaluation."""
         print(self._label_output("[FACT]", "Initiating constitutional compliance check"))
 
@@ -305,7 +301,7 @@ class HelixCLI:
         print(f"Persona Drift: {'PASS' if audit.persona_drift_pass else 'FAIL'}")
         print(f"Drift Code: {audit.drift_code}")
         print(f"Silent Drift Risk: {audit.silent_drift_risk}")
-        print(f"\nAnalysis:")
+        print("\nAnalysis:")
         print(f"  {audit.analysis}")
 
         return 0 if audit.status.value == "COMPLETE" else 1
@@ -429,7 +425,7 @@ class HelixCLI:
 
         return 0 if is_valid else 1
 
-    def cmd_naming_list(self, origin: Optional[str] = None, file_type: Optional[str] = None) -> int:
+    def cmd_naming_list(self, origin: str | None = None, file_type: str | None = None) -> int:
         """List files by origin or type."""
         if origin:
             print(self._label_output("[FACT]", f"Listing files for origin: {origin}"))

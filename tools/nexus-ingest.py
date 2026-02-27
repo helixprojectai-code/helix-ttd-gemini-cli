@@ -10,7 +10,6 @@
 import argparse
 import json
 import os
-from pathlib import Path
 
 # 📦 NEXUS Ingestion Logic
 # Bridge: Knowledge Graph (Manifest) -> Semantic Search (Vector DB)
@@ -18,7 +17,7 @@ from pathlib import Path
 
 def load_manifest(manifest_path):
     """Parses the canonical Knowledge Graph."""
-    with open(manifest_path, "r", encoding="utf-8-sig") as f:
+    with open(manifest_path, encoding="utf-8-sig") as f:
         return json.load(f)
 
 
@@ -27,13 +26,12 @@ def get_document_content(file_path):
     if not os.path.exists(file_path):
         print(f"[ERROR] File not found: {file_path}")
         return None
-    with open(file_path, "r", encoding="utf-8") as f:
+    with open(file_path, encoding="utf-8") as f:
         return f.read()
 
 
 def ingest_to_nexus(manifest, docs_dir, endpoint):
-    """
-    Ingestion loop for populating NEXUS.
+    """Ingestion loop for populating NEXUS.
     Note: Requires 'qdrant-client' or similar for specific implementations.
     """
     print(f"\n[START] NEXUS INGESTION: {len(manifest['entries'])} Files")
@@ -50,8 +48,8 @@ def ingest_to_nexus(manifest, docs_dir, endpoint):
         if not content:
             continue
 
-        # 🧩 Metadata Construction
-        payload = {
+        # Metadata Construction
+        _payload = {  # noqa: F841
             "title": entry.get("title"),
             "cluster": entry.get("cluster"),
             "tags": entry.get("tags", []),

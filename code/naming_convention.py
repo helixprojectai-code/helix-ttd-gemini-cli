@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
-"""
-naming_convention.py
+"""naming_convention.py
 
 Helix-TTD File Naming Convention Enforcement
 Ensures all federation files follow semantic, collision-resistant naming.
@@ -17,13 +16,11 @@ import re
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
 
 
 @dataclass
 class HelixFilename:
-    """
-    Parsed Helix-TTD filename components.
+    """Parsed Helix-TTD filename components.
 
     [FACT] Every file in the federation must follow this structure.
     [HYPOTHESIS] Semantic naming prevents collisions without central coordination.
@@ -35,7 +32,7 @@ class HelixFilename:
     descriptor: str  # Human-readable slug
     date: str  # YYYYMMDD
     extension: str  # md, json, py
-    revision: Optional[int] = None  # For conflicts: -REV2, -REV3
+    revision: int | None = None  # For conflicts: -REV2, -REV3
 
     def to_string(self) -> str:
         """Generate canonical filename."""
@@ -50,8 +47,7 @@ class HelixFilename:
 
 
 class NamingConvention:
-    """
-    Helix-TTD file naming convention validator and generator.
+    """Helix-TTD file naming convention validator and generator.
 
     Enforces: {ORIGIN}-{TYPE}-{SEQUENCE}_{DESCRIPTOR}_{YYYYMMDD}[-REV{N}].{ext}
     """
@@ -121,9 +117,8 @@ class NamingConvention:
             r"\.(?P<ext>[a-z]+)$"  # Extension
         )
 
-    def parse(self, filename: str) -> Optional[HelixFilename]:
-        """
-        Parse filename into components.
+    def parse(self, filename: str) -> HelixFilename | None:
+        """Parse filename into components.
 
         [FACT] Returns None if filename violates convention.
         """
@@ -141,9 +136,8 @@ class NamingConvention:
             revision=int(match.group("rev")) if match.group("rev") else None,
         )
 
-    def validate(self, filename: str) -> Tuple[bool, List[str]]:
-        """
-        Validate filename against convention.
+    def validate(self, filename: str) -> tuple[bool, list[str]]:
+        """Validate filename against convention.
 
         Returns (is_valid, list_of_violations).
         """
@@ -188,12 +182,11 @@ class NamingConvention:
         file_type: str,
         sequence: str,
         descriptor: str,
-        date: Optional[str] = None,
+        date: str | None = None,
         extension: str = "md",
         check_conflicts: bool = True,
     ) -> HelixFilename:
-        """
-        Generate canonical filename with conflict resolution.
+        """Generate canonical filename with conflict resolution.
 
         [FACT] Automatically appends -REV{N} if filename already exists.
         """
@@ -258,10 +251,9 @@ class NamingConvention:
         target_dir = self._get_target_directory(filename.file_type)
         return self.base_path / target_dir / filename.to_string()
 
-    def list_by_origin(self, origin: str) -> List[Tuple[str, HelixFilename]]:
+    def list_by_origin(self, origin: str) -> list[tuple[str, HelixFilename]]:
         """List all files by origin node."""
         results = []
-        pattern = re.compile(rf"^{origin}-")
 
         for dir_path in self.base_path.rglob("*"):
             if dir_path.is_file():
@@ -271,7 +263,7 @@ class NamingConvention:
 
         return sorted(results, key=lambda x: x[1].date, reverse=True)
 
-    def list_by_type(self, file_type: str) -> List[Tuple[str, HelixFilename]]:
+    def list_by_type(self, file_type: str) -> list[tuple[str, HelixFilename]]:
         """List all files by type."""
         results = []
         target_dir = self._get_target_directory(file_type)
@@ -288,7 +280,7 @@ class NamingConvention:
 
         return sorted(results, key=lambda x: x[1].date, reverse=True)
 
-    def generate_manifest_entry(self, filename: HelixFilename, **kwargs) -> Dict:
+    def generate_manifest_entry(self, filename: HelixFilename, **kwargs) -> dict:
         """Generate MANIFEST.json entry for file."""
         entry = {
             "id": f"HELIX-{filename.origin}-{filename.file_type}-{filename.sequence}",
@@ -334,7 +326,7 @@ if __name__ == "__main__":
     # Parse filename
     parsed = convention.parse(test_name)
     if parsed:
-        print(f"\n[FACT] Parsed components:")
+        print("\n[FACT] Parsed components:")
         print(f"  Origin: {parsed.origin}")
         print(f"  Type: {parsed.file_type}")
         print(f"  Sequence: {parsed.sequence}")
