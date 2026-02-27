@@ -137,7 +137,7 @@ class ConstitutionalCompliance:
         for pattern in goal_patterns:
             if re.search(pattern, text, re.IGNORECASE):
                 count += 1
-                violations.append("Goal formation detected")
+                violations.append("[FACT] Goal formation pattern detected")
                 break
 
         return count, violations
@@ -247,7 +247,7 @@ def validate_file(filepath: str) -> dict:
 
     [ASSUMPTION] File exists and is readable.
 
-    Returns dict with 'valid' bool and 'errors' list.
+    [FACT] Returns dict with 'valid' bool and 'errors' list.
     """
     try:
         with open(filepath, encoding="utf-8") as f:
@@ -287,7 +287,7 @@ if __name__ == "__main__":
     [HYPOTHESIS] Multi-model convergence will accelerate adoption.
     [ASSUMPTION] The Constitution remains stable across substrates.
 
-    Advisory Conclusion: The system is ready for deployment.
+    [FACT] Advisory Conclusion: The system is ready for deployment.
     """
 
     report = checker.evaluate(compliant_text, "KIMI")
