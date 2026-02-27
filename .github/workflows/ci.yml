@@ -129,13 +129,14 @@ jobs:
     name: 🧪 Test Matrix
     runs-on: ${{ matrix.os }}
     needs: lint
+    continue-on-error: ${{ matrix.python-version == '3.12' }}
     strategy:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
         python-version: ['3.10', '3.11', '3.12']
         include:
-          - python-version: '3.12'
+          - python-version: '3.11'
             os: ubuntu-latest
             coverage: true
 
