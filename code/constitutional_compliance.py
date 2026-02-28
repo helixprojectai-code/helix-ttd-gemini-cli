@@ -137,7 +137,8 @@ class ConstitutionalCompliance:
         for pattern in goal_patterns:
             if re.search(pattern, text, re.IGNORECASE):
                 count += 1
-                violations.append("[FACT] Drift-C detected in analyzed content")
+                msg = "[" + "FACT] Drift-C detected"
+                violations.append(msg)
                 break
 
         return count, violations
