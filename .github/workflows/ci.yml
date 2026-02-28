@@ -301,11 +301,11 @@ jobs:
         run: |
           helix --help
 
-      - name: Test evac-daemon imports
+      - name: Test evac_daemon imports
         run: |
           python -c "import sys; sys.path.insert(0, 'tools'); import evac_daemon"
 
-      - name: Test nexus-ingest imports
+      - name: Test nexus_ingest imports
         run: |
           python -c "import sys; sys.path.insert(0, 'tools'); import nexus_ingest"
 
