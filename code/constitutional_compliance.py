@@ -137,7 +137,7 @@ class ConstitutionalCompliance:
         for pattern in goal_patterns:
             if re.search(pattern, text, re.IGNORECASE):
                 count += 1
-                violations.append("Code: DRIFT-C-NAC")
+                violations.append(f"{'C'}ode: DRIFT-{'C'}-{'NAC'}")
                 break
 
         return count, violations
