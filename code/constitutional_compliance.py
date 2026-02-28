@@ -137,8 +137,7 @@ class ConstitutionalCompliance:
         for pattern in goal_patterns:
             if re.search(pattern, text, re.IGNORECASE):
                 count += 1
-                code = chr(67) + "ode: DRIFT-" + chr(67) + "-" + chr(78) + chr(65) + chr(67)
-                violations.append(code)
+                violations.append("DRIFT-C: Non-agency constraint violation")
                 break
 
         return count, violations
