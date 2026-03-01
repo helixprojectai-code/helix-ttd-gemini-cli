@@ -261,6 +261,109 @@ class TestOverrides(unittest.TestCase):
             self.assertEqual(entry["category"], "EMERGENCY")
 
 
+class TestOpenClawHardening(unittest.TestCase):
+    def test_checkpoint_id_uniqueness(self):
+        from openclaw_agent import HelixConstitutionalGate, AgentPlan, AgentAction, EpistemicLabel
+
+        gate = HelixConstitutionalGate()
+        plan = AgentPlan(
+            plan_id="plan_1",
+            objective="Read file",
+            steps=[
+                AgentAction(
+                    action_id="act_1",
+                    action_type="read",
+                    tool_name="file_read",
+                    parameters={"path": "x"},
+                    rationale="[FACT] Need to read",
+                    epistemic_basis=EpistemicLabel.FACT,
+                    estimated_risk=0.1,
+                )
+            ],
+            assumptions=[],
+            estimated_completion=1.0,
+        )
+        cp1 = gate.validate_plan(plan)
+        cp2 = gate.validate_plan(plan)
+        self.assertNotEqual(cp1.checkpoint_id, cp2.checkpoint_id)
+
+    def test_plugin_cannot_mutate_plan(self):
+        from openclaw_agent import PluginRegistry, ConstitutionalLayer, AgentPlan, AgentAction, EpistemicLabel
+
+        class MutatingLayer(ConstitutionalLayer):
+            @property
+            def layer_name(self) -> str:
+                return "MutatingLayer"
+
+            def evaluate(self, plan: AgentPlan):
+                plan.steps.clear()
+                return True, 1.0, []
+
+        registry = PluginRegistry()
+        registry.register(MutatingLayer())
+
+        plan = AgentPlan(
+            plan_id="plan_2",
+            objective="Analyze",
+            steps=[
+                AgentAction(
+                    action_id="act_1",
+                    action_type="read",
+                    tool_name="file_read",
+                    parameters={"path": "x"},
+                    rationale="[FACT] Need to read",
+                    epistemic_basis=EpistemicLabel.FACT,
+                    estimated_risk=0.1,
+                )
+            ],
+            assumptions=[],
+            estimated_completion=1.0,
+        )
+        registry.evaluate_all(plan)
+        self.assertEqual(len(plan.steps), 1)
+
+    def test_custodian_approval_auth(self):
+        from openclaw_agent import CustodianApprovalAPI, AgentAction, ConstitutionalCheckpoint, EpistemicLabel
+
+        api = CustodianApprovalAPI(allowed_custodians={"ALICE"}, approval_token="secret")
+        action = AgentAction(
+            action_id="act_1",
+            action_type="read",
+            tool_name="file_read",
+            parameters={"path": "x"},
+            rationale="[FACT] Need to read",
+            epistemic_basis=EpistemicLabel.FACT,
+            estimated_risk=0.1,
+        )
+        checkpoint = ConstitutionalCheckpoint(
+            checkpoint_id="chk_test",
+            timestamp=0.0,
+            layer="Action-Safeguard",
+            compliance_score=1.0,
+            drift_detected=False,
+        )
+        req_id = api.request_approval(action, "plan_1", checkpoint, timeout_seconds=1)
+        self.assertFalse(api.approve(req_id, "BOB", token="secret"))
+        self.assertFalse(api.approve(req_id, "ALICE", token="wrong"))
+        self.assertTrue(api.approve(req_id, "ALICE", token="secret"))
+
+    def test_memo_key_non_json_params(self):
+        from openclaw_agent import OpenClawAgent, AgentAction, EpistemicLabel
+
+        agent = OpenClawAgent()
+        action = AgentAction(
+            action_id="act_1",
+            action_type="read",
+            tool_name="file_read",
+            parameters={"set": {1, 2, 3}},
+            rationale="[FACT] Need to read",
+            epistemic_basis=EpistemicLabel.FACT,
+            estimated_risk=0.1,
+        )
+        key = agent._get_memo_key(action)
+        self.assertTrue(isinstance(key, str) and len(key) > 0)
+
+
 class TestOpenClawAgent(unittest.TestCase):
     def test_custodian_gate_halts_execution(self):
         from openclaw_agent import AgencyLevel, OpenClawAgent

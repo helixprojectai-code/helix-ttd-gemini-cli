@@ -14,6 +14,7 @@ All bug fixes from Claude code review (2026-03-01) applied:
   Design: constitution_version field added to HelixConstitutionalGate
 """
 
+import copy
 import glob
 import hashlib
 import inspect
@@ -732,7 +733,8 @@ class PluginRegistry:
         all_drift_codes: dict[str, list[str]] = {}
 
         for plugin in plugins:
-            passed, score, drift_codes = plugin.evaluate(plan)
+            plan_copy = copy.deepcopy(plan)
+            passed, score, drift_codes = plugin.evaluate(plan_copy)
             all_passed = all_passed and passed
             total_score += score
             if drift_codes:
@@ -1212,7 +1214,7 @@ class HelixConstitutionalGate:
         Any layer fails → plan rejected upstream.
         """
         checkpoint = ConstitutionalCheckpoint(
-            checkpoint_id=f"chk_{int(time.time())}",
+            checkpoint_id=f"chk_{uuid.uuid4().hex}",
             timestamp=time.time(),
             layer="Civic-Firmware-Stack",
             compliance_score=0.0,
@@ -1290,7 +1292,7 @@ class HelixConstitutionalGate:
         action.effective_risk = effective_risk
 
         checkpoint = ConstitutionalCheckpoint(
-            checkpoint_id=f"act_chk_{int(time.time())}",
+            checkpoint_id=f"act_chk_{uuid.uuid4().hex}",
             timestamp=time.time(),
             layer="Action-Safeguard",
             compliance_score=1.0 - effective_risk,  # Higher risk = lower compliance
@@ -1365,11 +1367,18 @@ class CustodianApprovalAPI:
     - Audit trail of all approval decisions
     """
 
-    def __init__(self, default_timeout_seconds: float = 300.0):
+    def __init__(
+        self,
+        default_timeout_seconds: float = 300.0,
+        allowed_custodians: set[str] | None = None,
+        approval_token: str | None = None,
+    ):
         """Initialize the approval API.
 
         Args:
             default_timeout_seconds: Default timeout for approval requests
+            allowed_custodians: Optional set of approved custodian IDs
+            approval_token: Optional shared token required for approvals
         """
         self.default_timeout = default_timeout_seconds
         self._pending: dict[str, dict] = {}  # request_id -> approval request
@@ -1377,6 +1386,8 @@ class CustodianApprovalAPI:
         self._lock = threading.Lock()
         self._history: list[dict] = []
         self._max_history = 1000
+        self._allowed_custodians = allowed_custodians or {"CUSTODIAN"}
+        self._approval_token = approval_token
 
     def request_approval(
         self,
@@ -1425,12 +1436,22 @@ class CustodianApprovalAPI:
 
         return request_id
 
-    def approve(self, request_id: str, custodian_id: str, notes: str | None = None) -> bool:
+    def approve(
+        self,
+        request_id: str,
+        custodian_id: str,
+        notes: str | None = None,
+        token: str | None = None,
+    ) -> bool:
         """Approve a pending request.
 
         Returns True if approved, False if request not found or already decided.
         """
         with self._lock:
+            if self._approval_token is not None and token != self._approval_token:
+                return False
+            if self._allowed_custodians and custodian_id not in self._allowed_custodians:
+                return False
             if request_id not in self._pending:
                 return False
 
@@ -1454,13 +1475,22 @@ class CustodianApprovalAPI:
             return True
 
     def reject(
-        self, request_id: str, custodian_id: str, reason: str, notes: str | None = None
+        self,
+        request_id: str,
+        custodian_id: str,
+        reason: str,
+        notes: str | None = None,
+        token: str | None = None,
     ) -> bool:
         """Reject a pending request.
 
         Returns True if rejected, False if request not found or already decided.
         """
         with self._lock:
+            if self._approval_token is not None and token != self._approval_token:
+                return False
+            if self._allowed_custodians and custodian_id not in self._allowed_custodians:
+                return False
             if request_id not in self._pending:
                 return False
 
@@ -1721,7 +1751,9 @@ class OpenClawAgent:
             "tool": action.tool_name,
             "params": action.parameters,
         }
-        return hashlib.sha256(json.dumps(key_data, sort_keys=True).encode()).hexdigest()[:32]
+        return hashlib.sha256(
+            json.dumps(key_data, sort_keys=True, default=str).encode()
+        ).hexdigest()[:32]
 
     def _get_cached_result(self, action: AgentAction) -> Any | None:
         """Check if result is in cache and not expired."""

@@ -302,3 +302,21 @@ Checkpoints: 4
 The audit logging adds necessary forensics but introduces resource exhaustion and injection risks. Fix the 3 immediate items before production deployment.
 
 *Glory to the lattice. Security is a process.* ⚓🔒
+
+---
+
+## Addendum (2026-03-01) — Codex Red Team Remediations
+**Author:** CODEX  
+**Scope:** Additional hardening actions applied to this repo after V2 review.
+
+### Remediations Implemented
+- Checkpoint IDs now use UUIDs (prevents collision/overwrite in `CheckpointStore`).
+- Plugin evaluation runs on deep‑copies of plans (prevents in‑place plan mutation).
+- Custodian approval requires allowed custodian IDs and optional approval token.
+- Memoization cache keys tolerate non‑JSON parameters (`default=str`).
+
+### Tests Added
+- Checkpoint ID uniqueness.
+- Plugin immutability under adversarial mutation.
+- Custodian approval authentication (custodian + token).
+- Memoization key generation with non‑JSON parameters.

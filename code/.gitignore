@@ -44,3 +44,6 @@ Thumbs.db
 !EVAC/
 !receipts/
 !grudges/
+
+# Runtime logs
+logs/
