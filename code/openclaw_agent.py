@@ -41,13 +41,13 @@ from typing import Any
 
 # v1.3.2: Ed25519 asymmetric cryptography
 try:
+    from cryptography.fernet import Fernet  # For key encryption at rest
+    from cryptography.hazmat.backends import default_backend
+    from cryptography.hazmat.primitives import serialization
     from cryptography.hazmat.primitives.asymmetric.ed25519 import (
         Ed25519PrivateKey,
         Ed25519PublicKey,
     )
-    from cryptography.hazmat.primitives import serialization
-    from cryptography.hazmat.backends import default_backend
-    from cryptography.fernet import Fernet  # For key encryption at rest
     CRYPTO_AVAILABLE = True
 except ImportError:
     CRYPTO_AVAILABLE = False  # Fallback to HMAC with warnings
