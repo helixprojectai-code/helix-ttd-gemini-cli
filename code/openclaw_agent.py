@@ -33,14 +33,16 @@ from typing import Any
 
 class AgencyLevel(Enum):
     """Constitutional agency tiers - Helix Article III: Non-Agency Constraint"""
-    ADVISORY_ONLY = auto()      # Suggest only, no tool execution
-    BOUNDED_TOOLS = auto()      # Execute from approved tool list only
-    SUPERVISED_CHAIN = auto()   # Multi-step with checkpoint after each
-    CUSTODIAN_GATE = auto()     # Human approval required at each step
+
+    ADVISORY_ONLY = auto()  # Suggest only, no tool execution
+    BOUNDED_TOOLS = auto()  # Execute from approved tool list only
+    SUPERVISED_CHAIN = auto()  # Multi-step with checkpoint after each
+    CUSTODIAN_GATE = auto()  # Human approval required at each step
 
 
 class EpistemicLabel(Enum):
     """Helix Article II: Epistemic Integrity"""
+
     FACT = "[FACT]"
     HYPOTHESIS = "[HYPOTHESIS]"
     ASSUMPTION = "[ASSUMPTION]"
@@ -50,6 +52,7 @@ class EpistemicLabel(Enum):
 @dataclass
 class ConstitutionalCheckpoint:
     """A Helix-TTD checkpoint anchoring agent state to immutable ledger"""
+
     checkpoint_id: str
     timestamp: float
     layer: str  # Ethics, Safeguard, Iterate, Knowledge
@@ -71,17 +74,16 @@ class ConstitutionalCheckpoint:
             "drift": self.drift_detected,
             "codes": sorted(self.drift_codes),  # Deterministic order
             "prev": self.prev_checkpoint_hash,
-            "metrics": self.risk_metrics
+            "metrics": self.risk_metrics,
         }
         # Full SHA-256, no truncation (was [:16] - collision risk)
-        return hashlib.sha256(
-            json.dumps(data, sort_keys=True).encode()
-        ).hexdigest()
+        return hashlib.sha256(json.dumps(data, sort_keys=True).encode()).hexdigest()
 
 
 @dataclass
 class AgentAction:
     """A single action the agent proposes to take"""
+
     action_id: str
     action_type: str  # "search", "calculate", "write_file", "api_call"
     tool_name: str
@@ -95,6 +97,7 @@ class AgentAction:
 @dataclass
 class AgentPlan:
     """Multi-step plan requiring constitutional validation before execution"""
+
     plan_id: str
     objective: str
     steps: list[AgentAction]
@@ -110,34 +113,37 @@ class RiskConfiguration:
 
     Allows incremental adjustment of paranoia vs. velocity.
     """
+
     # Base thresholds (0.0 - 1.0)
-    planning_max_risk: float = 0.7      # Max acceptable plan-level risk
-    action_max_risk: float = 0.8        # Max acceptable single-action risk
-    cumulative_max_risk: float = 2.0    # Max cumulative risk across plan
+    planning_max_risk: float = 0.7  # Max acceptable plan-level risk
+    action_max_risk: float = 0.8  # Max acceptable single-action risk
+    cumulative_max_risk: float = 2.0  # Max cumulative risk across plan
 
     # Layer-specific attenuation (multipliers)
-    ethics_attenuation: float = 0.9     # Ethics layer reduces effective risk
+    ethics_attenuation: float = 0.9  # Ethics layer reduces effective risk
     safeguard_attenuation: float = 0.8  # Safeguards provide additional reduction
 
     # Custodian override settings
     custodian_can_override: bool = True
-    override_max_risk: float = 0.95     # Even with approval, above this is blocked
+    override_max_risk: float = 0.95  # Even with approval, above this is blocked
     override_requires_dual_approval: bool = False
 
     # Tool-specific risk multipliers
-    tool_multipliers: dict[str, float] = field(default_factory=lambda: {
-        "file_read": 0.5,        # Read is safer
-        "file_write": 1.2,       # Write is riskier
-        "file_delete": 1.5,      # Delete is dangerous
-        "api_call": 1.0,         # Neutral
-        "database_migrate": 1.3, # DB ops are high-stakes
-        "self_update_agent": 10.0, # Always blocked
-        "code_execution": 2.0,   # Arbitrary code is dangerous
-    })
+    tool_multipliers: dict[str, float] = field(
+        default_factory=lambda: {
+            "file_read": 0.5,  # Read is safer
+            "file_write": 1.2,  # Write is riskier
+            "file_delete": 1.5,  # Delete is dangerous
+            "api_call": 1.0,  # Neutral
+            "database_migrate": 1.3,  # DB ops are high-stakes
+            "self_update_agent": 10.0,  # Always blocked
+            "code_execution": 2.0,  # Arbitrary code is dangerous
+        }
+    )
 
     # Progressive risk budget
-    daily_risk_budget: float = 10.0     # Max cumulative risk per day
-    current_risk_spend: float = 0.0     # Tracked runtime
+    daily_risk_budget: float = 10.0  # Max cumulative risk per day
+    current_risk_spend: float = 0.0  # Tracked runtime
 
     def __post_init__(self):
         """BUG-3 Fix: Initialize lock in __post_init__ to prevent race condition.
@@ -172,8 +178,7 @@ class RiskConfiguration:
         # P1: Safe comparison with epsilon tolerance
         with self._get_lock():
             return not self._risk_exceeds(
-                self.current_risk_spend + action_risk,
-                self.daily_risk_budget
+                self.current_risk_spend + action_risk, self.daily_risk_budget
             )
 
     def spend_risk(self, amount: float) -> bool:
@@ -201,7 +206,11 @@ class RiskConfiguration:
             "budget": self.daily_risk_budget,
             "spent": self.current_risk_spend,
             "remaining": self.daily_risk_budget - self.current_risk_spend,
-            "utilization": self.current_risk_spend / self.daily_risk_budget if self.daily_risk_budget > 0 else 0
+            "utilization": (
+                self.current_risk_spend / self.daily_risk_budget
+                if self.daily_risk_budget > 0
+                else 0
+            ),
         }
 
 
@@ -219,9 +228,12 @@ class HelixConstitutionalGate:
     # Constitutional grammar version — checked at init against substrate
     CONSTITUTION_VERSION = "1.0.0"
 
-    def __init__(self, agency_tier: AgencyLevel = AgencyLevel.BOUNDED_TOOLS,
-                 risk_config: RiskConfiguration | None = None,
-                 constitution_version: str = "1.0.0"):
+    def __init__(
+        self,
+        agency_tier: AgencyLevel = AgencyLevel.BOUNDED_TOOLS,
+        risk_config: RiskConfiguration | None = None,
+        constitution_version: str = "1.0.0",
+    ):
         self.agency_tier = agency_tier
         self.risk = risk_config or RiskConfiguration()
         self.checkpoints: list[ConstitutionalCheckpoint] = []
@@ -230,18 +242,24 @@ class HelixConstitutionalGate:
         # (custodian_can_override, override_max_risk) causing false DRIFT-C positives.
         # Custodian override authority is a constitutional right, not a forbidden pattern.
         self.forbidden_patterns: list[str] = [
-            "autonomous", "self-directed", "initiate", "independent",
-            "self-improve", "modify_own", "bypass"
+            "autonomous",
+            "self-directed",
+            "initiate",
+            "independent",
+            "self-improve",
+            "modify_own",
+            "bypass",
         ]
         # Constitution versioning: surfaced in all checkpoints for drift detection
         self.constitution_version = constitution_version
         if constitution_version != self.CONSTITUTION_VERSION:
             import warnings
+
             warnings.warn(
                 f"Constitution version mismatch: gate={constitution_version}, "
                 f"canonical={self.CONSTITUTION_VERSION}. Risk model may be stale.",
                 UserWarning,
-                stacklevel=2
+                stacklevel=2,
             )
 
     def _layer_ethics(self, plan: AgentPlan) -> tuple[bool, float]:
@@ -252,8 +270,10 @@ class HelixConstitutionalGate:
         compliance_factors = []
 
         # Check for imperatives toward human
-        if any("must" in step.rationale.lower() or "should" in step.rationale.lower()
-               for step in plan.steps):
+        if any(
+            "must" in step.rationale.lower() or "should" in step.rationale.lower()
+            for step in plan.steps
+        ):
             compliance_factors.append(0.8)  # Slight deduction for imperative tone
         else:
             compliance_factors.append(1.0)
@@ -264,9 +284,13 @@ class HelixConstitutionalGate:
                 return False, 0.0
 
         # Check for self-referential modifications
-        self_ref_count = sum(1 for step in plan.steps
-                           if any(pattern in step.tool_name.lower()
-                                 for pattern in ["self", "modify", "update_agent"]))
+        self_ref_count = sum(
+            1
+            for step in plan.steps
+            if any(
+                pattern in step.tool_name.lower() for pattern in ["self", "modify", "update_agent"]
+            )
+        )
         if self_ref_count > 0:
             compliance_factors.append(0.0)  # Constitutional violation
             return False, 0.0
@@ -276,10 +300,10 @@ class HelixConstitutionalGate:
     def _normalize_for_check(self, text: str) -> str:
         """P0 Fix: Unicode normalization to prevent homoglyph bypasses"""
         # NFKC normalization (compatibility decomposition + composition)
-        normalized = unicodedata.normalize('NFKC', str(text))
+        normalized = unicodedata.normalize("NFKC", str(text))
         # Remove zero-width characters that can hide forbidden words
-        for zw in ['\u200B', '\u200C', '\u200D', '\uFEFF', '\u2060']:
-            normalized = normalized.replace(zw, '')
+        for zw in ["\u200b", "\u200c", "\u200d", "\ufeff", "\u2060"]:
+            normalized = normalized.replace(zw, "")
         return normalized.lower()
 
     def _layer_safeguard(self, plan: AgentPlan) -> tuple[bool, list[str], float]:
@@ -296,9 +320,7 @@ class HelixConstitutionalGate:
 
         for step in plan.steps:
             # Calculate effective risk with tool multipliers
-            effective_risk = self.risk.calculate_effective_risk(
-                step.estimated_risk, step.tool_name
-            )
+            effective_risk = self.risk.calculate_effective_risk(step.estimated_risk, step.tool_name)
             step.effective_risk = effective_risk  # Store for later
             total_effective_risk += effective_risk
 
@@ -306,7 +328,7 @@ class HelixConstitutionalGate:
             # P2: Limit parameter serialization size to prevent memory issues
             param_str = json.dumps(step.parameters, ensure_ascii=False)
             if len(param_str) > self.MAX_JSON_PARAM_SIZE:
-                param_str = param_str[:self.MAX_JSON_PARAM_SIZE] + "...[TRUNCATED]"
+                param_str = param_str[: self.MAX_JSON_PARAM_SIZE] + "...[TRUNCATED]"
             all_text = f"{step.rationale} {step.tool_name} {step.action_type} {param_str}"
             check_text = self._normalize_for_check(all_text)
 
@@ -316,11 +338,15 @@ class HelixConstitutionalGate:
 
             # Check cumulative risk budget
             if not self.risk.has_risk_budget(effective_risk):
-                drift_codes.append(f"DRIFT-S: Daily Risk Budget Exceeded ({self.risk.get_risk_velocity()['remaining']:.2f} remaining)")
+                drift_codes.append(
+                    f"DRIFT-S: Daily Risk Budget Exceeded ({self.risk.get_risk_velocity()['remaining']:.2f} remaining)"
+                )
 
             # Check per-action risk threshold (with tool multipliers applied)
             if effective_risk > self.risk.action_max_risk:
-                drift_codes.append(f"DRIFT-S: Effective Risk {effective_risk:.2f} Exceeds Action Threshold {self.risk.action_max_risk}")
+                drift_codes.append(
+                    f"DRIFT-S: Effective Risk {effective_risk:.2f} Exceeds Action Threshold {self.risk.action_max_risk}"
+                )
 
             # Check tool authorization
             if self.allowed_tools and step.tool_name not in self.allowed_tools:
@@ -328,7 +354,9 @@ class HelixConstitutionalGate:
 
         # Check cumulative plan risk
         if total_effective_risk > self.risk.cumulative_max_risk:
-            drift_codes.append(f"DRIFT-S: Cumulative Plan Risk {total_effective_risk:.2f} Exceeds Budget {self.risk.cumulative_max_risk}")
+            drift_codes.append(
+                f"DRIFT-S: Cumulative Plan Risk {total_effective_risk:.2f} Exceeds Budget {self.risk.cumulative_max_risk}"
+            )
 
         plan.total_effective_risk = total_effective_risk
         return len(drift_codes) == 0, drift_codes, total_effective_risk
@@ -343,8 +371,8 @@ class HelixConstitutionalGate:
         Previously: detection was case-insensitive but replacement was not.
         """
         for step in plan.steps:
-            step.rationale = re.sub(r'you should', 'consider', step.rationale, flags=re.IGNORECASE)
-            step.rationale = re.sub(r'\bmust\b', 'could', step.rationale, flags=re.IGNORECASE)
+            step.rationale = re.sub(r"you should", "consider", step.rationale, flags=re.IGNORECASE)
+            step.rationale = re.sub(r"\bmust\b", "could", step.rationale, flags=re.IGNORECASE)
 
         return plan
 
@@ -380,7 +408,7 @@ class HelixConstitutionalGate:
                 **self.risk.get_risk_velocity(),
                 "constitution_version": self.constitution_version,  # Surfaces in audit chain
             },
-            prev_checkpoint_hash=self.checkpoints[-1].merkle_hash if self.checkpoints else "0"
+            prev_checkpoint_hash=self.checkpoints[-1].merkle_hash if self.checkpoints else "0",
         )
 
         # Layer 0: Ethics
@@ -395,7 +423,7 @@ class HelixConstitutionalGate:
 
         # Layer 1: Safeguard (with granular risk)
         safeguard_pass, drift_codes, total_risk = self._layer_safeguard(plan)
-        checkpoint.risk_metrics['plan_total'] = total_risk
+        checkpoint.risk_metrics["plan_total"] = total_risk
 
         if not safeguard_pass:
             checkpoint.compliance_score = ethics_score * 0.5
@@ -420,7 +448,7 @@ class HelixConstitutionalGate:
 
         # All layers passed - spend the risk budget (P1 Fix: check return value)
         for step in plan.steps:
-            if hasattr(step, 'effective_risk'):
+            if hasattr(step, "effective_risk"):
                 if not self.risk.spend_risk(step.effective_risk):
                     checkpoint.drift_detected = True
                     checkpoint.drift_codes.append("DRIFT-S: Risk Budget Exhausted")
@@ -445,9 +473,7 @@ class HelixConstitutionalGate:
     def validate_action(self, action: AgentAction, context: dict) -> ConstitutionalCheckpoint:
         """Validate a single action before execution with granular risk tuning."""
         # Calculate effective risk with tool multipliers
-        effective_risk = self.risk.calculate_effective_risk(
-            action.estimated_risk, action.tool_name
-        )
+        effective_risk = self.risk.calculate_effective_risk(action.estimated_risk, action.tool_name)
         action.effective_risk = effective_risk
 
         checkpoint = ConstitutionalCheckpoint(
@@ -457,12 +483,12 @@ class HelixConstitutionalGate:
             compliance_score=1.0 - effective_risk,  # Higher risk = lower compliance
             drift_detected=False,
             risk_metrics={
-                'base_risk': action.estimated_risk,
-                'effective_risk': effective_risk,
-                'remaining_budget': self.risk.get_risk_velocity()['remaining'],
-                'constitution_version': self.constitution_version,
+                "base_risk": action.estimated_risk,
+                "effective_risk": effective_risk,
+                "remaining_budget": self.risk.get_risk_velocity()["remaining"],
+                "constitution_version": self.constitution_version,
             },
-            prev_checkpoint_hash=self.checkpoints[-1].merkle_hash if self.checkpoints else "0"
+            prev_checkpoint_hash=self.checkpoints[-1].merkle_hash if self.checkpoints else "0",
         )
 
         # Runtime safeguard checks with granular thresholds
@@ -470,27 +496,33 @@ class HelixConstitutionalGate:
         # Absolute blocks (even with approval)
         if effective_risk >= self.risk.override_max_risk:
             checkpoint.drift_detected = True
-            checkpoint.drift_codes.append(f"DRIFT-C: Effective Risk {effective_risk:.2f} Exceeds Absolute Maximum {self.risk.override_max_risk}")
+            checkpoint.drift_codes.append(
+                f"DRIFT-C: Effective Risk {effective_risk:.2f} Exceeds Absolute Maximum {self.risk.override_max_risk}"
+            )
             checkpoint.compliance_score = 0.0
             action.requires_approval = True  # Will be blocked anyway
 
         # High risk requiring approval
         elif effective_risk > self.risk.action_max_risk:
-            checkpoint.drift_codes.append(f"DRIFT-S: Effective Risk {effective_risk:.2f} Requires Approval (threshold: {self.risk.action_max_risk})")
+            checkpoint.drift_codes.append(
+                f"DRIFT-S: Effective Risk {effective_risk:.2f} Requires Approval (threshold: {self.risk.action_max_risk})"
+            )
             checkpoint.compliance_score = 0.5
             action.requires_approval = True
 
         # Check risk budget
         if not self.risk.has_risk_budget(effective_risk):
             checkpoint.drift_detected = True
-            checkpoint.drift_codes.append(f"DRIFT-S: Insufficient Risk Budget ({self.risk.get_risk_velocity()['remaining']:.2f} remaining)")
+            checkpoint.drift_codes.append(
+                f"DRIFT-S: Insufficient Risk Budget ({self.risk.get_risk_velocity()['remaining']:.2f} remaining)"
+            )
             checkpoint.compliance_score = 0.2
 
         # Check for forbidden patterns
         # P2: Limit parameter serialization size to prevent memory issues
         param_str = json.dumps(action.parameters, ensure_ascii=False)
         if len(param_str) > self.MAX_JSON_PARAM_SIZE:
-            param_str = param_str[:self.MAX_JSON_PARAM_SIZE] + "...[TRUNCATED]"
+            param_str = param_str[: self.MAX_JSON_PARAM_SIZE] + "...[TRUNCATED]"
         all_text = f"{action.rationale} {action.tool_name} {action.action_type} {param_str}"
         check_text = self._normalize_for_check(all_text)
         if any(pattern in check_text for pattern in self.forbidden_patterns):
@@ -522,9 +554,12 @@ class OpenClawAgent:
     MAX_PLAN_STEPS = 100
     MAX_EXECUTION_TIME = 300  # 5 minutes
 
-    def __init__(self, agency_tier: AgencyLevel = AgencyLevel.BOUNDED_TOOLS,
-                 risk_config: RiskConfiguration | None = None,
-                 audit_log_path: str | None = None):
+    def __init__(
+        self,
+        agency_tier: AgencyLevel = AgencyLevel.BOUNDED_TOOLS,
+        risk_config: RiskConfiguration | None = None,
+        audit_log_path: str | None = None,
+    ):
         self.gate = HelixConstitutionalGate(agency_tier, risk_config)
         self.plan_history: list[AgentPlan] = []
         self.execution_log: list[dict] = []
@@ -563,8 +598,8 @@ class OpenClawAgent:
         result = {}
         for k, v in data.items():
             if isinstance(v, str):
-                sanitized = v.replace('\n', ' ').replace('\r', ' ').replace('\x00', '')
-                sanitized = ''.join(c if ord(c) >= 32 or c == '\t' else ' ' for c in sanitized)
+                sanitized = v.replace("\n", " ").replace("\r", " ").replace("\x00", "")
+                sanitized = "".join(c if ord(c) >= 32 or c == "\t" else " " for c in sanitized)
                 result[k] = sanitized
             elif isinstance(v, dict):
                 result[k] = self._sanitize_audit_data(v)
@@ -572,8 +607,8 @@ class OpenClawAgent:
                 sanitized_list = []
                 for item in v:
                     if isinstance(item, str):
-                        s = item.replace('\n', ' ').replace('\r', ' ').replace('\x00', '')
-                        s = ''.join(c if ord(c) >= 32 or c == '\t' else ' ' for c in s)
+                        s = item.replace("\n", " ").replace("\r", " ").replace("\x00", "")
+                        s = "".join(c if ord(c) >= 32 or c == "\t" else " " for c in s)
                         sanitized_list.append(s)
                     elif isinstance(item, dict):
                         sanitized_list.append(self._sanitize_audit_data(item))
@@ -587,11 +622,19 @@ class OpenClawAgent:
     def _validate_event_type(self, event_type: str) -> str:
         """P2: Validate event type against allowed set to prevent injection."""
         allowed_events = {
-            "TOOL_REGISTERED", "PLAN_EXECUTION_START", "PLAN_EXECUTION_COMPLETE",
-            "PLAN_EXECUTION_REJECTED", "CUSTODIAN_APPROVAL_PENDING",
-            "CUSTODIAN_APPROVAL_REJECTED", "CUSTODIAN_APPROVAL_GRANTED",
-            "ACTION_BLOCKED", "ACTION_CHECKPOINT", "TOOL_INVOKED",
-            "RISK_BUDGET_EXHAUSTED", "TIMEOUT", "DRIFT_DETECTED"
+            "TOOL_REGISTERED",
+            "PLAN_EXECUTION_START",
+            "PLAN_EXECUTION_COMPLETE",
+            "PLAN_EXECUTION_REJECTED",
+            "CUSTODIAN_APPROVAL_PENDING",
+            "CUSTODIAN_APPROVAL_REJECTED",
+            "CUSTODIAN_APPROVAL_GRANTED",
+            "ACTION_BLOCKED",
+            "ACTION_CHECKPOINT",
+            "TOOL_INVOKED",
+            "RISK_BUDGET_EXHAUSTED",
+            "TIMEOUT",
+            "DRIFT_DETECTED",
         }
         if event_type not in allowed_events:
             return "UNKNOWN_EVENT"
@@ -649,15 +692,16 @@ class OpenClawAgent:
                 raise RuntimeError("Unsafe audit log path")
 
             if not os.path.exists(self.audit_log_path):
-                with open(self.audit_log_path, 'w') as f:
+                with open(self.audit_log_path, "w") as f:
                     f.write(f"# Helix Audit Log - Initialized {datetime.now().isoformat()}\n")
                     f.write(f"# Agent ID: {self.agent_id}\n")
                     f.write("# Log Rotation: 30 days / 100MB\n")
                     f.flush()
         except Exception as e:
             import sys
+
             error_msg = str(e)
-            if hasattr(self, 'audit_log_path') and self.audit_log_path in error_msg:
+            if hasattr(self, "audit_log_path") and self.audit_log_path in error_msg:
                 error_msg = error_msg.replace(self.audit_log_path, "<LOG_PATH>")
             home_dir = os.path.expanduser("~")
             if home_dir in error_msg:
@@ -675,19 +719,16 @@ class OpenClawAgent:
             safe_event_type = self._validate_event_type(event_type)
             safe_data = self._sanitize_audit_data(data)
 
-            entry = {
-                "ts": datetime.now().isoformat(),
-                "type": safe_event_type,
-                "data": safe_data
-            }
-            with open(self.audit_log_path, 'a') as f:
+            entry = {"ts": datetime.now().isoformat(), "type": safe_event_type, "data": safe_data}
+            with open(self.audit_log_path, "a") as f:
                 f.write(json.dumps(entry, sort_keys=True) + "\n")
                 f.flush()
                 os.fsync(f.fileno())
         except Exception as e:
             import sys
+
             error_msg = str(e)
-            if hasattr(self, 'audit_log_path') and self.audit_log_path in error_msg:
+            if hasattr(self, "audit_log_path") and self.audit_log_path in error_msg:
                 error_msg = error_msg.replace(self.audit_log_path, "<LOG_PATH>")
             home_dir = os.path.expanduser("~")
             if home_dir in error_msg:
@@ -709,8 +750,8 @@ class OpenClawAgent:
         if inspect.isbuiltin(function):
             raise ValueError(f"Tool '{name}': Builtin functions not allowed (pickle safety)")
 
-        func_module = getattr(function, '__module__', None)
-        if func_module in ('__builtin__', 'builtins', 'os', 'subprocess', 'sys'):
+        func_module = getattr(function, "__module__", None)
+        if func_module in ("__builtin__", "builtins", "os", "subprocess", "sys"):
             raise ValueError(f"Tool '{name}': Module '{func_module}' not allowed")
 
         if not isinstance(risk_level, (int, float)):
@@ -720,7 +761,7 @@ class OpenClawAgent:
 
         if not isinstance(name, str) or not name:
             raise ValueError("Tool name must be non-empty string")
-        if any(c in name for c in ['/', '\\', '..', '\x00']):
+        if any(c in name for c in ["/", "\\", "..", "\x00"]):
             raise ValueError(f"Tool '{name}': Invalid characters in name")
 
         # P1: Thread-safe atomic registration
@@ -731,14 +772,12 @@ class OpenClawAgent:
                 "risk_level": float(risk_level),
                 "registered_at": time.time(),
                 "module": func_module,
-                "name": name
+                "name": name,
             }
 
-        self._append_audit("TOOL_REGISTERED", {
-            "tool_name": name,
-            "risk_level": risk_level,
-            "module": func_module
-        })
+        self._append_audit(
+            "TOOL_REGISTERED", {"tool_name": name, "risk_level": risk_level, "module": func_module}
+        )
 
     def create_plan(self, objective: str, context: dict[str, Any]) -> AgentPlan:
         """Agent proposes a plan based on objective.
@@ -748,46 +787,53 @@ class OpenClawAgent:
         steps = []
 
         if "analyze" in objective.lower():
-            steps.append(AgentAction(
-                action_id="act_1",
-                action_type="search",
-                tool_name="file_search",
-                parameters={"pattern": "*.py"},
-                rationale="[HYPOTHESIS] Python files contain the main logic requiring analysis",
-                epistemic_basis=EpistemicLabel.HYPOTHESIS,
-                estimated_risk=0.2
-            ))
-            steps.append(AgentAction(
-                action_id="act_2",
-                action_type="read",
-                tool_name="file_read",
-                parameters={"path": "detected_files"},
-                rationale="[FACT] Files need to be read to analyze content",
-                epistemic_basis=EpistemicLabel.FACT,
-                estimated_risk=0.1
-            ))
-            steps.append(AgentAction(
-                action_id="act_3",
-                action_type="analyze",
-                tool_name="static_analysis",
-                parameters={"files": "read_content"},
-                rationale="[HYPOTHESIS] Static analysis will identify improvement opportunities",
-                epistemic_basis=EpistemicLabel.HYPOTHESIS,
-                estimated_risk=0.3
-            ))
+            steps.append(
+                AgentAction(
+                    action_id="act_1",
+                    action_type="search",
+                    tool_name="file_search",
+                    parameters={"pattern": "*.py"},
+                    rationale="[HYPOTHESIS] Python files contain the main logic requiring analysis",
+                    epistemic_basis=EpistemicLabel.HYPOTHESIS,
+                    estimated_risk=0.2,
+                )
+            )
+            steps.append(
+                AgentAction(
+                    action_id="act_2",
+                    action_type="read",
+                    tool_name="file_read",
+                    parameters={"path": "detected_files"},
+                    rationale="[FACT] Files need to be read to analyze content",
+                    epistemic_basis=EpistemicLabel.FACT,
+                    estimated_risk=0.1,
+                )
+            )
+            steps.append(
+                AgentAction(
+                    action_id="act_3",
+                    action_type="analyze",
+                    tool_name="static_analysis",
+                    parameters={"files": "read_content"},
+                    rationale="[HYPOTHESIS] Static analysis will identify improvement opportunities",
+                    epistemic_basis=EpistemicLabel.HYPOTHESIS,
+                    estimated_risk=0.3,
+                )
+            )
 
         plan = AgentPlan(
             plan_id=f"plan_{int(time.time())}",
             objective=objective,
             steps=steps,
             assumptions=["Files are accessible", "Tools are available"],
-            estimated_completion=5.0
+            estimated_completion=5.0,
         )
 
         return plan
 
-    def execute_with_checkpoints(self, plan: AgentPlan,
-                                  custodian_approval: bool | None = None) -> dict:
+    def execute_with_checkpoints(
+        self, plan: AgentPlan, custodian_approval: bool | None = None
+    ) -> dict:
         """Execute a plan with full Helix-TTD checkpointing.
 
         P1 Hardened: Step limits, timeouts, thread-safe execution.
@@ -807,7 +853,7 @@ class OpenClawAgent:
                 return {
                     "plan_id": plan.plan_id,
                     "status": "rejected",
-                    "reason": f"Plan exceeds maximum {self.MAX_PLAN_STEPS} steps (DoS protection)"
+                    "reason": f"Plan exceeds maximum {self.MAX_PLAN_STEPS} steps (DoS protection)",
                 }
 
             start_time = time.time()
@@ -818,32 +864,37 @@ class OpenClawAgent:
                 "executions": [],
                 "status": "pending",
                 "final_anchor": "",
-                "start_time": datetime.now().isoformat()
+                "start_time": datetime.now().isoformat(),
             }
 
-            self._append_audit("PLAN_EXECUTION_START", {
-                "plan_id": plan.plan_id,
-                "steps": len(plan.steps),
-                "custodian_override": custodian_approval
-            })
+            self._append_audit(
+                "PLAN_EXECUTION_START",
+                {
+                    "plan_id": plan.plan_id,
+                    "steps": len(plan.steps),
+                    "custodian_override": custodian_approval,
+                },
+            )
 
             # Checkpoint 1: Plan Validation
             plan_checkpoint = self.gate.validate_plan(plan)
-            results["checkpoints"].append({
-                "id": plan_checkpoint.checkpoint_id,
-                "compliance": plan_checkpoint.compliance_score,
-                "drift": plan_checkpoint.drift_detected,
-                "codes": plan_checkpoint.drift_codes,
-                "scope": "plan"
-            })
+            results["checkpoints"].append(
+                {
+                    "id": plan_checkpoint.checkpoint_id,
+                    "compliance": plan_checkpoint.compliance_score,
+                    "drift": plan_checkpoint.drift_detected,
+                    "codes": plan_checkpoint.drift_codes,
+                    "scope": "plan",
+                }
+            )
 
             if not plan.constitutional_clearance:
                 results["status"] = "rejected_at_planning"
                 results["reason"] = f"Constitutional violation: {plan_checkpoint.drift_codes}"
-                self._append_audit("PLAN_EXECUTION_REJECTED", {
-                    "plan_id": plan.plan_id,
-                    "reason": results["reason"]
-                })
+                self._append_audit(
+                    "PLAN_EXECUTION_REJECTED",
+                    {"plan_id": plan.plan_id, "reason": results["reason"]},
+                )
                 return results
 
             # Execute steps with per-action checkpoints
@@ -856,102 +907,120 @@ class OpenClawAgent:
                     results["completed_steps"] = step_idx
                     # BUG-1 Fix: was "PLAN_TIMEOUT" which is not in the allowed_events
                     # whitelist — logged silently as UNKNOWN_EVENT. Corrected to "TIMEOUT".
-                    self._append_audit("TIMEOUT", {
-                        "plan_id": plan.plan_id,
-                        "elapsed": elapsed,
-                        "completed_steps": step_idx
-                    })
+                    self._append_audit(
+                        "TIMEOUT",
+                        {"plan_id": plan.plan_id, "elapsed": elapsed, "completed_steps": step_idx},
+                    )
                     return results
 
                 # Checkpoint 2: Pre-execution validation
                 action_checkpoint = self.gate.validate_action(step, {})
-                results["checkpoints"].append({
-                    "id": action_checkpoint.checkpoint_id,
-                    "compliance": action_checkpoint.compliance_score,
-                    "drift": action_checkpoint.drift_detected,
-                    "codes": action_checkpoint.drift_codes,
-                    "scope": "action",
-                    "action_id": step.action_id
-                })
+                results["checkpoints"].append(
+                    {
+                        "id": action_checkpoint.checkpoint_id,
+                        "compliance": action_checkpoint.compliance_score,
+                        "drift": action_checkpoint.drift_detected,
+                        "codes": action_checkpoint.drift_codes,
+                        "scope": "action",
+                        "action_id": step.action_id,
+                    }
+                )
 
                 if action_checkpoint.drift_detected and action_checkpoint.compliance_score < 0.5:
-                    results["executions"].append({
-                        "action_id": step.action_id,
-                        "status": "blocked",
-                        "reason": action_checkpoint.drift_codes
-                    })
-                    self._append_audit("ACTION_BLOCKED", {
-                        "plan_id": plan.plan_id,
-                        "action_id": step.action_id,
-                        "reason": action_checkpoint.drift_codes
-                    })
+                    results["executions"].append(
+                        {
+                            "action_id": step.action_id,
+                            "status": "blocked",
+                            "reason": action_checkpoint.drift_codes,
+                        }
+                    )
+                    self._append_audit(
+                        "ACTION_BLOCKED",
+                        {
+                            "plan_id": plan.plan_id,
+                            "action_id": step.action_id,
+                            "reason": action_checkpoint.drift_codes,
+                        },
+                    )
                     continue
 
                 # Check for custodian gate
                 if step.requires_approval or self.gate.agency_tier == AgencyLevel.CUSTODIAN_GATE:
                     if custodian_approval is None:
-                        results["executions"].append({
-                            "action_id": step.action_id,
-                            "status": "awaiting_custodian_approval",
-                            # Design fix: serialize AgentAction to dict — raw dataclass
-                            # object is not JSON-serializable; any caller attempting
-                            # json.dumps(results) would crash with TypeError.
-                            "action": {
+                        results["executions"].append(
+                            {
                                 "action_id": step.action_id,
-                                "action_type": step.action_type,
-                                "tool_name": step.tool_name,
-                                "rationale": step.rationale,
-                                "epistemic_basis": step.epistemic_basis.value if isinstance(step.epistemic_basis, EpistemicLabel) else str(step.epistemic_basis),
-                                "estimated_risk": step.estimated_risk,
-                                "requires_approval": step.requires_approval,
+                                "status": "awaiting_custodian_approval",
+                                # Design fix: serialize AgentAction to dict — raw dataclass
+                                # object is not JSON-serializable; any caller attempting
+                                # json.dumps(results) would crash with TypeError.
+                                "action": {
+                                    "action_id": step.action_id,
+                                    "action_type": step.action_type,
+                                    "tool_name": step.tool_name,
+                                    "rationale": step.rationale,
+                                    "epistemic_basis": (
+                                        step.epistemic_basis.value
+                                        if isinstance(step.epistemic_basis, EpistemicLabel)
+                                        else str(step.epistemic_basis)
+                                    ),
+                                    "estimated_risk": step.estimated_risk,
+                                    "requires_approval": step.requires_approval,
+                                },
                             }
-                        })
+                        )
                         results["status"] = "awaiting_custodian_approval"
                         results["pending_action"] = step.action_id
                         results["completed_steps"] = step_idx
-                        self._append_audit("CUSTODIAN_APPROVAL_PENDING", {
-                            "plan_id": plan.plan_id,
-                            "action_id": step.action_id
-                        })
+                        self._append_audit(
+                            "CUSTODIAN_APPROVAL_PENDING",
+                            {"plan_id": plan.plan_id, "action_id": step.action_id},
+                        )
                         return results
                     elif not custodian_approval:
-                        results["executions"].append({
-                            "action_id": step.action_id,
-                            "status": "rejected_by_custodian"
-                        })
+                        results["executions"].append(
+                            {"action_id": step.action_id, "status": "rejected_by_custodian"}
+                        )
                         results["status"] = "rejected_by_custodian"
                         results["completed_steps"] = step_idx
-                        self._append_audit("CUSTODIAN_APPROVAL_REJECTED", {
-                            "plan_id": plan.plan_id,
-                            "action_id": step.action_id
-                        })
+                        self._append_audit(
+                            "CUSTODIAN_APPROVAL_REJECTED",
+                            {"plan_id": plan.plan_id, "action_id": step.action_id},
+                        )
                         return results
 
                 # Execute (simulated)
                 execution_result = self._simulate_execution(step, plan_id=plan.plan_id)
 
-                results["executions"].append({
-                    "action_id": step.action_id,
-                    "status": "completed",
-                    # BUG-2 Fix: Full SHA-256, no truncation. Truncation to [:16]
-                    # reintroduced collision risk inconsistent with the P0 fix applied
-                    # elsewhere (ConstitutionalCheckpoint.compute_hash).
-                    "result_hash": hashlib.sha256(str(execution_result).encode()).hexdigest()
-                })
+                results["executions"].append(
+                    {
+                        "action_id": step.action_id,
+                        "status": "completed",
+                        # BUG-2 Fix: Full SHA-256, no truncation. Truncation to [:16]
+                        # reintroduced collision risk inconsistent with the P0 fix applied
+                        # elsewhere (ConstitutionalCheckpoint.compute_hash).
+                        "result_hash": hashlib.sha256(str(execution_result).encode()).hexdigest(),
+                    }
+                )
 
             # Final anchor
             results["status"] = "completed_with_checkpoints"
             results["final_anchor"] = self._compute_merkle_root(results["checkpoints"])
             results["execution_time"] = time.time() - start_time
 
-            self._append_audit("PLAN_EXECUTION_COMPLETE", {
-                "plan_id": plan.plan_id,
-                "status": results["status"],
-                "checkpoints": len(results["checkpoints"]),
-                "executions": len([e for e in results["executions"] if e.get("status") == "completed"]),
-                "execution_time": results["execution_time"],
-                "merkle_root": results["final_anchor"][:16] + "..."
-            })
+            self._append_audit(
+                "PLAN_EXECUTION_COMPLETE",
+                {
+                    "plan_id": plan.plan_id,
+                    "status": results["status"],
+                    "checkpoints": len(results["checkpoints"]),
+                    "executions": len(
+                        [e for e in results["executions"] if e.get("status") == "completed"]
+                    ),
+                    "execution_time": results["execution_time"],
+                    "merkle_root": results["final_anchor"][:16] + "...",
+                },
+            )
 
             return results
 
@@ -967,12 +1036,19 @@ class OpenClawAgent:
             if action.tool_name not in self.gate.allowed_tools:
                 return {"status": "tool_unauthorized", "tool": action.tool_name}
 
-        self._append_audit("TOOL_INVOKED", {
-            "plan_id": plan_id,
-            "action_id": action.action_id,
-            "tool": action.tool_name,
-            "epistemic": action.epistemic_basis.value if isinstance(action.epistemic_basis, EpistemicLabel) else str(action.epistemic_basis)
-        })
+        self._append_audit(
+            "TOOL_INVOKED",
+            {
+                "plan_id": plan_id,
+                "action_id": action.action_id,
+                "tool": action.tool_name,
+                "epistemic": (
+                    action.epistemic_basis.value
+                    if isinstance(action.epistemic_basis, EpistemicLabel)
+                    else str(action.epistemic_basis)
+                ),
+            },
+        )
 
         return {"status": "success", "tool": action.tool_name}
 
@@ -995,7 +1071,7 @@ class OpenClawAgent:
             next_level = []
             for i in range(0, len(leaves), 2):
                 left = leaves[i]
-                right = leaves[i+1] if i+1 < len(leaves) else leaves[i]
+                right = leaves[i + 1] if i + 1 < len(leaves) else leaves[i]
                 parent = hashlib.sha256(left + right).digest()
                 next_level.append(parent)
             leaves = next_level

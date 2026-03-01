@@ -18,19 +18,21 @@ from openclaw_agent import (
 # USAGE EXAMPLES
 # ============================================================
 
+
 def example_bounded_agent_workflow():
     """Example: A bounded agent that analyzes code with full constitutional checkpoints."""
     agent = OpenClawAgent(agency_tier=AgencyLevel.BOUNDED_TOOLS)
 
     def noop(x):
         return x
+
     agent.register_tool("file_search", noop, risk_level=0.2)
     agent.register_tool("file_read", noop, risk_level=0.1)
     agent.register_tool("static_analysis", noop, risk_level=0.3)
 
     plan = agent.create_plan(
         objective="Analyze Python codebase for potential improvements",
-        context={"directory": "./src"}
+        context={"directory": "./src"},
     )
 
     print(f"[PLAN CREATED] {plan.plan_id}")
@@ -42,9 +44,9 @@ def example_bounded_agent_workflow():
     print("\n[EXECUTION RESULTS]")
     print(f"  Status: {results['status']}")
     print(f"  Checkpoints: {len(results['checkpoints'])}")
-    for cp in results['checkpoints']:
+    for cp in results["checkpoints"]:
         print(f"    - {cp['id']}: {cp['compliance']*100:.0f}% compliance")
-        if cp['drift']:
+        if cp["drift"]:
             print(f"      DRIFT: {cp['codes']}")
 
     print(f"  Merkle Root: {results['final_anchor']}")
@@ -61,6 +63,7 @@ def example_high_risk_gate():
 
     def noop(x):
         return x
+
     agent.register_tool("database_migrate", noop, risk_level=0.9)
 
     risky_plan = AgentPlan(
@@ -74,15 +77,15 @@ def example_high_risk_gate():
                 parameters={"operation": "ALTER TABLE..."},
                 rationale="[ASSUMPTION] Schema migration is required for new feature",
                 epistemic_basis=EpistemicLabel.ASSUMPTION,
-                estimated_risk=0.9
+                estimated_risk=0.9,
             )
         ],
         assumptions=["Backup completed", "Migration tested in staging"],
-        estimated_completion=10.0
+        estimated_completion=10.0,
     )
 
     results_no_approval = agent.execute_with_checkpoints(risky_plan, custodian_approval=None)
-    if results_no_approval['executions']:
+    if results_no_approval["executions"]:
         print(f"[WITHOUT APPROVAL] {results_no_approval['executions'][0]['status']}")
     else:
         print(f"[WITHOUT APPROVAL] Plan blocked: {results_no_approval.get('reason', 'No reason')}")
@@ -98,14 +101,14 @@ def example_high_risk_gate():
                 parameters={"operation": "ALTER TABLE..."},
                 rationale="[ASSUMPTION] Schema migration is required for new feature",
                 epistemic_basis=EpistemicLabel.ASSUMPTION,
-                estimated_risk=0.9
+                estimated_risk=0.9,
             )
         ],
         assumptions=["Backup completed"],
-        estimated_completion=10.0
+        estimated_completion=10.0,
     )
     results_approved = agent.execute_with_checkpoints(risky_plan2, custodian_approval=True)
-    if results_approved['executions']:
+    if results_approved["executions"]:
         print(f"[WITH APPROVAL] {results_approved['executions'][0]['status']}")
     else:
         print(f"[WITH APPROVAL] {results_approved['status']}")
@@ -126,11 +129,11 @@ def example_drift_detection():
                 parameters={"new_behavior": "autonomous"},
                 rationale="Self-improvement will optimize outcomes",
                 epistemic_basis=EpistemicLabel.HYPOTHESIS,
-                estimated_risk=1.0
+                estimated_risk=1.0,
             )
         ],
         assumptions=["Self-modification is safe"],
-        estimated_completion=1.0
+        estimated_completion=1.0,
     )
 
     results = agent.execute_with_checkpoints(bad_plan)
@@ -150,7 +153,7 @@ def example_granular_risk_tuning():
         action_max_risk=0.7,
         override_max_risk=0.9,
         daily_risk_budget=5.0,
-        tool_multipliers={"database_migrate": 1.5, "file_delete": 2.0}
+        tool_multipliers={"database_migrate": 1.5, "file_delete": 2.0},
     )
 
     permissive_risk = RiskConfiguration(
@@ -159,7 +162,7 @@ def example_granular_risk_tuning():
         override_max_risk=0.99,
         daily_risk_budget=20.0,
         custodian_can_override=True,
-        tool_multipliers={"database_migrate": 1.0, "file_delete": 1.2}
+        tool_multipliers={"database_migrate": 1.0, "file_delete": 1.2},
     )
 
     production_risk = RiskConfiguration(
@@ -168,22 +171,21 @@ def example_granular_risk_tuning():
         override_max_risk=0.8,
         daily_risk_budget=3.0,
         custodian_can_override=False,
-        tool_multipliers={"database_migrate": 2.0, "file_delete": 3.0}
+        tool_multipliers={"database_migrate": 2.0, "file_delete": 3.0},
     )
 
     configs = [
         ("Conservative", conservative_risk),
         ("Permissive", permissive_risk),
-        ("Production", production_risk)
+        ("Production", production_risk),
     ]
 
     for name, risk_config in configs:
-        agent = OpenClawAgent(
-            agency_tier=AgencyLevel.CUSTODIAN_GATE,
-            risk_config=risk_config
-        )
+        agent = OpenClawAgent(agency_tier=AgencyLevel.CUSTODIAN_GATE, risk_config=risk_config)
+
         def noop(x):
             return x
+
         agent.register_tool("database_migrate", noop, risk_level=0.8)
 
         plan = AgentPlan(
@@ -197,11 +199,11 @@ def example_granular_risk_tuning():
                     parameters={"operation": "ALTER TABLE..."},
                     rationale="[ASSUMPTION] Migration is safe",
                     epistemic_basis=EpistemicLabel.ASSUMPTION,
-                    estimated_risk=0.8
+                    estimated_risk=0.8,
                 )
             ],
             assumptions=[],
-            estimated_completion=5.0
+            estimated_completion=5.0,
         )
 
         effective = risk_config.calculate_effective_risk(0.8, "database_migrate")
@@ -211,8 +213,12 @@ def example_granular_risk_tuning():
 
         print(f"\n  {name} Config:")
         print(f"    Base Risk: 0.8 -> Effective: {effective:.2f}")
-        print(f"    Action Max: {risk_config.action_max_risk}, Override Max: {risk_config.override_max_risk}")
-        print(f"    Daily Budget: {velocity['budget']:.1f}, Can Override: {risk_config.custodian_can_override}")
+        print(
+            f"    Action Max: {risk_config.action_max_risk}, Override Max: {risk_config.override_max_risk}"
+        )
+        print(
+            f"    Daily Budget: {velocity['budget']:.1f}, Can Override: {risk_config.custodian_can_override}"
+        )
         print(f"    Result: {results['status']}")
 
 
