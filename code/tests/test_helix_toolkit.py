@@ -263,7 +263,7 @@ class TestOverrides(unittest.TestCase):
 
 class TestOpenClawHardening(unittest.TestCase):
     def test_checkpoint_id_uniqueness(self):
-        from openclaw_agent import HelixConstitutionalGate, AgentPlan, AgentAction, EpistemicLabel
+        from openclaw_agent import AgentAction, AgentPlan, EpistemicLabel, HelixConstitutionalGate
 
         gate = HelixConstitutionalGate()
         plan = AgentPlan(
@@ -288,7 +288,13 @@ class TestOpenClawHardening(unittest.TestCase):
         self.assertNotEqual(cp1.checkpoint_id, cp2.checkpoint_id)
 
     def test_plugin_cannot_mutate_plan(self):
-        from openclaw_agent import PluginRegistry, ConstitutionalLayer, AgentPlan, AgentAction, EpistemicLabel
+        from openclaw_agent import (
+            AgentAction,
+            AgentPlan,
+            ConstitutionalLayer,
+            EpistemicLabel,
+            PluginRegistry,
+        )
 
         class MutatingLayer(ConstitutionalLayer):
             @property
@@ -323,7 +329,12 @@ class TestOpenClawHardening(unittest.TestCase):
         self.assertEqual(len(plan.steps), 1)
 
     def test_custodian_approval_auth(self):
-        from openclaw_agent import CustodianApprovalAPI, AgentAction, ConstitutionalCheckpoint, EpistemicLabel
+        from openclaw_agent import (
+            AgentAction,
+            ConstitutionalCheckpoint,
+            CustodianApprovalAPI,
+            EpistemicLabel,
+        )
 
         api = CustodianApprovalAPI(allowed_custodians={"ALICE"}, approval_token="secret")
         action = AgentAction(
@@ -348,7 +359,7 @@ class TestOpenClawHardening(unittest.TestCase):
         self.assertTrue(api.approve(req_id, "ALICE", token="secret"))
 
     def test_memo_key_non_json_params(self):
-        from openclaw_agent import OpenClawAgent, AgentAction, EpistemicLabel
+        from openclaw_agent import AgentAction, EpistemicLabel, OpenClawAgent
 
         agent = OpenClawAgent()
         action = AgentAction(
