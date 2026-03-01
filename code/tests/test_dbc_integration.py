@@ -13,10 +13,10 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from openclaw_agent import (
+    CRYPTO_AVAILABLE,
     CheckpointStore,
     ConstitutionalCheckpoint,
     DBCIdentity,
-    CRYPTO_AVAILABLE,
 )
 
 
