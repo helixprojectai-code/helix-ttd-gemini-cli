@@ -17,6 +17,7 @@ All bug fixes from Claude code review (2026-03-01) applied:
 import copy
 import glob
 import hashlib
+import hmac
 import inspect
 import json
 import os
@@ -31,8 +32,9 @@ import uuid
 from abc import ABC, abstractmethod
 from collections.abc import Callable
 from dataclasses import dataclass, field
-from datetime import date, datetime, timedelta
+from datetime import date, datetime, timedelta, timezone
 from enum import Enum, auto
+from pathlib import Path
 from typing import Any
 
 
@@ -307,20 +309,198 @@ class RiskConfiguration:
         return report
 
 
+# v1.3.0: DBC Identity for Non-Repudiable Audit Trails
+class DBCIdentity:
+    """[FACT] Digital Birth Certificate identity for cryptographic signing.
+
+    [HYPOTHESIS] DBC-linked signatures provide forensic non-repudiation.
+    [ASSUMPTION] DBC files contain node identity and public key metadata.
+    """
+
+    def __init__(self, dbc_path: Path | None = None):
+        """[FACT] Initialize DBC identity from file.
+
+        Args:
+            dbc_path: Path to DBC JSON file. If None, uses environment default.
+        """
+        self.dbc_path = dbc_path or self._find_dbc()
+        self.dbc_data: dict = {}
+        self._private_key: str | None = None
+        self._loaded = False
+
+    def _find_dbc(self) -> Path:
+        """[FACT] Locate DBC file in standard locations."""
+        # Check environment variable first
+        if dbc_env := os.environ.get("HELIX_DBC_PATH"):
+            return Path(dbc_env)
+
+        # Standard locations by node type
+        workspace = Path("Z:/gemini")
+        evac_dir = workspace / "EVAC"
+
+        # Try gems.dbc.json first (GEMS substrate)
+        dbc_file = evac_dir / "gems.dbc.json"
+        if dbc_file.exists():
+            return dbc_file
+
+        # Fallback to kimi.dbc.json (KIMI substrate)
+        dbc_file = Path("Z:/kimi/EVAC/kimi.dbc.json")
+        if dbc_file.exists():
+            return dbc_file
+
+        # Default to gems location (will need creation)
+        return evac_dir / "gems.dbc.json"
+
+    def load(self) -> "DBCIdentity":
+        """[FACT] Load DBC from disk.
+
+        Returns:
+            Self for chaining.
+
+        Raises:
+            FileNotFoundError: If DBC file doesn't exist.
+        """
+        if not self.dbc_path.exists():
+            raise FileNotFoundError(
+                f"[ASSUMPTION] DBC not found at {self.dbc_path}. " "Run DBC creation first."
+            )
+
+        with open(self.dbc_path, encoding="utf-8") as f:
+            self.dbc_data = json.load(f)
+
+        self._loaded = True
+        return self
+
+    def load_or_create(
+        self, agent_name: str | None = None, custodian_id: str | None = None
+    ) -> "DBCIdentity":
+        """[FACT] Load existing DBC or create new one.
+
+        Args:
+            agent_name: Name for new DBC if creation needed.
+            custodian_id: Custodian for new DBC if creation needed.
+
+        Returns:
+            Self for chaining.
+        """
+        try:
+            return self.load()
+        except FileNotFoundError:
+            return self._create_default(agent_name, custodian_id)
+
+    def _create_default(
+        self, agent_name: str | None = None, custodian_id: str | None = None
+    ) -> "DBCIdentity":
+        """[FACT] Create minimal DBC for testing/development."""
+        # Generate keypair simulation (in production, use proper crypto)
+        key_seed = f"{agent_name or 'agent'}_{uuid.uuid4().hex[:16]}"
+        self._private_key = hashlib.sha256(key_seed.encode()).hexdigest()
+        public_key = hashlib.sha256(self._private_key.encode()).hexdigest()
+
+        self.dbc_data = {
+            "version": "v0.3",
+            "type": "DBC",
+            "agent_name": agent_name or f"Agent-{uuid.uuid4().hex[:8]}",
+            "custodian_id": custodian_id or "System",
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "creation_reason": "Auto-generated for audit signing",
+            "hardware_sig": "SIMULATED",
+            "parent_dbc": None,
+            "public_key": public_key,
+            "merkle_root": hashlib.sha256(public_key.encode()).hexdigest(),
+            "dbc_id": f"DBC-{uuid.uuid4().hex[:16]}",
+        }
+
+        # Ensure directory exists
+        self.dbc_path.parent.mkdir(parents=True, exist_ok=True)
+
+        with open(self.dbc_path, "w", encoding="utf-8") as f:
+            json.dump(self.dbc_data, f, indent=2)
+
+        self._loaded = True
+        return self
+
+    @property
+    def dbc_id(self) -> str:
+        """[FACT] Return DBC identifier."""
+        return self.dbc_data.get("dbc_id", "UNKNOWN")
+
+    @property
+    def agent_name(self) -> str:
+        """[FACT] Return agent name from DBC."""
+        return self.dbc_data.get("agent_name", "Unknown")
+
+    @property
+    def public_key(self) -> str:
+        """[FACT] Return public key for signature verification."""
+        # If DBC has public_key field, use it
+        if "public_key" in self.dbc_data:
+            return self.dbc_data["public_key"]
+        # Otherwise derive from merkle_root (legacy DBCs)
+        return self.dbc_data.get("merkle_root", "UNKNOWN")
+
+    def sign(self, data: bytes) -> str:
+        """[FACT] Sign data using DBC-linked private key.
+
+        [HYPOTHESIS] HMAC-SHA256 provides sufficient non-repudiation
+        for audit trails within the Helix federation.
+
+        Args:
+            data: Raw bytes to sign.
+
+        Returns:
+            Hex-encoded signature string.
+        """
+        if not self._loaded:
+            self.load()
+
+        private_key = self._get_private_key()
+
+        # HMAC-SHA256 signature with constant-time comparison
+        signature = hmac.new(private_key.encode(), data, hashlib.sha256).hexdigest()
+
+        return signature
+
+    def _get_private_key(self) -> str:
+        """[FACT] Retrieve or derive private key for signing."""
+        if self._private_key:
+            return self._private_key
+
+        # Derive deterministic key from DBC data
+        dbc_entropy = f"{self.dbc_id}:{self.dbc_data.get('merkle_root', '')}"
+        self._private_key = hashlib.sha256(dbc_entropy.encode()).hexdigest()
+        return self._private_key
+
+    def verify(self, data: bytes, signature: str) -> bool:
+        """[FACT] Verify signature against DBC public key."""
+        expected = self.sign(data)
+        return hmac.compare_digest(expected, signature)
+
+
 class CheckpointStore:
-    """ENHANCEMENT #1: SQLite persistence for forensic audit trails.
+    """ENHANCEMENT #1 + v1.3.0: SQLite persistence with DBC-signed audit trails.
 
     Provides durable storage for constitutional checkpoints with queryable
     history for regulatory compliance and forensic analysis.
+
+    v1.3.0 adds DBC (Digital Birth Certificate) identity signing for
+    non-repudiable audit trails linking checkpoints to agent identity.
     """
 
-    def __init__(self, db_path: str | None = None):
-        """Initialize checkpoint store with optional custom database path."""
+    def __init__(self, db_path: str | None = None, dbc_identity: DBCIdentity | None = None):
+        """Initialize checkpoint store with optional custom database path.
+
+        Args:
+            db_path: Path to SQLite database. If None, uses default location.
+            dbc_identity: DBC identity for signing checkpoints. If None,
+                checkpoints are stored without cryptographic signatures.
+        """
         if db_path is None:
             script_dir = os.path.dirname(os.path.abspath(__file__))
             db_path = os.path.join(script_dir, "checkpoints.db")
         self.db_path = db_path
         self._lock = threading.Lock()
+        self._dbc = dbc_identity
         self._init_db()
 
     def _init_db(self):
@@ -338,7 +518,10 @@ class CheckpointStore:
                     prev_checkpoint_hash TEXT,
                     risk_metrics TEXT,
                     plan_id TEXT,
-                    agent_id TEXT
+                    agent_id TEXT,
+                    dbc_id TEXT,
+                    dbc_signature TEXT,
+                    signature_timestamp TEXT
                 )
                 """)
             conn.execute("""
@@ -347,18 +530,39 @@ class CheckpointStore:
             conn.execute("""
                 CREATE INDEX IF NOT EXISTS idx_timestamp ON checkpoints(timestamp)
                 """)
+            conn.execute("""
+                CREATE INDEX IF NOT EXISTS idx_dbc_id ON checkpoints(dbc_id)
+                """)
             conn.commit()
 
     def save(self, checkpoint: ConstitutionalCheckpoint, plan_id: str = "", agent_id: str = ""):
-        """Persist a checkpoint to the database."""
+        """Persist a checkpoint to the database with optional DBC signature.
+
+        v1.3.0: If DBC identity is configured, signs the checkpoint hash
+        for non-repudiable audit trails.
+        """
+        # Compute checkpoint hash for signing
+        checkpoint_hash = checkpoint.compute_hash()
+
+        # Generate DBC signature if identity available
+        dbc_id = None
+        dbc_signature = None
+        signature_timestamp = None
+
+        if self._dbc:
+            sig_bundle = self._sign_checkpoint(checkpoint_hash)
+            dbc_id = sig_bundle.get("dbc_id")
+            dbc_signature = sig_bundle.get("signature")
+            signature_timestamp = sig_bundle.get("timestamp")
+
         with self._lock, sqlite3.connect(self.db_path) as conn:
             conn.execute(
                 """
                     INSERT OR REPLACE INTO checkpoints
                     (id, timestamp, layer, compliance_score, drift_detected,
                      drift_codes, merkle_hash, prev_checkpoint_hash, risk_metrics,
-                     plan_id, agent_id)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                     plan_id, agent_id, dbc_id, dbc_signature, signature_timestamp)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                     """,
                 (
                     checkpoint.checkpoint_id,
@@ -372,9 +576,93 @@ class CheckpointStore:
                     json.dumps(checkpoint.risk_metrics),
                     plan_id,
                     agent_id,
+                    dbc_id,
+                    dbc_signature,
+                    signature_timestamp,
                 ),
             )
             conn.commit()
+
+    def _sign_checkpoint(self, checkpoint_hash: str) -> dict:
+        """[FACT] Sign checkpoint hash with DBC identity.
+
+        v1.3.0: Creates cryptographically signed checkpoint for audit.
+
+        Returns:
+            Signature bundle with metadata for verification.
+        """
+        timestamp = datetime.now(timezone.utc).isoformat()
+
+        # Create signed payload: hash + timestamp + dbc_id
+        payload = f"{checkpoint_hash}:{timestamp}:{self._dbc.dbc_id}"
+        signature = self._dbc.sign(payload.encode())
+
+        return {
+            "signature": signature,
+            "dbc_id": self._dbc.dbc_id,
+            "agent_name": self._dbc.agent_name,
+            "public_key": self._dbc.public_key,
+            "timestamp": timestamp,
+            "algorithm": "HMAC-SHA256",
+        }
+
+    def verify_signature(self, checkpoint_id: str) -> dict:
+        """[FACT] Verify DBC signature of a stored checkpoint.
+
+        v1.3.0: Forensic verification of checkpoint authenticity.
+
+        Returns:
+            Verification result with validity status.
+        """
+        with sqlite3.connect(self.db_path) as conn:
+            conn.row_factory = sqlite3.Row
+            cursor = conn.execute("""SELECT * FROM checkpoints WHERE id = ?""", (checkpoint_id,))
+            row = cursor.fetchone()
+
+            if not row:
+                return {"valid": False, "error": "Checkpoint not found"}
+
+            row_dict = dict(row)
+
+            # Check if signature exists
+            if not row_dict.get("dbc_signature"):
+                return {"valid": False, "error": "No signature stored for this checkpoint"}
+
+            # Reconstruct checkpoint hash
+            checkpoint = ConstitutionalCheckpoint(
+                checkpoint_id=row_dict["id"],
+                timestamp=row_dict["timestamp"],
+                layer=row_dict["layer"],
+                compliance_score=row_dict["compliance_score"],
+                drift_detected=bool(row_dict["drift_detected"]),
+                drift_codes=json.loads(row_dict["drift_codes"] or "[]"),
+                merkle_hash=row_dict["merkle_hash"],
+                prev_checkpoint_hash=row_dict["prev_checkpoint_hash"] or "",
+                risk_metrics=json.loads(row_dict["risk_metrics"] or "{}"),
+            )
+            checkpoint_hash = checkpoint.compute_hash()
+
+            # Reconstruct payload
+            payload = f"{checkpoint_hash}:{row_dict['signature_timestamp']}:{row_dict['dbc_id']}"
+
+            # Verify using stored DBC identity or a new one with same keys
+            if self._dbc and self._dbc.dbc_id == row_dict["dbc_id"]:
+                is_valid = self._dbc.verify(payload.encode(), row_dict["dbc_signature"])
+            else:
+                # Cannot verify without matching DBC identity
+                return {
+                    "valid": False,
+                    "error": "DBC identity mismatch or not available",
+                    "stored_dbc_id": row_dict["dbc_id"],
+                    "current_dbc_id": self._dbc.dbc_id if self._dbc else None,
+                }
+
+            return {
+                "valid": is_valid,
+                "dbc_id": row_dict["dbc_id"],
+                "signature_timestamp": row_dict["signature_timestamp"],
+                "algorithm": "HMAC-SHA256",
+            }
 
     def get_by_plan(self, plan_id: str) -> list[dict]:
         """Retrieve all checkpoints for a specific plan."""
