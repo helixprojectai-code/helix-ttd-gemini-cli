@@ -20,6 +20,7 @@ import inspect
 import json
 import os
 import re
+import sqlite3
 import sys
 import threading
 import time
@@ -213,6 +214,127 @@ class RiskConfiguration:
                 else 0
             ),
         }
+
+
+class CheckpointStore:
+    """ENHANCEMENT #1: SQLite persistence for forensic audit trails.
+
+    Provides durable storage for constitutional checkpoints with queryable
+    history for regulatory compliance and forensic analysis.
+    """
+
+    def __init__(self, db_path: str | None = None):
+        """Initialize checkpoint store with optional custom database path."""
+        if db_path is None:
+            script_dir = os.path.dirname(os.path.abspath(__file__))
+            db_path = os.path.join(script_dir, "checkpoints.db")
+        self.db_path = db_path
+        self._lock = threading.Lock()
+        self._init_db()
+
+    def _init_db(self):
+        """Create checkpoint table if not exists."""
+        with sqlite3.connect(self.db_path) as conn:
+            conn.execute(
+                """
+                CREATE TABLE IF NOT EXISTS checkpoints (
+                    id TEXT PRIMARY KEY,
+                    timestamp REAL NOT NULL,
+                    layer TEXT NOT NULL,
+                    compliance_score REAL NOT NULL,
+                    drift_detected INTEGER NOT NULL,
+                    drift_codes TEXT,
+                    merkle_hash TEXT NOT NULL,
+                    prev_checkpoint_hash TEXT,
+                    risk_metrics TEXT,
+                    plan_id TEXT,
+                    agent_id TEXT
+                )
+                """
+            )
+            conn.execute(
+                """
+                CREATE INDEX IF NOT EXISTS idx_plan_id ON checkpoints(plan_id)
+                """
+            )
+            conn.execute(
+                """
+                CREATE INDEX IF NOT EXISTS idx_timestamp ON checkpoints(timestamp)
+                """
+            )
+            conn.commit()
+
+    def save(self, checkpoint: ConstitutionalCheckpoint, plan_id: str = "", agent_id: str = ""):
+        """Persist a checkpoint to the database."""
+        with self._lock, sqlite3.connect(self.db_path) as conn:
+                conn.execute(
+                    """
+                    INSERT OR REPLACE INTO checkpoints
+                    (id, timestamp, layer, compliance_score, drift_detected,
+                     drift_codes, merkle_hash, prev_checkpoint_hash, risk_metrics,
+                     plan_id, agent_id)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    """,
+                    (
+                        checkpoint.checkpoint_id,
+                        checkpoint.timestamp,
+                        checkpoint.layer,
+                        checkpoint.compliance_score,
+                        1 if checkpoint.drift_detected else 0,
+                        json.dumps(checkpoint.drift_codes),
+                        checkpoint.merkle_hash,
+                        checkpoint.prev_checkpoint_hash,
+                        json.dumps(checkpoint.risk_metrics),
+                        plan_id,
+                        agent_id,
+                    ),
+                )
+                conn.commit()
+
+    def get_by_plan(self, plan_id: str) -> list[dict]:
+        """Retrieve all checkpoints for a specific plan."""
+        with sqlite3.connect(self.db_path) as conn:
+            conn.row_factory = sqlite3.Row
+            cursor = conn.execute(
+                "SELECT * FROM checkpoints WHERE plan_id = ? ORDER BY timestamp",
+                (plan_id,),
+            )
+            return [dict(row) for row in cursor.fetchall()]
+
+    def get_by_timerange(
+        self, start: datetime, end: datetime, agent_id: str | None = None
+    ) -> list[dict]:
+        """Query checkpoints within a time range for forensic analysis."""
+        with sqlite3.connect(self.db_path) as conn:
+            conn.row_factory = sqlite3.Row
+            if agent_id:
+                cursor = conn.execute(
+                    """SELECT * FROM checkpoints
+                       WHERE timestamp >= ? AND timestamp <= ? AND agent_id = ?
+                       ORDER BY timestamp""",
+                    (start.timestamp(), end.timestamp(), agent_id),
+                )
+            else:
+                cursor = conn.execute(
+                    """SELECT * FROM checkpoints
+                       WHERE timestamp >= ? AND timestamp <= ?
+                       ORDER BY timestamp""",
+                    (start.timestamp(), end.timestamp()),
+                )
+            return [dict(row) for row in cursor.fetchall()]
+
+    def get_drift_history(self, limit: int = 100) -> list[dict]:
+        """Retrieve recent drift events for compliance monitoring."""
+        with sqlite3.connect(self.db_path) as conn:
+            conn.row_factory = sqlite3.Row
+            cursor = conn.execute(
+                """SELECT * FROM checkpoints
+                   WHERE drift_detected = 1
+                   ORDER BY timestamp DESC
+                   LIMIT ?""",
+                (limit,),
+            )
+            return [dict(row) for row in cursor.fetchall()]
 
 
 class HelixConstitutionalGate:
@@ -1155,3 +1277,223 @@ class OpenClawAgent:
             leaves = next_level
 
         return leaves[0].hex()
+
+    # ENHANCEMENT #2: Async Execution Support
+    async def execute_async(self, plan: AgentPlan, custodian_approval: bool | None = None) -> dict:
+        """Async version of execute_with_checkpoints for I/O-bound tools.
+
+        Allows concurrent execution of independent actions while maintaining
+        constitutional checkpoints for each step.
+        """
+        import asyncio
+
+        with self._execution_lock:
+            if len(plan.steps) > self.MAX_PLAN_STEPS:
+                return {
+                    "plan_id": plan.plan_id,
+                    "status": "rejected",
+                    "reason": f"Plan exceeds maximum {self.MAX_PLAN_STEPS} steps",
+                }
+
+            start_time = time.time()
+            results = {
+                "plan_id": plan.plan_id,
+                "checkpoints": [],
+                "executions": [],
+                "status": "pending",
+                "final_anchor": "",
+                "start_time": datetime.now().isoformat(),
+            }
+
+            # Validate plan first (synchronous)
+            plan_checkpoint = self.gate.validate_plan(plan)
+            results["checkpoints"].append({
+                "id": plan_checkpoint.checkpoint_id,
+                "compliance": plan_checkpoint.compliance_score,
+                "drift": plan_checkpoint.drift_detected,
+                "codes": plan_checkpoint.drift_codes,
+                "scope": "plan",
+            })
+
+            if not plan.constitutional_clearance:
+                results["status"] = "rejected_at_planning"
+                results["reason"] = f"Constitutional violation: {plan_checkpoint.drift_codes}"
+                return results
+
+            # Execute steps asynchronously
+            for step_idx, step in enumerate(plan.steps):
+                elapsed = time.time() - start_time
+                if elapsed > self.MAX_EXECUTION_TIME:
+                    results["status"] = "timeout"
+                    results["reason"] = f"Execution exceeded {self.MAX_EXECUTION_TIME}s limit"
+                    results["completed_steps"] = step_idx
+                    return results
+
+                # Validate action
+                action_checkpoint = self.gate.validate_action(step, {})
+                results["checkpoints"].append({
+                    "id": action_checkpoint.checkpoint_id,
+                    "compliance": action_checkpoint.compliance_score,
+                    "drift": action_checkpoint.drift_detected,
+                    "codes": action_checkpoint.drift_codes,
+                    "scope": "action",
+                    "action_id": step.action_id,
+                })
+
+                if action_checkpoint.drift_detected and action_checkpoint.compliance_score < 0.5:
+                    results["executions"].append({
+                        "action_id": step.action_id,
+                        "status": "blocked",
+                        "reason": action_checkpoint.drift_codes,
+                    })
+                    continue
+
+                # Check custodian gate
+                if step.requires_approval or self.gate.agency_tier == AgencyLevel.CUSTODIAN_GATE:
+                    if custodian_approval is None:
+                        results["status"] = "awaiting_custodian_approval"
+                        results["pending_action"] = step.action_id
+                        return results
+                    elif not custodian_approval:
+                        results["status"] = "rejected_by_custodian"
+                        return results
+
+                # Async execution
+                execution_result = await self._execute_tool_async(step, plan_id=plan.plan_id)
+                results["executions"].append({
+                    "action_id": step.action_id,
+                    "status": "completed" if execution_result.get("status") == "success" else "failed",
+                    "result_hash": hashlib.sha256(str(execution_result).encode()).hexdigest(),
+                })
+
+                # Small yield to allow other async tasks
+                await asyncio.sleep(0)
+
+            results["status"] = "completed_with_checkpoints"
+            results["final_anchor"] = self._compute_merkle_root(results["checkpoints"])
+            results["execution_time"] = time.time() - start_time
+            return results
+
+    async def _execute_tool_async(self, action: AgentAction, plan_id: str | None = None) -> Any:
+        """Execute a tool asynchronously, handling both sync and async functions."""
+        import asyncio
+        import inspect
+
+        with self._tool_lock:
+            if action.tool_name not in self.available_tools:
+                return {"status": "tool_not_found", "tool": action.tool_name}
+
+            tool_entry = self.available_tools[action.tool_name]
+            tool_func = tool_entry["function"]
+
+        # Check if function is async
+        if inspect.iscoroutinefunction(tool_func):
+            # It's already async - await it directly
+            try:
+                sig = inspect.signature(tool_func)
+                param_count = len(sig.parameters)
+                if param_count == 0:
+                    result = await tool_func()
+                elif param_count == 1:
+                    result = await tool_func(action.parameters)
+                else:
+                    if isinstance(action.parameters, dict):
+                        result = await tool_func(**action.parameters)
+                    else:
+                        result = await tool_func(action.parameters)
+                return {"status": "success", "result": result}
+            except Exception as e:
+                return {"status": "execution_failed", "error": str(e)}
+        else:
+            # Run synchronous function in thread pool to prevent blocking
+            loop = asyncio.get_event_loop()
+            return await loop.run_in_executor(
+                None,  # Uses default executor
+                lambda: self._simulate_execution(action, plan_id)
+            )
+
+    # ENHANCEMENT #3: Plan Serialization & Resume
+    def plan_to_json(self, plan: AgentPlan) -> str:
+        """Serialize a plan to JSON for persistence or transfer."""
+        return json.dumps({
+            "plan_id": plan.plan_id,
+            "objective": plan.objective,
+            "steps": [
+                {
+                    "action_id": step.action_id,
+                    "action_type": step.action_type,
+                    "tool_name": step.tool_name,
+                    "parameters": step.parameters,
+                    "rationale": step.rationale,
+                    "epistemic_basis": step.epistemic_basis.value,
+                    "estimated_risk": step.estimated_risk,
+                    "requires_approval": step.requires_approval,
+                }
+                for step in plan.steps
+            ],
+            "assumptions": plan.assumptions,
+            "estimated_completion": plan.estimated_completion,
+            "constitutional_clearance": plan.constitutional_clearance,
+            "plan_checkpoint": {
+                "checkpoint_id": plan.plan_checkpoint.checkpoint_id,
+                "timestamp": plan.plan_checkpoint.timestamp,
+                "layer": plan.plan_checkpoint.layer,
+                "compliance_score": plan.plan_checkpoint.compliance_score,
+                "drift_detected": plan.plan_checkpoint.drift_detected,
+                "drift_codes": plan.plan_checkpoint.drift_codes,
+                "merkle_hash": plan.plan_checkpoint.merkle_hash,
+            } if plan.plan_checkpoint else None,
+        }, indent=2)
+
+    @classmethod
+    def plan_from_json(cls, json_str: str) -> AgentPlan:
+        """Deserialize a plan from JSON."""
+        data = json.loads(json_str)
+
+        steps = [
+            AgentAction(
+                action_id=step["action_id"],
+                action_type=step["action_type"],
+                tool_name=step["tool_name"],
+                parameters=step["parameters"],
+                rationale=step["rationale"],
+                epistemic_basis=EpistemicLabel(step["epistemic_basis"]),
+                estimated_risk=step["estimated_risk"],
+                requires_approval=step.get("requires_approval", False),
+            )
+            for step in data["steps"]
+        ]
+
+        plan_checkpoint = None
+        if data.get("plan_checkpoint"):
+            cp = data["plan_checkpoint"]
+            plan_checkpoint = ConstitutionalCheckpoint(
+                checkpoint_id=cp["checkpoint_id"],
+                timestamp=cp["timestamp"],
+                layer=cp["layer"],
+                compliance_score=cp["compliance_score"],
+                drift_detected=cp["drift_detected"],
+                drift_codes=cp.get("drift_codes", []),
+                merkle_hash=cp.get("merkle_hash", ""),
+            )
+
+        return AgentPlan(
+            plan_id=data["plan_id"],
+            objective=data["objective"],
+            steps=steps,
+            assumptions=data["assumptions"],
+            estimated_completion=data["estimated_completion"],
+            constitutional_clearance=data.get("constitutional_clearance", False),
+            plan_checkpoint=plan_checkpoint,
+        )
+
+    def save_plan_state(self, plan: AgentPlan, filepath: str):
+        """Save plan state to file for later resumption."""
+        with open(filepath, 'w') as f:
+            f.write(self.plan_to_json(plan))
+
+    @classmethod
+    def load_plan_state(cls, filepath: str) -> AgentPlan:
+        """Load plan state from file."""
+        with open(filepath) as f:
+            return cls.plan_from_json(f.read())
