@@ -20,6 +20,7 @@ import inspect
 import json
 import os
 import re
+import sys
 import threading
 import time
 import unicodedata
@@ -665,11 +666,15 @@ class OpenClawAgent:
                         if os.path.getsize(log_file) > self.MAX_LOG_SIZE_BYTES:
                             self._rotate_current_log()
 
-                except Exception:
-                    pass
+                except OSError as e:
+                    # FIX #3: Log rotation errors instead of silent fail
+                    print(f"[WARN] Log rotation failed for {log_file}: {e}", file=sys.stderr)
+                except Exception as e:
+                    print(f"[WARN] Unexpected error rotating {log_file}: {e}", file=sys.stderr)
 
-        except Exception:
-            pass
+        except Exception as e:
+            # FIX #3: Log the error instead of silently failing
+            print(f"[WARN] Log rotation check failed: {e}", file=sys.stderr)
 
     def _rotate_current_log(self):
         """Rotate the current log file (timestamp-based)."""
@@ -679,8 +684,11 @@ class OpenClawAgent:
             if os.path.exists(self.audit_log_path):
                 os.rename(self.audit_log_path, rotated_path)
                 self._init_audit_log()
-        except Exception:
-            pass
+        except OSError as e:
+            # FIX #3: Log rotation errors
+            print(f"[WARN] Could not rotate log file: {e}", file=sys.stderr)
+        except Exception as e:
+            print(f"[WARN] Unexpected error during log rotation: {e}", file=sys.stderr)
 
     def _init_audit_log(self):
         """P2: Initialize append-only audit log"""
@@ -780,53 +788,83 @@ class OpenClawAgent:
         )
 
     def create_plan(self, objective: str, context: dict[str, Any]) -> AgentPlan:
-        """Agent proposes a plan based on objective.
+        """Agent proposes a plan based on objective and context.
 
-        This is the planning phase - no execution yet.
+        FIX #2: Previously hardcoded 'analyze' branch only. Now uses context
+        and available tools to construct dynamic plans.
         """
         steps = []
+        assumptions = ["Tools required by plan are registered and authorized"]
 
-        if "analyze" in objective.lower():
+        # Use context to inform plan construction
+        target_files = context.get("files", [])
+        target_directory = context.get("directory", "")
+        file_pattern = context.get("pattern", "*.py")
+
+        # Build plan based on available tools and objective
+        if "search" in objective.lower() or "find" in objective.lower():
             steps.append(
                 AgentAction(
-                    action_id="act_1",
+                    action_id="act_search",
                     action_type="search",
                     tool_name="file_search",
-                    parameters={"pattern": "*.py"},
-                    rationale="[HYPOTHESIS] Python files contain the main logic requiring analysis",
+                    parameters={"pattern": file_pattern, "directory": target_directory},
+                    rationale="[HYPOTHESIS] Search will locate relevant files matching criteria",
                     epistemic_basis=EpistemicLabel.HYPOTHESIS,
                     estimated_risk=0.2,
                 )
             )
+            assumptions.append("Target directory exists and is readable")
+
+        if "read" in objective.lower() or "analyze" in objective.lower():
+            read_target = target_files if target_files else {"path": "detected_files"}
             steps.append(
                 AgentAction(
-                    action_id="act_2",
+                    action_id="act_read",
                     action_type="read",
                     tool_name="file_read",
-                    parameters={"path": "detected_files"},
-                    rationale="[FACT] Files need to be read to analyze content",
+                    parameters={"files": read_target},
+                    rationale="[FACT] Files must be read to access their content",
                     epistemic_basis=EpistemicLabel.FACT,
                     estimated_risk=0.1,
                 )
             )
+            assumptions.append("Files are accessible and readable")
+
+        if "analyze" in objective.lower():
             steps.append(
                 AgentAction(
-                    action_id="act_3",
+                    action_id="act_analyze",
                     action_type="analyze",
                     tool_name="static_analysis",
-                    parameters={"files": "read_content"},
-                    rationale="[HYPOTHESIS] Static analysis will identify improvement opportunities",
+                    parameters={"files": "read_content", "context": context},
+                    rationale="[HYPOTHESIS] Static analysis will identify patterns and opportunities",
                     epistemic_basis=EpistemicLabel.HYPOTHESIS,
                     estimated_risk=0.3,
                 )
             )
 
+        # Fallback: generic plan if no specific handlers matched
+        if not steps:
+            steps.append(
+                AgentAction(
+                    action_id="act_generic",
+                    action_type="process",
+                    tool_name="generic_handler",
+                    parameters={"objective": objective, "context": context},
+                    rationale="[ASSUMPTION] Generic processing may satisfy objective",
+                    epistemic_basis=EpistemicLabel.ASSUMPTION,
+                    estimated_risk=0.5,
+                )
+            )
+            assumptions.append("Generic handler can process this objective")
+
         plan = AgentPlan(
             plan_id=f"plan_{int(time.time())}",
             objective=objective,
             steps=steps,
-            assumptions=["Files are accessible", "Tools are available"],
-            estimated_completion=5.0,
+            assumptions=assumptions,
+            estimated_completion=len(steps) * 2.0,  # Rough estimate
         )
 
         return plan
@@ -1025,9 +1063,10 @@ class OpenClawAgent:
             return results
 
     def _simulate_execution(self, action: AgentAction, plan_id: str | None = None) -> Any:
-        """Simulate tool execution - in production, this calls actual tools.
+        """Execute tool function with parameter injection and error handling.
 
-        P1 Hardened: Thread-safe tool lookup with lock.
+        FIX #1: Previously returned stub {"status": "success"} without calling
+        the actual function. Now properly invokes registered tools with context.
         """
         with self._tool_lock:
             if action.tool_name not in self.available_tools:
@@ -1035,6 +1074,10 @@ class OpenClawAgent:
 
             if action.tool_name not in self.gate.allowed_tools:
                 return {"status": "tool_unauthorized", "tool": action.tool_name}
+
+            tool_entry = self.available_tools[action.tool_name]
+            tool_func = tool_entry["function"]
+            tool_risk = tool_entry.get("risk_level", 0.5)
 
         self._append_audit(
             "TOOL_INVOKED",
@@ -1047,10 +1090,45 @@ class OpenClawAgent:
                     if isinstance(action.epistemic_basis, EpistemicLabel)
                     else str(action.epistemic_basis)
                 ),
+                "risk_level": tool_risk,
             },
         )
 
-        return {"status": "success", "tool": action.tool_name}
+        # FIX #1: Actually execute the tool with error handling
+        try:
+            # Inspect function signature to determine parameter passing strategy
+            sig = inspect.signature(tool_func)
+            param_count = len(sig.parameters)
+
+            if param_count == 0:
+                # No-argument function
+                result = tool_func()
+            elif param_count == 1:
+                # Single parameter - pass the parameters dict
+                result = tool_func(action.parameters)
+            else:
+                # Multi-parameter - pass as kwargs if parameters is dict
+                if isinstance(action.parameters, dict):
+                    result = tool_func(**action.parameters)
+                else:
+                    result = tool_func(action.parameters)
+
+            return {
+                "status": "success",
+                "tool": action.tool_name,
+                "result": result,
+                "result_type": type(result).__name__,
+            }
+        except Exception as e:
+            error_msg = str(e)
+            # Sanitize error to prevent log injection
+            error_msg = error_msg.replace("\n", " ").replace("\r", " ")[:500]
+            return {
+                "status": "execution_failed",
+                "tool": action.tool_name,
+                "error": error_msg,
+                "error_type": type(e).__name__,
+            }
 
     def _compute_merkle_root(self, checkpoints: list[dict]) -> str:
         """Compute proper Merkle root of all checkpoint content (P0 Fix).
