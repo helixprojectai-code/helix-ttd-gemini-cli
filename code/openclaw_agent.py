@@ -992,7 +992,8 @@ class CheckpointStore:
                     agent_id TEXT,
                     dbc_id TEXT,
                     dbc_signature TEXT,
-                    signature_timestamp TEXT
+                    signature_timestamp TEXT,
+                    signature_expiration TEXT
                 )
                 """)
             conn.execute("""
@@ -1020,12 +1021,19 @@ class CheckpointStore:
         dbc_signature = None
         signature_timestamp = None
 
+        # v1.3.2: Generate DBC signature if identity available
+        dbc_id = None
+        dbc_signature = None
+        signature_timestamp = None
+        signature_expiration = None
+
         if self._dbc:
             # v1.3.2: Pass checkpoint_id for hardened signing (HIGH-003)
             sig_bundle = self._sign_checkpoint(checkpoint_hash, checkpoint.checkpoint_id)
             dbc_id = sig_bundle.get("dbc_id")
             dbc_signature = sig_bundle.get("signature")
             signature_timestamp = sig_bundle.get("timestamp")
+            signature_expiration = sig_bundle.get("expiration")
 
         with self._lock, sqlite3.connect(self.db_path) as conn:
             conn.execute(
@@ -1033,8 +1041,8 @@ class CheckpointStore:
                     INSERT OR REPLACE INTO checkpoints
                     (id, timestamp, layer, compliance_score, drift_detected,
                      drift_codes, merkle_hash, prev_checkpoint_hash, risk_metrics,
-                     plan_id, agent_id, dbc_id, dbc_signature, signature_timestamp)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                     plan_id, agent_id, dbc_id, dbc_signature, signature_timestamp, signature_expiration)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                     """,
                 (
                     checkpoint.checkpoint_id,
@@ -1051,6 +1059,7 @@ class CheckpointStore:
                     dbc_id,
                     dbc_signature,
                     signature_timestamp,
+                    signature_expiration,
                 ),
             )
             conn.commit()
@@ -1138,33 +1147,66 @@ class CheckpointStore:
                 risk_metrics=json.loads(row_dict["risk_metrics"] or "{}"),
             )
             checkpoint_hash = checkpoint.compute_hash()
-
-            # Reconstruct payload
-            payload = f"{checkpoint_hash}:{row_dict['signature_timestamp']}:{row_dict['dbc_id']}"
             stored_dbc_id = row_dict["dbc_id"]
+
+            # v1.3.2: Try new hardened payload format first
+            # Format: checkpoint_id:hash:timestamp:expiration:dbc_id
+            payload_v132 = f"{checkpoint_id}:{checkpoint_hash}:{row_dict['signature_timestamp']}:{row_dict.get('signature_expiration', '')}:{stored_dbc_id}"
 
             # Try local DBC identity first
             if self._dbc and self._dbc.dbc_id == stored_dbc_id:
-                is_valid = self._dbc.verify(payload.encode(), row_dict["dbc_signature"])
+                is_valid = self._dbc.verify(payload_v132.encode(), row_dict["dbc_signature"])
+                if not is_valid:
+                    # Fallback: try old v1.3.0 format for backward compatibility
+                    payload_legacy = (
+                        f"{checkpoint_hash}:{row_dict['signature_timestamp']}:{stored_dbc_id}"
+                    )
+                    is_valid = self._dbc.verify(payload_legacy.encode(), row_dict["dbc_signature"])
+
+                # Check expiration if present (HIGH-005 fix)
+                expiration = row_dict.get("signature_expiration")
+                if expiration and is_valid:
+                    try:
+                        from datetime import datetime as dt_parse
+
+                        exp_dt = dt_parse.fromisoformat(expiration)
+                        if dt_parse.now(timezone.utc) > exp_dt:
+                            return {
+                                "valid": False,
+                                "error": "Signature expired",
+                                "dbc_id": stored_dbc_id,
+                                "expired_at": expiration,
+                            }
+                    except (ValueError, TypeError):
+                        pass  # Invalid expiration format, skip check
+
                 return {
                     "valid": is_valid,
                     "dbc_id": stored_dbc_id,
                     "signature_timestamp": row_dict["signature_timestamp"],
-                    "algorithm": "HMAC-SHA256",
+                    "algorithm": getattr(self._dbc, "ALGORITHM", "Ed25519"),
                     "verification_method": "local_identity",
                 }
 
             # v1.3.1: Try federation registry for cross-node verification
             if federation_registry:
                 fed_result = federation_registry.verify_cross_node(
-                    stored_dbc_id, payload.encode(), row_dict["dbc_signature"]
+                    stored_dbc_id, payload_v132.encode(), row_dict["dbc_signature"]
                 )
+                if not fed_result["valid"]:
+                    # Fallback: try legacy format
+                    payload_legacy = (
+                        f"{checkpoint_hash}:{row_dict['signature_timestamp']}:{stored_dbc_id}"
+                    )
+                    fed_result = federation_registry.verify_cross_node(
+                        stored_dbc_id, payload_legacy.encode(), row_dict["dbc_signature"]
+                    )
                 if fed_result["valid"]:
                     return {
                         "valid": True,
                         "dbc_id": stored_dbc_id,
                         "signature_timestamp": row_dict["signature_timestamp"],
-                        "algorithm": "HMAC-SHA256",
+                        "algorithm": getattr(self._dbc, "ALGORITHM", "Ed25519"),
                         "verification_method": "federation_registry",
                         "node_name": fed_result.get("node_name"),
                         "custodian_id": fed_result.get("custodian_id"),
