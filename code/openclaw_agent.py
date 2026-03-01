@@ -26,6 +26,7 @@ import threading
 import time
 import unicodedata
 import uuid
+from abc import ABC, abstractmethod
 from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import date, datetime, timedelta
@@ -536,6 +537,466 @@ class MultiAgentCheckpointConsensus:
             }
 
 
+# ENHANCEMENT #7: SIEM Integration - Structured Logging for Security Teams
+class SIEMExporter:
+    """Export constitutional events to SIEM systems (Splunk, ELK, OpenTelemetry).
+
+    Provides real-time constitutional violation alerts and compliance reporting
+    for security operations centers.
+    """
+
+    def __init__(self, agent_id: str, endpoint: str | None = None):
+        """Initialize SIEM exporter.
+
+        Args:
+            agent_id: Unique agent identifier
+            endpoint: Optional SIEM ingestion endpoint (HTTP/HTTPS)
+        """
+        self.agent_id = agent_id
+        self.endpoint = endpoint
+        self._event_queue: list[dict] = []
+        self._queue_lock = threading.Lock()
+        self._enabled = endpoint is not None
+
+        # OpenTelemetry-compatible structured format
+        self._resource_attributes = {
+            "service.name": "helix-ttd-agent",
+            "service.version": "1.0.0",
+            "agent.id": agent_id,
+        }
+
+    def export_event(self, event_type: str, checkpoint: ConstitutionalCheckpoint | None = None, **kwargs):
+        """Export a constitutional event in OTel-compatible format.
+
+        Args:
+            event_type: Type of event (drift_detected, checkpoint_validated, etc.)
+            checkpoint: Optional checkpoint associated with event
+            **kwargs: Additional event attributes
+        """
+        event = {
+            "timestamp": datetime.now().isoformat(),
+            "severity": self._map_severity(event_type, checkpoint),
+            "event_type": f"helix.ttd.{event_type}",
+            "resource": self._resource_attributes,
+            "attributes": {
+                "agent.id": self.agent_id,
+                **kwargs,
+            },
+        }
+
+        if checkpoint:
+            event["attributes"]["checkpoint_id"] = checkpoint.checkpoint_id
+            event["attributes"]["compliance_score"] = checkpoint.compliance_score
+            event["attributes"]["drift_detected"] = checkpoint.drift_detected
+            event["attributes"]["drift_codes"] = checkpoint.drift_codes
+            event["attributes"]["layer"] = checkpoint.layer
+
+        with self._queue_lock:
+            self._event_queue.append(event)
+
+        # For critical events, flush immediately
+        if event["severity"] in ("critical", "high"):
+            self.flush()
+
+        return event
+
+    def _map_severity(self, event_type: str, checkpoint: ConstitutionalCheckpoint | None = None) -> str:
+        """Map event type to severity level."""
+        if checkpoint and checkpoint.drift_detected:
+            return "critical" if checkpoint.compliance_score < 0.3 else "high"
+        severity_map = {
+            "drift_detected": "critical",
+            "checkpoint_rejected": "high",
+            "custodian_override_used": "warning",
+            "plan_executed": "info",
+            "tool_invoked": "info",
+        }
+        return severity_map.get(event_type, "info")
+
+    def flush(self) -> list[dict]:
+        """Flush event queue to SIEM endpoint or return for batch processing.
+
+        Returns list of events that were flushed.
+        """
+        with self._queue_lock:
+            events_to_flush = self._event_queue.copy()
+            self._event_queue = []
+
+        if not events_to_flush:
+            return []
+
+        if self._enabled and self.endpoint:
+            # In production, this would HTTP POST to SIEM
+            # For now, we simulate with structured logging
+            for event in events_to_flush:
+                print(json.dumps(event, default=str), flush=True)
+
+        return events_to_flush
+
+    def get_queue_stats(self) -> dict:
+        """Get current event queue statistics."""
+        with self._queue_lock:
+            return {
+                "queued_events": len(self._event_queue),
+                "enabled": self._enabled,
+                "endpoint": self.endpoint,
+            }
+
+    def export_drift_alert(self, checkpoint: ConstitutionalCheckpoint, context: dict | None = None):
+        """Export a drift detection alert (high priority)."""
+        return self.export_event(
+            "drift_detected",
+            checkpoint=checkpoint,
+            alert_title="Constitutional Drift Detected",
+            alert_description="Agent behavior violated constitutional constraints",
+            recommended_action="Review checkpoint and custodian approval status",
+            context=context or {},
+        )
+
+
+# ENHANCEMENT #8: Plugin Architecture for Extensible 4-Layer Pipeline
+class ConstitutionalLayer(ABC):
+    """Abstract base class for constitutional pipeline layers.
+
+    Allows custom layers to be registered and integrated into the
+    Ethics → Safeguard → Iterate → Knowledge pipeline.
+    """
+
+    @abstractmethod
+    def evaluate(self, plan: AgentPlan) -> tuple[bool, float, list[str]]:
+        """Evaluate a plan through this constitutional layer.
+
+        Returns:
+            (passed, compliance_score, drift_codes)
+            - passed: True if plan passes this layer
+            - compliance_score: 0.0-1.0 compliance rating
+            - drift_codes: List of drift codes if violations found
+        """
+        ...
+
+    @property
+    @abstractmethod
+    def layer_name(self) -> str:
+        """Return the name of this layer."""
+        ...
+
+    @property
+    def priority(self) -> int:
+        """Return execution priority (lower = earlier). Default is 50."""
+        return 50
+
+
+class PluginRegistry:
+    """Registry for constitutional layer plugins.
+
+    Manages custom layers that extend the 4-layer pipeline.
+    """
+
+    def __init__(self):
+        self._plugins: dict[str, ConstitutionalLayer] = {}
+        self._lock = threading.Lock()
+
+    def register(self, plugin: ConstitutionalLayer) -> bool:
+        """Register a constitutional layer plugin.
+
+        Returns True if registered, False if name conflict.
+        """
+        with self._lock:
+            if plugin.layer_name in self._plugins:
+                return False
+            self._plugins[plugin.layer_name] = plugin
+            return True
+
+    def unregister(self, layer_name: str) -> bool:
+        """Unregister a plugin by name."""
+        with self._lock:
+            if layer_name in self._plugins:
+                del self._plugins[layer_name]
+                return True
+            return False
+
+    def get_sorted_plugins(self) -> list[ConstitutionalLayer]:
+        """Get plugins sorted by priority."""
+        with self._lock:
+            return sorted(self._plugins.values(), key=lambda p: p.priority)
+
+    def evaluate_all(self, plan: AgentPlan) -> tuple[bool, float, dict[str, list[str]]]:
+        """Evaluate plan through all registered plugins.
+
+        Returns aggregated results from all layers.
+        """
+        plugins = self.get_sorted_plugins()
+        all_passed = True
+        total_score = 0.0
+        all_drift_codes: dict[str, list[str]] = {}
+
+        for plugin in plugins:
+            passed, score, drift_codes = plugin.evaluate(plan)
+            all_passed = all_passed and passed
+            total_score += score
+            if drift_codes:
+                all_drift_codes[plugin.layer_name] = drift_codes
+
+        avg_score = total_score / len(plugins) if plugins else 1.0
+        return all_passed, avg_score, all_drift_codes
+
+    def list_plugins(self) -> list[dict]:
+        """List all registered plugins with metadata."""
+        with self._lock:
+            return [
+                {
+                    "name": p.layer_name,
+                    "priority": p.priority,
+                    "class": p.__class__.__name__,
+                }
+                for p in self._plugins.values()
+            ]
+
+
+# Example plugin implementations
+class ComplianceAuditLayer(ConstitutionalLayer):
+    """Example plugin: Audit compliance against external policies."""
+
+    def __init__(self, required_tags: list[str] | None = None):
+        self.required_tags = required_tags or ["[FACT]", "[HYPOTHESIS]"]
+
+    @property
+    def layer_name(self) -> str:
+        """Return the layer name."""
+        return "ComplianceAudit"
+
+    @property
+    def priority(self) -> int:
+        """Return execution priority (run after Ethics, before Safeguard)."""
+        return 25
+
+    def evaluate(self, plan: AgentPlan) -> tuple[bool, float, list[str]]:
+        """Check plan steps for required epistemic tags."""
+        drift_codes = []
+        for step in plan.steps:
+            has_required = any(tag in step.rationale for tag in self.required_tags)
+            if not has_required:
+                drift_codes.append(f"DRIFT-A: Missing required epistemic tag in {step.action_id}")
+
+        score = 1.0 if not drift_codes else 0.5
+        return len(drift_codes) == 0, score, drift_codes
+
+
+class RateLimitLayer(ConstitutionalLayer):
+    """Example plugin: Rate limiting for tool invocations."""
+
+    def __init__(self, max_calls_per_minute: int = 60):
+        self.max_calls = max_calls_per_minute
+        self._call_times: list[float] = []
+        self._lock = threading.Lock()
+
+    @property
+    def layer_name(self) -> str:
+        """Return the layer name."""
+        return "RateLimit"
+
+    @property
+    def priority(self) -> int:
+        """Return execution priority (run very early)."""
+        return 15
+
+    def evaluate(self, plan: AgentPlan) -> tuple[bool, float, list[str]]:
+        """Check if plan would exceed rate limits."""
+        with self._lock:
+            now = time.time()
+            # Remove calls older than 1 minute
+            self._call_times = [t for t in self._call_times if now - t < 60]
+
+            if len(self._call_times) + len(plan.steps) > self.max_calls:
+                return False, 0.0, ["DRIFT-R: Rate limit exceeded"]
+
+            # Record planned calls
+            for _ in plan.steps:
+                self._call_times.append(now)
+
+        return True, 1.0, []
+
+
+# ENHANCEMENT #9: Metrics Dashboard - Prometheus/Grafana Telemetry
+class MetricsCollector:
+    """Collect and expose metrics for operational monitoring.
+
+    Provides Prometheus-compatible metrics for dashboards and alerting.
+    Tracks execution latency, throughput, violation rates, and resource usage.
+    """
+
+    def __init__(self, agent_id: str):
+        """Initialize metrics collector.
+
+        Args:
+            agent_id: Unique agent identifier for metric labels
+        """
+        self.agent_id = agent_id
+        self._metrics_lock = threading.Lock()
+
+        # Counters (monotonically increasing)
+        self._counters: dict[str, int] = {
+            "plans_executed_total": 0,
+            "plans_rejected_total": 0,
+            "actions_executed_total": 0,
+            "actions_blocked_total": 0,
+            "drift_detected_total": 0,
+            "custodian_overrides_total": 0,
+            "tool_invocations_total": 0,
+            "cache_hits_total": 0,
+            "cache_misses_total": 0,
+        }
+
+        # Gauges (current values)
+        self._gauges: dict[str, float] = {
+            "risk_budget_remaining": 0.0,
+            "risk_utilization_ratio": 0.0,
+            "active_plans": 0.0,
+            "cache_size": 0.0,
+        }
+
+        # Histograms (latency distributions)
+        self._latency_buckets = [0.001, 0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1.0, 2.5, 5.0, 10.0]
+        self._plan_execution_times: list[float] = []
+        self._action_execution_times: list[float] = []
+
+        # Time-series data for dashboards (last 1000 points)
+        self._timeseries: dict[str, list[tuple[float, float]]] = {
+            "compliance_score": [],
+            "risk_velocity": [],
+            "drift_rate": [],
+        }
+
+    def increment(self, metric_name: str, value: int = 1):
+        """Increment a counter metric."""
+        with self._metrics_lock:
+            if metric_name in self._counters:
+                self._counters[metric_name] += value
+
+    def set_gauge(self, metric_name: str, value: float):
+        """Set a gauge metric to a specific value."""
+        with self._metrics_lock:
+            if metric_name in self._gauges:
+                self._gauges[metric_name] = value
+
+    def record_latency(self, metric_type: str, seconds: float):
+        """Record execution latency."""
+        with self._metrics_lock:
+            if metric_type == "plan":
+                self._plan_execution_times.append(seconds)
+                # Keep last 1000 samples
+                if len(self._plan_execution_times) > 1000:
+                    self._plan_execution_times = self._plan_execution_times[-1000:]
+            elif metric_type == "action":
+                self._action_execution_times.append(seconds)
+                if len(self._action_execution_times) > 1000:
+                    self._action_execution_times = self._action_execution_times[-1000:]
+
+    def record_timeseries(self, metric_name: str, value: float):
+        """Record a time-series data point."""
+        with self._metrics_lock:
+            if metric_name in self._timeseries:
+                timestamp = time.time()
+                self._timeseries[metric_name].append((timestamp, value))
+                # Keep last 1000 points
+                if len(self._timeseries[metric_name]) > 1000:
+                    self._timeseries[metric_name] = self._timeseries[metric_name][-1000:]
+
+    def _compute_histogram(self, samples: list[float]) -> dict:
+        """Compute histogram buckets from samples."""
+        if not samples:
+            return {"count": 0, "sum": 0.0, "buckets": dict.fromkeys(self._latency_buckets, 0)}
+
+        buckets = {b: sum(1 for s in samples if s <= b) for b in self._latency_buckets}
+        return {
+            "count": len(samples),
+            "sum": sum(samples),
+            "avg": sum(samples) / len(samples),
+            "min": min(samples),
+            "max": max(samples),
+            "buckets": buckets,
+        }
+
+    def get_prometheus_format(self) -> str:
+        """Export metrics in Prometheus text format."""
+        lines = []
+        labels = f'agent_id="{self.agent_id}"'
+
+        with self._metrics_lock:
+            # Counters
+            for name, value in self._counters.items():
+                lines.append(f"# TYPE {name} counter")
+                lines.append(f'{name}{{{labels}}} {value}')
+
+            # Gauges
+            for name, value in self._gauges.items():
+                lines.append(f"# TYPE {name} gauge")
+                lines.append(f'{name}{{{labels}}} {value}')
+
+            # Histograms
+            for hist_name, samples in [
+                ("plan_execution_duration_seconds", self._plan_execution_times),
+                ("action_execution_duration_seconds", self._action_execution_times),
+            ]:
+                hist = self._compute_histogram(samples)
+                lines.append(f"# TYPE {hist_name} histogram")
+                for bucket, count in hist["buckets"].items():
+                    lines.append(f'{hist_name}_bucket{{{labels},le="{bucket}"}} {count}')
+                lines.append(f'{hist_name}_count{{{labels}}} {hist["count"]}')
+                lines.append(f'{hist_name}_sum{{{labels}}} {hist["sum"]}')
+
+        return "\n".join(lines)
+
+    def get_dashboard_data(self) -> dict:
+        """Get metrics formatted for dashboard display."""
+        with self._metrics_lock:
+            plan_hist = self._compute_histogram(self._plan_execution_times)
+            action_hist = self._compute_histogram(self._action_execution_times)
+
+            return {
+                "agent_id": self.agent_id,
+                "timestamp": datetime.now().isoformat(),
+                "counters": self._counters.copy(),
+                "gauges": self._gauges.copy(),
+                "latency": {
+                    "plan_execution_ms": {
+                        "avg": plan_hist["avg"] * 1000 if plan_hist["count"] > 0 else 0,
+                        "p95": self._percentile(self._plan_execution_times, 0.95) * 1000 if self._plan_execution_times else 0,
+                        "p99": self._percentile(self._plan_execution_times, 0.99) * 1000 if self._plan_execution_times else 0,
+                    },
+                    "action_execution_ms": {
+                        "avg": action_hist["avg"] * 1000 if action_hist["count"] > 0 else 0,
+                        "p95": self._percentile(self._action_execution_times, 0.95) * 1000 if self._action_execution_times else 0,
+                        "p99": self._percentile(self._action_execution_times, 0.99) * 1000 if self._action_execution_times else 0,
+                    },
+                },
+                "timeseries": {
+                    name: [(t, v) for t, v in data[-100:]]  # Last 100 points
+                    for name, data in self._timeseries.items()
+                },
+            }
+
+    def _percentile(self, samples: list[float], p: float) -> float:
+        """Calculate percentile from samples."""
+        if not samples:
+            return 0.0
+        sorted_samples = sorted(samples)
+        k = (len(sorted_samples) - 1) * p
+        f = int(k)
+        c = f + 1 if f + 1 < len(sorted_samples) else f
+        return sorted_samples[f] + (k - f) * (sorted_samples[c] - sorted_samples[f])
+
+    def record_plan_execution(self, plan: AgentPlan, duration_seconds: float, success: bool):
+        """Record metrics for a completed plan execution."""
+        self.increment("plans_executed_total" if success else "plans_rejected_total")
+        self.record_latency("plan", duration_seconds)
+
+        # Calculate drift rate for this plan
+        drift_count = sum(1 for step in plan.steps if getattr(step, "drift_detected", False))
+        drift_rate = drift_count / len(plan.steps) if plan.steps else 0.0
+        self.record_timeseries("drift_rate", drift_rate)
+
+
 class HelixConstitutionalGate:
     """The Helix-TTD Civic Firmware Stack applied to agent workflows.
 
@@ -903,6 +1364,15 @@ class OpenClawAgent:
         self._memo_cache: dict[str, tuple[Any, float]] = {}  # (result, timestamp)
         self._memo_ttl_seconds: float = 300.0  # 5 minute default TTL
         self._memo_lock = threading.Lock()
+
+        # ENHANCEMENT #7: SIEM Integration
+        self.siem = SIEMExporter(self.agent_id)
+
+        # ENHANCEMENT #8: Plugin Registry
+        self.plugins = PluginRegistry()
+
+        # ENHANCEMENT #9: Metrics Collection
+        self.metrics = MetricsCollector(self.agent_id)
 
     # P2: Log rotation constants
     MAX_LOG_AGE_DAYS = 30
