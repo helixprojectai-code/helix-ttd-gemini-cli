@@ -215,6 +215,92 @@ class RiskConfiguration:
             ),
         }
 
+    # ENHANCEMENT #4: Dynamic Risk Calibration
+    def record_execution_outcome(
+        self, tool_name: str, planned_risk: float, actual_risk: float, drift_detected: bool
+    ):
+        """Record execution outcome for dynamic calibration.
+
+        Adjusts tool multipliers based on observed vs predicted risk.
+        Positive feedback loop: accurate predictions rewarded, drift penalized.
+        """
+        with self._get_lock():
+            # Initialize calibration history if needed
+            if not hasattr(self, "_calibration_history"):
+                self._calibration_history: dict[str, list[dict]] = {}
+
+            if tool_name not in self._calibration_history:
+                self._calibration_history[tool_name] = []
+
+            # Record this outcome
+            self._calibration_history[tool_name].append({
+                "planned": planned_risk,
+                "actual": actual_risk,
+                "drift": drift_detected,
+                "timestamp": time.time(),
+            })
+
+            # Keep only last 100 observations per tool
+            self._calibration_history[tool_name] = self._calibration_history[tool_name][-100:]
+
+            # Only calibrate after 5 observations
+            if len(self._calibration_history[tool_name]) >= 5:
+                self._calibrate_tool_multiplier(tool_name)
+
+    def _calibrate_tool_multiplier(self, tool_name: str):
+        """Adjust tool multiplier based on historical accuracy."""
+        history = self._calibration_history.get(tool_name, [])
+        if len(history) < 5:
+            return
+
+        # Calculate risk prediction accuracy
+        planned_sum = sum(h["planned"] for h in history[-20:])  # Last 20 observations
+        actual_sum = sum(h["actual"] for h in history[-20:])
+        drift_count = sum(1 for h in history[-20:] if h["drift"])
+
+        if planned_sum == 0:
+            return
+
+        # Accuracy ratio: actual/planned (1.0 = perfect prediction)
+        accuracy_ratio = actual_sum / planned_sum
+        drift_rate = drift_count / min(len(history), 20)
+
+        # Adjust multiplier based on accuracy and drift
+        current_multiplier = self.tool_multipliers.get(tool_name, 1.0)
+
+        if accuracy_ratio > 1.2 or drift_rate > 0.3:
+            # Underestimating risk - increase multiplier
+            new_multiplier = min(current_multiplier * 1.1, 5.0)
+        elif accuracy_ratio < 0.8 and drift_rate < 0.1:
+            # Overestimating risk - decrease multiplier (carefully)
+            new_multiplier = max(current_multiplier * 0.95, 0.1)
+        else:
+            return  # No adjustment needed
+
+        self.tool_multipliers[tool_name] = new_multiplier
+
+    def get_calibration_report(self) -> dict:
+        """Generate report on risk calibration status."""
+        if not hasattr(self, "_calibration_history"):
+            return {"status": "insufficient_data", "tools": {}}
+
+        report = {"status": "active", "tools": {}}
+        for tool_name, history in self._calibration_history.items():
+            if len(history) >= 5:
+                recent = history[-20:]
+                avg_planned = sum(h["planned"] for h in recent) / len(recent)
+                avg_actual = sum(h["actual"] for h in recent) / len(recent)
+                drift_rate = sum(1 for h in recent if h["drift"]) / len(recent)
+
+                report["tools"][tool_name] = {
+                    "observations": len(history),
+                    "accuracy_ratio": avg_actual / avg_planned if avg_planned > 0 else 0,
+                    "drift_rate": drift_rate,
+                    "current_multiplier": self.tool_multipliers.get(tool_name, 1.0),
+                }
+
+        return report
+
 
 class CheckpointStore:
     """ENHANCEMENT #1: SQLite persistence for forensic audit trails.
@@ -335,6 +421,119 @@ class CheckpointStore:
                 (limit,),
             )
             return [dict(row) for row in cursor.fetchall()]
+
+
+# ENHANCEMENT #6: Multi-Agent Checkpoint Consensus
+class MultiAgentCheckpointConsensus:
+    """Threshold signature scheme for multi-agent checkpoint validation.
+
+    Allows multiple agents to sign checkpoints, requiring a threshold of
+    signatures for consensus. This is v2.0 federation infrastructure.
+
+    Note: This is a simplified implementation using hash-based "signatures"
+    for demonstration. Production would use proper cryptographic signatures
+    (ECDSA, BLS, or threshold BLS for production multi-agent systems).
+    """
+
+    def __init__(self, agent_id: str, threshold: int = 2, total_agents: int = 3):
+        """Initialize consensus participant.
+
+        Args:
+            agent_id: Unique identifier for this agent
+            threshold: Minimum signatures required for consensus
+            total_agents: Total number of agents in the federation
+        """
+        self.agent_id = agent_id
+        self.threshold = threshold
+        self.total_agents = total_agents
+        self._signatures: dict[str, dict[str, str]] = {}  # checkpoint_id -> {agent_id: signature}
+        self._lock = threading.Lock()
+
+    def sign_checkpoint(self, checkpoint: ConstitutionalCheckpoint) -> str:
+        """Generate a signature for a checkpoint.
+
+        Returns a hash-based signature string. In production, this would
+        use a proper cryptographic signature with private keys.
+        """
+        # Create deterministic signature based on checkpoint content + agent_id
+        sig_data = {
+            "checkpoint_hash": checkpoint.compute_hash(),
+            "agent_id": self.agent_id,
+            "timestamp": time.time(),
+        }
+        signature = hashlib.sha256(json.dumps(sig_data, sort_keys=True).encode()).hexdigest()
+
+        with self._lock:
+            if checkpoint.checkpoint_id not in self._signatures:
+                self._signatures[checkpoint.checkpoint_id] = {}
+            self._signatures[checkpoint.checkpoint_id][self.agent_id] = signature
+
+        return signature
+
+    def add_peer_signature(self, checkpoint_id: str, peer_agent_id: str, signature: str) -> bool:
+        """Add a signature from another agent.
+
+        Returns True if consensus is reached, False otherwise.
+        """
+        with self._lock:
+            if checkpoint_id not in self._signatures:
+                self._signatures[checkpoint_id] = {}
+            self._signatures[checkpoint_id][peer_agent_id] = signature
+            return len(self._signatures[checkpoint_id]) >= self.threshold
+
+    def has_consensus(self, checkpoint_id: str) -> bool:
+        """Check if threshold signatures have been collected."""
+        with self._lock:
+            signatures = self._signatures.get(checkpoint_id, {})
+            return len(signatures) >= self.threshold
+
+    def get_consensus_proof(self, checkpoint_id: str) -> dict | None:
+        """Get the full consensus proof for a checkpoint.
+
+        Returns dict with signatures if consensus reached, None otherwise.
+        """
+        with self._lock:
+            signatures = self._signatures.get(checkpoint_id, {})
+            if len(signatures) < self.threshold:
+                return None
+
+            return {
+                "checkpoint_id": checkpoint_id,
+                "threshold": self.threshold,
+                "signatures_collected": len(signatures),
+                "total_agents": self.total_agents,
+                "signatures": signatures.copy(),
+                "consensus_reached": True,
+            }
+
+    def verify_signature(
+        self, checkpoint: ConstitutionalCheckpoint, agent_id: str, signature: str
+    ) -> bool:
+        """Verify a signature is valid for a given checkpoint and agent.
+
+        Returns True if signature is valid, False otherwise.
+        """
+        # Recreate expected signature
+        sig_data = {
+            "checkpoint_hash": checkpoint.compute_hash(),
+            "agent_id": agent_id,
+            # Note: timestamp not included in verification (would need temporal tolerance)
+        }
+        expected = hashlib.sha256(json.dumps(sig_data, sort_keys=True).encode()).hexdigest()
+        return signature[:64] == expected[:64]  # Compare first 64 chars
+
+    def get_checkpoint_status(self, checkpoint_id: str) -> dict:
+        """Get current consensus status for a checkpoint."""
+        with self._lock:
+            signatures = self._signatures.get(checkpoint_id, {})
+            return {
+                "checkpoint_id": checkpoint_id,
+                "signatures_collected": len(signatures),
+                "threshold": self.threshold,
+                "consensus_reached": len(signatures) >= self.threshold,
+                "signing_agents": list(signatures.keys()),
+                "remaining_needed": max(0, self.threshold - len(signatures)),
+            }
 
 
 class HelixConstitutionalGate:
@@ -700,6 +899,11 @@ class OpenClawAgent:
         self.audit_log_path = audit_log_path or default_path
         self._init_audit_log()
 
+        # ENHANCEMENT #5: Tool Result Memoization
+        self._memo_cache: dict[str, tuple[Any, float]] = {}  # (result, timestamp)
+        self._memo_ttl_seconds: float = 300.0  # 5 minute default TTL
+        self._memo_lock = threading.Lock()
+
     # P2: Log rotation constants
     MAX_LOG_AGE_DAYS = 30
     MAX_LOG_SIZE_BYTES = 100 * 1024 * 1024  # 100MB
@@ -741,6 +945,61 @@ class OpenClawAgent:
             else:
                 result[k] = v
         return result
+
+    # ENHANCEMENT #5: Tool Result Memoization
+    def _get_memo_key(self, action: AgentAction) -> str:
+        """Generate cache key for memoization based on tool + parameters."""
+        # Hash of tool name and parameters determines cache key
+        key_data = {
+            "tool": action.tool_name,
+            "params": action.parameters,
+        }
+        return hashlib.sha256(json.dumps(key_data, sort_keys=True).encode()).hexdigest()[:32]
+
+    def _get_cached_result(self, action: AgentAction) -> Any | None:
+        """Check if result is in cache and not expired."""
+        with self._memo_lock:
+            cache_key = self._get_memo_key(action)
+            if cache_key in self._memo_cache:
+                result, timestamp = self._memo_cache[cache_key]
+                if time.time() - timestamp < self._memo_ttl_seconds:
+                    return result
+                else:
+                    # Expired - remove from cache
+                    del self._memo_cache[cache_key]
+            return None
+
+    def _cache_result(self, action: AgentAction, result: Any):
+        """Store result in cache with current timestamp."""
+        with self._memo_lock:
+            cache_key = self._get_memo_key(action)
+            self._memo_cache[cache_key] = (result, time.time())
+            # Prevent unbounded growth - keep last 1000 entries
+            if len(self._memo_cache) > 1000:
+                # Remove oldest entries
+                sorted_items = sorted(self._memo_cache.items(), key=lambda x: x[1][1])
+                for key, _ in sorted_items[:100]:
+                    del self._memo_cache[key]
+
+    def clear_memo_cache(self):
+        """Clear all cached results."""
+        with self._memo_lock:
+            self._memo_cache.clear()
+
+    def get_memo_stats(self) -> dict:
+        """Get memoization cache statistics."""
+        with self._memo_lock:
+            now = time.time()
+            valid_entries = sum(
+                1 for _, timestamp in self._memo_cache.values()
+                if now - timestamp < self._memo_ttl_seconds
+            )
+            return {
+                "total_entries": len(self._memo_cache),
+                "valid_entries": valid_entries,
+                "expired_entries": len(self._memo_cache) - valid_entries,
+                "ttl_seconds": self._memo_ttl_seconds,
+            }
 
     def _validate_event_type(self, event_type: str) -> str:
         """P2: Validate event type against allowed set to prevent injection."""
@@ -1189,6 +1448,8 @@ class OpenClawAgent:
 
         FIX #1: Previously returned stub {"status": "success"} without calling
         the actual function. Now properly invokes registered tools with context.
+
+        ENHANCEMENT #5: Added memoization support for expensive operations.
         """
         with self._tool_lock:
             if action.tool_name not in self.available_tools:
@@ -1200,6 +1461,32 @@ class OpenClawAgent:
             tool_entry = self.available_tools[action.tool_name]
             tool_func = tool_entry["function"]
             tool_risk = tool_entry.get("risk_level", 0.5)
+
+        # ENHANCEMENT #5: Check memoization cache first
+        cached = self._get_cached_result(action)
+        if cached is not None:
+            self._append_audit(
+                "TOOL_INVOKED",
+                {
+                    "plan_id": plan_id,
+                    "action_id": action.action_id,
+                    "tool": action.tool_name,
+                    "epistemic": (
+                        action.epistemic_basis.value
+                        if isinstance(action.epistemic_basis, EpistemicLabel)
+                        else str(action.epistemic_basis)
+                    ),
+                    "risk_level": tool_risk,
+                    "cached": True,
+                },
+            )
+            return {
+                "status": "success",
+                "tool": action.tool_name,
+                "result": cached,
+                "result_type": type(cached).__name__,
+                "cached": True,
+            }
 
         self._append_audit(
             "TOOL_INVOKED",
@@ -1213,6 +1500,7 @@ class OpenClawAgent:
                     else str(action.epistemic_basis)
                 ),
                 "risk_level": tool_risk,
+                "cached": False,
             },
         )
 
@@ -1235,11 +1523,15 @@ class OpenClawAgent:
                 else:
                     result = tool_func(action.parameters)
 
+            # ENHANCEMENT #5: Cache the result for future use
+            self._cache_result(action, result)
+
             return {
                 "status": "success",
                 "tool": action.tool_name,
                 "result": result,
                 "result_type": type(result).__name__,
+                "cached": False,
             }
         except Exception as e:
             error_msg = str(e)
