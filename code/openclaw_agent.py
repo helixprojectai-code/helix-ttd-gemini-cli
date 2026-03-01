@@ -659,11 +659,7 @@ class FederatedCheckpointValidator:
     [ASSUMPTION] DBCFederationRegistry has loaded valid node DBCs.
     """
 
-    def __init__(
-        self,
-        federation_registry: DBCFederationRegistry,
-        local_dbc: DBCIdentity
-    ):
+    def __init__(self, federation_registry: DBCFederationRegistry, local_dbc: DBCIdentity):
         """[FACT] Initialize federated validator.
 
         Args:
@@ -675,9 +671,7 @@ class FederatedCheckpointValidator:
         self._validation_cache: dict[str, dict] = {}
 
     def validate_federated_checkpoint(
-        self,
-        checkpoint: ConstitutionalCheckpoint,
-        origin_node_id: str
+        self, checkpoint: ConstitutionalCheckpoint, origin_node_id: str
     ) -> dict:
         """[FACT] Validate a checkpoint from another federation node.
 
@@ -695,7 +689,7 @@ class FederatedCheckpointValidator:
             "origin_node": origin_node_id,
             "checks": {},
             "trust_score": 0.0,
-            "timestamp": datetime.now().isoformat()
+            "timestamp": datetime.now().isoformat(),
         }
 
         # Check 1: Origin node is registered
@@ -708,9 +702,7 @@ class FederatedCheckpointValidator:
         result["checks"]["has_signature"] = bool(checkpoint.dbc_signature)
 
         # Check 3: DBC ID matches origin
-        result["checks"]["dbc_match"] = (
-            checkpoint.dbc_id == origin_node_id
-        )
+        result["checks"]["dbc_match"] = checkpoint.dbc_id == origin_node_id
 
         # Check 4: Verify signature
         if checkpoint.dbc_signature and checkpoint.checkpoint_id:
@@ -736,11 +728,7 @@ class FederatedCheckpointValidator:
 
         return result
 
-    def request_federation_consensus(
-        self,
-        checkpoint_id: str,
-        min_validations: int = 3
-    ) -> dict:
+    def request_federation_consensus(self, checkpoint_id: str, min_validations: int = 3) -> dict:
         """[FACT] Request consensus validation from federation nodes.
 
         Simulates gathering validation signatures from multiple nodes.
@@ -754,19 +742,20 @@ class FederatedCheckpointValidator:
         """
         nodes = self.registry.list_nodes()
         active_nodes = [
-            n for n in nodes
-            if n.get("dbc_id") != self.local_dbc.dbc_id  # Exclude self
+            n for n in nodes if n.get("dbc_id") != self.local_dbc.dbc_id  # Exclude self
         ]
 
         # Simulate gathering validations
         validations = []
         for node in active_nodes[:min_validations]:
-            validations.append({
-                "node_id": node.get("dbc_id"),
-                "node_name": node.get("node_name"),
-                "validated": True,  # Simulated
-                "timestamp": datetime.now().isoformat()
-            })
+            validations.append(
+                {
+                    "node_id": node.get("dbc_id"),
+                    "node_name": node.get("node_name"),
+                    "validated": True,  # Simulated
+                    "timestamp": datetime.now().isoformat(),
+                }
+            )
 
         consensus_achieved = len(validations) >= min_validations
 
@@ -776,12 +765,11 @@ class FederatedCheckpointValidator:
             "validations": validations,
             "required": min_validations,
             "received": len(validations),
-            "timestamp": datetime.now().isoformat()
+            "timestamp": datetime.now().isoformat(),
         }
 
     def sign_local_checkpoint(
-        self,
-        checkpoint: ConstitutionalCheckpoint
+        self, checkpoint: ConstitutionalCheckpoint
     ) -> ConstitutionalCheckpoint:
         """[FACT] Sign a checkpoint with local DBC identity.
 
