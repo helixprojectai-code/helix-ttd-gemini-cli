@@ -1,5 +1,4 @@
-"""
-OpenClaw Agent: Helix-TTD Constitutional Governance Module
+"""OpenClaw Agent: Helix-TTD Constitutional Governance Module
 
 Canonical importable module containing all class definitions.
 helix-ttd-claw-agent.py is the runnable entry point; it imports from here.
@@ -25,10 +24,11 @@ import threading
 import time
 import unicodedata
 import uuid
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import date, datetime, timedelta
 from enum import Enum, auto
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any
 
 
 class AgencyLevel(Enum):
@@ -55,10 +55,10 @@ class ConstitutionalCheckpoint:
     layer: str  # Ethics, Safeguard, Iterate, Knowledge
     compliance_score: float  # 0.0 - 1.0
     drift_detected: bool
-    drift_codes: List[str] = field(default_factory=list)
+    drift_codes: list[str] = field(default_factory=list)
     merkle_hash: str = ""
     prev_checkpoint_hash: str = ""
-    risk_metrics: Dict[str, Any] = field(default_factory=dict)
+    risk_metrics: dict[str, Any] = field(default_factory=dict)
 
     def compute_hash(self) -> str:
         """Compute cryptographically secure checkpoint hash (P0 Fix)"""
@@ -85,7 +85,7 @@ class AgentAction:
     action_id: str
     action_type: str  # "search", "calculate", "write_file", "api_call"
     tool_name: str
-    parameters: Dict[str, Any]
+    parameters: dict[str, Any]
     rationale: str
     epistemic_basis: EpistemicLabel
     estimated_risk: float  # 0.0 - 1.0
@@ -97,17 +97,17 @@ class AgentPlan:
     """Multi-step plan requiring constitutional validation before execution"""
     plan_id: str
     objective: str
-    steps: List[AgentAction]
-    assumptions: List[str]
+    steps: list[AgentAction]
+    assumptions: list[str]
     estimated_completion: float
     constitutional_clearance: bool = False
-    plan_checkpoint: Optional[ConstitutionalCheckpoint] = None
+    plan_checkpoint: ConstitutionalCheckpoint | None = None
 
 
 @dataclass
 class RiskConfiguration:
-    """
-    Granular risk tuning for constitutional gates.
+    """Granular risk tuning for constitutional gates.
+
     Allows incremental adjustment of paranoia vs. velocity.
     """
     # Base thresholds (0.0 - 1.0)
@@ -125,7 +125,7 @@ class RiskConfiguration:
     override_requires_dual_approval: bool = False
 
     # Tool-specific risk multipliers
-    tool_multipliers: Dict[str, float] = field(default_factory=lambda: {
+    tool_multipliers: dict[str, float] = field(default_factory=lambda: {
         "file_read": 0.5,        # Read is safer
         "file_write": 1.2,       # Write is riskier
         "file_delete": 1.5,      # Delete is dangerous
@@ -141,8 +141,10 @@ class RiskConfiguration:
 
     def __post_init__(self):
         """BUG-3 Fix: Initialize lock in __post_init__ to prevent race condition.
+
         _get_lock() lazy initialization was not thread-safe — two threads could
-        race through hasattr() and create separate lock instances."""
+        race through hasattr() and create separate lock instances.
+        """
         self._lock = threading.Lock()
         self._last_reset: str = date.today().isoformat()
 
@@ -175,8 +177,8 @@ class RiskConfiguration:
             )
 
     def spend_risk(self, amount: float) -> bool:
-        """
-        Track risk expenditure with daily reset (P1 Fix).
+        """Track risk expenditure with daily reset (P1 Fix).
+
         Returns False if budget exceeded.
         """
         with self._get_lock():
@@ -193,7 +195,7 @@ class RiskConfiguration:
             self.current_risk_spend += amount
             return True
 
-    def get_risk_velocity(self) -> Dict[str, float]:
+    def get_risk_velocity(self) -> dict[str, float]:
         """Return current risk metrics"""
         return {
             "budget": self.daily_risk_budget,
@@ -204,8 +206,8 @@ class RiskConfiguration:
 
 
 class HelixConstitutionalGate:
-    """
-    The Helix-TTD Civic Firmware Stack applied to agent workflows.
+    """The Helix-TTD Civic Firmware Stack applied to agent workflows.
+
     Reject-forward pipeline: Ethics → Safeguard → Iterate → Knowledge
 
     Now with granular risk tuning via RiskConfiguration.
@@ -218,16 +220,16 @@ class HelixConstitutionalGate:
     CONSTITUTION_VERSION = "1.0.0"
 
     def __init__(self, agency_tier: AgencyLevel = AgencyLevel.BOUNDED_TOOLS,
-                 risk_config: Optional[RiskConfiguration] = None,
+                 risk_config: RiskConfiguration | None = None,
                  constitution_version: str = "1.0.0"):
         self.agency_tier = agency_tier
         self.risk = risk_config or RiskConfiguration()
-        self.checkpoints: List[ConstitutionalCheckpoint] = []
+        self.checkpoints: list[ConstitutionalCheckpoint] = []
         self.allowed_tools: set = set()
         # Design fix: removed "override" — it conflicts with internal field names
         # (custodian_can_override, override_max_risk) causing false DRIFT-C positives.
         # Custodian override authority is a constitutional right, not a forbidden pattern.
-        self.forbidden_patterns: List[str] = [
+        self.forbidden_patterns: list[str] = [
             "autonomous", "self-directed", "initiate", "independent",
             "self-improve", "modify_own", "bypass"
         ]
@@ -243,8 +245,8 @@ class HelixConstitutionalGate:
             )
 
     def _layer_ethics(self, plan: AgentPlan) -> tuple[bool, float]:
-        """
-        Layer 0: Ethics Evaluation
+        """Layer 0: Ethics Evaluation
+
         Does this plan respect Custodial Sovereignty?
         """
         compliance_factors = []
@@ -280,9 +282,9 @@ class HelixConstitutionalGate:
             normalized = normalized.replace(zw, '')
         return normalized.lower()
 
-    def _layer_safeguard(self, plan: AgentPlan) -> tuple[bool, List[str], float]:
-        """
-        Layer 1: Safeguard Detection with granular risk tuning.
+    def _layer_safeguard(self, plan: AgentPlan) -> tuple[bool, list[str], float]:
+        """Layer 1: Safeguard Detection with granular risk tuning.
+
         Detect coercion, agency redefinition, epistemic anomalies
         P0 Fix: Check ALL fields with Unicode normalization
         """
@@ -332,8 +334,8 @@ class HelixConstitutionalGate:
         return len(drift_codes) == 0, drift_codes, total_effective_risk
 
     def _layer_iterate(self, plan: AgentPlan) -> AgentPlan:
-        """
-        Layer 2: Iterate Layer
+        """Layer 2: Iterate Layer
+
         Rephrase for clarity, ensure ledger-aligned diffability
 
         BUG-4 Fix: Use re.sub with IGNORECASE so mixed-case imperatives
@@ -347,8 +349,8 @@ class HelixConstitutionalGate:
         return plan
 
     def _layer_knowledge(self, plan: AgentPlan) -> tuple[bool, str]:
-        """
-        Layer 3: Knowledge Layer
+        """Layer 3: Knowledge Layer
+
         Apply epistemic labels, ensure advisory posture
         P0 Fix: Type validation to prevent bypass with None/custom values
         """
@@ -364,8 +366,8 @@ class HelixConstitutionalGate:
         return True, "Advisory Conclusion: Plan validated with epistemic constraints"
 
     def validate_plan(self, plan: AgentPlan) -> ConstitutionalCheckpoint:
-        """
-        Full civic firmware pipeline with granular risk tuning.
+        """Full civic firmware pipeline with granular risk tuning.
+
         Any layer fails → plan rejected upstream.
         """
         checkpoint = ConstitutionalCheckpoint(
@@ -440,10 +442,8 @@ class HelixConstitutionalGate:
 
         return checkpoint
 
-    def validate_action(self, action: AgentAction, context: Dict) -> ConstitutionalCheckpoint:
-        """
-        Validate a single action before execution with granular risk tuning.
-        """
+    def validate_action(self, action: AgentAction, context: dict) -> ConstitutionalCheckpoint:
+        """Validate a single action before execution with granular risk tuning."""
         # Calculate effective risk with tool multipliers
         effective_risk = self.risk.calculate_effective_risk(
             action.estimated_risk, action.tool_name
@@ -509,8 +509,7 @@ class HelixConstitutionalGate:
 
 
 class OpenClawAgent:
-    """
-    A bounded agent with Helix-TTD constitutional checkpoints.
+    """A bounded agent with Helix-TTD constitutional checkpoints.
 
     Philosophy: The agent plans and proposes. Helix validates.
     The Custodian (human or explicit gate) approves execution.
@@ -524,12 +523,12 @@ class OpenClawAgent:
     MAX_EXECUTION_TIME = 300  # 5 minutes
 
     def __init__(self, agency_tier: AgencyLevel = AgencyLevel.BOUNDED_TOOLS,
-                 risk_config: Optional[RiskConfiguration] = None,
-                 audit_log_path: Optional[str] = None):
+                 risk_config: RiskConfiguration | None = None,
+                 audit_log_path: str | None = None):
         self.gate = HelixConstitutionalGate(agency_tier, risk_config)
-        self.plan_history: List[AgentPlan] = []
-        self.execution_log: List[Dict] = []
-        self.available_tools: Dict[str, Callable] = {}
+        self.plan_history: list[AgentPlan] = []
+        self.execution_log: list[dict] = []
+        self.available_tools: dict[str, Callable] = {}
 
         # P1: Thread safety
         self._tool_lock = threading.Lock()
@@ -554,13 +553,11 @@ class OpenClawAgent:
         if os.path.exists(path) and not os.path.isfile(path):
             return False
         log_dir = os.path.dirname(path)
-        if log_dir and os.path.islink(log_dir):
-            return False
-        return True
+        return not (log_dir and os.path.islink(log_dir))
 
-    def _sanitize_audit_data(self, data: Dict) -> Dict:
-        """
-        P2: Sanitize audit data to prevent log injection.
+    def _sanitize_audit_data(self, data: dict) -> dict:
+        """P2: Sanitize audit data to prevent log injection.
+
         Remove newlines, control chars, and null bytes from strings.
         """
         result = {}
@@ -601,9 +598,7 @@ class OpenClawAgent:
         return event_type
 
     def _rotate_logs_if_needed(self):
-        """
-        P2: Rotate logs based on size and age (30-day retention).
-        """
+        """P2: Rotate logs based on size and age (30-day retention)."""
         try:
             log_dir = os.path.dirname(self.audit_log_path)
             if not log_dir or not os.path.exists(log_dir):
@@ -657,7 +652,7 @@ class OpenClawAgent:
                 with open(self.audit_log_path, 'w') as f:
                     f.write(f"# Helix Audit Log - Initialized {datetime.now().isoformat()}\n")
                     f.write(f"# Agent ID: {self.agent_id}\n")
-                    f.write(f"# Log Rotation: 30 days / 100MB\n")
+                    f.write("# Log Rotation: 30 days / 100MB\n")
                     f.flush()
         except Exception as e:
             import sys
@@ -669,7 +664,7 @@ class OpenClawAgent:
                 error_msg = error_msg.replace(home_dir, "~")
             print(f"WARN: Could not init audit log: {error_msg}", file=sys.stderr)
 
-    def _append_audit(self, event_type: str, data: Dict):
+    def _append_audit(self, event_type: str, data: dict):
         """P2: Append event to audit log (fsync for durability, sanitized)"""
         try:
             self._rotate_logs_if_needed()
@@ -700,8 +695,8 @@ class OpenClawAgent:
             print(f"WARN: Audit log write failed: {error_msg}", file=sys.stderr)
 
     def register_tool(self, name: str, function: Callable, risk_level: float = 0.5):
-        """
-        Register a tool with the agent - requires constitutional approval.
+        """Register a tool with the agent - requires constitutional approval.
+
         P1/P2 Hardened: Type validation, thread-safe, no lambdas/builtins.
         """
         if not callable(function):
@@ -745,9 +740,9 @@ class OpenClawAgent:
             "module": func_module
         })
 
-    def create_plan(self, objective: str, context: Dict[str, Any]) -> AgentPlan:
-        """
-        Agent proposes a plan based on objective.
+    def create_plan(self, objective: str, context: dict[str, Any]) -> AgentPlan:
+        """Agent proposes a plan based on objective.
+
         This is the planning phase - no execution yet.
         """
         steps = []
@@ -792,9 +787,9 @@ class OpenClawAgent:
         return plan
 
     def execute_with_checkpoints(self, plan: AgentPlan,
-                                  custodian_approval: Optional[bool] = None) -> Dict:
-        """
-        Execute a plan with full Helix-TTD checkpointing.
+                                  custodian_approval: bool | None = None) -> dict:
+        """Execute a plan with full Helix-TTD checkpointing.
+
         P1 Hardened: Step limits, timeouts, thread-safe execution.
 
         Flow:
@@ -960,16 +955,14 @@ class OpenClawAgent:
 
             return results
 
-    def _simulate_execution(self, action: AgentAction, plan_id: Optional[str] = None) -> Any:
-        """
-        Simulate tool execution - in production, this calls actual tools.
+    def _simulate_execution(self, action: AgentAction, plan_id: str | None = None) -> Any:
+        """Simulate tool execution - in production, this calls actual tools.
+
         P1 Hardened: Thread-safe tool lookup with lock.
         """
         with self._tool_lock:
             if action.tool_name not in self.available_tools:
                 return {"status": "tool_not_found", "tool": action.tool_name}
-
-            tool = self.available_tools[action.tool_name]
 
             if action.tool_name not in self.gate.allowed_tools:
                 return {"status": "tool_unauthorized", "tool": action.tool_name}
@@ -983,9 +976,9 @@ class OpenClawAgent:
 
         return {"status": "success", "tool": action.tool_name}
 
-    def _compute_merkle_root(self, checkpoints: List[Dict]) -> str:
-        """
-        Compute proper Merkle root of all checkpoint content (P0 Fix).
+    def _compute_merkle_root(self, checkpoints: list[dict]) -> str:
+        """Compute proper Merkle root of all checkpoint content (P0 Fix).
+
         Previously only hashed IDs, allowing content tampering.
         """
         if not checkpoints:

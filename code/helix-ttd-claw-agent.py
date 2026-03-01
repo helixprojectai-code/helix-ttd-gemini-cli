@@ -1,5 +1,5 @@
-"""
-Helix-TTD-Claw Agent: Runnable Entry Point
+# noqa: N999
+"""Helix-TTD-Claw Agent: Runnable Entry Point.
 
 Imports all classes from openclaw_agent (canonical importable module)
 and runs usage examples. Run directly with: python helix-ttd-claw-agent.py
@@ -9,9 +9,7 @@ from openclaw_agent import (
     AgencyLevel,
     AgentAction,
     AgentPlan,
-    ConstitutionalCheckpoint,
     EpistemicLabel,
-    HelixConstitutionalGate,
     OpenClawAgent,
     RiskConfiguration,
 )
@@ -21,9 +19,7 @@ from openclaw_agent import (
 # ============================================================
 
 def example_bounded_agent_workflow():
-    """
-    Example: A bounded agent that analyzes code with full constitutional checkpoints.
-    """
+    """Example: A bounded agent that analyzes code with full constitutional checkpoints."""
     agent = OpenClawAgent(agency_tier=AgencyLevel.BOUNDED_TOOLS)
 
     def noop(x):
@@ -43,7 +39,7 @@ def example_bounded_agent_workflow():
 
     results = agent.execute_with_checkpoints(plan)
 
-    print(f"\n[EXECUTION RESULTS]")
+    print("\n[EXECUTION RESULTS]")
     print(f"  Status: {results['status']}")
     print(f"  Checkpoints: {len(results['checkpoints'])}")
     for cp in results['checkpoints']:
@@ -57,8 +53,8 @@ def example_bounded_agent_workflow():
 
 
 def example_high_risk_gate():
-    """
-    Example: High-risk action requiring custodian approval.
+    """Example: High-risk action requiring custodian approval.
+
     Demonstrates the CUSTODIAN_GATE tier.
     """
     agent = OpenClawAgent(agency_tier=AgencyLevel.CUSTODIAN_GATE)
@@ -116,9 +112,7 @@ def example_high_risk_gate():
 
 
 def example_drift_detection():
-    """
-    Example: Agent attempts self-modification (constitutional violation).
-    """
+    """Example: Agent attempts self-modification (constitutional violation)."""
     agent = OpenClawAgent(agency_tier=AgencyLevel.BOUNDED_TOOLS)
 
     bad_plan = AgentPlan(
@@ -145,8 +139,8 @@ def example_drift_detection():
 
 
 def example_granular_risk_tuning():
-    """
-    Example: Demonstrating incremental risk levers.
+    """Example: Demonstrating incremental risk levers.
+
     Same high-risk action, different configurations.
     """
     print("\n[GRANULAR RISK TUNING DEMO]")
