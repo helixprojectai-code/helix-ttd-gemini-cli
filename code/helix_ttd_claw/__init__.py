@@ -1,12 +1,14 @@
-"""Helix-TTD-Claw Agent: Constitutional AI Governance Package.
+"""[FACT] Helix-TTD-Claw Agent: Constitutional AI Governance Package.
 
-This package provides modular access to the constitutional governance system:
+[HYPOTHESIS] This package provides modular access to the constitutional governance system:
 - core: Types, enums, and configuration
 - gate: 4-layer constitutional pipeline
 - audit: Persistence, SIEM, and metrics
 - federation: Multi-agent consensus and approvals
 - agent: The bounded agent implementation
 - utils: Crypto and validation helpers
+
+[ASSUMPTION] All submodules are importable and functional.
 
 Version: 1.2.2
 License: Apache-2.0

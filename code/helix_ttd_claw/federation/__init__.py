@@ -1,4 +1,4 @@
-"""Multi-agent consensus and approval workflows for Helix-TTD-Claw."""
+"""[FACT] Multi-agent consensus and approval workflows for Helix-TTD-Claw."""
 
 from openclaw_agent import (
     CustodianApprovalAPI,

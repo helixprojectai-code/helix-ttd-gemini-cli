@@ -1,4 +1,4 @@
-"""Constitutional gate and plugin system for Helix-TTD-Claw."""
+"""[FACT] Constitutional gate and plugin system for Helix-TTD-Claw."""
 
 from openclaw_agent import (
     ComplianceAuditLayer,

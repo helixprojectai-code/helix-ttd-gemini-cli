@@ -1,4 +1,4 @@
-"""Bounded agent implementation for Helix-TTD-Claw."""
+"""[FACT] Bounded agent implementation for Helix-TTD-Claw."""
 
 from openclaw_agent import OpenClawAgent
 

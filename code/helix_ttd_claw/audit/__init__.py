@@ -1,4 +1,4 @@
-"""Audit, persistence, and metrics for Helix-TTD-Claw."""
+"""[FACT] Audit, persistence, and metrics for Helix-TTD-Claw."""
 
 from openclaw_agent import (
     CheckpointStore,
