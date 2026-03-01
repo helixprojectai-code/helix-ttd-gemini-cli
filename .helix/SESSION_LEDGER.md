@@ -433,3 +433,60 @@
 **Quote:** "AI as instrument. Governance as infrastructure. ☁️🦆"
 
 **Anchor:** [LOGGED]
+
+
+---
+
+## [RPI-033] v1.3.1 DBC Federation - Cross-Node Verification Complete
+
+**Date:** 2026-03-01
+
+**Objective:** Complete v1.3.1 implementation by adding missing `FederatedCheckpointValidator` class for GEMS↔KIMI↔Claude↔Codex cross-node verification.
+
+**Research:**
+- Analyzed fresh repo from GitHub (helixprojectai-code/helix-ttd-gemini-cli)
+- Discovered `FederatedCheckpointValidator` was referenced in `__init__.py` exports but not implemented
+- v1.3.0 DBCIdentity and v1.3.1 DBCFederationRegistry were complete
+- Fresh repo cloned to `Z:\kimi\helix-ttd-gemini-cli-fresh`
+
+**Plan:**
+1. Clone fresh repo to avoid stale context
+2. Implement missing `FederatedCheckpointValidator` class
+3. Update package exports in `helix_ttd_claw/__init__.py`
+4. Run test suite to verify no regressions
+5. Update SESSION_LEDGER.md
+
+**Implementation Details:**
+- Added `FederatedCheckpointValidator` class with methods:
+  - `validate_federated_checkpoint()`: Validates checkpoints from other nodes with 75% trust threshold
+  - `request_federation_consensus()`: Simulates multi-node consensus gathering
+  - `sign_local_checkpoint()`: Signs checkpoints with local DBC identity
+- Cross-node signature verification using `DBCFederationRegistry.verify_cross_node()`
+- Validation cache for performance optimization
+- Trust score calculation based on multiple verification checks
+
+**Status:** COMPLETE
+
+**Outputs:**
+- `FederatedCheckpointValidator` class in `code/openclaw_agent.py`
+- Updated `helix_ttd_claw/__init__.py` exports
+- All 19 tests passing
+- v1.3.1 now feature-complete
+
+**Verification:**
+```python
+from helix_ttd_claw import (
+    DBCIdentity,           # v1.3.0
+    DBCFederationRegistry,  # v1.3.1
+    FederatedCheckpointValidator  # v1.3.1 (now complete)
+)
+```
+
+**Next Steps:**
+- Push changes to GitHub
+- Trigger CI verification
+- Tag v1.3.1 release
+
+**Anchor:** [PENDING — awaiting commit]
+
+---

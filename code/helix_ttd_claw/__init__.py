@@ -36,6 +36,7 @@ from openclaw_agent import (  # Core types; Gate; Audit; Federation; Agent
     DBCFederationRegistry,
     DBCIdentity,
     EpistemicLabel,
+    FederatedCheckpointValidator,
     HelixConstitutionalGate,
     MetricsCollector,
     MultiAgentCheckpointConsensus,
@@ -76,6 +77,7 @@ __all__ = [
     # Federation
     "MultiAgentCheckpointConsensus",
     "CustodianApprovalAPI",
+    "FederatedCheckpointValidator",
     # Agent
     "OpenClawAgent",
 ]

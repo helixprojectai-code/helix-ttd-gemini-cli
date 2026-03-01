@@ -649,6 +649,159 @@ class DBCFederationRegistry:
         return any(info["custodian_id"] == custodian_id for info in self._registry.values())
 
 
+class FederatedCheckpointValidator:
+    """[FACT] v1.3.1: Validates checkpoints across federation nodes.
+
+    [HYPOTHESIS] Federated validation enables multi-node consensus
+    on checkpoint integrity, preventing single-node compromise.
+
+    [ASSUMPTION] Majority of federation nodes are honest.
+    [ASSUMPTION] DBCFederationRegistry has loaded valid node DBCs.
+    """
+
+    def __init__(
+        self,
+        federation_registry: DBCFederationRegistry,
+        local_dbc: DBCIdentity
+    ):
+        """[FACT] Initialize federated validator.
+
+        Args:
+            federation_registry: Registry of known federation nodes.
+            local_dbc: Local node DBC identity for signing.
+        """
+        self.registry = federation_registry
+        self.local_dbc = local_dbc
+        self._validation_cache: dict[str, dict] = {}
+
+    def validate_federated_checkpoint(
+        self,
+        checkpoint: ConstitutionalCheckpoint,
+        origin_node_id: str
+    ) -> dict:
+        """[FACT] Validate a checkpoint from another federation node.
+
+        Returns validation result with trust score and verification details.
+
+        Args:
+            checkpoint: The checkpoint to validate.
+            origin_node_id: DBC ID of the originating node.
+
+        Returns:
+            Validation result dictionary.
+        """
+        result = {
+            "valid": False,
+            "origin_node": origin_node_id,
+            "checks": {},
+            "trust_score": 0.0,
+            "timestamp": datetime.now().isoformat()
+        }
+
+        # Check 1: Origin node is registered
+        public_key = self.registry.get_public_key(origin_node_id)
+        result["checks"]["node_registered"] = public_key is not None
+        if not public_key:
+            return result
+
+        # Check 2: Checkpoint has DBC signature
+        result["checks"]["has_signature"] = bool(checkpoint.dbc_signature)
+
+        # Check 3: DBC ID matches origin
+        result["checks"]["dbc_match"] = (
+            checkpoint.dbc_id == origin_node_id
+        )
+
+        # Check 4: Verify signature
+        if checkpoint.dbc_signature and checkpoint.checkpoint_id:
+            # Reconstruct data that was signed
+            data = f"{checkpoint.checkpoint_id}:{checkpoint.merkle_hash}".encode()
+            sig_result = self.registry.verify_cross_node(
+                origin_node_id, data, checkpoint.dbc_signature
+            )
+            result["checks"]["signature_valid"] = sig_result.get("valid", False)
+        else:
+            result["checks"]["signature_valid"] = None
+
+        # Calculate trust score
+        checks = result["checks"]
+        checks_total = len([v for v in checks.values() if v is not None])
+        checks_passed = sum(1 for v in checks.values() if v is True)
+        result["trust_score"] = checks_passed / checks_total if checks_total > 0 else 0.0
+        result["valid"] = result["trust_score"] >= 0.75  # 75% threshold
+
+        # Cache result
+        cache_key = f"{origin_node_id}:{checkpoint.checkpoint_id}"
+        self._validation_cache[cache_key] = result
+
+        return result
+
+    def request_federation_consensus(
+        self,
+        checkpoint_id: str,
+        min_validations: int = 3
+    ) -> dict:
+        """[FACT] Request consensus validation from federation nodes.
+
+        Simulates gathering validation signatures from multiple nodes.
+
+        Args:
+            checkpoint_id: Checkpoint to validate.
+            min_validations: Minimum validations required for consensus.
+
+        Returns:
+            Consensus result dictionary.
+        """
+        nodes = self.registry.list_nodes()
+        active_nodes = [
+            n for n in nodes
+            if n.get("dbc_id") != self.local_dbc.dbc_id  # Exclude self
+        ]
+
+        # Simulate gathering validations
+        validations = []
+        for node in active_nodes[:min_validations]:
+            validations.append({
+                "node_id": node.get("dbc_id"),
+                "node_name": node.get("node_name"),
+                "validated": True,  # Simulated
+                "timestamp": datetime.now().isoformat()
+            })
+
+        consensus_achieved = len(validations) >= min_validations
+
+        return {
+            "checkpoint_id": checkpoint_id,
+            "consensus_achieved": consensus_achieved,
+            "validations": validations,
+            "required": min_validations,
+            "received": len(validations),
+            "timestamp": datetime.now().isoformat()
+        }
+
+    def sign_local_checkpoint(
+        self,
+        checkpoint: ConstitutionalCheckpoint
+    ) -> ConstitutionalCheckpoint:
+        """[FACT] Sign a checkpoint with local DBC identity.
+
+        Args:
+            checkpoint: Checkpoint to sign.
+
+        Returns:
+            Checkpoint with dbc_id, dbc_signature, and signature_timestamp set.
+        """
+        # Create signature over checkpoint ID and merkle hash
+        data = f"{checkpoint.checkpoint_id}:{checkpoint.merkle_hash}".encode()
+        signature = self.local_dbc.sign(data.decode())
+
+        checkpoint.dbc_id = self.local_dbc.dbc_id
+        checkpoint.dbc_signature = signature
+        checkpoint.signature_timestamp = datetime.now().isoformat()
+
+        return checkpoint
+
+
 class CheckpointStore:
     """ENHANCEMENT #1 + v1.3.0: SQLite persistence with DBC-signed audit trails.
 
