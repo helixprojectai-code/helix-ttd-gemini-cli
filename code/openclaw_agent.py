@@ -235,12 +235,14 @@ class RiskConfiguration:
                 self._calibration_history[tool_name] = []
 
             # Record this outcome
-            self._calibration_history[tool_name].append({
-                "planned": planned_risk,
-                "actual": actual_risk,
-                "drift": drift_detected,
-                "timestamp": time.time(),
-            })
+            self._calibration_history[tool_name].append(
+                {
+                    "planned": planned_risk,
+                    "actual": actual_risk,
+                    "drift": drift_detected,
+                    "timestamp": time.time(),
+                }
+            )
 
             # Keep only last 100 observations per tool
             self._calibration_history[tool_name] = self._calibration_history[tool_name][-100:]
@@ -323,8 +325,7 @@ class CheckpointStore:
     def _init_db(self):
         """Create checkpoint table if not exists."""
         with sqlite3.connect(self.db_path) as conn:
-            conn.execute(
-                """
+            conn.execute("""
                 CREATE TABLE IF NOT EXISTS checkpoints (
                     id TEXT PRIMARY KEY,
                     timestamp REAL NOT NULL,
@@ -338,46 +339,41 @@ class CheckpointStore:
                     plan_id TEXT,
                     agent_id TEXT
                 )
-                """
-            )
-            conn.execute(
-                """
+                """)
+            conn.execute("""
                 CREATE INDEX IF NOT EXISTS idx_plan_id ON checkpoints(plan_id)
-                """
-            )
-            conn.execute(
-                """
+                """)
+            conn.execute("""
                 CREATE INDEX IF NOT EXISTS idx_timestamp ON checkpoints(timestamp)
-                """
-            )
+                """)
             conn.commit()
 
     def save(self, checkpoint: ConstitutionalCheckpoint, plan_id: str = "", agent_id: str = ""):
         """Persist a checkpoint to the database."""
         with self._lock, sqlite3.connect(self.db_path) as conn:
-                conn.execute(
-                    """
+            conn.execute(
+                """
                     INSERT OR REPLACE INTO checkpoints
                     (id, timestamp, layer, compliance_score, drift_detected,
                      drift_codes, merkle_hash, prev_checkpoint_hash, risk_metrics,
                      plan_id, agent_id)
                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                     """,
-                    (
-                        checkpoint.checkpoint_id,
-                        checkpoint.timestamp,
-                        checkpoint.layer,
-                        checkpoint.compliance_score,
-                        1 if checkpoint.drift_detected else 0,
-                        json.dumps(checkpoint.drift_codes),
-                        checkpoint.merkle_hash,
-                        checkpoint.prev_checkpoint_hash,
-                        json.dumps(checkpoint.risk_metrics),
-                        plan_id,
-                        agent_id,
-                    ),
-                )
-                conn.commit()
+                (
+                    checkpoint.checkpoint_id,
+                    checkpoint.timestamp,
+                    checkpoint.layer,
+                    checkpoint.compliance_score,
+                    1 if checkpoint.drift_detected else 0,
+                    json.dumps(checkpoint.drift_codes),
+                    checkpoint.merkle_hash,
+                    checkpoint.prev_checkpoint_hash,
+                    json.dumps(checkpoint.risk_metrics),
+                    plan_id,
+                    agent_id,
+                ),
+            )
+            conn.commit()
 
     def get_by_plan(self, plan_id: str) -> list[dict]:
         """Retrieve all checkpoints for a specific plan."""
@@ -566,7 +562,9 @@ class SIEMExporter:
             "agent.id": agent_id,
         }
 
-    def export_event(self, event_type: str, checkpoint: ConstitutionalCheckpoint | None = None, **kwargs):
+    def export_event(
+        self, event_type: str, checkpoint: ConstitutionalCheckpoint | None = None, **kwargs
+    ):
         """Export a constitutional event in OTel-compatible format.
 
         Args:
@@ -601,7 +599,9 @@ class SIEMExporter:
 
         return event
 
-    def _map_severity(self, event_type: str, checkpoint: ConstitutionalCheckpoint | None = None) -> str:
+    def _map_severity(
+        self, event_type: str, checkpoint: ConstitutionalCheckpoint | None = None
+    ) -> str:
         """Map event type to severity level."""
         if checkpoint and checkpoint.drift_detected:
             return "critical" if checkpoint.compliance_score < 0.3 else "high"
@@ -857,7 +857,20 @@ class MetricsCollector:
         }
 
         # Histograms (latency distributions)
-        self._latency_buckets = [0.001, 0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1.0, 2.5, 5.0, 10.0]
+        self._latency_buckets = [
+            0.001,
+            0.005,
+            0.01,
+            0.025,
+            0.05,
+            0.1,
+            0.25,
+            0.5,
+            1.0,
+            2.5,
+            5.0,
+            10.0,
+        ]
         self._plan_execution_times: list[float] = []
         self._action_execution_times: list[float] = []
 
@@ -927,12 +940,12 @@ class MetricsCollector:
             # Counters
             for name, value in self._counters.items():
                 lines.append(f"# TYPE {name} counter")
-                lines.append(f'{name}{{{labels}}} {value}')
+                lines.append(f"{name}{{{labels}}} {value}")
 
             # Gauges
             for name, value in self._gauges.items():
                 lines.append(f"# TYPE {name} gauge")
-                lines.append(f'{name}{{{labels}}} {value}')
+                lines.append(f"{name}{{{labels}}} {value}")
 
             # Histograms
             for hist_name, samples in [
@@ -962,13 +975,29 @@ class MetricsCollector:
                 "latency": {
                     "plan_execution_ms": {
                         "avg": plan_hist["avg"] * 1000 if plan_hist["count"] > 0 else 0,
-                        "p95": self._percentile(self._plan_execution_times, 0.95) * 1000 if self._plan_execution_times else 0,
-                        "p99": self._percentile(self._plan_execution_times, 0.99) * 1000 if self._plan_execution_times else 0,
+                        "p95": (
+                            self._percentile(self._plan_execution_times, 0.95) * 1000
+                            if self._plan_execution_times
+                            else 0
+                        ),
+                        "p99": (
+                            self._percentile(self._plan_execution_times, 0.99) * 1000
+                            if self._plan_execution_times
+                            else 0
+                        ),
                     },
                     "action_execution_ms": {
                         "avg": action_hist["avg"] * 1000 if action_hist["count"] > 0 else 0,
-                        "p95": self._percentile(self._action_execution_times, 0.95) * 1000 if self._action_execution_times else 0,
-                        "p99": self._percentile(self._action_execution_times, 0.99) * 1000 if self._action_execution_times else 0,
+                        "p95": (
+                            self._percentile(self._action_execution_times, 0.95) * 1000
+                            if self._action_execution_times
+                            else 0
+                        ),
+                        "p99": (
+                            self._percentile(self._action_execution_times, 0.99) * 1000
+                            if self._action_execution_times
+                            else 0
+                        ),
                     },
                 },
                 "timeseries": {
@@ -1507,11 +1536,7 @@ class CustodianApprovalAPI:
         with self._lock:
             now = time.time()
             # Clean up expired requests
-            expired = [
-                req_id
-                for req_id, req in self._pending.items()
-                if now > req["timeout_at"]
-            ]
+            expired = [req_id for req_id, req in self._pending.items() if now > req["timeout_at"]]
             for req_id in expired:
                 self._pending[req_id]["status"] = "timeout"
                 self._record_history(self._pending[req_id])
@@ -1733,7 +1758,8 @@ class OpenClawAgent:
         with self._memo_lock:
             now = time.time()
             valid_entries = sum(
-                1 for _, timestamp in self._memo_cache.values()
+                1
+                for _, timestamp in self._memo_cache.values()
                 if now - timestamp < self._memo_ttl_seconds
             )
             return {
@@ -2341,13 +2367,15 @@ class OpenClawAgent:
 
             # Validate plan first (synchronous)
             plan_checkpoint = self.gate.validate_plan(plan)
-            results["checkpoints"].append({
-                "id": plan_checkpoint.checkpoint_id,
-                "compliance": plan_checkpoint.compliance_score,
-                "drift": plan_checkpoint.drift_detected,
-                "codes": plan_checkpoint.drift_codes,
-                "scope": "plan",
-            })
+            results["checkpoints"].append(
+                {
+                    "id": plan_checkpoint.checkpoint_id,
+                    "compliance": plan_checkpoint.compliance_score,
+                    "drift": plan_checkpoint.drift_detected,
+                    "codes": plan_checkpoint.drift_codes,
+                    "scope": "plan",
+                }
+            )
 
             if not plan.constitutional_clearance:
                 results["status"] = "rejected_at_planning"
@@ -2365,21 +2393,25 @@ class OpenClawAgent:
 
                 # Validate action
                 action_checkpoint = self.gate.validate_action(step, {})
-                results["checkpoints"].append({
-                    "id": action_checkpoint.checkpoint_id,
-                    "compliance": action_checkpoint.compliance_score,
-                    "drift": action_checkpoint.drift_detected,
-                    "codes": action_checkpoint.drift_codes,
-                    "scope": "action",
-                    "action_id": step.action_id,
-                })
+                results["checkpoints"].append(
+                    {
+                        "id": action_checkpoint.checkpoint_id,
+                        "compliance": action_checkpoint.compliance_score,
+                        "drift": action_checkpoint.drift_detected,
+                        "codes": action_checkpoint.drift_codes,
+                        "scope": "action",
+                        "action_id": step.action_id,
+                    }
+                )
 
                 if action_checkpoint.drift_detected and action_checkpoint.compliance_score < 0.5:
-                    results["executions"].append({
-                        "action_id": step.action_id,
-                        "status": "blocked",
-                        "reason": action_checkpoint.drift_codes,
-                    })
+                    results["executions"].append(
+                        {
+                            "action_id": step.action_id,
+                            "status": "blocked",
+                            "reason": action_checkpoint.drift_codes,
+                        }
+                    )
                     continue
 
                 # Check custodian gate
@@ -2394,11 +2426,15 @@ class OpenClawAgent:
 
                 # Async execution
                 execution_result = await self._execute_tool_async(step, plan_id=plan.plan_id)
-                results["executions"].append({
-                    "action_id": step.action_id,
-                    "status": "completed" if execution_result.get("status") == "success" else "failed",
-                    "result_hash": hashlib.sha256(str(execution_result).encode()).hexdigest(),
-                })
+                results["executions"].append(
+                    {
+                        "action_id": step.action_id,
+                        "status": (
+                            "completed" if execution_result.get("status") == "success" else "failed"
+                        ),
+                        "result_hash": hashlib.sha256(str(execution_result).encode()).hexdigest(),
+                    }
+                )
 
                 # Small yield to allow other async tasks
                 await asyncio.sleep(0)
@@ -2442,42 +2478,48 @@ class OpenClawAgent:
             # Run synchronous function in thread pool to prevent blocking
             loop = asyncio.get_event_loop()
             return await loop.run_in_executor(
-                None,  # Uses default executor
-                lambda: self._simulate_execution(action, plan_id)
+                None, lambda: self._simulate_execution(action, plan_id)  # Uses default executor
             )
 
     # ENHANCEMENT #3: Plan Serialization & Resume
     def plan_to_json(self, plan: AgentPlan) -> str:
         """Serialize a plan to JSON for persistence or transfer."""
-        return json.dumps({
-            "plan_id": plan.plan_id,
-            "objective": plan.objective,
-            "steps": [
-                {
-                    "action_id": step.action_id,
-                    "action_type": step.action_type,
-                    "tool_name": step.tool_name,
-                    "parameters": step.parameters,
-                    "rationale": step.rationale,
-                    "epistemic_basis": step.epistemic_basis.value,
-                    "estimated_risk": step.estimated_risk,
-                    "requires_approval": step.requires_approval,
-                }
-                for step in plan.steps
-            ],
-            "assumptions": plan.assumptions,
-            "estimated_completion": plan.estimated_completion,
-            "constitutional_clearance": plan.constitutional_clearance,
-            "plan_checkpoint": {
-                "checkpoint_id": plan.plan_checkpoint.checkpoint_id,
-                "timestamp": plan.plan_checkpoint.timestamp,
-                "layer": plan.plan_checkpoint.layer,
-                "compliance_score": plan.plan_checkpoint.compliance_score,
-                "drift_detected": plan.plan_checkpoint.drift_detected,
-                "drift_codes": plan.plan_checkpoint.drift_codes,
-                "merkle_hash": plan.plan_checkpoint.merkle_hash,
-            } if plan.plan_checkpoint else None,
-        }, indent=2)
+        return json.dumps(
+            {
+                "plan_id": plan.plan_id,
+                "objective": plan.objective,
+                "steps": [
+                    {
+                        "action_id": step.action_id,
+                        "action_type": step.action_type,
+                        "tool_name": step.tool_name,
+                        "parameters": step.parameters,
+                        "rationale": step.rationale,
+                        "epistemic_basis": step.epistemic_basis.value,
+                        "estimated_risk": step.estimated_risk,
+                        "requires_approval": step.requires_approval,
+                    }
+                    for step in plan.steps
+                ],
+                "assumptions": plan.assumptions,
+                "estimated_completion": plan.estimated_completion,
+                "constitutional_clearance": plan.constitutional_clearance,
+                "plan_checkpoint": (
+                    {
+                        "checkpoint_id": plan.plan_checkpoint.checkpoint_id,
+                        "timestamp": plan.plan_checkpoint.timestamp,
+                        "layer": plan.plan_checkpoint.layer,
+                        "compliance_score": plan.plan_checkpoint.compliance_score,
+                        "drift_detected": plan.plan_checkpoint.drift_detected,
+                        "drift_codes": plan.plan_checkpoint.drift_codes,
+                        "merkle_hash": plan.plan_checkpoint.merkle_hash,
+                    }
+                    if plan.plan_checkpoint
+                    else None
+                ),
+            },
+            indent=2,
+        )
 
     @classmethod
     def plan_from_json(cls, json_str: str) -> AgentPlan:
@@ -2523,7 +2565,7 @@ class OpenClawAgent:
 
     def save_plan_state(self, plan: AgentPlan, filepath: str):
         """Save plan state to file for later resumption."""
-        with open(filepath, 'w') as f:
+        with open(filepath, "w") as f:
             f.write(self.plan_to_json(plan))
 
     @classmethod
