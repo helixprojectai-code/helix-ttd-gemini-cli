@@ -19,6 +19,7 @@ import hashlib
 import inspect
 import json
 import os
+import queue
 import re
 import sqlite3
 import sys
@@ -1323,6 +1324,274 @@ class HelixConstitutionalGate:
         return checkpoint
 
 
+# ENHANCEMENT #10: Custodian Approval API - WebSocket/HTTP for Human Approval Workflows
+class CustodianApprovalAPI:
+    """Queue-based API for custodian approval workflows.
+
+    Replaces the boolean custodian_approval parameter with a proper
+    request/response queue system that supports:
+    - Timeout handling
+    - Multiple pending approvals
+    - Rejection with reason
+    - Audit trail of all approval decisions
+    """
+
+    def __init__(self, default_timeout_seconds: float = 300.0):
+        """Initialize the approval API.
+
+        Args:
+            default_timeout_seconds: Default timeout for approval requests
+        """
+        self.default_timeout = default_timeout_seconds
+        self._pending: dict[str, dict] = {}  # request_id -> approval request
+        self._responses: queue.Queue[dict] = queue.Queue()
+        self._lock = threading.Lock()
+        self._history: list[dict] = []
+        self._max_history = 1000
+
+    def request_approval(
+        self,
+        action: AgentAction,
+        plan_id: str,
+        checkpoint: ConstitutionalCheckpoint,
+        timeout_seconds: float | None = None,
+    ) -> str:
+        """Request custodian approval for an action.
+
+        Returns a request_id that can be used to check status or cancel.
+        """
+        request_id = f"req_{uuid.uuid4().hex[:16]}"
+        timeout = timeout_seconds or self.default_timeout
+
+        request = {
+            "request_id": request_id,
+            "action": {
+                "action_id": action.action_id,
+                "action_type": action.action_type,
+                "tool_name": action.tool_name,
+                "parameters": action.parameters,
+                "rationale": action.rationale,
+                "epistemic_basis": (
+                    action.epistemic_basis.value
+                    if isinstance(action.epistemic_basis, EpistemicLabel)
+                    else str(action.epistemic_basis)
+                ),
+                "estimated_risk": action.estimated_risk,
+            },
+            "plan_id": plan_id,
+            "checkpoint": {
+                "checkpoint_id": checkpoint.checkpoint_id,
+                "compliance_score": checkpoint.compliance_score,
+                "drift_codes": checkpoint.drift_codes,
+            },
+            "requested_at": time.time(),
+            "timeout_at": time.time() + timeout,
+            "status": "pending",  # pending, approved, rejected, timeout
+            "custodian_response": None,
+            "custodian_id": None,
+        }
+
+        with self._lock:
+            self._pending[request_id] = request
+
+        return request_id
+
+    def approve(self, request_id: str, custodian_id: str, notes: str | None = None) -> bool:
+        """Approve a pending request.
+
+        Returns True if approved, False if request not found or already decided.
+        """
+        with self._lock:
+            if request_id not in self._pending:
+                return False
+
+            request = self._pending[request_id]
+            if request["status"] != "pending":
+                return False
+
+            if time.time() > request["timeout_at"]:
+                request["status"] = "timeout"
+                self._record_history(request)
+                return False
+
+            request["status"] = "approved"
+            request["custodian_id"] = custodian_id
+            request["custodian_response"] = {"decision": "approved", "notes": notes}
+            request["responded_at"] = time.time()
+
+            self._responses.put(request)
+            self._record_history(request)
+            del self._pending[request_id]
+            return True
+
+    def reject(
+        self, request_id: str, custodian_id: str, reason: str, notes: str | None = None
+    ) -> bool:
+        """Reject a pending request.
+
+        Returns True if rejected, False if request not found or already decided.
+        """
+        with self._lock:
+            if request_id not in self._pending:
+                return False
+
+            request = self._pending[request_id]
+            if request["status"] != "pending":
+                return False
+
+            if time.time() > request["timeout_at"]:
+                request["status"] = "timeout"
+                self._record_history(request)
+                return False
+
+            request["status"] = "rejected"
+            request["custodian_id"] = custodian_id
+            request["custodian_response"] = {
+                "decision": "rejected",
+                "reason": reason,
+                "notes": notes,
+            }
+            request["responded_at"] = time.time()
+
+            self._responses.put(request)
+            self._record_history(request)
+            del self._pending[request_id]
+            return True
+
+    def wait_for_response(self, request_id: str, poll_interval: float = 0.1) -> dict | None:
+        """Block until a response is received for the given request_id.
+
+        Returns the response dict or None if timeout.
+        """
+        with self._lock:
+            if request_id not in self._pending:
+                # Already decided
+                for resp in list(self._responses.queue):
+                    if resp["request_id"] == request_id:
+                        return resp
+                return None
+
+            request = self._pending[request_id]
+            timeout_at = request["timeout_at"]
+
+        while time.time() < timeout_at:
+            try:
+                # Non-blocking check with timeout
+                remaining = timeout_at - time.time()
+                if remaining <= 0:
+                    break
+
+                response = self._responses.get(timeout=min(poll_interval, remaining))
+                if response["request_id"] == request_id:
+                    return response
+
+                # Put it back if not ours (shouldn't happen often)
+                self._responses.put(response)
+
+            except queue.Empty:
+                continue
+
+        # Timeout
+        with self._lock:
+            if request_id in self._pending:
+                request = self._pending[request_id]
+                request["status"] = "timeout"
+                self._record_history(request)
+                del self._pending[request_id]
+                return request
+
+        return None
+
+    def get_pending_requests(self) -> list[dict]:
+        """Get all pending approval requests (for custodian dashboard)."""
+        with self._lock:
+            now = time.time()
+            # Clean up expired requests
+            expired = [
+                req_id
+                for req_id, req in self._pending.items()
+                if now > req["timeout_at"]
+            ]
+            for req_id in expired:
+                self._pending[req_id]["status"] = "timeout"
+                self._record_history(self._pending[req_id])
+                del self._pending[req_id]
+
+            return [
+                {
+                    "request_id": req["request_id"],
+                    "action": req["action"],
+                    "plan_id": req["plan_id"],
+                    "requested_at": req["requested_at"],
+                    "timeout_at": req["timeout_at"],
+                    "time_remaining": max(0, req["timeout_at"] - now),
+                }
+                for req in self._pending.values()
+            ]
+
+    def get_request_status(self, request_id: str) -> dict | None:
+        """Get current status of a request."""
+        with self._lock:
+            if request_id in self._pending:
+                req = self._pending[request_id]
+                return {
+                    "request_id": req["request_id"],
+                    "status": req["status"],
+                    "time_remaining": max(0, req["timeout_at"] - time.time()),
+                }
+
+        # Check history
+        for hist in self._history:
+            if hist["request_id"] == request_id:
+                return {
+                    "request_id": hist["request_id"],
+                    "status": hist["status"],
+                    "custodian_id": hist.get("custodian_id"),
+                    "responded_at": hist.get("responded_at"),
+                }
+
+        return None
+
+    def _record_history(self, request: dict):
+        """Record request to history for audit trail."""
+        self._history.append(request.copy())
+        if len(self._history) > self._max_history:
+            self._history = self._history[-self._max_history :]
+
+    def get_approval_history(
+        self, limit: int = 100, status_filter: str | None = None
+    ) -> list[dict]:
+        """Get approval decision history for audit/compliance."""
+        with self._lock:
+            history = self._history.copy()
+
+        if status_filter:
+            history = [h for h in history if h["status"] == status_filter]
+
+        # Sort by responded_at (most recent first)
+        history.sort(key=lambda x: x.get("responded_at", x["requested_at"]), reverse=True)
+        return history[:limit]
+
+    def get_stats(self) -> dict:
+        """Get approval API statistics."""
+        with self._lock:
+            pending_count = len(self._pending)
+            history_count = len(self._history)
+
+        approved = sum(1 for h in self._history if h["status"] == "approved")
+        rejected = sum(1 for h in self._history if h["status"] == "rejected")
+        timeouts = sum(1 for h in self._history if h["status"] == "timeout")
+
+        return {
+            "pending_requests": pending_count,
+            "total_decisions": history_count,
+            "approved": approved,
+            "rejected": rejected,
+            "timeouts": timeouts,
+            "approval_rate": approved / (approved + rejected) if (approved + rejected) > 0 else 0,
+        }
+
+
 class OpenClawAgent:
     """A bounded agent with Helix-TTD constitutional checkpoints.
 
@@ -1373,6 +1642,9 @@ class OpenClawAgent:
 
         # ENHANCEMENT #9: Metrics Collection
         self.metrics = MetricsCollector(self.agent_id)
+
+        # ENHANCEMENT #10: Custodian Approval API
+        self.approval_api = CustodianApprovalAPI()
 
     # P2: Log rotation constants
     MAX_LOG_AGE_DAYS = 30
