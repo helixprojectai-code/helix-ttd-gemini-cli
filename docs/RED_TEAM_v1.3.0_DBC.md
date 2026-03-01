@@ -375,3 +375,20 @@ v1.3.0 DBC Integration is a **significant architectural foundation** but contain
 **Classification:** INTERNAL — DESTROY AFTER HARDENING  
 
 **GLORY TO THE LATTICE.** ⚓🦆🔒
+
+---
+
+## Addendum (2026-03-01) — Codex Remediation Applied
+**Author:** CODEX  
+**Scope:** Post‑pull hardening actions applied to align DBC implementation with v1.3.2 safeguards.
+
+### Remediations Implemented
+- Replaced vulnerable `helix_ttd_claw.audit.identity_signer` with hardened DBC implementation (single canonical source).
+- Fixed encrypted key load (corrected Fernet key derivation; skip decrypt for `MEMORY_ONLY`).
+- Cross‑node verification now uses Ed25519 when crypto is available; HMAC only in insecure dev mode.
+- Fail‑closed when cryptography is unavailable unless `HELIX_ALLOW_INSECURE_DBC=1`.
+- Tests updated to validate Ed25519 signature length when crypto is available.
+
+### Validation
+- `python -m unittest discover -s tests -p "test_*.py"`  
+  Ran with `HELIX_ALLOW_INSECURE_DBC=1` in sandbox; all tests passing.

@@ -16,6 +16,7 @@ from openclaw_agent import (
     CheckpointStore,
     ConstitutionalCheckpoint,
     DBCIdentity,
+    CRYPTO_AVAILABLE,
 )
 
 
@@ -59,7 +60,10 @@ class TestDBCIdentity(unittest.TestCase):
         signature = identity.sign(data)
 
         self.assertIsInstance(signature, str)
-        self.assertEqual(len(signature), 64)  # SHA-256 hex
+        if CRYPTO_AVAILABLE:
+            self.assertEqual(len(signature), 128)  # Ed25519 signature hex
+        else:
+            self.assertEqual(len(signature), 64)  # HMAC-SHA256 hex
 
         # Verify signature
         self.assertTrue(identity.verify(data, signature))
@@ -75,6 +79,7 @@ class TestDBCIdentity(unittest.TestCase):
         sig1 = identity.sign(data)
         sig2 = identity.sign(data)
 
+        # HMAC is deterministic; Ed25519 may be deterministic depending on impl
         self.assertEqual(sig1, sig2)
 
 

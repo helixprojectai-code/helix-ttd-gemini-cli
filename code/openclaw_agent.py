@@ -355,6 +355,12 @@ class DBCIdentity:
         self._crypto_available = CRYPTO_AVAILABLE
 
         if not self._crypto_available:
+            allow_insecure = os.environ.get("HELIX_ALLOW_INSECURE_DBC", "").lower() in ("1", "true", "yes")
+            if not allow_insecure:
+                raise RuntimeError(
+                    "[SECURITY] cryptography library not installed. "
+                    "Set HELIX_ALLOW_INSECURE_DBC=1 to allow HMAC fallback (development only)."
+                )
             import warnings
 
             warnings.warn(
@@ -424,6 +430,10 @@ class DBCIdentity:
         if not self._crypto_available:
             return
 
+        # Skip decryption if key was not persisted
+        if self.dbc_data.get("encrypted_private_key") == "MEMORY_ONLY":
+            return
+
         # Get encryption key from environment (must be set!)
         enc_key = os.environ.get("HELIX_DBC_ENC_KEY")
         if not enc_key:
@@ -435,8 +445,8 @@ class DBCIdentity:
         # Derive Fernet key from env var
         from cryptography.fernet import Fernet
 
-        fernet_key = hashlib.sha256(enc_key.encode()).base64digest()[:32]
-        fernet_key = base64.urlsafe_b64encode(fernet_key.encode())
+        fernet_key = hashlib.sha256(enc_key.encode()).digest()[:32]
+        fernet_key = base64.urlsafe_b64encode(fernet_key)
         f = Fernet(fernet_key)
 
         # Decrypt private key bytes
@@ -755,16 +765,22 @@ class DBCFederationRegistry:
                 "trusted": False,
             }
 
-        # Reconstruct verification (we know the public key, derive verification key)
-        # In production: use proper asymmetric crypto (ECDSA/Ed25519)
-        # Here we simulate with the same HMAC approach using public key
         public_key = entry["public_key"]
+        # Prefer Ed25519 verification when crypto is available
+        if CRYPTO_AVAILABLE:
+            is_valid = DBCIdentity().verify_cross_node(data, signature, public_key)
+            return {
+                "valid": is_valid,
+                "dbc_id": dbc_id,
+                "node_name": entry["node_name"],
+                "custodian_id": entry["custodian_id"],
+                "trusted": True,
+                "verification_method": "Ed25519",
+            }
 
-        # For simulation: derive verification key from public key
-        # In production: use proper signature verification
+        # Fallback: HMAC-derived verification (development only)
         verification_key = hashlib.sha256(public_key.encode()).hexdigest()
         expected_sig = hmac.new(verification_key.encode(), data, hashlib.sha256).hexdigest()
-
         is_valid = hmac.compare_digest(expected_sig, signature)
 
         return {
