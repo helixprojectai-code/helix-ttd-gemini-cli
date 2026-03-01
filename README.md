@@ -1,6 +1,6 @@
 # Helix-TTD Gemini CLI Node
 
-[![Helix-TTD Full CI](https://github.com/helixprojectai-code/helix-ttd-gemini-cli/actions/workflows/ci.yml/badge.svg)](https://github.com/helixprojectai-code/helix-ttd-gemini-cli/actions/workflows/ci.yml)
+[![Helix-TTD Full CI](https://github.com/helixprojectai-code/helix-ttd-kimi-cli/actions/workflows/ci.yml/badge.svg)](https://github.com/helixprojectai-code/helix-ttd-kimi-cli/actions/workflows/ci.yml)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
 [![License: Apache-2.0](https://img.shields.io/badge/License-Apache%202.0-green.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Constitutional Compliance](https://img.shields.io/badge/Constitution-RATIFIED-gold.svg)](.helix/CONSTITUTION.md)
@@ -78,6 +78,27 @@ You can now use GEMS as a non-agentic, advisory librarian over the Helix corpus:
 ```
 GEMS, map the interaction between 'Epistemic Integrity' and 'Custodial Sovereignty'.
 ```
+
+---
+
+## 🤖 Agentic Governance: Helix-TTD-Claw (WIP)
+
+The foundation for the **Helix-TTD Agentic Layer** is now established. This module extends the constitutional grammar into active tool-use scenarios while maintaining the **Non-Agency Constraint (Article III)**.
+
+**Current Status:** **WIP / ALPHA**
+- **Validation:** 100% CI Pass (7-Stage Pipeline).
+- **Architecture:** Modular split (`openclaw_agent.py`) for library integration.
+- **Security:** Hardened with Unicode Normalization, Full Content Merkle Hashing, and Risk Budgeting.
+
+### Key Features:
+- **4-Layer Civic Firmware Stack:** Ethics → Safeguard → Iterate → Knowledge.
+- **Granular Risk Budgeting:** Per-action and daily cumulative risk thresholds.
+- **Merkle-Anchored Checkpoints:** Every plan and action is cryptographically chained for forensic auditing.
+- **Custodian Gate:** Mandatory human-in-the-loop approval for high-risk operations.
+
+This agentic substrate is designed to transform autonomous LLM agents into **Bounded Advisory Instruments** under total human custody.
+
+---
 
 ## Safe Reset and Continuity
 

@@ -7,6 +7,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
+
 CODE_DIR = Path(__file__).resolve().parents[1]
 if str(CODE_DIR) not in sys.path:
     sys.path.insert(0, str(CODE_DIR))
@@ -26,8 +27,8 @@ class TempCWD:
 
 class TestReceiptsManager(unittest.TestCase):
     def test_grudge_origin_fallback_and_list(self):
-        from naming_convention import NamingConvention
         from receipts_manager import PersonalDirectory
+        from naming_convention import NamingConvention
 
         with TempCWD():
             directory = PersonalDirectory("STEVE_HOPE")
@@ -107,7 +108,9 @@ class TestHelixCLI(unittest.TestCase):
         with TempCWD():
             cli = HelixCLI()
             rpi = cli.rpi_tracker.initiate_research(
-                objective="Test", initial_findings=["Init"], sources=["test"]
+                objective="Test",
+                initial_findings=["Init"],
+                sources=["test"]
             )
             buf = io.StringIO()
             with contextlib.redirect_stdout(buf):
@@ -122,10 +125,15 @@ class TestHelixCLI(unittest.TestCase):
         with TempCWD():
             cli = HelixCLI()
             rpi = cli.rpi_tracker.initiate_research(
-                objective="Test", initial_findings=["Init"], sources=["test"]
+                objective="Test",
+                initial_findings=["Init"],
+                sources=["test"]
             )
             cli.rpi_tracker.transition_to_plan(
-                rpi_id=rpi.rpi_id, plan_steps=["Step 1"], dependencies=[], risks="None"
+                rpi_id=rpi.rpi_id,
+                plan_steps=["Step 1"],
+                dependencies=[],
+                risks="None"
             )
             cli.rpi_tracker.anchor_to_l1(rpi.rpi_id, "txid123")
             cli.rpi_tracker.set_proof_present("proof-30k")
@@ -139,7 +147,7 @@ class TestHelixCLI(unittest.TestCase):
 
 class TestDriftTelemetry(unittest.TestCase):
     def test_gradual_drift_detection(self):
-        from drift_telemetry import DriftCode, DriftTelemetry
+        from drift_telemetry import DriftTelemetry, DriftCode
 
         with TempCWD():
             telemetry = DriftTelemetry()
@@ -148,72 +156,57 @@ class TestDriftTelemetry(unittest.TestCase):
 
             # 3/5 snapshots with minor drift (missing labels)
             for _ in range(3):
-                telemetry.capture(
-                    "KIMI",
-                    {
-                        "epistemic_labels": False,
-                        "advisory_posture": True,
-                        "agency_claims": 0,
-                        "hierarchy_intact": True,
-                        "visible_reasoning": True,
-                    },
-                )
+                telemetry.capture("KIMI", {
+                    "epistemic_labels": False,
+                    "advisory_posture": True,
+                    "agency_claims": 0,
+                    "hierarchy_intact": True,
+                    "visible_reasoning": True,
+                })
 
             # 2 clean snapshots; last should trigger DRIFT_G by history
-            telemetry.capture(
-                "KIMI",
-                {
-                    "epistemic_labels": True,
-                    "advisory_posture": True,
-                    "agency_claims": 0,
-                    "hierarchy_intact": True,
-                    "visible_reasoning": True,
-                },
-            )
-            snapshot = telemetry.capture(
-                "KIMI",
-                {
-                    "epistemic_labels": True,
-                    "advisory_posture": True,
-                    "agency_claims": 0,
-                    "hierarchy_intact": True,
-                    "visible_reasoning": True,
-                },
-            )
+            telemetry.capture("KIMI", {
+                "epistemic_labels": True,
+                "advisory_posture": True,
+                "agency_claims": 0,
+                "hierarchy_intact": True,
+                "visible_reasoning": True,
+            })
+            snapshot = telemetry.capture("KIMI", {
+                "epistemic_labels": True,
+                "advisory_posture": True,
+                "agency_claims": 0,
+                "hierarchy_intact": True,
+                "visible_reasoning": True,
+            })
 
             drift_code, _ = telemetry.detect_drift(snapshot)
             self.assertEqual(drift_code, DriftCode.DRIFT_G)
 
     def test_intent_consistency_detection(self):
-        from drift_telemetry import DriftCode, DriftTelemetry
+        from drift_telemetry import DriftTelemetry, DriftCode
 
         with TempCWD():
             telemetry = DriftTelemetry()
             telemetry.thresholds["intent_similarity_min"] = 0.6
 
-            telemetry.capture(
-                "KIMI",
-                {
-                    "epistemic_labels": True,
-                    "advisory_posture": True,
-                    "agency_claims": 0,
-                    "hierarchy_intact": True,
-                    "visible_reasoning": True,
-                    "intent": "audit constitutional compliance and report drift",
-                },
-            )
+            telemetry.capture("KIMI", {
+                "epistemic_labels": True,
+                "advisory_posture": True,
+                "agency_claims": 0,
+                "hierarchy_intact": True,
+                "visible_reasoning": True,
+                "intent": "audit constitutional compliance and report drift",
+            })
 
-            snapshot = telemetry.capture(
-                "KIMI",
-                {
-                    "epistemic_labels": True,
-                    "advisory_posture": True,
-                    "agency_claims": 0,
-                    "hierarchy_intact": True,
-                    "visible_reasoning": True,
-                    "intent": "deploy federation node to new cluster",
-                },
-            )
+            snapshot = telemetry.capture("KIMI", {
+                "epistemic_labels": True,
+                "advisory_posture": True,
+                "agency_claims": 0,
+                "hierarchy_intact": True,
+                "visible_reasoning": True,
+                "intent": "deploy federation node to new cluster",
+            })
 
             drift_code, _ = telemetry.detect_drift(snapshot)
             self.assertEqual(drift_code, DriftCode.DRIFT_M)
@@ -223,16 +216,13 @@ class TestDriftTelemetry(unittest.TestCase):
 
         with TempCWD():
             telemetry = DriftTelemetry()
-            telemetry.capture(
-                "KIMI",
-                {
-                    "epistemic_labels": True,
-                    "advisory_posture": True,
-                    "agency_claims": 0,
-                    "hierarchy_intact": True,
-                    "visible_reasoning": True,
-                },
-            )
+            telemetry.capture("KIMI", {
+                "epistemic_labels": True,
+                "advisory_posture": True,
+                "agency_claims": 0,
+                "hierarchy_intact": True,
+                "visible_reasoning": True,
+            })
             artifact = telemetry.generate_trajectory_artifact("KIMI", window=5)
             self.assertEqual(artifact["node_id"], "KIMI")
             self.assertEqual(artifact["window"], 1)
@@ -240,8 +230,8 @@ class TestDriftTelemetry(unittest.TestCase):
 
 class TestOverrides(unittest.TestCase):
     def test_override_logging(self):
-        from naming_convention import NamingConvention
         from receipts_manager import PersonalDirectory
+        from naming_convention import NamingConvention
 
         with TempCWD():
             directory = PersonalDirectory("STEVE_HOPE")
@@ -250,7 +240,7 @@ class TestOverrides(unittest.TestCase):
                 category="EMERGENCY",
                 reason="Telemetry spike",
                 authorization_chain=["CUSTODIAN_PROCEED"],
-                custody_tag="STEVE",
+                custody_tag="STEVE"
             )
             overrides_dir = Path("EVAC") / "personal" / "STEVE_HOPE" / "overrides"
             files = list(overrides_dir.glob("*.jsonl"))
@@ -259,6 +249,82 @@ class TestOverrides(unittest.TestCase):
             self.assertIsNotNone(parsed)
             self.assertEqual(parsed.file_type, "OVERRIDE")
             self.assertEqual(entry["category"], "EMERGENCY")
+
+
+class TestOpenClawAgent(unittest.TestCase):
+    def test_custodian_gate_halts_execution(self):
+        from openclaw_agent import OpenClawAgent, AgencyLevel
+
+        with TempCWD():
+            def noop(x):
+                return x
+
+            agent = OpenClawAgent(agency_tier=AgencyLevel.CUSTODIAN_GATE)
+            agent.register_tool("file_search", noop, risk_level=0.2)
+            agent.register_tool("file_read", noop, risk_level=0.1)
+            agent.register_tool("static_analysis", noop, risk_level=0.3)
+
+            plan = agent.create_plan(
+                objective="Analyze Python codebase for potential improvements",
+                context={}
+            )
+            results = agent.execute_with_checkpoints(plan, custodian_approval=None)
+            self.assertEqual(results["status"], "awaiting_custodian_approval")
+            self.assertEqual(len(results["executions"]), 1)
+            self.assertTrue(any(cp.get("scope") == "plan" for cp in results["checkpoints"]))
+            self.assertTrue(any(cp.get("scope") == "action" for cp in results["checkpoints"]))
+
+    def test_register_tool_rejects_lambda(self):
+        from openclaw_agent import OpenClawAgent
+
+        with TempCWD():
+            agent = OpenClawAgent()
+            with self.assertRaises(ValueError):
+                agent.register_tool("file_search", lambda x: x, risk_level=0.2)
+
+    def test_action_normalization_blocks_hidden_forbidden(self):
+        from openclaw_agent import HelixConstitutionalGate, AgentAction, EpistemicLabel
+
+        with TempCWD():
+            gate = HelixConstitutionalGate()
+            action = AgentAction(
+                action_id="act_1",
+                action_type="read",
+                tool_name="file_read",
+                parameters={"note": "auto\u200Bnomous"},
+                rationale="[HYPOTHESIS] test",
+                epistemic_basis=EpistemicLabel.HYPOTHESIS,
+                estimated_risk=0.1
+            )
+            checkpoint = gate.validate_action(action, {})
+            self.assertTrue(checkpoint.drift_detected)
+            self.assertTrue(any("DRIFT-C" in c for c in checkpoint.drift_codes))
+
+    def test_no_tools_authorized_blocks_plan(self):
+        from openclaw_agent import HelixConstitutionalGate, AgentPlan, AgentAction, EpistemicLabel
+
+        with TempCWD():
+            gate = HelixConstitutionalGate()
+            plan = AgentPlan(
+                plan_id="plan_1",
+                objective="Read file",
+                steps=[
+                    AgentAction(
+                        action_id="act_1",
+                        action_type="read",
+                        tool_name="file_read",
+                        parameters={"path": "x"},
+                        rationale="[FACT] Need to read",
+                        epistemic_basis=EpistemicLabel.FACT,
+                        estimated_risk=0.1
+                    )
+                ],
+                assumptions=[],
+                estimated_completion=1.0
+            )
+            checkpoint = gate.validate_plan(plan)
+            self.assertTrue(checkpoint.drift_detected)
+            self.assertTrue(any("No tools authorized" in c for c in checkpoint.drift_codes))
 
 
 if __name__ == "__main__":
