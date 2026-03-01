@@ -4,6 +4,18 @@
 
 ---
 
+## 🔐 Addendum: DBC Hardening (v1.3.x)
+
+**Summary:** DBC (Digital Birth Certificate) signing is now hardened and aligned to Ed25519.  
+**Key changes:**
+- Single canonical DBC implementation (vulnerable signer removed/re-exported).
+- Encrypted key load fixed; `MEMORY_ONLY` keys skip decrypt.
+- Cross-node verification uses Ed25519 when crypto is available.
+- Fail-closed without cryptography unless `HELIX_ALLOW_INSECURE_DBC=1`.
+- CI now runs DBC tests in both secure and insecure modes.
+
+---
+
 ## 🏛️ Overview
 
 The Helix-TTD-Claw Agent is a **constitutionally bounded AI agent** implementing the Helix-TTD Civic Firmware Stack. It enforces custodial sovereignty, epistemic integrity, and drift-resistant governance across all agent operations.
