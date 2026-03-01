@@ -477,6 +477,178 @@ class DBCIdentity:
         return hmac.compare_digest(expected, signature)
 
 
+class DBCFederationRegistry:
+    """[FACT] v1.3.1: Cross-node DBC registry for federation signature verification.
+
+    [HYPOTHESIS] Each node in the Helix federation can verify signatures from any other node
+    by maintaining a registry of known DBC public keys.
+
+    [ASSUMPTION] DBC files are distributed via secure out-of-band channel (Git/substrate sync).
+    [ASSUMPTION] Custodian attestation chains establish trust anchors.
+    """
+
+    # Standard federation node DBC locations
+    FEDERATION_DBC_PATHS: dict[str, Path] = {
+        "GEMS": Path("Z:/gemini/EVAC/gems.dbc.json"),
+        "KIMI": Path("Z:/kimi/EVAC/kimi.dbc.json"),
+        "CLAUDE": Path("Z:/claude/EVAC/claude.dbc.json"),
+        "CODEX": Path("Z:/codex/EVAC/codex.dbc.json"),
+    }
+
+    def __init__(self, custom_dbc_paths: dict[str, Path] | None = None):
+        """[FACT] Initialize federation registry.
+
+        Args:
+            custom_dbc_paths: Optional dict of node_name -> DBC path overrides.
+        """
+        self._dbc_paths = custom_dbc_paths or self.FEDERATION_DBC_PATHS.copy()
+        self._registry: dict[str, dict] = {}  # dbc_id -> DBC data
+        self._loaded = False
+
+    def load_all(self) -> "DBCFederationRegistry":
+        """[FACT] Load all available DBC files from federation nodes.
+
+        Returns:
+            Self for chaining.
+        """
+        for node_name, dbc_path in self._dbc_paths.items():
+            if dbc_path.exists():
+                try:
+                    with open(dbc_path, encoding="utf-8") as f:
+                        dbc_data = json.load(f)
+                        dbc_id = dbc_data.get("dbc_id")
+                        if dbc_id:
+                            self._registry[dbc_id] = {
+                                "node_name": node_name,
+                                "dbc_path": dbc_path,
+                                "dbc_data": dbc_data,
+                                "public_key": dbc_data.get("public_key")
+                                or dbc_data.get("merkle_root", ""),
+                                "custodian_id": dbc_data.get("custodian_id", "Unknown"),
+                            }
+                except (json.JSONDecodeError, OSError):
+                    # Skip invalid/unreadable DBCs
+                    continue
+        self._loaded = True
+        return self
+
+    def register_dbc(self, dbc_path: Path, node_name: str | None = None) -> bool:
+        """[FACT] Register a DBC file into the federation registry.
+
+        Args:
+            dbc_path: Path to DBC JSON file.
+            node_name: Optional node name override.
+
+        Returns:
+            True if registered successfully.
+        """
+        try:
+            with open(dbc_path, encoding="utf-8") as f:
+                dbc_data = json.load(f)
+                dbc_id = dbc_data.get("dbc_id")
+                if not dbc_id:
+                    return False
+
+                self._registry[dbc_id] = {
+                    "node_name": node_name or dbc_data.get("agent_name", "Unknown"),
+                    "dbc_path": dbc_path,
+                    "dbc_data": dbc_data,
+                    "public_key": dbc_data.get("public_key") or dbc_data.get("merkle_root", ""),
+                    "custodian_id": dbc_data.get("custodian_id", "Unknown"),
+                }
+                return True
+        except (json.JSONDecodeError, OSError):
+            return False
+
+    def get_public_key(self, dbc_id: str) -> str | None:
+        """[FACT] Retrieve public key for a given DBC ID.
+
+        Args:
+            dbc_id: The DBC identifier.
+
+        Returns:
+            Public key string or None if not found.
+        """
+        if not self._loaded:
+            self.load_all()
+        entry = self._registry.get(dbc_id)
+        return entry["public_key"] if entry else None
+
+    def verify_cross_node(self, dbc_id: str, data: bytes, signature: str) -> dict:
+        """[FACT] v1.3.1: Verify signature from any federation node.
+
+        Args:
+            dbc_id: DBC ID of the signing node.
+            data: Raw bytes that were signed.
+            signature: Hex-encoded signature to verify.
+
+        Returns:
+            Verification result with trust information.
+        """
+        if not self._loaded:
+            self.load_all()
+
+        entry = self._registry.get(dbc_id)
+        if not entry:
+            return {
+                "valid": False,
+                "error": "DBC not found in federation registry",
+                "dbc_id": dbc_id,
+                "trusted": False,
+            }
+
+        # Reconstruct verification (we know the public key, derive verification key)
+        # In production: use proper asymmetric crypto (ECDSA/Ed25519)
+        # Here we simulate with the same HMAC approach using public key
+        public_key = entry["public_key"]
+
+        # For simulation: derive verification key from public key
+        # In production: use proper signature verification
+        verification_key = hashlib.sha256(public_key.encode()).hexdigest()
+        expected_sig = hmac.new(verification_key.encode(), data, hashlib.sha256).hexdigest()
+
+        is_valid = hmac.compare_digest(expected_sig, signature)
+
+        return {
+            "valid": is_valid,
+            "dbc_id": dbc_id,
+            "node_name": entry["node_name"],
+            "custodian_id": entry["custodian_id"],
+            "trusted": True,  # In registry = trusted (simplified model)
+            "verification_method": "HMAC-SHA256-derived",
+        }
+
+    def list_nodes(self) -> list[dict]:
+        """[FACT] List all registered federation nodes.
+
+        Returns:
+            List of node information dictionaries.
+        """
+        if not self._loaded:
+            self.load_all()
+        return [
+            {
+                "dbc_id": dbc_id,
+                "node_name": info["node_name"],
+                "custodian_id": info["custodian_id"],
+            }
+            for dbc_id, info in self._registry.items()
+        ]
+
+    def is_trusted_custodian(self, custodian_id: str) -> bool:
+        """[FACT] Check if custodian is trusted by any federation node.
+
+        Args:
+            custodian_id: Custodian identifier to check.
+
+        Returns:
+            True if custodian attests at least one DBC.
+        """
+        if not self._loaded:
+            self.load_all()
+        return any(info["custodian_id"] == custodian_id for info in self._registry.values())
+
+
 class CheckpointStore:
     """ENHANCEMENT #1 + v1.3.0: SQLite persistence with DBC-signed audit trails.
 
@@ -606,10 +778,17 @@ class CheckpointStore:
             "algorithm": "HMAC-SHA256",
         }
 
-    def verify_signature(self, checkpoint_id: str) -> dict:
+    def verify_signature(
+        self, checkpoint_id: str, federation_registry: DBCFederationRegistry | None = None
+    ) -> dict:
         """[FACT] Verify DBC signature of a stored checkpoint.
 
         v1.3.0: Forensic verification of checkpoint authenticity.
+        v1.3.1: Cross-node verification via DBCFederationRegistry.
+
+        Args:
+            checkpoint_id: ID of checkpoint to verify.
+            federation_registry: Optional registry for cross-node verification.
 
         Returns:
             Verification result with validity status.
@@ -644,24 +823,41 @@ class CheckpointStore:
 
             # Reconstruct payload
             payload = f"{checkpoint_hash}:{row_dict['signature_timestamp']}:{row_dict['dbc_id']}"
+            stored_dbc_id = row_dict["dbc_id"]
 
-            # Verify using stored DBC identity or a new one with same keys
-            if self._dbc and self._dbc.dbc_id == row_dict["dbc_id"]:
+            # Try local DBC identity first
+            if self._dbc and self._dbc.dbc_id == stored_dbc_id:
                 is_valid = self._dbc.verify(payload.encode(), row_dict["dbc_signature"])
-            else:
-                # Cannot verify without matching DBC identity
                 return {
-                    "valid": False,
-                    "error": "DBC identity mismatch or not available",
-                    "stored_dbc_id": row_dict["dbc_id"],
-                    "current_dbc_id": self._dbc.dbc_id if self._dbc else None,
+                    "valid": is_valid,
+                    "dbc_id": stored_dbc_id,
+                    "signature_timestamp": row_dict["signature_timestamp"],
+                    "algorithm": "HMAC-SHA256",
+                    "verification_method": "local_identity",
                 }
 
+            # v1.3.1: Try federation registry for cross-node verification
+            if federation_registry:
+                fed_result = federation_registry.verify_cross_node(
+                    stored_dbc_id, payload.encode(), row_dict["dbc_signature"]
+                )
+                if fed_result["valid"]:
+                    return {
+                        "valid": True,
+                        "dbc_id": stored_dbc_id,
+                        "signature_timestamp": row_dict["signature_timestamp"],
+                        "algorithm": "HMAC-SHA256",
+                        "verification_method": "federation_registry",
+                        "node_name": fed_result.get("node_name"),
+                        "custodian_id": fed_result.get("custodian_id"),
+                    }
+
+            # Cannot verify
             return {
-                "valid": is_valid,
-                "dbc_id": row_dict["dbc_id"],
-                "signature_timestamp": row_dict["signature_timestamp"],
-                "algorithm": "HMAC-SHA256",
+                "valid": False,
+                "error": "DBC identity mismatch or not available in federation",
+                "stored_dbc_id": stored_dbc_id,
+                "current_dbc_id": self._dbc.dbc_id if self._dbc else None,
             }
 
     def get_by_plan(self, plan_id: str) -> list[dict]:

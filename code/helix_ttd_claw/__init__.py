@@ -4,16 +4,17 @@
 - core: Types, enums, and configuration
 - gate: 4-layer constitutional pipeline
 - audit: Persistence, SIEM, metrics, and DBC identity signing
-- federation: Multi-agent consensus and approvals
+- federation: Multi-agent consensus, DBC cross-node verification, and approvals
 - agent: The bounded agent implementation
 - utils: Crypto and validation helpers
 
 [ASSUMPTION] All submodules are importable and functional.
 
-Version: 1.3.0
+Version: 1.3.1
 License: Apache-2.0
 """
 
+# v1.3.1: DBC Federation - Cross-node signature verification
 # v1.3.0: DBC Integration - Non-repudiable audit trails with identity signing
 # v1.2.2: Package decoupling - maintaining backwards compatibility
 # All exports from original openclaw_agent.py are preserved
@@ -32,6 +33,7 @@ from openclaw_agent import (  # Core types; Gate; Audit; Federation; Agent
     ConstitutionalCheckpoint,
     ConstitutionalLayer,
     CustodianApprovalAPI,
+    DBCFederationRegistry,
     DBCIdentity,
     EpistemicLabel,
     HelixConstitutionalGate,
@@ -44,7 +46,7 @@ from openclaw_agent import (  # Core types; Gate; Audit; Federation; Agent
     SIEMExporter,
 )
 
-__version__ = "1.3.0"
+__version__ = "1.3.1"
 __author__ = "Stephen Hope"
 __license__ = "Apache-2.0"
 
@@ -70,6 +72,7 @@ __all__ = [
     "SIEMExporter",
     "MetricsCollector",
     "DBCIdentity",  # v1.3.0: DBC-signed checkpoints
+    "DBCFederationRegistry",  # v1.3.1: Cross-node verification
     # Federation
     "MultiAgentCheckpointConsensus",
     "CustodianApprovalAPI",
