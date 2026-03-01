@@ -42,7 +42,6 @@ from typing import Any
 # v1.3.2: Ed25519 asymmetric cryptography
 try:
     from cryptography.fernet import Fernet  # For key encryption at rest
-    from cryptography.hazmat.backends import default_backend
     from cryptography.hazmat.primitives import serialization
     from cryptography.hazmat.primitives.asymmetric.ed25519 import (
         Ed25519PrivateKey,
@@ -362,6 +361,7 @@ class DBCIdentity:
                 "[CRITICAL] cryptography library not installed. "
                 "Falling back to HMAC (NOT for production!)",
                 RuntimeWarning,
+                stacklevel=2,
             )
 
     def _find_dbc(self) -> Path:
@@ -506,6 +506,7 @@ class DBCIdentity:
                 warnings.warn(
                     "[SECURITY] HELIX_DBC_ENC_KEY not set. Private key will not be persisted!",
                     RuntimeWarning,
+                    stacklevel=2,
                 )
         else:
             # Fallback: HMAC (NOT FOR PRODUCTION)
