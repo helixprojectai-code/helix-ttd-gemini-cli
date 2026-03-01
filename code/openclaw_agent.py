@@ -48,6 +48,7 @@ try:
         Ed25519PrivateKey,
         Ed25519PublicKey,
     )
+
     CRYPTO_AVAILABLE = True
 except ImportError:
     CRYPTO_AVAILABLE = False  # Fallback to HMAC with warnings
@@ -356,6 +357,7 @@ class DBCIdentity:
 
         if not self._crypto_available:
             import warnings
+
             warnings.warn(
                 "[CRITICAL] cryptography library not installed. "
                 "Falling back to HMAC (NOT for production!)",
@@ -405,9 +407,7 @@ class DBCIdentity:
             FileNotFoundError: If DBC file doesn't exist.
         """
         if not self.dbc_path.exists():
-            raise FileNotFoundError(
-                "[ASSUMPTION] DBC not found. Run DBC creation first."
-            )
+            raise FileNotFoundError("[ASSUMPTION] DBC not found. Run DBC creation first.")
 
         with open(self.dbc_path, encoding="utf-8") as f:
             self.dbc_data = json.load(f)
@@ -434,6 +434,7 @@ class DBCIdentity:
 
         # Derive Fernet key from env var
         from cryptography.fernet import Fernet
+
         fernet_key = hashlib.sha256(enc_key.encode()).base64digest()[:32]
         fernet_key = base64.urlsafe_b64encode(fernet_key.encode())
         f = Fernet(fernet_key)
@@ -484,8 +485,7 @@ class DBCIdentity:
 
             # Serialize public key for storage
             public_key_bytes = public_key.public_bytes(
-                encoding=serialization.Encoding.Raw,
-                format=serialization.PublicFormat.Raw
+                encoding=serialization.Encoding.Raw, format=serialization.PublicFormat.Raw
             )
             public_key_hex = public_key_bytes.hex()
 
@@ -502,6 +502,7 @@ class DBCIdentity:
                 # Warning: private key will be in memory only
                 encrypted_private_str = "MEMORY_ONLY"
                 import warnings
+
                 warnings.warn(
                     "[SECURITY] HELIX_DBC_ENC_KEY not set. Private key will not be persisted!",
                     RuntimeWarning,
@@ -1053,9 +1054,7 @@ class CheckpointStore:
             )
             conn.commit()
 
-    def _sign_checkpoint(
-        self, checkpoint_hash: str, checkpoint_id: str = ""
-    ) -> dict:
+    def _sign_checkpoint(self, checkpoint_hash: str, checkpoint_id: str = "") -> dict:
         """[FACT] v1.3.2: Hardened checkpoint signing with Ed25519.
 
         RED TEAM FIXES:
@@ -1075,11 +1074,13 @@ class CheckpointStore:
 
         # v1.3.2: Hardened payload includes checkpoint_id (HIGH-003)
         # Format: checkpoint_id:hash:timestamp:expiration:dbc_id
-        payload = f"{checkpoint_id}:{checkpoint_hash}:{timestamp_str}:{expiration_str}:{self._dbc.dbc_id}"
+        payload = (
+            f"{checkpoint_id}:{checkpoint_hash}:{timestamp_str}:{expiration_str}:{self._dbc.dbc_id}"
+        )
         signature = self._dbc.sign(payload.encode())
 
         # v1.3.2: Detect algorithm from DBC
-        algorithm = getattr(self._dbc, 'ALGORITHM', 'Ed25519')
+        algorithm = getattr(self._dbc, "ALGORITHM", "Ed25519")
         if not CRYPTO_AVAILABLE:
             algorithm = "HMAC-SHA256-FALLBACK"
 
