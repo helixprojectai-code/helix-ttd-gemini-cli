@@ -15,20 +15,20 @@ All bug fixes from Claude code review (2026-03-01) applied:
   Design: constitution_version field added to HelixConstitutionalGate
 """
 
-from dataclasses import dataclass, field
-from typing import List, Dict, Any, Optional, Callable
-from enum import Enum, auto
+import glob
 import hashlib
-import json
-import re
-import time
-import os
-import threading
 import inspect
+import json
+import os
+import re
+import threading
+import time
 import unicodedata
 import uuid
-import glob
-from datetime import datetime, date, timedelta
+from dataclasses import dataclass, field
+from datetime import date, datetime, timedelta
+from enum import Enum, auto
+from typing import Any, Callable, Dict, List, Optional
 
 
 class AgencyLevel(Enum):

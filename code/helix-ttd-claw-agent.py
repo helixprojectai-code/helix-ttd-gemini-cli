@@ -6,11 +6,15 @@ and runs usage examples. Run directly with: python helix-ttd-claw-agent.py
 """
 
 from openclaw_agent import (
-    AgencyLevel, EpistemicLabel, ConstitutionalCheckpoint,
-    AgentAction, AgentPlan, RiskConfiguration,
-    HelixConstitutionalGate, OpenClawAgent
+    AgencyLevel,
+    AgentAction,
+    AgentPlan,
+    ConstitutionalCheckpoint,
+    EpistemicLabel,
+    HelixConstitutionalGate,
+    OpenClawAgent,
+    RiskConfiguration,
 )
-
 
 # ============================================================
 # USAGE EXAMPLES

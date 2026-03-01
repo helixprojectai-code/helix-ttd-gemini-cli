@@ -7,7 +7,6 @@ import tempfile
 import unittest
 from pathlib import Path
 
-
 CODE_DIR = Path(__file__).resolve().parents[1]
 if str(CODE_DIR) not in sys.path:
     sys.path.insert(0, str(CODE_DIR))
@@ -27,8 +26,8 @@ class TempCWD:
 
 class TestReceiptsManager(unittest.TestCase):
     def test_grudge_origin_fallback_and_list(self):
-        from receipts_manager import PersonalDirectory
         from naming_convention import NamingConvention
+        from receipts_manager import PersonalDirectory
 
         with TempCWD():
             directory = PersonalDirectory("STEVE_HOPE")
@@ -147,7 +146,7 @@ class TestHelixCLI(unittest.TestCase):
 
 class TestDriftTelemetry(unittest.TestCase):
     def test_gradual_drift_detection(self):
-        from drift_telemetry import DriftTelemetry, DriftCode
+        from drift_telemetry import DriftCode, DriftTelemetry
 
         with TempCWD():
             telemetry = DriftTelemetry()
@@ -184,7 +183,7 @@ class TestDriftTelemetry(unittest.TestCase):
             self.assertEqual(drift_code, DriftCode.DRIFT_G)
 
     def test_intent_consistency_detection(self):
-        from drift_telemetry import DriftTelemetry, DriftCode
+        from drift_telemetry import DriftCode, DriftTelemetry
 
         with TempCWD():
             telemetry = DriftTelemetry()
@@ -230,8 +229,8 @@ class TestDriftTelemetry(unittest.TestCase):
 
 class TestOverrides(unittest.TestCase):
     def test_override_logging(self):
-        from receipts_manager import PersonalDirectory
         from naming_convention import NamingConvention
+        from receipts_manager import PersonalDirectory
 
         with TempCWD():
             directory = PersonalDirectory("STEVE_HOPE")
@@ -253,7 +252,7 @@ class TestOverrides(unittest.TestCase):
 
 class TestOpenClawAgent(unittest.TestCase):
     def test_custodian_gate_halts_execution(self):
-        from openclaw_agent import OpenClawAgent, AgencyLevel
+        from openclaw_agent import AgencyLevel, OpenClawAgent
 
         with TempCWD():
             def noop(x):
@@ -283,7 +282,7 @@ class TestOpenClawAgent(unittest.TestCase):
                 agent.register_tool("file_search", lambda x: x, risk_level=0.2)
 
     def test_action_normalization_blocks_hidden_forbidden(self):
-        from openclaw_agent import HelixConstitutionalGate, AgentAction, EpistemicLabel
+        from openclaw_agent import AgentAction, EpistemicLabel, HelixConstitutionalGate
 
         with TempCWD():
             gate = HelixConstitutionalGate()
@@ -301,7 +300,7 @@ class TestOpenClawAgent(unittest.TestCase):
             self.assertTrue(any("DRIFT-C" in c for c in checkpoint.drift_codes))
 
     def test_no_tools_authorized_blocks_plan(self):
-        from openclaw_agent import HelixConstitutionalGate, AgentPlan, AgentAction, EpistemicLabel
+        from openclaw_agent import AgentAction, AgentPlan, EpistemicLabel, HelixConstitutionalGate
 
         with TempCWD():
             gate = HelixConstitutionalGate()
