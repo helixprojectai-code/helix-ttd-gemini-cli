@@ -5,6 +5,8 @@
 [![License: Apache-2.0](https://img.shields.io/badge/License-Apache%202.0-green.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Constitutional Compliance](https://img.shields.io/badge/Constitution-RATIFIED-gold.svg)](.helix/CONSTITUTION.md)
 
+![Helix-TTD Gemini CLI](GEMINI_CLI.png)
+
 Constitutionally-governed Gemini 3.x in your terminal. This repo wraps the official Gemini CLI in the Helix-TTD governance vessel: constitutional grammar, custodial hierarchy, epistemic labels, and a visible EVAC "suitcase" for state continuity.
 
 ---
