@@ -355,7 +355,11 @@ class DBCIdentity:
         self._crypto_available = CRYPTO_AVAILABLE
 
         if not self._crypto_available:
-            allow_insecure = os.environ.get("HELIX_ALLOW_INSECURE_DBC", "").lower() in ("1", "true", "yes")
+            allow_insecure = os.environ.get("HELIX_ALLOW_INSECURE_DBC", "").lower() in (
+                "1",
+                "true",
+                "yes",
+            )
             if not allow_insecure:
                 raise RuntimeError(
                     "[SECURITY] cryptography library not installed. "
