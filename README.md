@@ -6,6 +6,7 @@
 [![Constitutional Compliance](https://img.shields.io/badge/Constitution-RATIFIED-gold.svg)](.helix/CONSTITUTION.md)
 [![Security: Ed25519](https://img.shields.io/badge/Security-Ed25519%20Hardened-red.svg)](docs/RED_TEAM_v1.3.0_DBC.md)
 [![Version](https://img.shields.io/badge/Version-1.3.2-blueviolet.svg)]()
+[![NVIDIA Inception](nvidia-inception-badge.png)](https://www.nvidia.com/en-us/startups/)
 
 ![Helix-TTD Gemini CLI](GEMINI_CLI.png)
 
