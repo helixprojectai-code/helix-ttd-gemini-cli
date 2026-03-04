@@ -6,17 +6,19 @@
 - audit: Persistence, SIEM, metrics, and DBC identity signing
 - federation: Multi-agent consensus, DBC cross-node verification, and approvals
 - agent: The bounded agent implementation
+- topology: Lattice structure, Merkle bridging, Layer 5 witness (v1.4.0)
 - utils: Crypto and validation helpers
 
 [ASSUMPTION] All submodules are importable and functional.
 
-Version: 1.3.1
+Version: 1.4.0
 License: Apache-2.0
 """
 
+# v1.4.0: Lattice Topology - Paper III/IV implementation (Merkle bridge, Layer 5 witness)
+# v1.3.2: Security Hardening - Ed25519, Fernet encryption, Red Team remediation
 # v1.3.1: DBC Federation - Cross-node signature verification
 # v1.3.0: DBC Integration - Non-repudiable audit trails with identity signing
-# v1.2.2: Package decoupling - maintaining backwards compatibility
 # All exports from original openclaw_agent.py are preserved
 
 # Import all public APIs from openclaw_agent for backwards compatibility
@@ -47,7 +49,67 @@ from openclaw_agent import (  # Core types; Gate; Audit; Federation; Agent
     SIEMExporter,
 )
 
-__version__ = "1.3.2"
+# v1.4.0: Lattice Topology imports (Paper III)
+from lattice_topology import (
+    LatticePosition,
+    CustodialHierarchy,
+    RPICycle,
+    DriftDetector,
+    EpistemicCategory,
+)
+from merkle_bridge import (
+    MerkleBridge,
+    L2Entry,
+    ConstitutionalContinuity,
+)
+from witness_node import (
+    OwlProtocol,
+    DuckProtocol,
+    OysterProtocol,
+    Layer5Infrastructure,
+    WitnessType,
+)
+from shlorpian_mapper import (
+    ShlorpianCharacter,
+    ConstitutionalRole,
+    ShlorpianTopology,
+    ConstitutionalMemorandum,
+    ShlorpianDriftDetector,
+)
+from article_zero import (
+    ArticleZeroProtocol,
+    ZTCEvent,
+    ZTCEventType,
+    ConstitutionalConstant,
+    get_constant,
+)
+from federation_receipts import (
+    NodeType,
+    ReceiptVersion,
+    EpistemicMarkers,
+    FederationReceipt,
+    ReceiptMigrator,
+    QuorumAttestation,
+    CrossNodeVerifier,
+    FederationReceiptManager,
+)
+from deepseek_bridge import (
+    DeepSeekModel,
+    DeepSeekReceipt,
+    DeepSeekBridge,
+    FederationRouter,
+)
+from suitcase import (
+    CloudProvider,
+    SuitcaseBundle,
+    SuitcaseSerializer,
+    AzureBlobStorage,
+    AzureKeyVault,
+    MultiCloudReplicator,
+    EVACStateManager,
+)
+
+__version__ = "1.4.0"
 __author__ = "Stephen Hope"
 __license__ = "Apache-2.0"
 
@@ -80,4 +142,51 @@ __all__ = [
     "FederatedCheckpointValidator",
     # Agent
     "OpenClawAgent",
+    # Topology (v1.4.0 - Paper III/IV)
+    "LatticePosition",
+    "CustodialHierarchy", 
+    "RPICycle",
+    "DriftDetector",
+    "EpistemicCategory",
+    "MerkleBridge",
+    "L2Entry",
+    "ConstitutionalContinuity",
+    "OwlProtocol",
+    "DuckProtocol",
+    "OysterProtocol",
+    "Layer5Infrastructure",
+    "WitnessType",
+    # Shlorpian (Paper IV)
+    "ShlorpianCharacter",
+    "ConstitutionalRole",
+    "ShlorpianTopology",
+    "ConstitutionalMemorandum",
+    "ShlorpianDriftDetector",
+    # Article 0 (Paper IV)
+    "ArticleZeroProtocol",
+    "ZTCEvent",
+    "ZTCEventType",
+    "ConstitutionalConstant",
+    "get_constant",
+    # Federation (Milestone 3)
+    "NodeType",
+    "ReceiptVersion",
+    "EpistemicMarkers",
+    "FederationReceipt",
+    "ReceiptMigrator",
+    "QuorumAttestation",
+    "CrossNodeVerifier",
+    "FederationReceiptManager",
+    "DeepSeekModel",
+    "DeepSeekReceipt",
+    "DeepSeekBridge",
+    "FederationRouter",
+    # EVAC (Milestone 4)
+    "CloudProvider",
+    "SuitcaseBundle",
+    "SuitcaseSerializer",
+    "AzureBlobStorage",
+    "AzureKeyVault",
+    "MultiCloudReplicator",
+    "EVACStateManager",
 ]
