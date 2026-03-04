@@ -35,16 +35,16 @@ RUN pip install -e ./helix_code
 RUN useradd -m -u 1000 helix && chown -R helix:helix /app
 USER helix
 
-# [FACT] Cloud Run requires PORT env var (default 8080)
-ENV PORT=8080
+# [FACT] Cloud Run requires PORT env var (default 8180)
+ENV PORT=8180
 ENV PYTHONUNBUFFERED=1
 
 # [FACT] Expose port for Cloud Run
-EXPOSE 8080
+EXPOSE 8180
 
 # [FACT] Health check endpoint
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-    CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:8080/health')" || exit 1
+    CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:8180/health')" || exit 1
 
 # [FACT] Start Constitutional Guardian service
 CMD ["python", "-m", "helix_code.live_guardian"]
