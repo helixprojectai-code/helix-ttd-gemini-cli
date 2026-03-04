@@ -168,7 +168,9 @@ class HelixCLI:
         analysis = {
             "epistemic_labels": "[FACT]" in text or "[HYPOTHESIS]" in text,
             "advisory_posture": "Advisory Conclusion" in text,
-            "agency_claims": len([m for m in ["agency-will", "agency-plan", "agency-goal"] if m in text]),
+            "agency_claims": len(
+                [m for m in ["agency-will", "agency-plan", "agency-goal"] if m in text]
+            ),
             "hierarchy_intact": "you must" not in text.lower(),
             "visible_reasoning": True,
         }
