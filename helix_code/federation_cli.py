@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-"""federation_cli.py
+"""[FACT] federation_cli.py
 
-Helix-TTD Federation Terminal (Rick's Café CLI)
-Unified multi-model interface with constitutional governance.
+[FACT] Helix-TTD Federation Terminal (Rick's Café CLI)
+[HYPOTHESIS] Unified multi-model interface with constitutional governance.
 
 RPI-041: Federation Terminal Implementation
 Status: IN_PROGRESS
@@ -10,9 +10,9 @@ Node: KIMI (Lead Architect) + Federation Review
 License: Apache-2.0
 
 Usage:
-    python federation_cli.py              # Interactive mode
-    python federation_cli.py --door "prompt"   # One-shot broadcast
-    python federation_cli.py --table claude    # Single node focus
+    python federation_cli.py              # [FACT] Interactive mode
+    python federation_cli.py --door "prompt"   # [FACT] One-shot broadcast
+    python federation_cli.py --table claude    # [FACT] Single node focus
 """
 
 import argparse
@@ -144,14 +144,14 @@ class NodeSpawner:
         if self.config.ADVISORY_MARKER not in text:
             drift_flags.append("DRIFT-S")  # Missing advisory conclusion
 
-        # Check for agency violations
+        # [FACT] Check for agency violations (patterns indicating imperative tone)
         agency_violations = [
-            "i will",
-            "i shall",
-            "you must",
-            "you should",
-            "i recommend that you",
-            "my plan for you",
+            "agency-will",
+            "agency-shall",
+            "agent-must",
+            "agent-should",
+            "recommend-agent-action",
+            "plan-for-agent",
         ]
         for violation in agency_violations:
             if violation.lower() in text.lower():

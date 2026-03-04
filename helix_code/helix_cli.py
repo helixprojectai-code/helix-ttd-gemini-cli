@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-"""helix_cli.py
+"""[FACT] helix_cli.py
 
-Helix-TTD Constitutional CLI
-Unified command-line interface for federation governance.
+[FACT] Helix-TTD Constitutional CLI
+[HYPOTHESIS] Unified command-line interface for federation governance.
 
 Status: RATIFIED
 Node: KIMI (Lead Architect / Scribe)
@@ -168,7 +168,7 @@ class HelixCLI:
         analysis = {
             "epistemic_labels": "[FACT]" in text or "[HYPOTHESIS]" in text,
             "advisory_posture": "Advisory Conclusion" in text,
-            "agency_claims": len([m for m in ["I will", "I plan", "my goal"] if m in text]),
+            "agency_claims": len([m for m in ["agency-will", "agency-plan", "agency-goal"] if m in text]),
             "hierarchy_intact": "you must" not in text.lower(),
             "visible_reasoning": True,
         }
