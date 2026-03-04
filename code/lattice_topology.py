@@ -13,9 +13,9 @@ from __future__ import annotations
 
 import hashlib
 from dataclasses import dataclass
-from enum import Enum, auto
-from typing import Optional, Set, List, Dict, Tuple, Any
 from datetime import datetime
+from enum import Enum, auto
+from typing import Any, Dict, List, Optional, Set, Tuple
 
 
 class EpistemicCategory(Enum):

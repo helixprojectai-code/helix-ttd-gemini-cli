@@ -14,10 +14,10 @@ from __future__ import annotations
 import hashlib
 import json
 from dataclasses import dataclass
-from enum import Enum, auto
-from typing import Optional, Dict, List, Any, Set
 from datetime import datetime
+from enum import Enum, auto
 from pathlib import Path
+from typing import Any, Dict, List, Optional, Set
 
 
 class ShlorpianCharacter(Enum):

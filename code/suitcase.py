@@ -11,14 +11,14 @@ Milestone 4: Cloud-Native Constitutional Continuity (Azure Deployment)
 
 from __future__ import annotations
 
+import gzip
 import hashlib
 import json
-import gzip
-from dataclasses import dataclass, asdict
-from enum import Enum, auto
-from typing import Optional, List, Dict, Any, Tuple
+from dataclasses import asdict, dataclass
 from datetime import datetime
+from enum import Enum, auto
 from pathlib import Path
+from typing import Any, Dict, List, Optional, Tuple
 
 
 class CloudProvider(Enum):

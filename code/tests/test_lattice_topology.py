@@ -13,24 +13,24 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from lattice_topology import (
-    LatticePosition,
+    ConstitutionalLayer,
     CustodialHierarchy,
-    RPICycle,
     DriftDetector,
     EpistemicCategory,
-    ConstitutionalLayer,
+    LatticePosition,
+    RPICycle,
     get_formation_status,
 )
 from merkle_bridge import (
-    MerkleBridge,
     L2Entry,
+    MerkleBridge,
     get_bridge_status,
 )
 from witness_node import (
-    OwlProtocol,
     DuckProtocol,
-    OysterProtocol,
     Layer5Infrastructure,
+    OwlProtocol,
+    OysterProtocol,
     WitnessType,
     get_witness_status,
 )

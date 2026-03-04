@@ -26,6 +26,43 @@ License: Apache-2.0
 #   from helix_ttd_claw import OpenClawAgent  (new way)
 #   from openclaw_agent import OpenClawAgent  (old way - still works)
 
+from article_zero import (
+    ArticleZeroProtocol,
+    ConstitutionalConstant,
+    ZTCEvent,
+    ZTCEventType,
+    get_constant,
+)
+from deepseek_bridge import (
+    DeepSeekBridge,
+    DeepSeekModel,
+    DeepSeekReceipt,
+    FederationRouter,
+)
+from federation_receipts import (
+    CrossNodeVerifier,
+    EpistemicMarkers,
+    FederationReceipt,
+    FederationReceiptManager,
+    NodeType,
+    QuorumAttestation,
+    ReceiptMigrator,
+    ReceiptVersion,
+)
+
+# v1.4.0: Lattice Topology imports (Paper III)
+from lattice_topology import (
+    CustodialHierarchy,
+    DriftDetector,
+    EpistemicCategory,
+    LatticePosition,
+    RPICycle,
+)
+from merkle_bridge import (
+    ConstitutionalContinuity,
+    L2Entry,
+    MerkleBridge,
+)
 from openclaw_agent import (  # Core types; Gate; Audit; Federation; Agent
     AgencyLevel,
     AgentAction,
@@ -48,65 +85,28 @@ from openclaw_agent import (  # Core types; Gate; Audit; Federation; Agent
     RiskConfiguration,
     SIEMExporter,
 )
-
-# v1.4.0: Lattice Topology imports (Paper III)
-from lattice_topology import (
-    LatticePosition,
-    CustodialHierarchy,
-    RPICycle,
-    DriftDetector,
-    EpistemicCategory,
-)
-from merkle_bridge import (
-    MerkleBridge,
-    L2Entry,
-    ConstitutionalContinuity,
-)
-from witness_node import (
-    OwlProtocol,
-    DuckProtocol,
-    OysterProtocol,
-    Layer5Infrastructure,
-    WitnessType,
-)
 from shlorpian_mapper import (
-    ShlorpianCharacter,
-    ConstitutionalRole,
-    ShlorpianTopology,
     ConstitutionalMemorandum,
+    ConstitutionalRole,
+    ShlorpianCharacter,
     ShlorpianDriftDetector,
-)
-from article_zero import (
-    ArticleZeroProtocol,
-    ZTCEvent,
-    ZTCEventType,
-    ConstitutionalConstant,
-    get_constant,
-)
-from federation_receipts import (
-    NodeType,
-    ReceiptVersion,
-    EpistemicMarkers,
-    FederationReceipt,
-    ReceiptMigrator,
-    QuorumAttestation,
-    CrossNodeVerifier,
-    FederationReceiptManager,
-)
-from deepseek_bridge import (
-    DeepSeekModel,
-    DeepSeekReceipt,
-    DeepSeekBridge,
-    FederationRouter,
+    ShlorpianTopology,
 )
 from suitcase import (
-    CloudProvider,
-    SuitcaseBundle,
-    SuitcaseSerializer,
     AzureBlobStorage,
     AzureKeyVault,
-    MultiCloudReplicator,
+    CloudProvider,
     EVACStateManager,
+    MultiCloudReplicator,
+    SuitcaseBundle,
+    SuitcaseSerializer,
+)
+from witness_node import (
+    DuckProtocol,
+    Layer5Infrastructure,
+    OwlProtocol,
+    OysterProtocol,
+    WitnessType,
 )
 
 __version__ = "1.4.0"

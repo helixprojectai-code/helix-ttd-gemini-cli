@@ -15,23 +15,23 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from federation_receipts import (
-    NodeType,
-    ReceiptVersion,
-    EpistemicMarkers,
-    FederationReceipt,
-    ReceiptMigrator,
-    QuorumAttestation,
-    CrossNodeVerifier,
-    FederationReceiptManager,
-    get_federation_status,
-)
 from deepseek_bridge import (
+    DeepSeekBridge,
     DeepSeekModel,
     DeepSeekReceipt,
-    DeepSeekBridge,
     FederationRouter,
     get_deepseek_status,
+)
+from federation_receipts import (
+    CrossNodeVerifier,
+    EpistemicMarkers,
+    FederationReceipt,
+    FederationReceiptManager,
+    NodeType,
+    QuorumAttestation,
+    ReceiptMigrator,
+    ReceiptVersion,
+    get_federation_status,
 )
 
 

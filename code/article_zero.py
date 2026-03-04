@@ -15,10 +15,10 @@ import hashlib
 import random
 import time
 from dataclasses import dataclass
-from enum import Enum, auto
-from typing import Optional, List, Dict, Any, Callable
 from datetime import datetime
+from enum import Enum, auto
 from pathlib import Path
+from typing import Any, Callable, Dict, List, Optional
 
 
 class ZTCEventType(Enum):

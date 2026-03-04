@@ -11,20 +11,20 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from shlorpian_mapper import (
-    ShlorpianCharacter,
-    ConstitutionalRole,
-    ShlorpianTopology,
-    ConstitutionalMemorandum,
-    ShlorpianDriftDetector,
-    get_shlorpian_status,
-)
 from article_zero import (
     ArticleZeroProtocol,
-    ZTCEventType,
     ConstitutionalConstant,
-    get_constant,
+    ZTCEventType,
     get_article_zero_status,
+    get_constant,
+)
+from shlorpian_mapper import (
+    ConstitutionalMemorandum,
+    ConstitutionalRole,
+    ShlorpianCharacter,
+    ShlorpianDriftDetector,
+    ShlorpianTopology,
+    get_shlorpian_status,
 )
 
 
