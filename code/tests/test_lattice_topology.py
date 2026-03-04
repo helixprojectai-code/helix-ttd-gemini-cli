@@ -107,15 +107,13 @@ def test_drift_detector():
     detector = DriftDetector()
 
     # [TEST] Valid FACT with grounding
-    assert (
-        detector.check_epistemic_labeling(
-            "Test claim", EpistemicCategory.FACT, grounding="evidence"
-        )
+    assert detector.check_epistemic_labeling(
+        "Test claim", EpistemicCategory.FACT, grounding="evidence"
     )
 
     # [TEST] Invalid FACT without grounding (DRIFT-C)
-    assert (
-        not detector.check_epistemic_labeling("Test claim", EpistemicCategory.FACT, grounding=None)
+    assert not detector.check_epistemic_labeling(
+        "Test claim", EpistemicCategory.FACT, grounding=None
     )
 
     status = detector.get_drift_status()

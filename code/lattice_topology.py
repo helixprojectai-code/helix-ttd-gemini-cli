@@ -54,7 +54,9 @@ class LatticePosition:
         # [ASSUMPTION] Meet requires comparable layers
         if self.layer == other.layer:
             # Same layer: meet is minimum coordinate
-            min_coord = tuple(min(a, b) for a, b in zip(self.coordinate, other.coordinate, strict=False))
+            min_coord = tuple(
+                min(a, b) for a, b in zip(self.coordinate, other.coordinate, strict=False)
+            )
             return LatticePosition(
                 layer=self.layer,
                 domain=self.domain if self.domain == other.domain else "shared",
@@ -151,7 +153,9 @@ class RPICycle:
     def set_research(self, position: LatticePosition) -> None:
         """[FACT] Research is Layer 0. Must precede Plan."""
         if position.layer != ConstitutionalLayer.RESEARCH:
-            raise ConstitutionalDriftError(f"[DRIFT-C] Research must be Layer 0, got {position.layer}")
+            raise ConstitutionalDriftError(
+                f"[DRIFT-C] Research must be Layer 0, got {position.layer}"
+            )
         self.research = position
 
     def set_plan(self, position: LatticePosition) -> None:
