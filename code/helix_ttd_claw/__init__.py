@@ -144,7 +144,7 @@ __all__ = [
     "OpenClawAgent",
     # Topology (v1.4.0 - Paper III/IV)
     "LatticePosition",
-    "CustodialHierarchy", 
+    "CustodialHierarchy",
     "RPICycle",
     "DriftDetector",
     "EpistemicCategory",

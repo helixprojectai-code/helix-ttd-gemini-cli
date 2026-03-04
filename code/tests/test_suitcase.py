@@ -51,20 +51,20 @@ def test_suitcase_bundle_creation():
         shlorpian_assignments={"kimi": "jesse"},
         receipt_manifest=["receipt_001"],
         quorum_status={"quorum": "2/3"},
-        content_hash=""  # Computed below
+        content_hash="",  # Computed below
     )
-    
+
     # [TEST] Compute hash
     bundle.content_hash = bundle.compute_hash()
     assert len(bundle.content_hash) == 64  # SHA256 hex
-    
+
     print("[PASS] SuitcaseBundle creation")
 
 
 def test_suitcase_serializer():
     """[FACT] Serializer compresses and decompresses bundles with integrity check."""
     serializer = SuitcaseSerializer()
-    
+
     # [SETUP] Create bundle
     bundle = SuitcaseBundle(
         bundle_id="serial_test",
@@ -80,66 +80,63 @@ def test_suitcase_serializer():
         shlorpian_assignments={},
         receipt_manifest=[],
         quorum_status={},
-        content_hash=""  # Will be computed
+        content_hash="",  # Will be computed
     )
-    
+
     # [TEST] Serialize
     data = serializer.serialize(bundle)
     assert len(data) > 0
     assert len(data) < 10000  # Should be compressed
-    
+
     # [TEST] Deserialize
     restored = serializer.deserialize(data)
     assert restored is not None
     assert restored.bundle_id == bundle.bundle_id
     assert restored.merkle_root == bundle.merkle_root
-    
+
     # [TEST] Integrity verification
     assert restored.content_hash == bundle.content_hash
-    
+
     print("[PASS] SuitcaseSerializer")
 
 
 def test_azure_blob_storage():
     """[FACT] Azure Blob Storage configured as primary."""
-    azure = AzureBlobStorage(
-        account_name="helixttdstorage",
-        container_name="helix-ttd-suitcases"
-    )
-    
+    azure = AzureBlobStorage(account_name="helixttdstorage", container_name="helix-ttd-suitcases")
+
     # [TEST] Configuration
     assert azure.account_name == "helixttdstorage"
     assert azure.container_name == "helix-ttd-suitcases"
     assert azure.tier == "Hot"
     assert len(azure.regions) == 2
-    
+
     # [TEST] Status
     status = azure.get_storage_status()
     assert status["provider"] == "azure"
     assert status["replication"] == "geo-redundant"
-    
+
     print("[PASS] AzureBlobStorage")
 
 
 def test_azure_key_vault():
     """[FACT] Azure Key Vault manages encryption keys."""
     vault = AzureKeyVault(vault_name="helix-ttd-vault")
-    
+
     # [TEST] Configuration
     assert vault.vault_name == "helix-ttd-vault"
     assert vault.key_name == "suitcase-encryption-key"
-    
+
     print("[PASS] AzureKeyVault")
 
 
 def test_multicloud_replicator():
     """[FACT] Replicate across Azure (primary), GCS, AWS."""
     replicator = MultiCloudReplicator()
-    
+
     # [TEST] Providers configured
     assert CloudProvider.AZURE in replicator.providers
     assert replicator.replication_factor == 2
-    
+
     # [TEST] Replication (simulated)
     serializer = SuitcaseSerializer()
     bundle = SuitcaseBundle(
@@ -156,24 +153,21 @@ def test_multicloud_replicator():
         shlorpian_assignments={},
         receipt_manifest=[],
         quorum_status={},
-        content_hash=""
+        content_hash="",
     )
-    
+
     result = replicator.replicate(bundle, serializer)
     assert result["bundle_id"] == bundle.bundle_id
     assert "azure" in result["providers"]
-    
+
     print("[PASS] MultiCloudReplicator")
 
 
 def test_evac_state_manager():
     """[FACT] EVAC coordinates suitcase creation, storage, and recovery."""
     with tempfile.TemporaryDirectory() as tmpdir:
-        manager = EVACStateManager(
-            local_cache_dir=Path(tmpdir),
-            cloud_provider=CloudProvider.AZURE
-        )
-        
+        manager = EVACStateManager(local_cache_dir=Path(tmpdir), cloud_provider=CloudProvider.AZURE)
+
         # [TEST] Create suitcase
         bundle = manager.create_suitcase(
             session_id="evac_test_session",
@@ -186,35 +180,35 @@ def test_evac_state_manager():
             ztc_events=[{"symbol": "🦆"}],
             shlorpian_assignments={"kimi": "jesse"},
             receipt_manifest=["r_001"],
-            quorum_status={"quorum": "2/3"}
+            quorum_status={"quorum": "2/3"},
         )
-        
+
         assert bundle.bundle_id.startswith("suitcase_evac_test_session")
         assert bundle.custodian_id == "stephen_hope"
         assert bundle.merkle_root == "merkle_abc123"
-        
+
         # [TEST] Local cache created
         cache_files = list(Path(tmpdir).glob("*.suitcase.gz"))
         assert len(cache_files) == 1
-        
+
         # [TEST] List suitcases
         available = manager.list_available_suitcases()
         assert len(available) == 1
         assert available[0]["bundle_id"] == bundle.bundle_id
-        
+
         # [TEST] Restore suitcase
         restored = manager.restore_suitcase(bundle.bundle_id)
         assert restored is not None
         assert restored.bundle_id == bundle.bundle_id
         assert restored.custodian_id == bundle.custodian_id
-        
+
         print("[PASS] EVACStateManager")
 
 
 def test_compression_efficiency():
     """[FACT] gzip compression reduces storage size."""
     serializer = SuitcaseSerializer()
-    
+
     # [SETUP] Create bundle with realistic data
     large_ledger = {"entries": [f"entry_{i}" for i in range(100)]}
     bundle = SuitcaseBundle(
@@ -231,26 +225,27 @@ def test_compression_efficiency():
         shlorpian_assignments={},
         receipt_manifest=[],
         quorum_status={},
-        content_hash=""
+        content_hash="",
     )
-    
+
     # [TEST] Serialized size
     compressed = serializer.serialize(bundle)
-    
+
     # Decompress to check original size
     import gzip
+
     decompressed = gzip.decompress(compressed)
-    
+
     # [FACT] Compressed should be smaller
     assert len(compressed) < len(decompressed)
-    
+
     print("[PASS] Compression efficiency")
 
 
 def test_integrity_verification():
     """[FACT] Tampered bundles fail integrity check."""
     serializer = SuitcaseSerializer()
-    
+
     # [SETUP] Create and serialize bundle
     bundle = SuitcaseBundle(
         bundle_id="integrity_test",
@@ -266,47 +261,47 @@ def test_integrity_verification():
         shlorpian_assignments={},
         receipt_manifest=[],
         quorum_status={},
-        content_hash=""
+        content_hash="",
     )
-    
+
     data = serializer.serialize(bundle)
-    
+
     # [TEST] Tamper with data
     tampered = data[:-10] + b"TAMPERED!!"
-    
+
     # [TEST] Deserialization should fail integrity check
     result = serializer.deserialize(tampered)
     assert result is None  # Integrity check failed
-    
+
     print("[PASS] Integrity verification")
 
 
 def test_evac_status():
     """[FACT] EVAC status reports system configuration."""
     status = get_evac_status()
-    
+
     assert status["system"] == "EVAC"
     assert status["suitcase"] == "ready"
     assert status["primary"] == "azure"
     assert status["credits"] == "active"
     assert status["replication"] == "geo_redundant"
     assert status["drift"] == "DRIFT-0"
-    
+
     print("[PASS] EVAC status")
 
 
 def test_azure_regions():
     """[FACT] Azure deployed to East US 2 and West Europe."""
     azure = AzureBlobStorage()
-    
+
     # [TEST] Primary regions
     assert "eastus2" in azure.regions
     assert "westeurope" in azure.regions
-    
+
     # [TEST] Geo-redundant replication
     status = azure.get_storage_status()
     assert status["replication"] == "geo-redundant"
-    
+
     print("[PASS] Azure regions")
 
 
@@ -326,9 +321,9 @@ def test_bundle_completeness():
         shlorpian_assignments={"kimi": "jesse", "gems": "yumyulack"},
         receipt_manifest=["r_m3_001"],
         quorum_status={"federation": "3/3"},
-        content_hash=""
+        content_hash="",
     )
-    
+
     # [TEST] All layers present
     assert len(bundle.ledger_state) > 0
     assert len(bundle.memorandum_state) > 0
@@ -337,7 +332,7 @@ def test_bundle_completeness():
     assert len(bundle.ztc_events) > 0
     assert len(bundle.shlorpian_assignments) > 0
     assert len(bundle.receipt_manifest) > 0
-    
+
     print("[PASS] Bundle completeness")
 
 
@@ -351,7 +346,7 @@ def main():
     print("v1.4.0 Milestone 4: EVAC 'Suitcase' Tests")
     print("Azure Primary | Multi-Region | Constitutional Continuity")
     print("=" * 60)
-    
+
     tests = [
         test_cloud_provider_enum,
         test_suitcase_bundle_creation,
@@ -366,10 +361,10 @@ def main():
         test_azure_regions,
         test_bundle_completeness,
     ]
-    
+
     passed = 0
     failed = 0
-    
+
     for test in tests:
         try:
             test()
@@ -377,13 +372,14 @@ def main():
         except Exception as e:
             print(f"[FAIL] {test.__name__}: {e}")
             import traceback
+
             traceback.print_exc()
             failed += 1
-    
+
     print("=" * 60)
     print(f"Results: {passed} passed, {failed} failed")
     print("=" * 60)
-    
+
     if failed == 0:
         print("[OK] All EVAC Suitcase tests passed.")
         print("Azure: Primary. GCS/AWS: Secondary. Credits: Active.")
