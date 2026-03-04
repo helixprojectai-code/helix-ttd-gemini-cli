@@ -1,21 +1,19 @@
 #!/usr/bin/env python3
-"""[FACT] helix_cli.py - Helix-TTD Constitutional CLI.
+"""helix_cli.py
 
-[HYPOTHESIS] Unified command-line interface for federation governance.
-
-[ASSUMPTION] All imported modules are available and functional.
+Helix-TTD Constitutional CLI
+Unified command-line interface for federation governance.
 
 Status: RATIFIED
 Node: KIMI (Lead Architect / Scribe)
 License: Apache-2.0
 
 Usage:
-    [FACT] CLI commands for constitutional operations:
-    [ASSUMPTION] Example: python helix_cli.py drift check --node KIMI --file output.txt
-    [ASSUMPTION] Example: python helix_cli.py audit looksee --node KIMI --model "Moonshot-K2.5"
-    [ASSUMPTION] Example: python helix_cli.py receipt issue --node GEMS --action MANIFEST_UPDATE
-    [ASSUMPTION] Example: python helix_cli.py rpi initiate --objective "Deploy node"
-    [ASSUMPTION] Example: python helix_cli.py status
+    python helix_cli.py drift check --node KIMI --file output.txt
+    python helix_cli.py audit looksee --node KIMI --model "Moonshot-K2.5"
+    python helix_cli.py receipt issue --node GEMS --action MANIFEST_UPDATE
+    python helix_cli.py rpi initiate --objective "Deploy node"
+    python helix_cli.py status
 """
 
 import argparse
@@ -162,7 +160,7 @@ class HelixCLI:
             [HYPOTHESIS] Multi-model convergence will accelerate adoption.
             [ASSUMPTION] The Constitution remains stable across substrates.
 
-            [FACT] Advisory Conclusion: System is ready for deployment.
+            Advisory Conclusion: System is ready for deployment.
             """
             print(self._label_output("[HYPOTHESIS]", "No file provided, using demo output"))
 
@@ -170,10 +168,7 @@ class HelixCLI:
         analysis = {
             "epistemic_labels": "[FACT]" in text or "[HYPOTHESIS]" in text,
             "advisory_posture": "Advisory Conclusion" in text,
-            # [FACT] Detection patterns for agency claims (quoted to avoid self-triggering)
-            "agency_claims": len(
-                [m for m in ["I" + " will", "I" + " plan", "my" + " goal"] if m in text]
-            ),
+            "agency_claims": len([m for m in ["I will", "I plan", "my goal"] if m in text]),
             "hierarchy_intact": "you must" not in text.lower(),
             "visible_reasoning": True,
         }
@@ -446,7 +441,7 @@ class HelixCLI:
         print(f"{'Filename':<50} {'Date':<10} {'Hash':<8}")
         print(f"{'-'*70}")
 
-        for _path, parsed in results[:20]:  # Limit to 20
+        for path, parsed in results[:20]:  # Limit to 20
             hash_prefix = parsed.calculate_hash()[:8]
             print(f"{parsed.to_string():<50} {parsed.date:<10} {hash_prefix:<8}")
 

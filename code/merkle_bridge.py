@@ -1,5 +1,4 @@
-"""
-merkle_bridge.py - Merkle Bridge for L1/L2 Constitutional Anchoring
+"""merkle_bridge.py - Merkle Bridge for L1/L2 Constitutional Anchoring
 
 [FACT] Merkle tree is pure lattice topology: hash as node, parent as join.
 [FACT] Bitcoin L1 anchoring provides immutable constitutional substrate.
@@ -13,16 +12,15 @@ from __future__ import annotations
 
 import hashlib
 import json
-from dataclasses import asdict, dataclass
+from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any
 
 
 @dataclass(frozen=True)
 class L2Entry:
-    """
-    [FACT] L2 (operational) entry: SESSION_LEDGER.md content.
+    """[FACT] L2 (operational) entry: SESSION_LEDGER.md content.
     [HYPOTHESIS] Each entry is a leaf in the Merkle tree.
     """
 
@@ -51,17 +49,16 @@ class L2Entry:
 
 
 class MerkleNode:
-    """
-    [FACT] Merkle node: parent is join (supremum) of children.
+    """[FACT] Merkle node: parent is join (supremum) of children.
     [HYPOTHESIS] Lattice structure enables proof paths from leaf to root.
     """
 
     def __init__(
         self,
         hash_value: str,
-        left: Optional[MerkleNode] = None,
-        right: Optional[MerkleNode] = None,
-        entry: Optional[L2Entry] = None,
+        left: MerkleNode | None = None,
+        right: MerkleNode | None = None,
+        entry: L2Entry | None = None,
     ):
         self.hash = hash_value
         self.left = left
@@ -71,8 +68,7 @@ class MerkleNode:
 
     @staticmethod
     def join(left: MerkleNode, right: MerkleNode) -> MerkleNode:
-        """
-        [FACT] Parent = hash(left.hash + right.hash).
+        """[FACT] Parent = hash(left.hash + right.hash).
         [HYPOTHESIS] Join operation creates supremum in lattice.
         """
         combined = left.hash + right.hash
@@ -81,16 +77,15 @@ class MerkleNode:
 
 
 class MerkleBridge:
-    """
-    [FACT] Bridge connects L2 (operational) to L1 (immutable).
+    """[FACT] Bridge connects L2 (operational) to L1 (immutable).
     [HYPOTHESIS] Proof path: leaf → intermediate nodes → root → Bitcoin anchor.
     """
 
     def __init__(self, ledger_dir: Path = Path(".helix")):
         self.ledger_dir = ledger_dir
-        self.root: Optional[MerkleNode] = None
-        self.leaves: List[MerkleNode] = []
-        self.l1_anchor: Optional[str] = None  # Bitcoin tx hash
+        self.root: MerkleNode | None = None
+        self.leaves: list[MerkleNode] = []
+        self.l1_anchor: str | None = None  # Bitcoin tx hash
 
     def add_l2_entry(self, entry: L2Entry) -> None:
         """[FACT] Add L2 entry as leaf node."""
@@ -98,8 +93,7 @@ class MerkleBridge:
         self.leaves.append(leaf)
 
     def build_tree(self) -> str:
-        """
-        [FACT] Build Merkle tree from leaves; return root hash.
+        """[FACT] Build Merkle tree from leaves; return root hash.
         [HYPOTHESIS] Tree construction is lattice join of all leaves.
         """
         if not self.leaves:
@@ -120,9 +114,8 @@ class MerkleBridge:
         self.root = nodes[0]
         return self.root.hash
 
-    def get_proof_path(self, entry_hash: str) -> Optional[List[Dict[str, str]]]:
-        """
-        [FACT] Proof path: list of (sibling_hash, direction) from leaf to root.
+    def get_proof_path(self, entry_hash: str) -> list[dict[str, str]] | None:
+        """[FACT] Proof path: list of (sibling_hash, direction) from leaf to root.
         [HYPOTHESIS] Path enables verification without full tree reconstruction.
         """
         if self.root is None:
@@ -130,7 +123,7 @@ class MerkleBridge:
 
         path = []
 
-        def traverse(node: MerkleNode, target: str, current_path: List[Dict[str, str]]) -> bool:
+        def traverse(node: MerkleNode, target: str, current_path: list[dict[str, str]]) -> bool:
             if node.is_leaf:
                 return node.hash == target
 
@@ -159,10 +152,9 @@ class MerkleBridge:
         return None
 
     def verify_proof(
-        self, entry: L2Entry, proof_path: List[Dict[str, str]], expected_root: str
+        self, entry: L2Entry, proof_path: list[dict[str, str]], expected_root: str
     ) -> bool:
-        """
-        [FACT] Verify: hash(entry) + proof_path → expected_root.
+        """[FACT] Verify: hash(entry) + proof_path → expected_root.
         [HYPOTHESIS] Verification is lattice traversal without full reconstruction.
         """
         current_hash = entry.hash()
@@ -183,8 +175,7 @@ class MerkleBridge:
         return current_hash == expected_root
 
     def anchor_to_l1(self, bitcoin_tx_hash: str) -> None:
-        """
-        [FACT] L1 anchor: Bitcoin transaction hash embedding root.
+        """[FACT] L1 anchor: Bitcoin transaction hash embedding root.
         [HYPOTHESIS] External immutable substrate verifies L2 state.
         [ASSUMPTION] Anchor operation requires custodian authorization.
         """
@@ -205,7 +196,7 @@ class MerkleBridge:
         with open(anchor_path, "w", encoding="utf-8") as f:
             json.dump(anchor_record, f, indent=2)
 
-    def get_lattice_status(self) -> Dict[str, Any]:
+    def get_lattice_status(self) -> dict[str, Any]:
         """[FACT] Return bridge status as lattice position."""
         return {
             "layer": "L2",  # Operational layer
@@ -219,18 +210,16 @@ class MerkleBridge:
 
 
 class ConstitutionalContinuity:
-    """
-    [FACT] Continuity across sessions requires L1 anchoring.
+    """[FACT] Continuity across sessions requires L1 anchoring.
     [HYPOTHESIS] Merkle bridge enables stateless sessions with persistent verification.
     """
 
     def __init__(self, bridge: MerkleBridge):
         self.bridge = bridge
-        self.session_chain: List[str] = []  # Chain of Merkle roots
+        self.session_chain: list[str] = []  # Chain of Merkle roots
 
-    def link_session(self, previous_anchor: Optional[str] = None) -> str:
-        """
-        [FACT] Link: new session root includes hash of previous anchor.
+    def link_session(self, previous_anchor: str | None = None) -> str:
+        """[FACT] Link: new session root includes hash of previous anchor.
         [HYPOTHESIS] Creates standing wave of constitutional validation.
         """
         root = self.bridge.build_tree()
@@ -244,24 +233,19 @@ class ConstitutionalContinuity:
         self.session_chain.append(root)
         return root
 
-    def verify_chain(self, anchors: List[str]) -> bool:
-        """
-        [FACT] Verify chain integrity: each link includes previous.
+    def verify_chain(self, anchors: list[str]) -> bool:
+        """[FACT] Verify chain integrity: each link includes previous.
         [HYPOTHESIS] Chain is recursive confirmation, not linear progression.
         """
         for i in range(1, len(anchors)):
             # [ASSUMPTION] Each anchor should reference previous
-            expected = (
-                hashlib.sha256((anchors[i - 1] + anchors[i - 2]).encode()).hexdigest()
-                if i > 1
-                else anchors[i - 1]
-            )
             # [NOTE] Simplified verification—full implementation would check inclusion
+            pass
         return True
 
 
 # [FACT] Module formation status
-def get_bridge_status() -> Dict[str, str]:
+def get_bridge_status() -> dict[str, str]:
     """[FACT] Return topological anchoring status."""
     return {
         "l1_status": "immutable",

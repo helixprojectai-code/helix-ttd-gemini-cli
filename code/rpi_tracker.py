@@ -85,9 +85,9 @@ class RPITracker:
             return
 
         # Parse existing markdown ledger for RPI entries
-        _content = self.ledger_path.read_text()  # noqa: F841
         # Simple parsing - in production would use proper markdown parser
         # This is a demonstration of structure
+        pass
 
     def initiate_research(
         self, objective: str, initial_findings: list[str], sources: list[str]

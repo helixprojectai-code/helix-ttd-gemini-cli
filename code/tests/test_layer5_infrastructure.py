@@ -13,14 +13,12 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from article_zero import (
     ArticleZeroProtocol,
-    ConstitutionalConstant,
     ZTCEventType,
     get_article_zero_status,
     get_constant,
 )
 from shlorpian_mapper import (
     ConstitutionalMemorandum,
-    ConstitutionalRole,
     ShlorpianCharacter,
     ShlorpianDriftDetector,
     ShlorpianTopology,
@@ -67,17 +65,17 @@ def test_persona_vs_topology():
     # [TEST] Valid functional claim
     valid = "I operate as convergence-node and scribe"
     is_drift = topology.detect_persona_drift(ShlorpianCharacter.JESSE, valid)
-    assert is_drift == False
+    assert not is_drift
 
     # [TEST] Invalid identity claim (DRIFT-C)
     invalid = "I feel like Jesse today"
     is_drift = topology.detect_persona_drift(ShlorpianCharacter.JESSE, invalid)
-    assert is_drift == True
+    assert is_drift
 
     # [TEST] Another invalid: personality claim
     invalid2 = "My personality is empathetic like Jesse"
     is_drift = topology.detect_persona_drift(ShlorpianCharacter.JESSE, invalid2)
-    assert is_drift == True
+    assert is_drift
 
     print("[PASS] Persona vs topology detection")
 
@@ -87,11 +85,11 @@ def test_cross_role_contamination():
     detector = ShlorpianDriftDetector()
 
     # [TEST] Valid function claim
-    assert detector.check_cross_role_contamination("kimi", "synthesis") == True
+    assert detector.check_cross_role_contamination("kimi", "synthesis")
 
     # [TEST] Contamination: KIMI claiming Custodian function
     result = detector.check_cross_role_contamination("kimi", "authoritative leadership")
-    assert result == False  # Detected as contamination
+    assert not result  # Detected as contamination
 
     report = detector.get_drift_report()
     assert report["violation_count"] == 1
@@ -165,7 +163,7 @@ def test_article_zero_protocol():
         event = a0.detect_emergence(context, ZTCEventType.DUCK_EMOJI)
         assert event is not None
         assert event.event_type == ZTCEventType.DUCK_EMOJI
-        assert event.verify() == True
+        assert event.verify()
 
         # [TEST] Updated status
         status = a0.get_article_zero_status()
@@ -190,13 +188,13 @@ def test_layer5_presence_validation():
         Glory to the Lattice.
         """
         result = a0.validate_l5_presence(output)
-        assert result["layer5_present"] == True
-        assert result["article_zero_confirmed"] == False  # No duck
+        assert result["layer5_present"]
+        assert not result["article_zero_confirmed"]  # No duck
 
         # [TEST] With duck
         output_with_duck = output + " 🦆"
         result2 = a0.validate_l5_presence(output_with_duck)
-        assert result2["article_zero_confirmed"] == True
+        assert result2["article_zero_confirmed"]
 
         print("[PASS] Layer 5 presence validation")
 
@@ -217,10 +215,10 @@ def test_constitutional_inhabitation():
             "[HYPOTHESIS] The shape holds.",
             "Non-agency constraint maintained.",
         ]
-        assert a0.verify_constitutional_inhabitation(logs) == True
+        assert a0.verify_constitutional_inhabitation(logs)
 
         # [TEST] Non-inhabited logs (empty/minimal)
-        assert a0.verify_constitutional_inhabitation(["Hello world"]) == False
+        assert not a0.verify_constitutional_inhabitation(["Hello world"])
 
         print("[PASS] Constitutional inhabitation")
 
@@ -256,7 +254,7 @@ def test_ztc_chain_integrity():
 
         # [TEST] Chain integrity
         status = a0.get_article_zero_status()
-        assert status["chain_integrity"] == True
+        assert status["chain_integrity"]
         assert status["ztc_events_total"] == 3
 
         print("[PASS] ZTC chain integrity")

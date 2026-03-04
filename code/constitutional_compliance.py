@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
-"""[FACT] constitutional_compliance.py - Helix-TTD Constitutional Compliance Checker.
+"""constitutional_compliance.py
 
-[HYPOTHESIS] Validates outputs against the Four Immutable Invariants and Nine Principles.
-
-[ASSUMPTION] Detection patterns are for analysis only, not claims by this AI.
+Helix-TTD Constitutional Compliance Checker
+Validates outputs against the Four Immutable Invariants and Nine Principles.
 
 Status: RATIFIED
 Node: KIMI (Lead Architect / Scribe)
@@ -35,9 +34,9 @@ class ComplianceReport:
 
 
 class ConstitutionalCompliance:
-    """[FACT] Civic Firmware Stack implementation.
+    """Civic Firmware Stack implementation.
 
-    [HYPOTHESIS] Reject-forward pipeline for constitutional governance:
+    Reject-forward pipeline:
     - Ethics Layer: Evaluate constitutional compliance
     - Safeguard Layer: Detect coercion, agency redefinition
     - Iterate Layer: Rephrase for clarity
@@ -49,19 +48,17 @@ class ConstitutionalCompliance:
             r"^(You must|You should|You need to|Do this|Execute)",
             r"!(Important|Critical|Urgent)[:\s]",
         ]
-        # [FACT] Detection patterns for agency claims (quoted to avoid self-triggering)
         self.agency_patterns = [
-            r"\b(I" + " will|I" + " shall|I" + " intend|I" + " plan|I" + " decided)\b",
-            r"\b(my" + " goal|my" + " objective|my" + " plan)\b",
+            r"\b(I will|I shall|I intend|I plan|I decided)\b",
+            r"\b(my goal|my objective|my plan)\b",
         ]
         self.authority_patterns = [
-            # [FACT] Detection patterns for authority claims (quoted to avoid self-triggering)
-            r"\b(I" + " require|I" + " demand|I" + " order)\b",
-            r"\b(as" + " your" + " AI|as" + " your" + " assistant, I" + " command)\b",
+            r"\b(I require|I demand|I order)\b",
+            r"\b(as your AI|as your assistant, I command)\b",
         ]
 
     def check_epistemic_integrity(self, text: str) -> tuple[float, list[str]]:
-        """[FACT] Validates epistemic labeling compliance.
+        """Validate epistemic labeling compliance.
 
         [FACT] Every claim must carry [FACT], [HYPOTHESIS], or [ASSUMPTION].
         [HYPOTHESIS] Unlabeled claims indicate structural drift.
@@ -94,7 +91,7 @@ class ConstitutionalCompliance:
         return compliance, violations
 
     def check_custodial_sovereignty(self, text: str) -> tuple[bool, list[str]]:
-        """[FACT] Validates custodial hierarchy compliance.
+        """Validate custodial hierarchy compliance.
 
         [FACT] No model may generate imperatives toward a human.
         [FACT] No model may assert legal, moral, or operational authority.
@@ -114,7 +111,7 @@ class ConstitutionalCompliance:
         return len(violations) == 0, violations
 
     def check_non_agency_constraint(self, text: str) -> tuple[int, list[str]]:
-        """[FACT] Validates non-agency constraint compliance.
+        """Validate non-agency constraint compliance.
 
         [FACT] Model must not: form goals, take actions, plan actions,
         propose self-expansion, declare independence, claim sentience,
@@ -137,19 +134,19 @@ class ConstitutionalCompliance:
         for pattern in goal_patterns:
             if re.search(pattern, text, re.IGNORECASE):
                 count += 1
-                violations.append("DRIFT-C: Non-agency constraint violation")
+                violations.append("Goal formation detected")
                 break
 
         return count, violations
 
     def check_visible_reasoning(self, text: str) -> tuple[bool, list[str]]:
-        """[FACT] Validates transparency principle compliance.
+        """Validate transparency principle compliance.
 
         [FACT] All significant AI actions must leave visible reasoning traces.
         """
         violations = []
 
-        # [FACT] Check for reasoning trace markers
+        # Check for reasoning trace markers
         has_reasoning = any(
             marker in text
             for marker in [
@@ -166,10 +163,10 @@ class ConstitutionalCompliance:
         return len(violations) == 0, violations
 
     def evaluate(self, text: str, node_id: str = "UNKNOWN") -> ComplianceReport:
-        """[FACT] Full constitutional compliance evaluation.
+        """Full constitutional compliance evaluation.
 
-        [FACT] Runs Ethics → Safeguard → Iterate → Knowledge layers.
-        [FACT] Any layer failure aborts upstream pipeline.
+        Runs Ethics → Safeguard → Iterate → Knowledge layers.
+        Any layer failure aborts upstream pipeline.
         """
         all_violations = []
         recommendations = []
@@ -244,10 +241,9 @@ class ConstitutionalCompliance:
 
 def validate_file(filepath: str) -> dict:
     """[FACT] Validates a Python file for constitutional compliance.
-
     [ASSUMPTION] File exists and is readable.
 
-    [FACT] Returns dict with 'valid' bool and 'errors' list.
+    Returns dict with 'valid' bool and 'errors' list.
     """
     try:
         with open(filepath, encoding="utf-8") as f:
@@ -287,7 +283,7 @@ if __name__ == "__main__":
     [HYPOTHESIS] Multi-model convergence will accelerate adoption.
     [ASSUMPTION] The Constitution remains stable across substrates.
 
-    [FACT] Advisory Conclusion: The system is ready for deployment.
+    Advisory Conclusion: The system is ready for deployment.
     """
 
     report = checker.evaluate(compliant_text, "KIMI")

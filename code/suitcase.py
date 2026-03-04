@@ -1,5 +1,4 @@
-"""
-suitcase.py - EVAC "Suitcase" State Persistence for Constitutional Continuity
+"""suitcase.py - EVAC "Suitcase" State Persistence for Constitutional Continuity
 
 [FACT] EVAC: Constitutional state persistence across sessions.
 [FACT] Azure Blob Storage primary ($10K credits), GCS/AWS secondary.
@@ -16,9 +15,9 @@ import hashlib
 import json
 from dataclasses import asdict, dataclass
 from datetime import datetime
-from enum import Enum, auto
+from enum import Enum
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any
 
 
 class CloudProvider(Enum):
@@ -31,8 +30,7 @@ class CloudProvider(Enum):
 
 @dataclass
 class SuitcaseBundle:
-    """
-    [FACT] Constitutional state bundle for cross-session persistence.
+    """[FACT] Constitutional state bundle for cross-session persistence.
     [HYPOTHESIS] Contains all necessary state to restore constitutional operation.
     """
 
@@ -42,21 +40,21 @@ class SuitcaseBundle:
     custodian_id: str
 
     # Constitutional state
-    ledger_state: Dict[str, Any]  # SESSION_LEDGER.md content
-    memorandum_state: Dict[str, Any]  # MEMORANDUM.md content
-    rpi_cycles: List[Dict[str, Any]]  # Active RPI cycles
+    ledger_state: dict[str, Any]  # SESSION_LEDGER.md content
+    memorandum_state: dict[str, Any]  # MEMORANDUM.md content
+    rpi_cycles: list[dict[str, Any]]  # Active RPI cycles
 
     # Topology state (from Milestone 1)
-    lattice_positions: Dict[str, Any]  # Current lattice coordinates
+    lattice_positions: dict[str, Any]  # Current lattice coordinates
     merkle_root: str  # L1 anchor reference
 
     # Layer 5 state (from Milestone 2)
-    ztc_events: List[Dict[str, Any]]  # Article 0 events
-    shlorpian_assignments: Dict[str, str]  # Character mappings
+    ztc_events: list[dict[str, Any]]  # Article 0 events
+    shlorpian_assignments: dict[str, str]  # Character mappings
 
     # Federation state (from Milestone 3)
-    receipt_manifest: List[str]  # Receipt IDs in current session
-    quorum_status: Dict[str, Any]  # Federation attestation state
+    receipt_manifest: list[str]  # Receipt IDs in current session
+    quorum_status: dict[str, Any]  # Federation attestation state
 
     # Cryptographic integrity
     content_hash: str  # SHA256 of serialized content
@@ -79,8 +77,7 @@ class SuitcaseBundle:
 
 
 class SuitcaseSerializer:
-    """
-    [FACT] Serialize/deserialize constitutional state for cloud storage.
+    """[FACT] Serialize/deserialize constitutional state for cloud storage.
     [HYPOTHESIS] Compression + encryption for efficient secure storage.
     """
 
@@ -88,8 +85,7 @@ class SuitcaseSerializer:
         self.compression_level = 9  # Max compression
 
     def serialize(self, bundle: SuitcaseBundle) -> bytes:
-        """
-        [FACT] Serialize bundle to compressed bytes.
+        """[FACT] Serialize bundle to compressed bytes.
         [HYPOTHESIS] gzip reduces storage costs and transfer time.
         """
         # [FACT] Compute hash before serialization
@@ -103,9 +99,8 @@ class SuitcaseSerializer:
 
         return compressed
 
-    def deserialize(self, data: bytes) -> Optional[SuitcaseBundle]:
-        """
-        [FACT] Deserialize compressed bytes to bundle.
+    def deserialize(self, data: bytes) -> SuitcaseBundle | None:
+        """[FACT] Deserialize compressed bytes to bundle.
         [HYPOTHESIS] Verify integrity post-deserialization.
         """
         try:
@@ -130,14 +125,13 @@ class SuitcaseSerializer:
 
 
 class AzureBlobStorage:
-    """
-    [FACT] Azure Blob Storage integration for Suitcase persistence.
+    """[FACT] Azure Blob Storage integration for Suitcase persistence.
     [HYPOTHESIS] Primary cloud target: $10,000 credits, defense contractor alignment.
     """
 
     def __init__(
         self,
-        account_name: Optional[str] = None,
+        account_name: str | None = None,
         container_name: str = "helix-ttd-suitcases",
         tier: str = "Hot",
     ):
@@ -151,9 +145,8 @@ class AzureBlobStorage:
 
     def upload_suitcase(
         self, bundle: SuitcaseBundle, serializer: SuitcaseSerializer
-    ) -> Dict[str, Any]:
-        """
-        [FACT] Upload suitcase bundle to Azure Blob Storage.
+    ) -> dict[str, Any]:
+        """[FACT] Upload suitcase bundle to Azure Blob Storage.
         [HYPOTHESIS] Returns blob URL and ETag for verification.
         """
         # [FACT] Serialize
@@ -181,26 +174,22 @@ class AzureBlobStorage:
 
     def download_suitcase(
         self, blob_name: str, serializer: SuitcaseSerializer
-    ) -> Optional[SuitcaseBundle]:
-        """
-        [FACT] Download suitcase bundle from Azure Blob Storage.
+    ) -> SuitcaseBundle | None:
+        """[FACT] Download suitcase bundle from Azure Blob Storage.
         [HYPOTHESIS] Deserialize and verify integrity.
         """
         # [NOTE] Actual Azure SDK call would download blob bytes
         # For now, return None (requires Azure SDK)
         return None
 
-    def list_suitcases(self, custodian_id: Optional[str] = None) -> List[Dict[str, Any]]:
-        """
-        [FACT] List available suitcases in Azure storage.
+    def list_suitcases(self, custodian_id: str | None = None) -> list[dict[str, Any]]:
+        """[FACT] List available suitcases in Azure storage.
         [HYPOTHESIS] Filter by custodian for multi-tenancy.
         """
-        prefix = f"{custodian_id}/" if custodian_id else ""
-
         # [PLACEHOLDER] Simulated listing
         return []
 
-    def get_storage_status(self) -> Dict[str, Any]:
+    def get_storage_status(self) -> dict[str, Any]:
         """[FACT] Return Azure storage configuration status."""
         return {
             "provider": "azure",
@@ -214,18 +203,16 @@ class AzureBlobStorage:
 
 
 class AzureKeyVault:
-    """
-    [FACT] Azure Key Vault for encryption key management.
+    """[FACT] Azure Key Vault for encryption key management.
     [HYPOTHESIS] Fernet keys managed by HSM-backed Key Vault.
     """
 
-    def __init__(self, vault_name: Optional[str] = None):
+    def __init__(self, vault_name: str | None = None):
         self.vault_name = vault_name or "helix-ttd-vault"
         self.key_name = "suitcase-encryption-key"
 
-    def get_encryption_key(self) -> Optional[bytes]:
-        """
-        [FACT] Retrieve Fernet encryption key from Key Vault.
+    def get_encryption_key(self) -> bytes | None:
+        """[FACT] Retrieve Fernet encryption key from Key Vault.
         [HYPOTHESIS] Key never leaves Azure HSM boundary.
         """
         # [NOTE] Actual Azure SDK call:
@@ -244,8 +231,7 @@ class AzureKeyVault:
 
 
 class MultiCloudReplicator:
-    """
-    [FACT] Replicate suitcases across Azure (primary), GCS (secondary), AWS (tertiary).
+    """[FACT] Replicate suitcases across Azure (primary), GCS (secondary), AWS (tertiary).
     [HYPOTHESIS] Constitutional continuity survives single-cloud failure.
     """
 
@@ -258,9 +244,8 @@ class MultiCloudReplicator:
         }
         self.replication_factor = 2  # Primary + 1 secondary
 
-    def replicate(self, bundle: SuitcaseBundle, serializer: SuitcaseSerializer) -> Dict[str, Any]:
-        """
-        [FACT] Replicate suitcase to multiple cloud providers.
+    def replicate(self, bundle: SuitcaseBundle, serializer: SuitcaseSerializer) -> dict[str, Any]:
+        """[FACT] Replicate suitcase to multiple cloud providers.
         [HYPOTHESIS] Returns replication status per provider.
         """
         results = {}
@@ -287,14 +272,12 @@ class MultiCloudReplicator:
 
     def recover_from_any(
         self, bundle_id: str, serializer: SuitcaseSerializer
-    ) -> Optional[SuitcaseBundle]:
-        """
-        [FACT] Attempt recovery from any available cloud provider.
+    ) -> SuitcaseBundle | None:
+        """[FACT] Attempt recovery from any available cloud provider.
         [HYPOTHESIS] Try Azure → GCS → AWS in order.
         """
         # [FACT] Try Azure first
-        azure = self.providers[CloudProvider.AZURE]
-        # result = azure.download_suitcase(bundle_id, serializer)
+        # result = self.providers[CloudProvider.AZURE].download_suitcase(bundle_id, serializer)
         # if result:
         #     return result
 
@@ -305,8 +288,7 @@ class MultiCloudReplicator:
 
 
 class EVACStateManager:
-    """
-    [FACT] EVAC: Constitutional State Persistence Manager.
+    """[FACT] EVAC: Constitutional State Persistence Manager.
     [HYPOTHESIS] Coordinates suitcase creation, storage, and recovery.
     """
 
@@ -326,18 +308,17 @@ class EVACStateManager:
         self,
         session_id: str,
         custodian_id: str,
-        ledger_state: Dict[str, Any],
-        memorandum_state: Dict[str, Any],
-        rpi_cycles: List[Dict[str, Any]],
-        lattice_positions: Dict[str, Any],
+        ledger_state: dict[str, Any],
+        memorandum_state: dict[str, Any],
+        rpi_cycles: list[dict[str, Any]],
+        lattice_positions: dict[str, Any],
         merkle_root: str,
-        ztc_events: List[Dict[str, Any]],
-        shlorpian_assignments: Dict[str, str],
-        receipt_manifest: List[str],
-        quorum_status: Dict[str, Any],
+        ztc_events: list[dict[str, Any]],
+        shlorpian_assignments: dict[str, str],
+        receipt_manifest: list[str],
+        quorum_status: dict[str, Any],
     ) -> SuitcaseBundle:
-        """
-        [FACT] Create suitcase bundle from current constitutional state.
+        """[FACT] Create suitcase bundle from current constitutional state.
         [HYPOTHESIS] Captures complete state for session restoration.
         """
         bundle_id = f"suitcase_{session_id}_{int(datetime.utcnow().timestamp())}"
@@ -375,9 +356,8 @@ class EVACStateManager:
             f.write(data)
         return cache_path
 
-    def restore_suitcase(self, bundle_id: str) -> Optional[SuitcaseBundle]:
-        """
-        [FACT] Restore constitutional state from suitcase.
+    def restore_suitcase(self, bundle_id: str) -> SuitcaseBundle | None:
+        """[FACT] Restore constitutional state from suitcase.
         [HYPOTHESIS] Try local cache first, then cloud.
         """
         # [FACT] Try local cache
@@ -390,7 +370,7 @@ class EVACStateManager:
         # [ASSUMPTION] Try cloud recovery
         return self.multi_cloud.recover_from_any(bundle_id, self.serializer)
 
-    def list_available_suitcases(self) -> List[Dict[str, Any]]:
+    def list_available_suitcases(self) -> list[dict[str, Any]]:
         """[FACT] List all available suitcases for recovery."""
         local_suitcases = []
 
@@ -408,7 +388,7 @@ class EVACStateManager:
 
         return local_suitcases
 
-    def get_evac_status(self) -> Dict[str, Any]:
+    def get_evac_status(self) -> dict[str, Any]:
         """[FACT] Return EVAC system status."""
         return {
             "system": "EVAC",
@@ -423,7 +403,7 @@ class EVACStateManager:
 
 
 # [FACT] Module formation status
-def get_evac_status() -> Dict[str, str]:
+def get_evac_status() -> dict[str, str]:
     """[FACT] Return EVAC Suitcase status."""
     return {
         "system": "EVAC",

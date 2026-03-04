@@ -17,7 +17,6 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from deepseek_bridge import (
     DeepSeekBridge,
-    DeepSeekModel,
     DeepSeekReceipt,
     FederationRouter,
     get_deepseek_status,
@@ -81,7 +80,7 @@ def test_federation_receipt_creation():
     assert len(receipt.hash_proof) == 64  # SHA256 hex
 
     # [TEST] Verify integrity
-    assert receipt.verify_integrity() == True
+    assert receipt.verify_integrity()
 
     print("[PASS] FederationReceipt creation")
 
@@ -104,7 +103,7 @@ def test_receipt_migration():
             "content": "[FACT] Old receipt. [HYPOTHESIS] Legacy format.",
         }
 
-        import json
+        import json  # noqa: E402
 
         with open(node_dir / "legacy.json", "w") as f:
             json.dump(legacy_receipt, f)
@@ -141,18 +140,18 @@ def test_quorum_attestation():
 
     # [TEST] First attestation (no quorum yet)
     result1 = quorum.attest_receipt(receipt, NodeType.GEMS)
-    assert result1 == False
-    assert receipt.quorum_reached == False
+    assert not result1
+    assert not receipt.quorum_reached
 
     # [TEST] Second attestation (quorum reached)
     result2 = quorum.attest_receipt(receipt, NodeType.DEEPSEEK)
-    assert result2 == True
-    assert receipt.quorum_reached == True
+    assert result2
+    assert receipt.quorum_reached
     assert len(receipt.attesting_nodes) == 2
 
     # [TEST] Verify quorum status
     has_quorum, attestations = quorum.verify_quorum("quorum_test")
-    assert has_quorum == True
+    assert has_quorum
     assert len(attestations) == 2
 
     print("[PASS] Quorum attestation")
@@ -178,7 +177,7 @@ def test_cross_node_verification():
 
     # [TEST] Verify correct node
     result = verifier.verify_cross_node(receipt, NodeType.GEMS)
-    assert result == True
+    assert result
 
     # [TEST] Verify wrong node (should fail)
     receipt2 = FederationReceipt(
@@ -193,7 +192,7 @@ def test_cross_node_verification():
     )
 
     result2 = verifier.verify_cross_node(receipt2, NodeType.GEMS)
-    assert result2 == False  # Node mismatch or integrity failure
+    assert not result2  # Node mismatch or integrity failure
 
     print("[PASS] Cross-node verification")
 
@@ -222,7 +221,7 @@ def test_federation_receipt_manager():
 
         assert loaded is not None
         assert loaded.receipt_id == receipt.receipt_id
-        assert loaded.verify_integrity() == True
+        assert loaded.verify_integrity()
 
         print("[PASS] FederationReceiptManager")
 
@@ -253,7 +252,7 @@ def test_deepseek_receipt():
         ).encode()
     ).hexdigest()
 
-    assert receipt.verify_integrity() == True
+    assert receipt.verify_integrity()
     assert len(receipt.thinking_blocks) == 2
 
     print("[PASS] DeepSeekReceipt")
@@ -289,14 +288,13 @@ def test_deepseek_bridge():
 
         assert receipt.node_id == "deepseek"
         assert receipt.model == "deepseek-r1:7b"
-        assert receipt.verify_integrity() == True
+        assert receipt.verify_integrity()
 
         print("[PASS] DeepSeekBridge")
 
 
 def test_deepseek_constitutional_compliance():
     """[FACT] DeepSeek output must meet constitutional requirements."""
-    bridge = DeepSeekBridge()
 
     # [TEST] Compliant receipt (has epistemic markers)
     compliant_receipt = DeepSeekReceipt(
@@ -334,7 +332,7 @@ def test_federation_router():
 
     assert "[FACT]" in response
     assert receipt.node_id == "deepseek"
-    assert receipt.verify_integrity() == True
+    assert receipt.verify_integrity()
 
     print("[PASS] FederationRouter")
 
@@ -396,8 +394,8 @@ def test_quorum_threshold_calculation():
     print("[PASS] Quorum threshold calculation")
 
 
-import hashlib
-import json
+import hashlib  # noqa: E402
+import json  # noqa: E402
 
 
 def main():

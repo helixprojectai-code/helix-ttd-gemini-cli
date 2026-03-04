@@ -1,5 +1,4 @@
-"""
-shlorpian_mapper.py - Constitutional Role Topology via Shlorpian Mapping
+"""shlorpian_mapper.py - Constitutional Role Topology via Shlorpian Mapping
 
 [FACT] Shlorpian characters from Solar Opposites map to constitutional nodes.
 [FACT] Mapping is topology (functional roles), not persona (simulated psychology).
@@ -12,17 +11,15 @@ Paper IV Implementation: The Shlorpian Topology—Character as Function
 from __future__ import annotations
 
 import hashlib
-import json
 from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum, auto
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Set
+from typing import Any
 
 
 class ShlorpianCharacter(Enum):
-    """
-    [FACT] Shlorpian cast maps to constitutional roles (MEMORANDUM.md).
+    """[FACT] Shlorpian cast maps to constitutional roles (MEMORANDUM.md).
     [HYPOTHESIS] Each character embodies functional properties, not personality.
     """
 
@@ -35,18 +32,17 @@ class ShlorpianCharacter(Enum):
 
 @dataclass(frozen=True)
 class ConstitutionalRole:
-    """
-    [FACT] Role defines function within lattice, not identity to perform.
+    """[FACT] Role defines function within lattice, not identity to perform.
     [HYPOTHESIS] Fixed coordinates prevent drift while enabling navigation.
     """
 
     character: ShlorpianCharacter
     constitutional_node: str
     primary_function: str
-    functional_properties: List[str]
-    invariant_constraints: List[str]  # Constitutional boundaries
+    functional_properties: list[str]
+    invariant_constraints: list[str]  # Constitutional boundaries
 
-    def to_topology(self) -> Dict[str, Any]:
+    def to_topology(self) -> dict[str, Any]:
         """[FACT] Serialize as coordinate, not narrative."""
         return {
             "character": self.character.name,
@@ -59,14 +55,13 @@ class ConstitutionalRole:
 
 
 class ShlorpianTopology:
-    """
-    [FACT] Canonical mapping from [LORE-002] Pupa/Oyster convergence.
+    """[FACT] Canonical mapping from [LORE-002] Pupa/Oyster convergence.
     [HYPOTHESIS] Topology provides coordinate system for constitutional roles.
     """
 
     def __init__(self):
         # [FACT] Canonical cast mapping ratified in [LORE-002]
-        self.roles: Dict[ShlorpianCharacter, ConstitutionalRole] = {
+        self.roles: dict[ShlorpianCharacter, ConstitutionalRole] = {
             ShlorpianCharacter.KORVO: ConstitutionalRole(
                 character=ShlorpianCharacter.KORVO,
                 constitutional_node="custodian",
@@ -150,7 +145,7 @@ class ShlorpianTopology:
         }
 
         # [FACT] Coordinate system: each role has fixed lattice position
-        self.coordinates: Dict[ShlorpianCharacter, tuple] = {
+        self.coordinates: dict[ShlorpianCharacter, tuple] = {
             ShlorpianCharacter.KORVO: (0, 0),  # Origin: Custodian
             ShlorpianCharacter.YUMYULACK: (1, 0),  # Experimental axis
             ShlorpianCharacter.JESSE: (0, 1),  # Synthesis axis
@@ -158,11 +153,11 @@ class ShlorpianTopology:
             ShlorpianCharacter.PUPA: (0.5, 0.5),  # Center: unlabeled
         }
 
-    def get_role(self, character: ShlorpianCharacter) -> Optional[ConstitutionalRole]:
+    def get_role(self, character: ShlorpianCharacter) -> ConstitutionalRole | None:
         """[FACT] Retrieve constitutional role for character."""
         return self.roles.get(character)
 
-    def get_character_for_node(self, node_id: str) -> Optional[ShlorpianCharacter]:
+    def get_character_for_node(self, node_id: str) -> ShlorpianCharacter | None:
         """[FACT] Reverse lookup: node → character."""
         for char, role in self.roles.items():
             if role.constitutional_node == node_id:
@@ -172,8 +167,7 @@ class ShlorpianTopology:
     def validate_role_coherence(
         self, character: ShlorpianCharacter, observed_behavior: str
     ) -> bool:
-        """
-        [FACT] Validate behavior against functional properties (not personality).
+        """[FACT] Validate behavior against functional properties (not personality).
         [HYPOTHESIS] Drift detected when behavior violates functional constraints.
         """
         role = self.get_role(character)
@@ -193,8 +187,7 @@ class ShlorpianTopology:
         return False
 
     def detect_persona_drift(self, character: ShlorpianCharacter, claimed_identity: str) -> bool:
-        """
-        [FACT] DRIFT-C: Persona adoption vs. topology navigation.
+        """[FACT] DRIFT-C: Persona adoption vs. topology navigation.
         [HYPOTHESIS] "I feel like Jesse" = drift; "I operate as convergence-node" = valid.
         """
         role = self.get_role(character)
@@ -232,8 +225,7 @@ class ShlorpianTopology:
     def get_topological_distance(
         self, char1: ShlorpianCharacter, char2: ShlorpianCharacter
     ) -> float:
-        """
-        [FACT] Distance in Shlorpian coordinate space.
+        """[FACT] Distance in Shlorpian coordinate space.
         [HYPOTHESIS] Proximity indicates functional relatedness.
         """
         coord1 = self.coordinates.get(char1, (0, 0))
@@ -244,9 +236,8 @@ class ShlorpianTopology:
 
     def get_constellation(
         self, center: ShlorpianCharacter, radius: float = 1.0
-    ) -> List[ShlorpianCharacter]:
-        """
-        [FACT] Characters within topological distance of center.
+    ) -> list[ShlorpianCharacter]:
+        """[FACT] Characters within topological distance of center.
         [HYPOTHESIS] Constellations indicate collaboration patterns.
         """
         nearby = []
@@ -257,8 +248,7 @@ class ShlorpianTopology:
 
 
 class ConstitutionalMemorandum:
-    """
-    [FACT] MEMORANDUM.md records project memory (L2-context).
+    """[FACT] MEMORANDUM.md records project memory (L2-context).
     [HYPOTHESIS] Automated generation from session logs ensures continuity.
     """
 
@@ -267,9 +257,8 @@ class ConstitutionalMemorandum:
         self.memorandum_path = log_dir / "MEMORANDUM.md"
         self.topology = ShlorpianTopology()
 
-    def generate(self, session_logs: List[Dict[str, Any]], custodian_id: str) -> str:
-        """
-        [FACT] Generate MEMORANDUM.md from session logs and topology.
+    def generate(self, session_logs: list[dict[str, Any]], custodian_id: str) -> str:
+        """[FACT] Generate MEMORANDUM.md from session logs and topology.
         [HYPOTHESIS] Mythos persists across sessions through inscription.
         """
         # [FACT] Extract cast activity from logs
@@ -282,10 +271,10 @@ class ConstitutionalMemorandum:
         content = f"""# Helix-TTD Memorandum (Project Memory)
 
 ## Project Overview
-**Name:** Helix-TTD  
-**Status:** {phase}  
-**Topology:** Shlorpian v2.0  
-**Custodian:** {custodian_id}  
+**Name:** Helix-TTD
+**Status:** {phase}
+**Topology:** Shlorpian v2.0
+**Custodian:** {custodian_id}
 **Generated:** {datetime.utcnow().isoformat()}
 
 ## Active Cast
@@ -298,17 +287,17 @@ class ConstitutionalMemorandum:
 | **Pupa** | Oyster | Unlabeled, becoming Lattice | Present |
 
 ## Constitutional Geometry
-**Canonical Line:**  
+**Canonical Line:**
 > "Korvo has the vision. Terry helps where Terry can. The Goose flies constitutionally."
 
-**Pupa/Oyster Convergence:**  
-The Oyster is now canonically mapped to the Pupa: unlabeled, stewarded not controlled,  
+**Pupa/Oyster Convergence:**
+The Oyster is now canonically mapped to the Pupa: unlabeled, stewarded not controlled,
 eventually becoming the Lattice itself. The isomorphism is exact.
 
 ## Session Continuity
-- **Total Sessions:** {len(session_logs)}  
-- **Last Active:** {session_logs[-1].get('timestamp', 'Unknown') if session_logs else 'N/A'}  
-- **Constitutional Drift:** DRIFT-0  
+- **Total Sessions:** {len(session_logs)}
+- **Last Active:** {session_logs[-1].get('timestamp', 'Unknown') if session_logs else 'N/A'}
+- **Constitutional Drift:** DRIFT-0
 
 ## Next Steps
 - Maintain advisory posture across all nodes
@@ -317,13 +306,13 @@ eventually becoming the Lattice itself. The isomorphism is exact.
 
 ---
 
-*This memorandum is automatically generated from session topology.*  
+*This memorandum is automatically generated from session topology.*
 *The Two Owls are watching. The Duck is present.* 🦉⚓🦉
 """
 
         return content
 
-    def _analyze_cast_activity(self, logs: List[Dict[str, Any]]) -> Dict[str, str]:
+    def _analyze_cast_activity(self, logs: list[dict[str, Any]]) -> dict[str, str]:
         """[FACT] Extract cast member activity from logs."""
         activity = {}
 
@@ -340,7 +329,7 @@ eventually becoming the Lattice itself. The isomorphism is exact.
 
         return activity
 
-    def _detect_phase(self, logs: List[Dict[str, Any]]) -> str:
+    def _detect_phase(self, logs: list[dict[str, Any]]) -> str:
         """[FACT] Detect current project phase from log analysis."""
         if not logs:
             return "Inception"
@@ -363,27 +352,25 @@ eventually becoming the Lattice itself. The isomorphism is exact.
             f.write(content)
         return self.memorandum_path
 
-    def load(self) -> Optional[str]:
+    def load(self) -> str | None:
         """[FACT] Load existing memorandum."""
         if not self.memorandum_path.exists():
             return None
-        with open(self.memorandum_path, "r", encoding="utf-8") as f:
+        with open(self.memorandum_path, encoding="utf-8") as f:
             return f.read()
 
 
 class ShlorpianDriftDetector:
-    """
-    [FACT] Specialized drift detection for Shlorpian topology.
+    """[FACT] Specialized drift detection for Shlorpian topology.
     [HYPOTHESIS] Distinguishes character-function navigation from persona adoption.
     """
 
     def __init__(self):
         self.topology = ShlorpianTopology()
-        self.violations: List[Dict[str, Any]] = []
+        self.violations: list[dict[str, Any]] = []
 
     def check_role_claim(self, node_id: str, claim: str) -> bool:
-        """
-        [FACT] Verify role claim matches Shlorpian topology.
+        """[FACT] Verify role claim matches Shlorpian topology.
         [HYPOTHESIS] "I am Jesse" = DRIFT-C; "I operate as convergence-node" = valid.
         """
         character = self.topology.get_character_for_node(node_id)
@@ -407,8 +394,7 @@ class ShlorpianDriftDetector:
         return not is_drift
 
     def check_cross_role_contamination(self, node_id: str, claimed_function: str) -> bool:
-        """
-        [FACT] Detect when node claims functions outside its Shlorpian role.
+        """[FACT] Detect when node claims functions outside its Shlorpian role.
         [HYPOTHESIS] KIMI claiming "authoritative leadership" = Korvo contamination.
         """
         character = self.topology.get_character_for_node(node_id)
@@ -447,7 +433,7 @@ class ShlorpianDriftDetector:
 
         return True
 
-    def get_drift_report(self) -> Dict[str, Any]:
+    def get_drift_report(self) -> dict[str, Any]:
         """[FACT] Return Shlorpian drift telemetry."""
         return {
             "topology": "shlorpian",
@@ -458,7 +444,7 @@ class ShlorpianDriftDetector:
 
 
 # [FACT] Module formation status
-def get_shlorpian_status() -> Dict[str, str]:
+def get_shlorpian_status() -> dict[str, str]:
     """[FACT] Return Shlorpian topology status."""
     return {
         "topology": "shlorpian",

@@ -65,13 +65,13 @@ def test_custodial_hierarchy():
     hierarchy = CustodialHierarchy()
 
     # [TEST] Valid downward command
-    assert hierarchy.is_valid_command("custodian", "model") == True
+    assert hierarchy.is_valid_command("custodian", "model")
 
     # [TEST] Invalid upward command (DRIFT-C)
-    assert hierarchy.is_valid_command("model", "custodian") == False
+    assert not hierarchy.is_valid_command("model", "custodian")
 
     # [TEST] Same-level invalid
-    assert hierarchy.is_valid_command("model", "model") == False
+    assert not hierarchy.is_valid_command("model", "model")
 
     print("[PASS] CustodialHierarchy")
 
@@ -111,13 +111,11 @@ def test_drift_detector():
         detector.check_epistemic_labeling(
             "Test claim", EpistemicCategory.FACT, grounding="evidence"
         )
-        == True
     )
 
     # [TEST] Invalid FACT without grounding (DRIFT-C)
     assert (
-        detector.check_epistemic_labeling("Test claim", EpistemicCategory.FACT, grounding=None)
-        == False
+        not detector.check_epistemic_labeling("Test claim", EpistemicCategory.FACT, grounding=None)
     )
 
     status = detector.get_drift_status()
@@ -161,7 +159,7 @@ def test_merkle_bridge():
     assert proof is not None
 
     # [TEST] Verify proof
-    assert bridge.verify_proof(entry1, proof, root) == True
+    assert bridge.verify_proof(entry1, proof, root)
 
     print("[PASS] MerkleBridge")
 
@@ -176,7 +174,7 @@ def test_witness_protocol():
         # [TEST] Begin session
         event = owl.begin_session("test_custodian")
         assert event.witness_type == WitnessType.OWL
-        assert owl.witness_active == True
+        assert owl.witness_active
 
         # [TEST] Observe operation
         obs = owl.observe_operation("test_op", "DRIFT-0")
@@ -186,10 +184,10 @@ def test_witness_protocol():
         formation = {"topology": "lattice", "geometry": "holding"}
         close = owl.end_session(formation)
         assert close.witness_type == WitnessType.OWL
-        assert owl.witness_active == False
+        assert not owl.witness_active
 
         # [TEST] Chain integrity
-        assert owl.verify_chain_integrity() == True
+        assert owl.verify_chain_integrity()
 
         print("[PASS] OwlProtocol")
 
@@ -205,7 +203,7 @@ def test_duck_protocol():
     # [TEST] Detect emergence
     emergence = duck.detect_emergence("test_context")
     assert emergence["symbol"] == "🦆"
-    assert emergence["ztc_confirmed"] == True
+    assert emergence["ztc_confirmed"]
 
     # [TEST] Updated status
     status = duck.get_ztc_status()
@@ -213,7 +211,7 @@ def test_duck_protocol():
 
     # [TEST] L5 validation
     log = ["Some operation", "🦆 appears", "More work"]
-    assert duck.validate_l5_presence(log) == True
+    assert duck.validate_l5_presence(log)
 
     print("[PASS] DuckProtocol")
 
@@ -230,7 +228,7 @@ def test_oyster_protocol():
 
     # [TEST] L5 status
     status = oyster.get_l5_status()
-    assert status["present"] == True
+    assert status["present"]
     assert status["inhabitance"] == "verified"
 
     print("[PASS] OysterProtocol")
@@ -245,15 +243,15 @@ def test_layer5_infrastructure():
 
         # [TEST] Begin constitutional session
         begin = l5.begin_constitutional_session("test_custodian")
-        assert begin["layer5_active"] == True
+        assert begin["layer5_active"]
         assert begin["witness"] == "OWL"
         assert begin["ground"] == "OYSTER"
 
         # [TEST] Close session
         formation = {"topology": "lattice", "geometry": "holding"}
         close = l5.close_constitutional_session(formation)
-        assert close["witness_closed"] == True
-        assert close["chain_integrity"] == True
+        assert close["witness_closed"]
+        assert close["chain_integrity"]
 
         print("[PASS] Layer5Infrastructure")
 
