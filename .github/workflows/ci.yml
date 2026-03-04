@@ -173,7 +173,7 @@ jobs:
           HELIX_DBC_ENC_KEY: ${{ matrix.dbc_mode == 'secure' && 'ci_dummy_enc_key' || '' }}
           HELIX_ALLOW_INSECURE_DBC: ${{ matrix.dbc_mode == 'insecure' && '1' || '' }}
         run: |
-          cd code && python -m pytest tests/ -v --tb=short ${{ matrix.coverage && '--cov=. --cov-report=xml --cov-report=term' || '' }}
+          python -m pytest code/tests/ -v --tb=short ${{ matrix.coverage && '--cov=code --cov-report=xml --cov-report=term' || '' }}
 
       - name: Upload coverage to Codecov
         if: matrix.coverage
