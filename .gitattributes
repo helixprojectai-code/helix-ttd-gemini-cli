@@ -1,13 +1,16 @@
 # Helix-TTD Git Attributes
-# Line endings managed by Black in CI
+# Line endings: Force LF for all text files
 
-# Treat all Python files as text with LF line endings
+# Default: treat all files as text with LF
+* text=auto eol=lf
+
+# Explicit LF for specific file types
 *.py text eol=lf
-
-# Other files
 *.yml text eol=lf
 *.yaml text eol=lf
 *.toml text eol=lf
 *.md text eol=lf
 *.json text eol=lf
-*.ps1 text eol=lf
+*.jsonl text eol=lf
+*.txt text eol=lf
+*.gitignore text eol=lf
