@@ -106,10 +106,11 @@ class DeepSeekBridge:
         epistemic = self.extract_epistemic_markers(response)
         thinking = self.extract_thinking_blocks(response)
 
-        # [FACT] Compute hash proof
+        # [FACT] Compute hash proof (use single timestamp to avoid race condition)
+        timestamp = datetime.utcnow().isoformat()
         data = {
             "receipt_id": receipt_id,
-            "timestamp": datetime.utcnow().isoformat(),
+            "timestamp": timestamp,
             "prompt_hash": prompt_hash,
             "response_hash": response_hash,
             "epistemic": epistemic,
@@ -118,7 +119,7 @@ class DeepSeekBridge:
 
         receipt = DeepSeekReceipt(
             receipt_id=receipt_id,
-            timestamp=datetime.utcnow().isoformat(),
+            timestamp=timestamp,
             prompt_hash=prompt_hash,
             response_hash=response_hash,
             epistemic_markers=epistemic,
