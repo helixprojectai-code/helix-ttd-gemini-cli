@@ -336,9 +336,23 @@ ws.onmessage = (event) => {
 
 ## 🧪 Proof of Google Cloud Deployment
 
-**Architecture Diagram:** See `architecture.png` in repository root.
+📄 **Full Documentation:** [`DEPLOYMENT_PROOF.md`](DEPLOYMENT_PROOF.md)
 
-**Cloud Console Evidence:**
+### Architecture Diagram
+![Constitutional Guardian Architecture](architecture.png)
+
+### GCP Services Used
+
+| Service | Purpose | Code Reference |
+|---------|---------|----------------|
+| **Cloud Run** | Serverless container hosting | [`Dockerfile`](Dockerfile), [`cloud-run-service.yaml`](cloud-run-service.yaml) |
+| **Cloud Build** | CI/CD pipeline | [`cloudbuild.yaml`](cloudbuild.yaml) |
+| **Cloud Pub/Sub** | Federation events | [`helix_code/gcp_integrations.py:47`](helix_code/gcp_integrations.py#L47) |
+| **Cloud Storage** | Receipt storage | [`helix_code/gcp_integrations.py:131`](helix_code/gcp_integrations.py#L131) |
+| **Secret Manager** | DBC key encryption | [`helix_code/gcp_integrations.py:211`](helix_code/gcp_integrations.py#L211) |
+| **Cloud Logging** | Audit trails | [`helix_code/gcp_integrations.py:278`](helix_code/gcp_integrations.py#L278) |
+
+### Cloud Console Evidence
 ```bash
 # Show running service
 gcloud run services describe constitutional-guardian --region us-central1
@@ -348,13 +362,23 @@ gcloud container images list-tags gcr.io/$PROJECT_ID/constitutional-guardian
 
 # Show build history
 gcloud builds list --filter="substitutions.REPO_NAME=helix-ttd-gemini-cli"
+
+# List Pub/Sub topics
+gcloud pubsub topics list --project=helix-constitutional-guardian
+
+# View audit logs
+gcloud logging read "resource.type=cloud_run_revision" --limit=10
 ```
 
-**Required Environment Variables:**
+### Required Environment Variables
 ```bash
 HELIX_NODE_ID=GCS-GUARDIAN
 HELIX_ENV=production
-HELIX_DBC_ENC_KEY=<256-bit-key>
+GOOGLE_CLOUD_PROJECT=helix-constitutional-guardian
+GOOGLE_CLOUD_REGION=us-central1
+PUBSUB_TOPIC=constitutional-federation
+GCS_RECEIPT_BUCKET=constitutional-receipts-helix
+HELIX_DBC_ENC_KEY=projects/helix-constitutional-guardian/secrets/dbc-master-key:latest
 ```
 
 ---
