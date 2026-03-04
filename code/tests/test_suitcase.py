@@ -9,6 +9,7 @@ test_suitcase.py - Verification tests for Milestone 4 (EVAC "Suitcase")
 Milestone 4: EVAC "Suitcase" Tests
 """
 
+import gzip
 import sys
 import tempfile
 from pathlib import Path
@@ -232,7 +233,6 @@ def test_compression_efficiency():
     compressed = serializer.serialize(bundle)
 
     # Decompress to check original size
-    import gzip
 
     decompressed = gzip.decompress(compressed)
 
@@ -334,10 +334,6 @@ def test_bundle_completeness():
     assert len(bundle.receipt_manifest) > 0
 
     print("[PASS] Bundle completeness")
-
-
-import gzip
-import json
 
 
 def main():

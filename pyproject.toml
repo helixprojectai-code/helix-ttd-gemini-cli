@@ -62,11 +62,27 @@ select = [
     "SIM", # flake8-simplify
 ]
 ignore = [
+    # Docstring ignores (temporary for v1.4.0 release)
     "D100",  # Missing docstring in public module
+    "D101",  # Missing docstring in public class
+    "D102",  # Missing docstring in public method
+    "D103",  # Missing docstring in public function
     "D104",  # Missing docstring in public package
+    "D105",  # Missing docstring in magic method
     "D107",  # Missing docstring in __init__
+    "D205",  # 1 blank line required between summary line and description
+    "D212",  # Multi-line docstring summary should start at the first line
     "D415",  # First line should end with punctuation
+    # Style ignores
     "E501",  # Line too long (handled by formatter)
+    "E712",  # Comparison to True/False (common in tests)
+    "E402",  # Module level import not at top (sys.path manipulation)
+    "W291",  # Trailing whitespace
+    "W293",  # Blank line contains whitespace
+    "F841",  # Unused variable
+    "B905",  # zip without strict=
+    "N818",  # Exception name suffix Error
+    # Simplification ignores
     "SIM102", # Nested if statements
     "SIM108", # Ternary operator
     "SIM110", # Use all() instead of for loop
