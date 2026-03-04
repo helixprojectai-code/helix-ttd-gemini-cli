@@ -1,0 +1,50 @@
+# [FACT] Constitutional Guardian - Production Container for Google Cloud Run
+# [HYPOTHESIS] Containerized deployment enables scalable federation nodes
+# [ASSUMPTION] Cloud Run provides sufficient cold-start performance for live audio
+
+FROM python:3.11-slim
+
+# [FACT] Set working directory
+WORKDIR /app
+
+# [FACT] Install system dependencies for audio processing
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    gcc \
+    libffi-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+# [FACT] Copy dependency files first (layer caching)
+COPY helix_code/requirements.txt ./
+COPY pyproject.toml ./
+
+# [FACT] Install Python dependencies
+RUN pip install --no-cache-dir -r requirements.txt \
+    google-adk \
+    google-cloud-speech \
+    google-cloud-pubsub \
+    google-cloud-storage
+
+# [FACT] Copy application code
+COPY helix_code/ ./helix_code/
+COPY tools/ ./tools/
+
+# [FACT] Install helix_code as editable package
+RUN pip install -e ./helix_code
+
+# [FACT] Create non-root user for security (Cloud Run best practice)
+RUN useradd -m -u 1000 helix && chown -R helix:helix /app
+USER helix
+
+# [FACT] Cloud Run requires PORT env var (default 8080)
+ENV PORT=8080
+ENV PYTHONUNBUFFERED=1
+
+# [FACT] Expose port for Cloud Run
+EXPOSE 8080
+
+# [FACT] Health check endpoint
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+    CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:8080/health')" || exit 1
+
+# [FACT] Start Constitutional Guardian service
+CMD ["python", "-m", "helix_code.live_guardian"]
