@@ -1,5 +1,4 @@
-"""
-federation_receipts.py - Cross-Node Receipt Validation and Quorum Attestation
+"""federation_receipts.py - Cross-Node Receipt Validation and Quorum Attestation
 
 [FACT] Federation: KIMI (cloud) | GEMS (cloud) | DEEPSEEK (local RTX 3050).
 [FACT] Receipt system v1.2.0: JSON with hash_proof, epistemic_markers counts.
@@ -15,10 +14,10 @@ import hashlib
 import json
 import time
 from dataclasses import asdict, dataclass
-from datetime import datetime, timedelta
-from enum import Enum, auto
+from datetime import datetime
+from enum import Enum
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Set, Tuple
+from typing import Any
 
 
 class NodeType(Enum):
@@ -51,8 +50,7 @@ class EpistemicMarkers:
 
 @dataclass
 class FederationReceipt:
-    """
-    [FACT] Receipt v1.1.0 schema for cross-node validation.
+    """[FACT] Receipt v1.1.0 schema for cross-node validation.
     [HYPOTHESIS] Receipt captures constitutional compliance per session.
     """
 
@@ -68,15 +66,15 @@ class FederationReceipt:
 
     # Cryptographic proof
     hash_proof: str  # Composite hash for verification
-    dbc_signature: Optional[str] = None  # Ed25519 signature (v1.2.0)
-    dbc_id: Optional[str] = None  # DBC identity identifier
+    dbc_signature: str | None = None  # Ed25519 signature (v1.2.0)
+    dbc_id: str | None = None  # DBC identity identifier
 
     # Version and migration
     schema_version: str = "1.1.0"
     algorithm: str = "SHA256"  # v1.2.0: Ed25519 vs HMAC-SHA256-FALLBACK
 
     # Federation attestation
-    attesting_nodes: List[str] = None  # Nodes that verified this receipt
+    attesting_nodes: list[str] = None  # Nodes that verified this receipt
     quorum_reached: bool = False
 
     def __post_init__(self):
@@ -109,26 +107,24 @@ class FederationReceipt:
 
 
 class ReceiptMigrator:
-    """
-    [FACT] Migrate GEMS/KIMI receipts from v1.0.0 to v1.1.0 schema.
+    """[FACT] Migrate GEMS/KIMI receipts from v1.0.0 to v1.1.0 schema.
     [HYPOTHESIS] Migration preserves integrity while adding epistemic tracking.
     """
 
     def __init__(self, receipts_dir: Path = Path("docs/receipts")):
         self.receipts_dir = receipts_dir
-        self.migration_log: List[Dict[str, Any]] = []
+        self.migration_log: list[dict[str, Any]] = []
 
-    def load_legacy_receipt(self, receipt_path: Path) -> Optional[Dict[str, Any]]:
+    def load_legacy_receipt(self, receipt_path: Path) -> dict[str, Any] | None:
         """[FACT] Load v1.0.0 receipt (legacy format)."""
         if not receipt_path.exists():
             return None
 
-        with open(receipt_path, "r", encoding="utf-8") as f:
+        with open(receipt_path, encoding="utf-8") as f:
             return json.load(f)
 
-    def migrate_v1_0_0_to_v1_1_0(self, legacy: Dict[str, Any]) -> FederationReceipt:
-        """
-        [FACT] Migrate legacy receipt to v1.1.0 schema.
+    def migrate_v1_0_0_to_v1_1_0(self, legacy: dict[str, Any]) -> FederationReceipt:
+        """[FACT] Migrate legacy receipt to v1.1.0 schema.
         [HYPOTHESIS] Adds epistemic markers, drift status, DBC fields.
         """
         # [FACT] Extract legacy fields
@@ -165,9 +161,8 @@ class ReceiptMigrator:
 
         return receipt
 
-    def migrate_node_receipts(self, node_type: NodeType) -> Tuple[int, int]:
-        """
-        [FACT] Migrate all receipts for a specific node.
+    def migrate_node_receipts(self, node_type: NodeType) -> tuple[int, int]:
+        """[FACT] Migrate all receipts for a specific node.
         [HYPOTHESIS] Returns (migrated_count, error_count).
         """
         node_dir = self.receipts_dir / node_type.value
@@ -221,7 +216,7 @@ class ReceiptMigrator:
 
         return migrated, errors
 
-    def migrate_all_nodes(self) -> Dict[str, Any]:
+    def migrate_all_nodes(self) -> dict[str, Any]:
         """[FACT] Migrate receipts for all federation nodes."""
         results = {}
 
@@ -238,20 +233,18 @@ class ReceiptMigrator:
 
 
 class QuorumAttestation:
-    """
-    [FACT] Quorum requires 2-of-3 node signatures for consensus.
+    """[FACT] Quorum requires 2-of-3 node signatures for consensus.
     [HYPOTHESIS] Quorum validates constitutional compliance across federation.
     """
 
     QUORUM_THRESHOLD = 2  # 2-of-3 nodes required
 
     def __init__(self):
-        self.attestations: Dict[str, List[str]] = {}  # receipt_id -> attesting_nodes
-        self.quorum_results: Dict[str, bool] = {}
+        self.attestations: dict[str, list[str]] = {}  # receipt_id -> attesting_nodes
+        self.quorum_results: dict[str, bool] = {}
 
     def attest_receipt(self, receipt: FederationReceipt, attesting_node: NodeType) -> bool:
-        """
-        [FACT] Add attestation from a federation node.
+        """[FACT] Add attestation from a federation node.
         [HYPOTHESIS] Returns True if quorum reached.
         """
         receipt_id = receipt.receipt_id
@@ -271,13 +264,13 @@ class QuorumAttestation:
 
         return quorum_reached
 
-    def verify_quorum(self, receipt_id: str) -> Tuple[bool, List[str]]:
+    def verify_quorum(self, receipt_id: str) -> tuple[bool, list[str]]:
         """[FACT] Check if receipt has achieved quorum."""
         attestations = self.attestations.get(receipt_id, [])
         has_quorum = len(attestations) >= self.QUORUM_THRESHOLD
         return has_quorum, attestations
 
-    def get_federation_status(self) -> Dict[str, Any]:
+    def get_federation_status(self) -> dict[str, Any]:
         """[FACT] Return current federation attestation status."""
         total_receipts = len(self.attestations)
         quorum_achieved = sum(1 for q in self.quorum_results.values() if q)
@@ -292,17 +285,15 @@ class QuorumAttestation:
 
 
 class CrossNodeVerifier:
-    """
-    [FACT] Verify receipts across federation nodes using DBC signatures.
+    """[FACT] Verify receipts across federation nodes using DBC signatures.
     [HYPOTHESIS] Ed25519 signatures provide non-repudiable attestation.
     """
 
     def __init__(self):
-        self.verification_results: Dict[str, Dict[str, Any]] = {}
+        self.verification_results: dict[str, dict[str, Any]] = {}
 
     def verify_cross_node(self, receipt: FederationReceipt, expected_node: NodeType) -> bool:
-        """
-        [FACT] Verify receipt from specific node using DBC signature.
+        """[FACT] Verify receipt from specific node using DBC signature.
         [HYPOTHESIS] Returns True if signature valid and matches expected node.
         """
         # [FACT] Check receipt integrity first
@@ -344,7 +335,7 @@ class CrossNodeVerifier:
 
         return True
 
-    def get_verification_summary(self) -> Dict[str, Any]:
+    def get_verification_summary(self) -> dict[str, Any]:
         """[FACT] Return verification results summary."""
         verified = sum(1 for r in self.verification_results.values() if r["status"] == "verified")
         failed = len(self.verification_results) - verified
@@ -358,8 +349,7 @@ class CrossNodeVerifier:
 
 
 class FederationReceiptManager:
-    """
-    [FACT] Central manager for federation receipt operations.
+    """[FACT] Central manager for federation receipt operations.
     [HYPOTHESIS] Coordinates migration, attestation, and verification.
     """
 
@@ -409,12 +399,12 @@ class FederationReceiptManager:
 
         return receipt
 
-    def load_receipt(self, receipt_path: Path) -> Optional[FederationReceipt]:
+    def load_receipt(self, receipt_path: Path) -> FederationReceipt | None:
         """[FACT] Load receipt from disk."""
         if not receipt_path.exists():
             return None
 
-        with open(receipt_path, "r", encoding="utf-8") as f:
+        with open(receipt_path, encoding="utf-8") as f:
             data = json.load(f)
 
         # [FACT] Reconstruct EpistemicMarkers
@@ -442,7 +432,7 @@ class FederationReceiptManager:
             quorum_reached=data.get("quorum_reached", False),
         )
 
-    def get_status(self) -> Dict[str, Any]:
+    def get_status(self) -> dict[str, Any]:
         """[FACT] Return comprehensive federation status."""
         return {
             "receipts_dir": str(self.receipts_dir),
@@ -453,7 +443,7 @@ class FederationReceiptManager:
 
 
 # [FACT] Module formation status
-def get_federation_status() -> Dict[str, str]:
+def get_federation_status() -> dict[str, str]:
     """[FACT] Return federation status summary."""
     return {
         "nodes": "3/3",
