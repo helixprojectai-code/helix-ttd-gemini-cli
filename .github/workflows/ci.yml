@@ -11,6 +11,7 @@ on:
     paths:
       - 'code/**'
       - 'tools/**'
+      - 'helix_ttd_claw/**'
       - '.github/workflows/ci.yml'
       - 'pyproject.toml'
       - 'setup.py'
@@ -20,6 +21,7 @@ on:
     paths:
       - 'code/**'
       - 'tools/**'
+      - 'helix_ttd_claw/**'
       - '.github/workflows/ci.yml'
       - 'pyproject.toml'
       - 'setup.py'
