@@ -6,6 +6,6 @@
 
 # Canonical hardened implementation lives in code/openclaw_agent.py.
 # Re-export here to ensure a single secure DBC source across the repo.
-from openclaw_agent import DBCIdentity, CheckpointIdentitySigner
+from openclaw_agent import CheckpointIdentitySigner, DBCIdentity
 
 __all__ = ["DBCIdentity", "CheckpointIdentitySigner"]
