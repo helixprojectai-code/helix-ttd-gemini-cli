@@ -9,7 +9,7 @@ on:
   push:
     branches: [main, develop]
     paths:
-      - 'code/**'
+      - 'helix-code/**'
       - 'tools/**'
       - 'helix_ttd_claw/**'
       - '.github/workflows/ci.yml'
@@ -19,7 +19,7 @@ on:
   pull_request:
     branches: [main]
     paths:
-      - 'code/**'
+      - 'helix-code/**'
       - 'tools/**'
       - 'helix_ttd_claw/**'
       - '.github/workflows/ci.yml'
@@ -57,7 +57,7 @@ jobs:
           VIOLATIONS=0
           
           # Pattern: [FACT], [HYPOTHESIS], [ASSUMPTION] must appear in docstrings
-          for file in $(find code tools -name "*.py" -type f); do
+          for file in $(find helix-code tools -name "*.py" -type f); do
             if ! grep -qE '\[FACT\]|\[HYPOTHESIS\]|\[ASSUMPTION\]' "$file" 2>/dev/null; then
               if ! grep -q '""".*"""' "$file" 2>/dev/null; then
                 echo "⚠️  WARNING: $file missing docstring with epistemic labels"
@@ -67,7 +67,7 @@ jobs:
           done
           
           # Check for prohibited patterns (imperative tone toward humans)
-          if grep -rE 'You must|You should|You need to|Always do' code/ tools/ 2>/dev/null; then
+          if grep -rE 'You must|You should|You need to|Always do' helix-code/ tools/ 2>/dev/null; then
             echo "❌ CONSTITUTIONAL VIOLATION: Imperative tone detected"
             VIOLATIONS=$((VIOLATIONS + 10))
           fi
@@ -105,7 +105,7 @@ jobs:
         run: |
           echo "=== VERIFYING LINE ENDINGS ==="
           # Check for CRLF in Python files
-          if grep -rI $'\r' code/ tools/ 2>/dev/null; then
+          if grep -rI $'\r' helix-code/ tools/ 2>/dev/null; then
             echo "❌ ERROR: CRLF line endings detected"
             exit 1
           else
@@ -114,15 +114,15 @@ jobs:
 
       - name: Check imports (isort)
         run: |
-          isort --check-only --diff code/ tools/
+          isort --check-only --diff helix-code/ tools/
 
       - name: Check formatting (black)
         run: |
-          black --check --diff code/ tools/
+          black --check --diff helix-code/ tools/
 
       - name: Lint with Ruff
         run: |
-          ruff check code/ tools/
+          ruff check helix-code/ tools/
 
   # ============================================================
   # STAGE 3: Test Matrix
@@ -166,14 +166,14 @@ jobs:
           python -m pip install --upgrade pip
           pip install pytest pytest-cov pytest-xdist
           pip install cryptography
-          pip install -e code/
+          pip install -e helix-code/
 
       - name: Run tests
         env:
           HELIX_DBC_ENC_KEY: ${{ matrix.dbc_mode == 'secure' && 'ci_dummy_enc_key' || '' }}
           HELIX_ALLOW_INSECURE_DBC: ${{ matrix.dbc_mode == 'insecure' && '1' || '' }}
         run: |
-          python -m pytest code/tests/ -v --tb=short ${{ matrix.coverage && '--cov=code --cov-report=xml --cov-report=term' || '' }}
+          python -m pytest helix-code/tests/ -v --tb=short ${{ matrix.coverage && '--cov=helix-code --cov-report=xml --cov-report=term' || '' }}
 
       - name: Upload coverage to Codecov
         if: matrix.coverage
@@ -203,12 +203,12 @@ jobs:
 
       - name: Install Helix toolkit
         run: |
-          pip install -e code/
+          pip install -e helix-code/
 
       - name: Validate Constitutional Grammar
         run: |
           echo "=== VALIDATING CONSTITUTIONAL GRAMMAR ==="
-          cd code && python -c "
+          cd helix-code && python -c "
           from constitutional_compliance import validate_file
           import os
           
@@ -242,7 +242,7 @@ jobs:
       - name: Check Epistemic Labeling
         run: |
           echo "=== CHECKING EPISTEMIC LABEL INTEGRITY ==="
-          LABEL_COUNT=$(grep -rE '\[FACT\]|\[HYPOTHESIS\]|\[ASSUMPTION\]' code/ tools/ 2>/dev/null | wc -l)
+          LABEL_COUNT=$(grep -rE '\[FACT\]|\[HYPOTHESIS\]|\[ASSUMPTION\]' helix-code/ tools/ 2>/dev/null | wc -l)
           echo "Found $LABEL_COUNT epistemic labels"
           if [ $LABEL_COUNT -lt 10 ]; then
             echo "⚠️  Warning: Low epistemic label count"
@@ -273,22 +273,22 @@ jobs:
 
       - name: Build package
         run: |
-          cd code && python -m build
+          cd helix-code && python -m build
 
       - name: Check wheel contents
         continue-on-error: true
         run: |
-          cd code && check-wheel-contents dist/*.whl || echo "⚠️ Wheel check warnings (non-blocking)"
+          cd helix-code && check-wheel-contents dist/*.whl || echo "⚠️ Wheel check warnings (non-blocking)"
 
       - name: Check with twine
         run: |
-          cd code && twine check dist/*
+          cd helix-code && twine check dist/*
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         with:
           name: helix-ttd-package
-          path: code/dist/
+          path: helix-code/dist/
           retention-days: 30
 
   # ============================================================
@@ -310,7 +310,7 @@ jobs:
 
       - name: Install toolkit
         run: |
-          pip install -e code/
+          pip install -e helix-code/
 
       - name: Test CLI entry point
         run: |
