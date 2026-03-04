@@ -1,0 +1,16 @@
+{
+  "receipt_id": "deepseek_test_session_1772663735",
+  "timestamp": "2026-03-04T17:35:35.584284",
+  "prompt_hash": "91183e14235999bb32f1d05671ebd0e6c9811834f5de4e8127c2350880d31d4a",
+  "response_hash": "926567173de881d5bf40ef64b1b910bb92d260e943317a1f8f378ae4c09f3a22",
+  "epistemic_markers": {
+    "fact": 1,
+    "hypothesis": 1,
+    "assumption": 1
+  },
+  "thinking_blocks": [],
+  "hash_proof": "f01f2956f410f0211b663316c160afcf55dc6ba388b94831759fb1435613f440",
+  "ed25519_signature": null,
+  "model": "deepseek-r1:7b",
+  "api_endpoint": "http://localhost:11434"
+}
