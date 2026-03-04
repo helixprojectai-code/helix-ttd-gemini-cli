@@ -19,6 +19,9 @@ COPY pyproject.toml ./
 
 # [FACT] Install Python dependencies
 RUN pip install --no-cache-dir -r requirements.txt \
+    fastapi \
+    uvicorn \
+    websockets \
     google-adk \
     google-cloud-speech \
     google-cloud-pubsub \
