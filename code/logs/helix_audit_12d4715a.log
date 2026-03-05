@@ -1,0 +1,6 @@
+# Helix Audit Log - Initialized 2026-03-01T10:39:44.485059
+# Agent ID: 12d4715a
+# Log Rotation: 30 days / 100MB
+{"data": {"module": "__main__", "risk_level": 0.1, "tool_name": "expensive"}, "ts": "2026-03-01T10:39:44.574317", "type": "TOOL_REGISTERED"}
+{"data": {"action_id": "test_1", "cached": false, "epistemic": "[FACT]", "plan_id": null, "risk_level": 0.1, "tool": "expensive"}, "ts": "2026-03-01T10:39:44.600663", "type": "TOOL_INVOKED"}
+{"data": {"action_id": "test_1", "cached": true, "epistemic": "[FACT]", "plan_id": null, "risk_level": 0.1, "tool": "expensive"}, "ts": "2026-03-01T10:39:44.639503", "type": "TOOL_INVOKED"}

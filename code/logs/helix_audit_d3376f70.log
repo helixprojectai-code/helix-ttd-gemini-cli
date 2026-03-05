@@ -1,0 +1,8 @@
+# Helix Audit Log - Initialized 2026-03-01T10:33:35.202451
+# Agent ID: d3376f70
+# Log Rotation: 30 days / 100MB
+{"data": {"module": "test_helix_toolkit", "risk_level": 0.2, "tool_name": "file_search"}, "ts": "2026-03-01T10:33:35.323471", "type": "TOOL_REGISTERED"}
+{"data": {"module": "test_helix_toolkit", "risk_level": 0.1, "tool_name": "file_read"}, "ts": "2026-03-01T10:33:35.386843", "type": "TOOL_REGISTERED"}
+{"data": {"module": "test_helix_toolkit", "risk_level": 0.3, "tool_name": "static_analysis"}, "ts": "2026-03-01T10:33:35.424844", "type": "TOOL_REGISTERED"}
+{"data": {"custodian_override": null, "plan_id": "plan_1772379215", "steps": 2}, "ts": "2026-03-01T10:33:35.447244", "type": "PLAN_EXECUTION_START"}
+{"data": {"action_id": "act_read", "plan_id": "plan_1772379215"}, "ts": "2026-03-01T10:33:35.482751", "type": "CUSTODIAN_APPROVAL_PENDING"}

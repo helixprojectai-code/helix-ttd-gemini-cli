@@ -1,0 +1,10 @@
+# Helix Audit Log - Initialized 2026-03-01T05:13:08.060292
+# Agent ID: 2208229079376
+{"data": {"module": "__main__", "risk_level": 0.9, "tool_name": "database_migrate"}, "ts": "2026-03-01T05:13:08.077285", "type": "TOOL_REGISTERED"}
+{"data": {"custodian_override": null, "plan_id": "risky_001", "steps": 1}, "ts": "2026-03-01T05:13:08.111146", "type": "PLAN_EXECUTION_START"}
+{"data": {"plan_id": "risky_001", "reason": "Constitutional violation: ['DRIFT-S: Effective Risk 0.84 Exceeds Action Threshold 0.8']"}, "ts": "2026-03-01T05:13:08.135216", "type": "PLAN_EXECUTION_REJECTED"}
+{"data": {"custodian_override": true, "plan_id": "risky_002", "steps": 1}, "ts": "2026-03-01T05:13:08.157194", "type": "PLAN_EXECUTION_START"}
+{"data": {"plan_id": "risky_002", "reason": "Constitutional violation: ['DRIFT-S: Effective Risk 0.84 Exceeds Action Threshold 0.8']"}, "ts": "2026-03-01T05:13:08.187844", "type": "PLAN_EXECUTION_REJECTED"}
+{"data": {"module": "__main__", "risk_level": 0.8, "tool_name": "database_migrate"}, "ts": "2026-03-01T05:13:08.301763", "type": "TOOL_REGISTERED"}
+{"data": {"custodian_override": true, "plan_id": "risk_test_conservative", "steps": 1}, "ts": "2026-03-01T05:13:08.345818", "type": "PLAN_EXECUTION_START"}
+{"data": {"plan_id": "risk_test_conservative", "reason": "Constitutional violation: ['DRIFT-S: Effective Risk 0.86 Exceeds Action Threshold 0.7']"}, "ts": "2026-03-01T05:13:08.386297", "type": "PLAN_EXECUTION_REJECTED"}

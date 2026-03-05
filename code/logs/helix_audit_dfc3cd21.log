@@ -1,0 +1,7 @@
+# Helix Audit Log - Initialized 2026-03-01T05:30:06.720591
+# Agent ID: dfc3cd21
+# Log Rotation: 30 days / 100MB
+{"data": {"module": "__main__", "risk_level": 0.8, "tool_name": "database_migrate"}, "ts": "2026-03-01T05:30:06.751438", "type": "TOOL_REGISTERED"}
+{"data": {"custodian_override": true, "plan_id": "risk_test_permissive", "steps": 1}, "ts": "2026-03-01T05:30:06.831610", "type": "PLAN_EXECUTION_START"}
+{"data": {"action_id": "db_1", "epistemic": "[ASSUMPTION]", "plan_id": "risk_test_permissive", "tool": "database_migrate"}, "ts": "2026-03-01T05:30:06.887649", "type": "TOOL_INVOKED"}
+{"data": {"checkpoints": 2, "execution_time": 0.11060309410095215, "executions": 1, "merkle_root": "09a153c7684a0666...", "plan_id": "risk_test_permissive", "status": "completed_with_checkpoints"}, "ts": "2026-03-01T05:30:06.942933", "type": "PLAN_EXECUTION_COMPLETE"}
