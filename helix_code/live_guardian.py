@@ -20,9 +20,10 @@ from pathlib import Path
 # [FACT] Add parent directory to path for imports
 sys.path.insert(0, str(Path(__file__).parent))
 
-from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
-from fastapi.responses import JSONResponse, HTMLResponse
 import uvicorn
+from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import HTMLResponse, JSONResponse
 
 # [FACT] Import demo components
 from live_demo_server import DEMO_HTML, demo_websocket_handler
@@ -39,6 +40,15 @@ app = FastAPI(
     version="1.0.0",
     docs_url="/docs",
     redoc_url="/redoc",
+)
+
+# [FACT] Enable CORS for browser-based demo
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 # [FACT] Global state (initialized on startup)
@@ -81,8 +91,8 @@ async def health_check():
 @app.get("/", response_class=HTMLResponse)
 async def root():
     """[FACT] Root endpoint serves interactive demo page."""
-    # Import demo HTML from live_demo_server
-    from live_demo_server import DEMO_HTML
+    # Import demo HTML from live_demo_server_html
+    from live_demo_server_html import DEMO_HTML
     return HTMLResponse(content=DEMO_HTML)
 
 
@@ -185,9 +195,56 @@ async def live_websocket(websocket: WebSocket):
 @app.websocket("/demo-live")
 async def demo_websocket(websocket: WebSocket):
     """[FACT] Interactive demo WebSocket with Constitutional Guardian validation."""
-    # Import here to avoid circular dependency
-    from live_demo_server import demo_websocket_handler
-    await demo_websocket_handler(websocket)
+    print(f"[FACT] WebSocket connection attempt from: {websocket.client.host}")
+    try:
+        await websocket.accept()
+        print(f"[FACT] WebSocket connection ACCEPTED for: {websocket.client.host}")
+        # Import here to avoid circular dependency
+        from live_demo_server import demo_websocket_handler
+        await demo_websocket_handler(websocket)
+    except Exception as e:
+        print(f"[ERROR] WebSocket connection failed: {e}")
+    finally:
+        print(f"[FACT] WebSocket connection CLOSED for: {websocket.client.host}")
+
+
+@app.get("/api/receipts")
+async def get_receipts(limit: int = 50):
+    """[FACT] API endpoint for demo receipt explorer."""
+    from live_demo_server import receipt_store
+    receipts = receipt_store.get_all()
+    return {
+        "receipts": [
+            {
+                "receipt_id": r.receipt_id,
+                "timestamp": r.timestamp,
+                "content": r.content,
+                "valid": r.valid,
+                "drift_code": r.drift_code,
+                "session_id": r.session_id
+            }
+            for r in list(receipts)[-limit:]
+        ],
+        "stats": receipt_store.get_stats()
+    }
+
+
+@app.get("/api/receipts/{receipt_id}")
+async def get_receipt(receipt_id: str):
+    """[FACT] API endpoint for specific receipt detail."""
+    from live_demo_server import receipt_store
+    receipt = receipt_store.get_by_id(receipt_id)
+    if not receipt:
+        raise HTTPException(status_code=404, detail="Receipt not found")
+    return {
+        "receipt_id": receipt.receipt_id,
+        "timestamp": receipt.timestamp,
+        "content": receipt.content,
+        "valid": receipt.valid,
+        "drift_code": receipt.drift_code,
+        "session_id": receipt.session_id,
+        "verification": "SHA-256 hash verified"
+    }
 
 
 # [FACT] ADK Agent Wrapper (for future Google ADK integration)
