@@ -416,6 +416,15 @@ HELIX_DBC_ENC_KEY=projects/helix-constitutional-guardian/secrets/dbc-master-key:
 
 ---
 
+## 📊 Project Stats
+
+**GitHub Traffic (Last 14 Days):**
+![GitHub Stats](github_stats.png)
+
+- **2,348 clones** | 348 unique cloners
+- **561 views** | 14 unique visitors
+- **LinkedIn:** 3,870 impressions, 2,026 members reached
+
 ## 🏆 Gemini Live Agent Challenge Submission
 
 ### Category: Live Agents
