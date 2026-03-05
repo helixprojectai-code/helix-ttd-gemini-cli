@@ -1,5 +1,6 @@
 # [FACT] Interactive HTML Dashboard for Constitutional Guardian Demo
 # This module provides the DEMO_HTML string with embedded JS and Chart.js
+# Cache-bust: 2026-03-05T13:00:00Z - Build: 34
 
 DEMO_HTML = """
 <!DOCTYPE html>
