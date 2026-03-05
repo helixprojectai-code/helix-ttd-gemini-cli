@@ -31,7 +31,6 @@ from fastapi.responses import HTMLResponse, JSONResponse
 from federation_receipts import FederationReceiptManager
 
 # [FACT] Import demo components
-from live_demo_server import DEMO_HTML, demo_websocket_handler
 
 # [FACT] FastAPI application for Cloud Run
 app = FastAPI(
@@ -59,7 +58,10 @@ telemetry: DriftTelemetry | None = None
 
 @app.on_event("startup")
 async def startup_event():
-    """[FACT] Initialize constitutional guardian components."""
+    """[FACT] Initialize constitutional guardian components.
+
+    [HYPOTHESIS] Early initialization ensures all dependent services are ready for the demo.
+    """
     global compliance, receipts, telemetry
 
     print("=== CONSTITUTIONAL GUARDIAN STARTUP ===")
@@ -76,7 +78,7 @@ async def startup_event():
 
 @app.get("/health")
 async def health_check():
-    """[FACT] Cloud Run health check endpoint."""
+    """[FACT] Cloud Run health check endpoint for node status."""
     return JSONResponse(
         status_code=200,
         content={
@@ -90,7 +92,7 @@ async def health_check():
 
 @app.get("/", response_class=HTMLResponse)
 async def root():
-    """[FACT] Root endpoint serves interactive demo page."""
+    """[FACT] Root endpoint serves the interactive demo dashboard."""
     # Import demo HTML from live_demo_server_html
     from live_demo_server_html import DEMO_HTML
 
@@ -99,7 +101,7 @@ async def root():
 
 @app.get("/api")
 async def api_info():
-    """[FACT] API info endpoint."""
+    """[FACT] API info endpoint for architectural discovery."""
     return JSONResponse(
         status_code=200,
         content={
@@ -216,7 +218,7 @@ async def demo_websocket(websocket: WebSocket):
 
 @app.get("/api/receipts")
 async def get_receipts(limit: int = 50):
-    """[FACT] API endpoint for demo receipt explorer."""
+    """[FACT] API endpoint for demo receipt explorer retrieval."""
     from live_demo_server import receipt_store
 
     receipts = receipt_store.get_all()
@@ -238,7 +240,7 @@ async def get_receipts(limit: int = 50):
 
 @app.get("/api/receipts/{receipt_id}")
 async def get_receipt(receipt_id: str):
-    """[FACT] API endpoint for specific receipt detail."""
+    """[FACT] API endpoint for specific receipt detail and verification."""
     from live_demo_server import receipt_store
 
     receipt = receipt_store.get_by_id(receipt_id)
@@ -277,11 +279,11 @@ class ConstitutionalGuardianAgent:
 
 
 def main():
-    """[FACT] Entry point for Cloud Run deployment."""
+    """[FACT] Entry point for Cloud Run deployment and local execution."""
     port = int(os.getenv("PORT", "8180"))
     host = "0.0.0.0"
 
-    print(f"=== STARTING CONSTITUTIONAL GUARDIAN ===")
+    print("=== STARTING CONSTITUTIONAL GUARDIAN ===")
     print(f"[FACT] Host: {host}")
     print(f"[FACT] Port: {port}")
     print(f"[FACT] Node: {os.getenv('HELIX_NODE_ID', 'GCS-GUARDIAN')}")

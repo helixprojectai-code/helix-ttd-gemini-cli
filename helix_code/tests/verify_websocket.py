@@ -9,6 +9,10 @@ logger = logging.getLogger("WS-Verify")
 
 
 async def test_websocket():
+    """[FACT] WebSocket verification test for Constitutional Guardian.
+
+    [HYPOTHESIS] Success validates the bidirectional bridge and validation logic.
+    """
     uri = "ws://localhost:8180/demo-live"
     try:
         async with websockets.connect(uri) as websocket:
@@ -40,10 +44,10 @@ async def test_websocket():
                 msg3 = await websocket.recv()
                 data3 = json.loads(msg3)
 
-            assert (
-                data3["type"] == "validated_response"
-            ), f"Expected validation, got {data3['type']}"
-            assert data3["valid"] == True, "Expected [FACT] to be valid"
+            assert data3["type"] == "validated_response", (
+                f"Expected validation, got {data3['type']}"
+            )
+            assert data3["valid"], "Expected [FACT] to be valid"
             logger.info(f"Validation received: Valid={data3['valid']}")
 
             # Send Test Message (Non-Compliant)
@@ -60,10 +64,10 @@ async def test_websocket():
                 msg4 = await websocket.recv()
                 data4 = json.loads(msg4)
 
-            assert (
-                data4["type"] == "validated_response"
-            ), f"Expected validation, got {data4['type']}"
-            assert data4["valid"] == False, "Expected missing marker to be invalid"
+            assert data4["type"] == "validated_response", (
+                f"Expected validation, got {data4['type']}"
+            )
+            assert not data4["valid"], "Expected missing marker to be invalid"
             logger.info(f"Validation received: Valid={data4['valid']} (Correctly Flagged)")
 
             logger.info("✅ WebSocket Verification PASSED")

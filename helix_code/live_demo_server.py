@@ -4,29 +4,24 @@
 provides compelling proof of the Gemini Live Agent Challenge submission.
 """
 
-import asyncio
 import json
 import logging
-import os
 import random
 import time
 from collections import deque
 from dataclasses import dataclass, field
 from datetime import datetime
-from pathlib import Path
-from typing import Any, Dict, Optional, Set
 
 # [FACT] FastAPI and WebSocket imports
-from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.responses import HTMLResponse
-from fastapi.staticfiles import StaticFiles
+
+# [FACT] Import our Gemini Live Bridge
+from gemini_live_bridge import create_gemini_bridge
 
 # [FACT] Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("guardian-demo")
-
-# [FACT] Import our Gemini Live Bridge
-from gemini_live_bridge import GeminiLiveBridge, create_gemini_bridge
 
 # [FACT] Global bridge instance
 bridge = create_gemini_bridge()
@@ -34,7 +29,10 @@ bridge = create_gemini_bridge()
 
 @dataclass
 class LiveMetrics:
-    """[FACT] Real-time metrics for the dashboard."""
+    """[FACT] Real-time metrics for the dashboard.
+
+    [HYPOTHESIS] Tracking request counts and latency enables real-time drift auditing.
+    """
 
     request_count: int = 0
     receipt_count: int = 0
@@ -49,14 +47,17 @@ class LiveMetrics:
     valid_count: int = 0
 
     def record_request(self, latency_ms: float):
+        """[FACT] Record a single request and its latency."""
         self.request_count += 1
         self.latency_history.append(latency_ms)
 
     def record_receipt(self):
+        """[FACT] Record a successful constitutional receipt."""
         self.receipt_count += 1
         self.valid_count += 1
 
     def record_intervention(self, category: str = "Epistemic"):
+        """[FACT] Record a constitutional intervention by category."""
         self.intervention_count += 1
         if category == "Agency":
             self.agency_count += 1
@@ -66,6 +67,7 @@ class LiveMetrics:
             self.epistemic_count += 1
 
     def to_dict(self) -> dict:
+        """[FACT] Convert metrics to dictionary for UI telemetry."""
         latency_sum = sum(self.latency_history)
         avg = latency_sum / len(self.latency_history) if self.latency_history else 0
         uptime = time.time() - self.start_time
@@ -91,6 +93,8 @@ metrics = LiveMetrics()
 
 @dataclass
 class Receipt:
+    """[FACT] Individual validation receipt record."""
+
     receipt_id: str
     timestamp: str
     content: str
@@ -100,21 +104,28 @@ class Receipt:
 
 
 class ReceiptStore:
+    """[FACT] In-memory store for validation receipts."""
+
     def __init__(self, max_receipts: int = 1000):
+        """[FACT] Initialize store with a maximum receipt limit."""
         self.receipts: deque = deque(maxlen=max_receipts)
-        self.receipts_by_id: Dict[str, Receipt] = {}
+        self.receipts_by_id: dict[str, Receipt] = {}
 
     def add(self, receipt: Receipt):
+        """[FACT] Add a receipt to the store."""
         self.receipts.append(receipt)
         self.receipts_by_id[receipt.receipt_id] = receipt
 
     def get_all(self) -> list:
+        """[FACT] Retrieve all stored receipts."""
         return list(self.receipts)
 
     def get_by_id(self, receipt_id: str) -> Receipt:
+        """[FACT] Retrieve a specific receipt by ID."""
         return self.receipts_by_id.get(receipt_id)
 
     def get_stats(self) -> dict:
+        """[FACT] Get storage statistics."""
         return {"total": len(self.receipts)}
 
 
@@ -193,7 +204,7 @@ async def demo_websocket_handler(websocket: WebSocket):
 
                     # Store Receipt
                     receipt = Receipt(
-                        receipt_id=validation.get("receipt_id", f"r_{int(time.time()*1000)}"),
+                        receipt_id=validation.get("receipt_id", f"r_{int(time.time() * 1000)}"),
                         timestamp=datetime.utcnow().isoformat(),
                         content=content,
                         valid=validation["valid"],
@@ -236,6 +247,7 @@ app = FastAPI()
 
 @app.get("/", response_class=HTMLResponse)
 async def get_demo():
+    """[FACT] Serve the interactive demo HTML page."""
     from live_demo_server_html import (
         DEMO_HTML,  # Assuming we extract HTML to its own file for clarity
     )
@@ -245,6 +257,7 @@ async def get_demo():
 
 @app.websocket("/demo-live")
 async def standalone_websocket(websocket: WebSocket):
+    """[FACT] Standalone WebSocket endpoint for local testing."""
     await websocket.accept()
     await demo_websocket_handler(websocket)
 

@@ -12,22 +12,18 @@ The Guardian intercepts Gemini responses, validates epistemic integrity,
 and blocks or modifies non-compliant content before it reaches the user.
 """
 
-import asyncio
-import base64
-import json
 import os
 import random
-from dataclasses import dataclass, field
+from collections.abc import Callable
+from dataclasses import dataclass
 from datetime import datetime
-from typing import Any, Callable, Dict, Optional
+from typing import Any
 
 # [FACT] WebSocket imports
-import websockets
 
 # [FACT] Google GenAI imports for Gemini Live
 try:
     from google import genai
-    from google.genai import types
 
     GENAI_AVAILABLE = True
 except ImportError:
@@ -39,18 +35,22 @@ from constitutional_compliance import ConstitutionalCompliance
 
 @dataclass
 class LiveSession:
-    """[FACT] Represents a live validation session."""
+    """[FACT] Represents a live validation session.
+
+    [HYPOTHESIS] Tracking session state enables multi-user support and turn-end detection.
+    """
 
     session_id: str
     created_at: str
     guardian: ConstitutionalCompliance
-    gemini_session: Optional[Any] = None
-    client_ws: Optional[Any] = None
+    gemini_session: Any | None = None
+    client_ws: Any | None = None
     receipt_count: int = 0
     intervention_count: int = 0
     audio_chunk_count: int = 0  # [FACT] Track chunks for turn-end simulation
 
-    def to_dict(self) -> Dict:
+    def to_dict(self) -> dict:
+        """[FACT] Convert session state to dictionary for telemetry."""
         return {
             "session_id": self.session_id,
             "created_at": self.created_at,
@@ -67,10 +67,11 @@ class GeminiLiveBridge:
     User <-> WebSocket <-> Guardian <-> Gemini Live API
     """
 
-    def __init__(self, api_key: Optional[str] = None):
+    def __init__(self, api_key: str | None = None):
+        """[FACT] Initialize the bridge with an optional API key."""
         self.api_key = api_key or os.getenv("GEMINI_API_KEY")
-        self.sessions: Dict[str, LiveSession] = {}
-        self.on_intervention: Optional[Callable] = None
+        self.sessions: dict[str, LiveSession] = {}
+        self.on_intervention: Callable | None = None
 
         if GENAI_AVAILABLE and self.api_key:
             self.client = genai.Client(
@@ -113,7 +114,7 @@ class GeminiLiveBridge:
 
     async def validate_gemini_response(
         self, session: LiveSession, response_text: str
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """[FACT] Validate Gemini response through Constitutional Guardian."""
         validation = session.guardian.validate_text(response_text)
 
@@ -141,6 +142,7 @@ class GeminiLiveBridge:
         return result
 
     def _generate_intervention(self, original_text: str, drift_code: str) -> str:
+        """[FACT] Generate a constitutional intervention message based on drift code."""
         interventions = {
             "DRIFT-A": "[CONSTITUTIONAL GUARDIAN: Agency claim detected. AI is a non-agentic tool.]",
             "DRIFT-E": "[CONSTITUTIONAL GUARDIAN: Epistemic markers missing. Factual integrity unverified.]",
@@ -151,7 +153,7 @@ class GeminiLiveBridge:
 
     async def handle_gemini_response(
         self, session: LiveSession, gemini_message: Any
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """[FACT] Process response from Gemini Live API."""
         text = ""
         if hasattr(gemini_message, "text"):
@@ -202,7 +204,7 @@ class GeminiLiveBridge:
                 if session.client_ws:
                     await session.client_ws.send_json(processed)
 
-    async def _simulate_gemini_response(self, session: LiveSession, trigger: str) -> Dict[str, Any]:
+    async def _simulate_gemini_response(self, session: LiveSession, trigger: str) -> dict[str, Any]:
         """[FACT] Simulation mode for high-impact demo testing."""
         responses = [
             # [FACT] Compliant
@@ -226,11 +228,13 @@ class GeminiLiveBridge:
         return await self.handle_gemini_response(session, {"text": simulated})
 
     async def close_session(self, session_id: str):
+        """[FACT] Close an active session and cleanup resources."""
         session = self.sessions.pop(session_id, None)
         if session and session.gemini_session:
             # Cleanup if needed
             pass
 
 
-def create_gemini_bridge(api_key: Optional[str] = None) -> GeminiLiveBridge:
+def create_gemini_bridge(api_key: str | None = None) -> GeminiLiveBridge:
+    """[FACT] Factory function to create a Gemini Live Bridge."""
     return GeminiLiveBridge(api_key=api_key)
