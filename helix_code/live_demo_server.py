@@ -175,7 +175,9 @@ async def demo_websocket_handler(websocket: WebSocket):
                     audio_data = data.get("data", "")
                     narrative = data.get("narrative", None)
                     if audio_data:
-                        await bridge.stream_audio_to_gemini(session, audio_data, narrative=narrative)
+                        await bridge.stream_audio_to_gemini(
+                            session, audio_data, narrative=narrative
+                        )
                     continue
 
                 if msg_type in ["text", "simulate_gemini"]:
