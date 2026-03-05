@@ -36,8 +36,10 @@ try:
 except ImportError:
     GENAI_AVAILABLE = False
 
-# [FACT] Import our Constitutional Guardian
-from helix_code.live_guardian import ConstitutionalGuardian, ValidationResult
+# [FACT] Import our Constitutional Guardian (avoid circular import)
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from helix_code.live_guardian import ConstitutionalGuardian
 
 
 @dataclass
@@ -45,7 +47,7 @@ class LiveSession:
     """[FACT] Represents a live validation session."""
     session_id: str
     created_at: str
-    guardian: ConstitutionalGuardian
+    guardian: 'ConstitutionalGuardian'
     gemini_ws: Optional[Any] = None
     client_ws: Optional[Any] = None
     receipt_count: int = 0
@@ -91,6 +93,8 @@ class GeminiLiveBridge:
         Returns:
             LiveSession configured with Guardian
         """
+        # [FACT] Local import to avoid circular dependency
+        from helix_code.live_guardian import ConstitutionalGuardian
         guardian = ConstitutionalGuardian()
         
         session = LiveSession(

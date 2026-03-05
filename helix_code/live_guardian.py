@@ -61,7 +61,7 @@ async def startup_event():
     print("[FACT] Compliance engine initialized")
     print("[FACT] Receipt manager initialized")
     print("[FACT] Drift telemetry initialized")
-    print("🦉⚓🦉 Guardian is watching.")
+    print("[LATTICE] Guardian is watching. The Two Owls are vigilant.")
 
 
 @app.get("/health")
