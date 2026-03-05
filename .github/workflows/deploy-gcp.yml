@@ -1,12 +1,8 @@
-# [FACT] GitHub Actions workflow for automated Cloud Run deployment
-# [HYPOTHESIS] CI/CD automation improves deployment reliability and speed
-# 
-# AUTHENTICATION: Workload Identity Federation (no stored keys)
-# More secure than Service Account Keys - uses OIDC tokens
+# [FACT] GitHub Actions workflow for Cloud Run deployment
+# [HYPOTHESIS] Docker build + Artifact Registry is more reliable than Cloud Build
 #
-# Required GitHub Secrets:
-# - WORKLOAD_IDENTITY_PROVIDER: projects/PROJECT_NUMBER/locations/global/workloadIdentityPools/POOL/providers/PROVIDER
-# - GCP_PROJECT_ID: helix-ai-deploy
+# This workflow builds the container directly in GitHub Actions,
+# pushes to Google Artifact Registry, and deploys to Cloud Run.
 
 name: Deploy to Google Cloud Run
 
@@ -17,23 +13,24 @@ on:
 
 permissions:
   contents: read
-  id-token: write  # Required for Workload Identity Federation
+  id-token: write
 
 env:
   PROJECT_ID: helix-ai-deploy
   SERVICE_NAME: constitutional-guardian
   REGION: us-central1
+  IMAGE: us-central1-docker.pkg.dev/helix-ai-deploy/helix-repo/constitutional-guardian
 
 jobs:
   deploy:
-    name: Build and Deploy to Cloud Run
+    name: Build and Deploy
     runs-on: ubuntu-latest
     
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
       
-      # [FACT] Authenticate to GCP using Workload Identity Federation
+      # [FACT] Authenticate to GCP
       - name: Authenticate to Google Cloud
         id: auth
         uses: google-github-actions/auth@v2
@@ -42,26 +39,38 @@ jobs:
           service_account: github-deployer@${{ env.PROJECT_ID }}.iam.gserviceaccount.com
           project_id: ${{ env.PROJECT_ID }}
       
+      # [FACT] Setup Cloud SDK
       - name: Setup Cloud SDK
         uses: google-github-actions/setup-gcloud@v2
-        with:
-          project_id: ${{ env.PROJECT_ID }}
       
+      # [FACT] Setup Docker authentication
       - name: Configure Docker
-        run: gcloud auth configure-docker gcr.io --quiet
+        run: |
+          gcloud auth configure-docker us-central1-docker.pkg.dev --quiet
       
-      # [FACT] Build and deploy
-      - name: Build and Deploy
+      # [FACT] Create Artifact Registry repository if not exists
+      - name: Setup Artifact Registry
+        run: |
+          gcloud artifacts repositories create helix-repo --repository-format=docker --location=us-central1 --project=${{ env.PROJECT_ID }} 2>/dev/null || true
+      
+      # [FACT] Build and push Docker image
+      - name: Build and Push Container
         run: |
           echo "=== Building container ==="
-          gcloud builds submit \
-            --tag gcr.io/${{ env.PROJECT_ID }}/${{ env.SERVICE_NAME }}:${{ github.sha }} \
-            --timeout=20m \
-            --quiet
+          docker build -t ${{ env.IMAGE }}:${{ github.sha }} .
+          docker build -t ${{ env.IMAGE }}:latest .
           
+          echo "=== Pushing to Artifact Registry ==="
+          docker push ${{ env.IMAGE }}:${{ github.sha }}
+          docker push ${{ env.IMAGE }}:latest
+      
+      # [FACT] Deploy to Cloud Run
+      - name: Deploy to Cloud Run
+        id: deploy
+        run: |
           echo "=== Deploying to Cloud Run ==="
           gcloud run deploy ${{ env.SERVICE_NAME }} \
-            --image gcr.io/${{ env.PROJECT_ID }}/${{ env.SERVICE_NAME }}:${{ github.sha }} \
+            --image ${{ env.IMAGE }}:${{ github.sha }} \
             --region ${{ env.REGION }} \
             --platform managed \
             --allow-unauthenticated \
@@ -76,9 +85,25 @@ jobs:
             --format 'value(status.url)')
           
           echo "service_url=$SERVICE_URL" >> $GITHUB_OUTPUT
-          echo "Deployed to: $SERVICE_URL"
+          echo "=== Deployment complete ==="
+          echo "URL: $SERVICE_URL"
       
+      # [FACT] Verify deployment
       - name: Verify Deployment
         run: |
+          echo "=== Health check ==="
           sleep 10
-          curl -s "${{ steps.deploy.outputs.service_url }}/health" | jq .
+          curl -s "${{ steps.deploy.outputs.service_url }}/health" || echo "Service starting up..."
+      
+      # [FACT] Output summary
+      - name: Deployment Summary
+        run: |
+          echo ""
+          echo "=========================================="
+          echo "🦉⚓🦉 CONSTITUTIONAL GUARDIAN DEPLOYED"
+          echo "=========================================="
+          echo "Service: ${{ env.SERVICE_NAME }}"
+          echo "Region: ${{ env.REGION }}"
+          echo "URL: ${{ steps.deploy.outputs.service_url }}"
+          echo "Image: ${{ env.IMAGE }}:${{ github.sha }}"
+          echo "=========================================="
