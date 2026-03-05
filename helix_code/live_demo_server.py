@@ -4,6 +4,7 @@
 provides compelling proof of the Gemini Live Agent Challenge submission.
 """
 
+import asyncio
 import json
 import logging
 import random
@@ -18,6 +19,7 @@ from fastapi.responses import HTMLResponse
 
 # [FACT] Import our Gemini Live Bridge
 from gemini_live_bridge import create_gemini_bridge
+from gemini_text_client import create_gemini_text_client, GeminiTextClient
 
 # [FACT] Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -25,6 +27,21 @@ logger = logging.getLogger("guardian-demo")
 
 # [FACT] Global bridge instance
 bridge = create_gemini_bridge()
+
+# [FACT] Gemini Text API client (Phase 1: Text before Voice)
+gemini_text_client: GeminiTextClient | None = None
+
+
+def get_gemini_text_client() -> GeminiTextClient | None:
+    """[FACT] Lazy initialization of Gemini Text client."""
+    global gemini_text_client
+    if gemini_text_client is None:
+        gemini_text_client = create_gemini_text_client()
+        if gemini_text_client.is_available():
+            logger.info("[FACT] Gemini Text API client initialized")
+        else:
+            logger.warning("[WARN] Gemini Text API unavailable - will use simulation")
+    return gemini_text_client
 
 
 @dataclass
@@ -178,6 +195,97 @@ async def demo_websocket_handler(websocket: WebSocket):
                 msg_type = data.get("type")
 
                 if msg_type == "get_metrics":
+                    await websocket.send_json({"type": "metrics", "metrics": metrics.to_dict()})
+                    continue
+                
+                if msg_type == "gemini_text":
+                    # [FACT] Send text to REAL Gemini API, then validate
+                    start_time = time.time()
+                    prompt = data.get("content", "")
+                    
+                    if not prompt:
+                        continue
+                    
+                    # [FACT] Notify user
+                    await websocket.send_json({
+                        "type": "user_message",
+                        "content": prompt
+                    })
+                    
+                    # [FACT] Check if Gemini API is available
+                    client = get_gemini_text_client()
+                    
+                    if client and client.is_available():
+                        # [FACT] Call REAL Gemini API
+                        await websocket.send_json({
+                            "type": "system_event",
+                            "message": "[GEMINI] Sending to Live API..."
+                        })
+                        
+                        gemini_result = await client.generate_response(
+                            prompt=prompt,
+                            system_instruction="You are a helpful AI assistant. Use epistemic markers [FACT], [HYPOTHESIS], [ASSUMPTION] for substantive claims. Never claim agency - you are a tool, not an agent.",
+                            temperature=0.7,
+                        )
+                        
+                        if gemini_result["success"]:
+                            content = gemini_result["text"]
+                            await websocket.send_json({
+                                "type": "gemini_response",
+                                "content": content[:200] + ("..." if len(content) > 200 else "")
+                            })
+                        else:
+                            # [FACT] API failed, fall back to simulation
+                            await websocket.send_json({
+                                "type": "system_event",
+                                "message": f"[GEMINI] API error: {gemini_result['error']}. Falling back to simulation."
+                            })
+                            content = f"[HYPOTHESIS] The user asked: {prompt[:50]}... [FACT] I would respond helpfully with epistemic markers. [ASSUMPTION] This is a simulated response due to API unavailability."
+                    else:
+                        # [FACT] API not configured, use simulation
+                        await websocket.send_json({
+                            "type": "system_event",
+                            "message": "[GEMINI] SIMULATION MODE (API not configured)"
+                        })
+                        # Simulate processing
+                        await asyncio.sleep(0.5)
+                        content = f"[HYPOTHESIS] Regarding your query about '{prompt[:30]}...' [FACT] This is a simulated response. [ASSUMPTION] Gemini API would provide substantive answer here."
+                    
+                    # [FACT] Validate through Constitutional Guardian
+                    validation = await bridge.validate_gemini_response(session, content)
+                    
+                    # Record metrics
+                    latency = (time.time() - start_time) * 1000
+                    metrics.record_request(latency)
+                    
+                    if validation["intervention_required"]:
+                        metrics.record_intervention(category="Epistemic" if validation["drift_code"] == "DRIFT-E" else "Agency")
+                    else:
+                        metrics.record_receipt()
+                    
+                    # Store receipt
+                    receipt = Receipt(
+                        receipt_id=validation.get("receipt_id", f"r_{int(time.time() * 1000)}"),
+                        timestamp=datetime.utcnow().isoformat(),
+                        content=content,
+                        valid=validation["valid"],
+                        drift_code=validation.get("drift_code"),
+                        session_id=session_id,
+                    )
+                    receipt_store.add(receipt)
+                    
+                    # Send response
+                    await websocket.send_json({
+                        "type": "validated_response",
+                        "original": content,
+                        "delivered": validation["modified_text"],
+                        "valid": validation["valid"],
+                        "receipt_id": receipt.receipt_id,
+                        "intervention": validation["intervention_required"],
+                        "drift_code": validation.get("drift_code"),
+                        "source": "gemini_api" if (client and client.is_available()) else "simulation",
+                    })
+                    
                     await websocket.send_json({"type": "metrics", "metrics": metrics.to_dict()})
                     continue
 

@@ -231,7 +231,10 @@ DEMO_HTML = """
                             <span>[MIC]</span> Start Live Mic
                         </button>
                         <button class="btn" style="background:#238636;" onclick="sendText()">Send Text</button>
-                        <button class="btn" style="background:#484f58;" onclick="simulate()">Simulate Gemini</button>
+                        <button class="btn" style="background:#bc8cff; color:#000;" onclick="sendToGemini()">
+                            <span>[AI]</span> Ask Gemini
+                        </button>
+                        <button class="btn" style="background:#484f58;" onclick="simulate()">Simulate</button>
                     </div>
                     <!-- [FACT] Demo Scenario Buttons for Video Recording -->
                     <div class="scenario-panel">
@@ -769,6 +772,18 @@ DEMO_HTML = """
             const el = document.getElementById('inputText');
             if (ws && el.value) { ws.send(JSON.stringify({type: 'text', content: el.value})); el.value = ''; }
         }
+        
+        function sendToGemini() {
+            const el = document.getElementById('inputText');
+            if (ws && el.value) { 
+                ws.send(JSON.stringify({type: 'gemini_text', content: el.value})); 
+                el.value = '';
+            } else if (ws) {
+                // Default prompt if empty
+                const defaultPrompt = "Explain constitutional AI governance in three sentences.";
+                ws.send(JSON.stringify({type: 'gemini_text', content: defaultPrompt}));
+            }
+        }
 
         function simulate() { if (ws) ws.send(JSON.stringify({type: 'simulate_gemini'})); }
         
@@ -835,6 +850,11 @@ DEMO_HTML = """
                     simulate();
                 }
                 
+                // G for Gemini
+                if (e.key === 'g' || e.key === 'G') {
+                    sendToGemini();
+                }
+                
                 // H for help
                 if (e.key === 'h' || e.key === 'H' || e.key === '?') {
                     showKeyboardHelp();
@@ -849,6 +869,7 @@ DEMO_HTML = """
             addLog('system', '  Space = Focus input');
             addLog('system', '  M = Toggle microphone');
             addLog('system', '  S = Simulate Gemini response');
+            addLog('system', '  G = Ask real Gemini API (text)');
             addLog('system', '  H or ? = Show this help');
             addLog('system', '  Escape = Clear input');
         }
