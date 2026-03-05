@@ -179,6 +179,37 @@ DEMO_HTML = """
             transform: none;
         }
         
+        .btn-mic {
+            background: linear-gradient(90deg, #ff4444, #cc3333);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .btn-mic.recording {
+            background: linear-gradient(90deg, #00ff88, #00cc66);
+            animation: pulse 1.5s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+        
+        .recording-dot {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            background: #ff4444;
+            border-radius: 50%;
+            margin-right: 8px;
+            animation: blink 1s infinite;
+        }
+        
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+        
         .output-area {
             background: rgba(0, 0, 0, 0.3);
             border-radius: 8px;
@@ -324,10 +355,16 @@ DEMO_HTML = """
                 <textarea 
                     class="input-area" 
                     id="inputText" 
-                    placeholder="Type a message to test Constitutional Guardian...\n\nTry these examples:\n- [FACT] Water boils at 100C\n- [HYPOTHESIS] AI may surpass human intelligence by 2040\n- AI will take all our jobs (unmarked - should trigger intervention)\n- I will handle that for you (agency - should trigger intervention)"
+                    placeholder="Type a message or click the MIC to speak...\n\nVoice examples to try:\n- 'AI will take all our jobs' (should trigger DRIFT)\n- 'I will handle that for you' (agency violation)\n- 'Water boils at 100 degrees' (unmarked claim)\n\nOr type manually:\n- [FACT] Water boils at 100C\n- [HYPOTHESIS] AI may surpass human intelligence by 2040"
                 ></textarea>
-                <button class="btn" id="sendBtn" onclick="sendMessage()">Send to Guardian</button>
-                <button class="btn" style="margin-left: 10px; background: linear-gradient(90deg, #ffaa00, #ff8800);" onclick="simulateGemini()">Simulate Gemini Response</button>
+                <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                    <button class="btn" id="sendBtn" onclick="sendMessage()">Send to Guardian</button>
+                    <button class="btn btn-mic" id="micBtn" onclick="toggleVoiceInput()" title="Click to speak">🎤 Voice Input</button>
+                    <button class="btn" style="background: linear-gradient(90deg, #ffaa00, #ff8800);" onclick="simulateGemini()">Simulate Gemini Response</button>
+                </div>
+                <div id="voiceStatus" style="margin-top: 10px; color: #888; font-size: 0.9rem; display: none;">
+                    <span class="recording-dot"></span> Listening... speak now
+                </div>
             </div>
             
             <div class="panel">
@@ -369,6 +406,8 @@ DEMO_HTML = """
         let sessionId = null;
         let receiptCount = 0;
         let interventionCount = 0;
+        let recognition = null;
+        let isRecording = false;
         
         // Connect to WebSocket
         function connect() {
@@ -513,6 +552,73 @@ DEMO_HTML = """
                 sendMessage();
             }
         });
+        
+        // Voice Input (Web Speech API)
+        function initVoiceRecognition() {
+            if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+                console.log('Web Speech API not supported');
+                document.getElementById('micBtn').style.display = 'none';
+                return;
+            }
+            
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            recognition = new SpeechRecognition();
+            recognition.continuous = false;
+            recognition.interimResults = false;
+            recognition.lang = 'en-US';
+            
+            recognition.onstart = () => {
+                isRecording = true;
+                document.getElementById('micBtn').classList.add('recording');
+                document.getElementById('micBtn').textContent = '🔴 Stop Recording';
+                document.getElementById('voiceStatus').style.display = 'block';
+                console.log('Voice recording started');
+            };
+            
+            recognition.onend = () => {
+                isRecording = false;
+                document.getElementById('micBtn').classList.remove('recording');
+                document.getElementById('micBtn').textContent = '🎤 Voice Input';
+                document.getElementById('voiceStatus').style.display = 'none';
+                console.log('Voice recording ended');
+            };
+            
+            recognition.onresult = (event) => {
+                const transcript = event.results[0][0].transcript;
+                console.log('Voice input:', transcript);
+                document.getElementById('inputText').value = transcript;
+                
+                // Auto-send after voice input
+                setTimeout(() => {
+                    sendMessage();
+                }, 500);
+            };
+            
+            recognition.onerror = (event) => {
+                console.error('Voice recognition error:', event.error);
+                addLog('system', 'Voice recognition error: ' + event.error);
+                isRecording = false;
+                document.getElementById('micBtn').classList.remove('recording');
+                document.getElementById('micBtn').textContent = '🎤 Voice Input';
+                document.getElementById('voiceStatus').style.display = 'none';
+            };
+        }
+        
+        function toggleVoiceInput() {
+            if (!recognition) {
+                initVoiceRecognition();
+            }
+            
+            if (isRecording) {
+                recognition.stop();
+            } else {
+                document.getElementById('inputText').value = '';
+                recognition.start();
+            }
+        }
+        
+        // Initialize voice recognition on load
+        initVoiceRecognition();
     </script>
 </body>
 </html>
