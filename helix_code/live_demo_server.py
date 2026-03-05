@@ -34,6 +34,68 @@ bridge = create_gemini_bridge()
 # [FACT] Active WebSocket connections
 active_connections: Dict[str, WebSocket] = {}
 
+# [FACT] Live metrics for dashboard
+from dataclasses import dataclass, field
+from collections import deque
+import time
+
+@dataclass
+class LiveMetrics:
+    """[FACT] Real-time metrics for the dashboard."""
+    request_count: int = 0
+    receipt_count: int = 0
+    intervention_count: int = 0
+    error_count: int = 0
+    latency_history: deque = field(default_factory=lambda: deque(maxlen=100))
+    start_time: float = field(default_factory=time.time)
+    
+    def record_request(self, latency_ms: float):
+        self.request_count += 1
+        self.latency_history.append(latency_ms)
+    
+    def record_receipt(self):
+        self.receipt_count += 1
+    
+    def record_intervention(self):
+        self.intervention_count += 1
+    
+    def record_error(self):
+        self.error_count += 1
+    
+    def get_latency_stats(self) -> dict:
+        if not self.latency_history:
+            return {"p50": 0, "p95": 0, "p99": 0, "avg": 0}
+        sorted_latencies = sorted(self.latency_history)
+        n = len(sorted_latencies)
+        return {
+            "p50": sorted_latencies[int(n * 0.5)],
+            "p95": sorted_latencies[int(n * 0.95)] if n >= 20 else sorted_latencies[-1],
+            "p99": sorted_latencies[int(n * 0.99)] if n >= 100 else sorted_latencies[-1],
+            "avg": sum(sorted_latencies) / n
+        }
+    
+    def get_uptime_seconds(self) -> float:
+        return time.time() - self.start_time
+    
+    def to_dict(self) -> dict:
+        latency = self.get_latency_stats()
+        uptime = self.get_uptime_seconds()
+        return {
+            "request_count": self.request_count,
+            "receipt_count": self.receipt_count,
+            "intervention_count": self.intervention_count,
+            "error_count": self.error_count,
+            "latency_p50": round(latency["p50"], 2),
+            "latency_p95": round(latency["p95"], 2),
+            "latency_p99": round(latency["p99"], 2),
+            "latency_avg": round(latency["avg"], 2),
+            "uptime_seconds": int(uptime),
+            "requests_per_minute": round(self.request_count / (uptime / 60), 2) if uptime > 0 else 0
+        }
+
+# [FACT] Global metrics instance
+metrics = LiveMetrics()
+
 
 # [FACT] HTML Demo Page
 DEMO_HTML = """
@@ -210,6 +272,96 @@ DEMO_HTML = """
             50% { opacity: 0.3; }
         }
         
+        /* [FACT] Metrics Dashboard Styles */
+        .metrics-panel {
+            background: rgba(0, 0, 0, 0.2);
+        }
+        
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .metric-card {
+            background: rgba(0, 255, 136, 0.05);
+            border: 1px solid rgba(0, 255, 136, 0.2);
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+            transition: transform 0.2s;
+        }
+        
+        .metric-card:hover {
+            transform: translateY(-2px);
+            border-color: rgba(0, 255, 136, 0.4);
+        }
+        
+        .metric-value {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: #00ff88;
+            font-family: 'Courier New', monospace;
+        }
+        
+        .metric-label {
+            font-size: 0.8rem;
+            color: #888;
+            margin-top: 5px;
+        }
+        
+        .latency-card {
+            background: rgba(0, 100, 255, 0.05);
+            border-color: rgba(0, 100, 255, 0.2);
+        }
+        
+        .latency-card .metric-value {
+            color: #00ccff;
+        }
+        
+        .latency-bar {
+            display: flex;
+            height: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: 10px;
+        }
+        
+        .latency-segment {
+            height: 100%;
+            transition: width 0.3s ease;
+        }
+        
+        .latency-segment.p50 { background: #00ff88; }
+        .latency-segment.p95 { background: #ffaa00; }
+        .latency-segment.p99 { background: #ff4444; }
+        
+        .latency-legend {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            font-size: 0.8rem;
+            color: #888;
+        }
+        
+        .latency-legend span {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .legend-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 2px;
+        }
+        
+        .legend-dot.p50 { background: #00ff88; }
+        .legend-dot.p95 { background: #ffaa00; }
+        .legend-dot.p99 { background: #ff4444; }
+        
         .output-area {
             background: rgba(0, 0, 0, 0.3);
             border-radius: 8px;
@@ -377,6 +529,46 @@ DEMO_HTML = """
             </div>
         </div>
         
+        <div class="panel metrics-panel">
+            <h2>📈 Live Metrics Dashboard</h2>
+            <div class="metrics-grid">
+                <div class="metric-card">
+                    <div class="metric-value" id="metricRequests">0</div>
+                    <div class="metric-label">Total Requests</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value" id="metricReceipts">0</div>
+                    <div class="metric-label">Receipts Generated</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value" id="metricInterventions">0</div>
+                    <div class="metric-label">Interventions</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value" id="metricErrors">0</div>
+                    <div class="metric-label">Errors</div>
+                </div>
+                <div class="metric-card latency-card">
+                    <div class="metric-value" id="metricLatency">0ms</div>
+                    <div class="metric-label">Avg Latency (p50: <span id="metricP50">0</span>ms)</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value" id="metricUptime">0s</div>
+                    <div class="metric-label">Uptime</div>
+                </div>
+            </div>
+            <div class="latency-bar">
+                <div class="latency-segment p50" id="latencyP50" style="width: 33%"></div>
+                <div class="latency-segment p95" id="latencyP95" style="width: 33%"></div>
+                <div class="latency-segment p99" id="latencyP99" style="width: 34%"></div>
+            </div>
+            <div class="latency-legend">
+                <span><span class="legend-dot p50"></span>p50</span>
+                <span><span class="legend-dot p95"></span>p95</span>
+                <span><span class="legend-dot p99"></span>p99</span>
+            </div>
+        </div>
+        
         <div class="panel">
             <h2>📚 About This Demo</h2>
             <p style="line-height: 1.6; color: #aaa;">
@@ -472,6 +664,9 @@ DEMO_HTML = """
                 document.getElementById('receiptCount').textContent = data.receipt_count;
                 document.getElementById('interventionCount').textContent = data.intervention_count;
             }
+            else if (data.type === 'metrics') {
+                updateMetrics(data.metrics);
+            }
         }
         
         function addLog(type, content, receiptId = null, driftCode = null) {
@@ -542,8 +737,39 @@ DEMO_HTML = """
             }));
         }
         
+        // Metrics update function
+        function updateMetrics(metrics) {
+            document.getElementById('metricRequests').textContent = metrics.request_count;
+            document.getElementById('metricReceipts').textContent = metrics.receipt_count;
+            document.getElementById('metricInterventions').textContent = metrics.intervention_count;
+            document.getElementById('metricErrors').textContent = metrics.error_count;
+            document.getElementById('metricLatency').textContent = metrics.latency_avg + 'ms';
+            document.getElementById('metricP50').textContent = metrics.latency_p50;
+            document.getElementById('metricUptime').textContent = formatUptime(metrics.uptime_seconds);
+            
+            // Update latency bar segments
+            const total = metrics.latency_p99 || 1;
+            document.getElementById('latencyP50').style.width = (metrics.latency_p50 / total * 100) + '%';
+            document.getElementById('latencyP95').style.width = ((metrics.latency_p95 - metrics.latency_p50) / total * 100) + '%';
+            document.getElementById('latencyP99').style.width = ((metrics.latency_p99 - metrics.latency_p95) / total * 100) + '%';
+        }
+        
+        function formatUptime(seconds) {
+            const hours = Math.floor(seconds / 3600);
+            const minutes = Math.floor((seconds % 3600) / 60);
+            if (hours > 0) return hours + 'h ' + minutes + 'm';
+            return minutes + 'm';
+        }
+        
         // Connect on load
         connect();
+        
+        // Request metrics periodically
+        setInterval(() => {
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify({type: 'get_metrics'}));
+            }
+        }, 2000);
         
         // Enter key to send
         document.getElementById('inputText').addEventListener('keypress', (e) => {
@@ -641,6 +867,7 @@ async def demo_websocket(websocket: WebSocket):
     3. Validates all messages through Guardian
     4. Simulates or proxies to Gemini Live
     5. Returns validated responses with receipts
+    6. Tracks and reports live metrics
     """
     await websocket.accept()
     
@@ -655,6 +882,12 @@ async def demo_websocket(websocket: WebSocket):
         "message": "Constitutional Guardian session established"
     })
     
+    # [FACT] Send initial metrics
+    await websocket.send_json({
+        "type": "metrics",
+        "metrics": metrics.to_dict()
+    })
+    
     print(f"[FACT] Demo session started: {session_id}")
     
     try:
@@ -663,7 +896,17 @@ async def demo_websocket(websocket: WebSocket):
             message = await websocket.receive_json()
             msg_type = message.get('type', 'text')
             
+            if msg_type == 'get_metrics':
+                # [FACT] Send current metrics
+                await websocket.send_json({
+                    "type": "metrics",
+                    "metrics": metrics.to_dict()
+                })
+                continue
+            
             if msg_type == 'text':
+                start_time = time.time()
+                
                 # [FACT] Echo user message
                 await websocket.send_json({
                     "type": "user_message",
@@ -675,6 +918,14 @@ async def demo_websocket(websocket: WebSocket):
                     session, 
                     message.get('content', '')
                 )
+                
+                # [FACT] Record metrics
+                latency_ms = (time.time() - start_time) * 1000
+                metrics.record_request(latency_ms)
+                if validation.get('receipt_id'):
+                    metrics.record_receipt()
+                if validation.get('intervention_required'):
+                    metrics.record_intervention()
                 
                 # [FACT] Send validated response
                 await websocket.send_json({
@@ -688,6 +939,8 @@ async def demo_websocket(websocket: WebSocket):
                 })
             
             elif msg_type == 'simulate_gemini':
+                start_time = time.time()
+                
                 # [FACT] Simulate Gemini response for demo
                 import random
                 
@@ -710,6 +963,14 @@ async def demo_websocket(websocket: WebSocket):
                 
                 # [FACT] Validate it
                 validation = await bridge.validate_gemini_response(session, simulated)
+                
+                # [FACT] Record metrics
+                latency_ms = (time.time() - start_time) * 1000
+                metrics.record_request(latency_ms)
+                if validation.get('receipt_id'):
+                    metrics.record_receipt()
+                if validation.get('intervention_required'):
+                    metrics.record_intervention()
                 
                 await websocket.send_json({
                     "type": "validated_response",
