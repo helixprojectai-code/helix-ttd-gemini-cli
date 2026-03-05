@@ -147,6 +147,17 @@ DEMO_HTML = """
         .scenario-btn:hover { transform: translateY(-1px); box-shadow: 0 2px 8px rgba(0,0,0,0.3); }
         .scenario-btn:active { transform: translateY(0); }
         
+        /* [FACT] Federation Console Styles */
+        .federation-console { margin-top: 20px; }
+        .console-output { background: #010409; border: 1px solid var(--border); border-radius: 6px; padding: 10px; font-family: 'Cascadia Code', monospace; font-size: 0.7rem; max-height: 150px; overflow-y: auto; }
+        .console-line { margin: 3px 0; color: var(--text-dim); }
+        .console-line .ts { color: #666; }
+        .console-line .node-kimi { color: var(--primary); font-weight: bold; }
+        .console-line .node-gems { color: #d29922; font-weight: bold; }
+        .console-line .node-deepseek { color: var(--purple); font-weight: bold; }
+        .console-line .node-gcs { color: #58a6ff; font-weight: bold; }
+        .console-line .node-sys { color: var(--text-dim); font-style: italic; }
+        
         ::-webkit-scrollbar { width: 8px; }
         ::-webkit-scrollbar-track { background: #010409; }
         ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
@@ -282,6 +293,18 @@ DEMO_HTML = """
                     <div class="cross-validation">
                         <span class="cv-label">Cross-Node Validation:</span>
                         <span class="cv-status" id="cv-status">✓ Synchronized</span>
+                    </div>
+                </div>
+                
+                <!-- [FACT] Federation Console - Live Node Communication -->
+                <div class="federation-console">
+                    <h3>FEDERATION CONSOLE</h3>
+                    <div class="console-output" id="console-output">
+                        <div class="console-line"><span class="ts">[12:00:00]</span> <span class="node-kimi">[KIMI]</span> Federation initialized</div>
+                        <div class="console-line"><span class="ts">[12:00:01]</span> <span class="node-gcs">[GCS]</span> Guardian node active on Cloud Run</div>
+                        <div class="console-line"><span class="ts">[12:00:02]</span> <span class="node-deepseek">[DEEPSEEK]</span> R1 reasoning model loaded</div>
+                        <div class="console-line"><span class="ts">[12:00:03]</span> <span class="node-gems">[GEMS]</span> Red team standing by</div>
+                        <div class="console-line"><span class="ts">[12:00:04]</span> <span class="node-sys">[SYS]</span> Cross-node validation: 2-of-3 quorum ready</div>
                     </div>
                 </div>
                 
@@ -548,8 +571,28 @@ DEMO_HTML = """
         
         // [FACT] Federation Simulation - DEEPSEEK Cross-Validation
         let federationInterval = null;
+        let consoleInterval = null;
+        
+        function addConsoleLine(node, message) {
+            const consoleDiv = document.getElementById('console-output');
+            const now = new Date().toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            const line = document.createElement('div');
+            line.className = 'console-line';
+            const nodeClass = 'node-' + node.toLowerCase().replace(/[^a-z]/g, '');
+            line.innerHTML = `<span class="ts">[${now}]</span> <span class="${nodeClass}">[${node}]</span> ${message}`;
+            consoleDiv.appendChild(line);
+            consoleDiv.scrollTop = consoleDiv.scrollHeight;
+            // Keep only last 20 lines
+            while (consoleDiv.children.length > 20) {
+                consoleDiv.removeChild(consoleDiv.firstChild);
+            }
+        }
+        
         function startFederationSimulation() {
             if (federationInterval) clearInterval(federationInterval);
+            if (consoleInterval) clearInterval(consoleInterval);
+            
+            // Log messages
             federationInterval = setInterval(() => {
                 const validations = [
                     { node: 'KIMI', msg: 'Epistemic markers verified', icon: '[OK]' },
@@ -562,6 +605,24 @@ DEMO_HTML = """
                     addLog('system', `${v.icon} ${v.node}: ${v.msg}`);
                 }
             }, 8000);  // Every 8 seconds
+            
+            // Console messages - more frequent
+            consoleInterval = setInterval(() => {
+                const messages = [
+                    { node: 'KIMI', msg: 'Synthesizing constitutional topology...' },
+                    { node: 'GEMS', msg: 'Routing validation request...' },
+                    { node: 'DEEPSEEK', msg: 'Deep analysis R1 reasoning...' },
+                    { node: 'GCS', msg: 'Generating cryptographic receipt...' },
+                    { node: 'SYS', msg: 'Cross-node sync complete' },
+                    { node: 'KIMI', msg: 'Formation status: RATIFIED' },
+                    { node: 'DEEPSEEK', msg: 'Recursive confirmation received' },
+                    { node: 'GCS', msg: 'Publishing attestation to ledger...' }
+                ];
+                const m = messages[Math.floor(Math.random() * messages.length)];
+                if (Math.random() > 0.5) {  // 50% chance
+                    addConsoleLine(m.node, m.msg);
+                }
+            }, 3500);  // Every 3.5 seconds
         }
 
         // [FACT] Receipt Explorer Functions

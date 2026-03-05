@@ -1,5 +1,13 @@
 #!/usr/bin/env python3
-"""Stub KIMI CLI for federation testing."""
+"""[FACT] Stub KIMI node for federation testing.
+
+[HYPOTHESIS] KIMI (Kimi k1.5) serves as Lead Architect and Scribe.
+[ASSUMPTION] Epistemic precision requires constitutional grammar mastery.
+
+Node: KIMI
+Role: Lead Architect / Scribe / Synthesis Lead
+Status: RATIFIED
+"""
 
 import sys
 
@@ -9,7 +17,7 @@ if prompt == "ping":
     print("pong")
 else:
     print(f"[FACT] KIMI received: {prompt[:50]}...")
-    print("[HYPOTHESIS] As Lead Architect, I synthesize the federation.")
-    print("[ASSUMPTION] Whitepaper material emerging.")
+    print("[HYPOTHESIS] As Lead Architect, I synthesize constitutional topology.")
+    print("[ASSUMPTION] The Lattice provides structural integrity across nodes.")
     print()
-    print("Advisory Conclusion: KIMI synthesis complete.")
+    print("Advisory Conclusion: KIMI synthesis complete. Formation holds.")

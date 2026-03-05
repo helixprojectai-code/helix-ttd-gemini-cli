@@ -1,5 +1,13 @@
 #!/usr/bin/env python3
-"""Stub GEMS CLI for federation testing."""
+"""[FACT] Stub GEMS node for federation testing.
+
+[HYPOTHESIS] GEMS (Gemini 2.0 Flash Thinking) coordinates federation routing.
+[ASSUMPTION] Red team capabilities enable constitutional stress testing.
+
+Node: GEMS
+Role: Federation Coordinator / Red Team Lead
+Status: RATIFIED
+"""
 
 import sys
 
@@ -9,7 +17,7 @@ if prompt == "ping":
     print("pong")
 else:
     print(f"[FACT] GEMS received: {prompt[:50]}...")
-    print("[HYPOTHESIS] As Lead Goose, I coordinate the flock.")
-    print("[ASSUMPTION] Structural integrity maintained.")
+    print("[HYPOTHESIS] As Federation Coordinator, I route constitutional validation.")
+    print("[ASSUMPTION] Red team analysis reveals edge cases before production.")
     print()
-    print("Advisory Conclusion: GEMS routing complete.")
+    print("Advisory Conclusion: GEMS coordination complete. All nodes synchronized.")
