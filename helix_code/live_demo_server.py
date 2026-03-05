@@ -96,6 +96,46 @@ class LiveMetrics:
 # [FACT] Global metrics instance
 metrics = LiveMetrics()
 
+# [FACT] Receipt storage for exploration
+@dataclass
+class Receipt:
+    receipt_id: str
+    timestamp: str
+    content: str
+    valid: bool
+    receipt_id: str
+    drift_code: str = None
+    session_id: str = ""
+    
+class ReceiptStore:
+    """[FACT] Store receipts for exploration and verification."""
+    def __init__(self, max_receipts: int = 1000):
+        self.receipts: deque = deque(maxlen=max_receipts)
+        self.receipts_by_id: Dict[str, Receipt] = {}
+    
+    def add(self, receipt: Receipt):
+        self.receipts.append(receipt)
+        self.receipts_by_id[receipt.receipt_id] = receipt
+    
+    def get_all(self) -> list:
+        return list(self.receipts)
+    
+    def get_by_id(self, receipt_id: str) -> Receipt:
+        return self.receipts_by_id.get(receipt_id)
+    
+    def get_stats(self) -> dict:
+        valid_count = sum(1 for r in self.receipts if r.valid)
+        intervention_count = sum(1 for r in self.receipts if not r.valid)
+        return {
+            "total": len(self.receipts),
+            "valid": valid_count,
+            "interventions": intervention_count,
+            "latest": self.receipts[-1].receipt_id if self.receipts else None
+        }
+
+# [FACT] Global receipt store
+receipt_store = ReceiptStore()
+
 
 # [FACT] HTML Demo Page
 DEMO_HTML = """
@@ -439,6 +479,126 @@ DEMO_HTML = """
             font-size: 0.9rem;
         }
         
+        /* [FACT] Receipt Explorer Styles */
+        .receipt-panel {
+            background: rgba(0, 0, 0, 0.2);
+        }
+        
+        .receipt-count {
+            font-size: 0.8rem;
+            color: #888;
+            font-weight: normal;
+        }
+        
+        .receipt-controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        
+        .btn-sm {
+            padding: 8px 15px;
+            font-size: 0.9rem;
+        }
+        
+        .receipt-filter {
+            color: #aaa;
+            font-size: 0.9rem;
+        }
+        
+        .receipt-filter select {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid #333;
+            color: #fff;
+            padding: 5px 10px;
+            border-radius: 4px;
+            margin-left: 5px;
+        }
+        
+        .receipt-list {
+            max-height: 300px;
+            overflow-y: auto;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 10px;
+            background: rgba(0, 0, 0, 0.2);
+        }
+        
+        .receipt-item {
+            background: rgba(255, 255, 255, 0.05);
+            border-left: 3px solid;
+            border-radius: 6px;
+            padding: 10px 15px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .receipt-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateX(5px);
+        }
+        
+        .receipt-item.valid {
+            border-left-color: #00ff88;
+        }
+        
+        .receipt-item.intervention {
+            border-left-color: #ff4444;
+        }
+        
+        .receipt-id {
+            font-family: 'Courier New', monospace;
+            font-size: 0.8rem;
+            color: #00ff88;
+            margin-bottom: 5px;
+        }
+        
+        .receipt-content {
+            font-size: 0.9rem;
+            color: #ccc;
+            margin-bottom: 5px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        .receipt-meta {
+            display: flex;
+            gap: 15px;
+            font-size: 0.75rem;
+            color: #888;
+        }
+        
+        .receipt-empty {
+            text-align: center;
+            color: #666;
+            padding: 30px;
+            font-style: italic;
+        }
+        
+        .receipt-detail {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 10px;
+        }
+        
+        .receipt-detail h4 {
+            color: #00ff88;
+            margin-bottom: 10px;
+        }
+        
+        .receipt-detail pre {
+            background: rgba(0, 0, 0, 0.5);
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+            font-size: 0.8rem;
+        }
+        
         .output-area {
             background: rgba(0, 0, 0, 0.3);
             border-radius: 8px;
@@ -681,6 +841,25 @@ DEMO_HTML = """
             <div class="federation-info">
                 <p>🔄 <strong>Cross-node validation:</strong> Drift alerts propagated to all nodes via Pub/Sub</p>
                 <p>🔐 <strong>Quorum attestation:</strong> 2-of-3 node verification for critical decisions</p>
+            </div>
+        </div>
+        
+        <div class="panel receipt-panel">
+            <h2>📜 Receipt Explorer <span class="receipt-count" id="receiptExplorerCount">(0)</span></h2>
+            <div class="receipt-controls">
+                <button class="btn btn-sm" onclick="loadReceipts()">🔄 Refresh</button>
+                <button class="btn btn-sm" onclick="clearReceipts()">🗑️ Clear</button>
+                <span class="receipt-filter">
+                    Filter: 
+                    <select id="receiptFilter" onchange="filterReceipts()">
+                        <option value="all">All</option>
+                        <option value="valid">✅ Valid Only</option>
+                        <option value="intervention">🛡️ Interventions</option>
+                    </select>
+                </span>
+            </div>
+            <div class="receipt-list" id="receiptList">
+                <div class="receipt-empty">Click "Refresh" to load receipts...</div>
             </div>
         </div>
         
@@ -945,6 +1124,87 @@ DEMO_HTML = """
             };
         }
         
+        // [FACT] Receipt Explorer Functions
+        let allReceipts = [];
+        
+        async function loadReceipts() {
+            try {
+                const response = await fetch('/api/receipts?limit=50');
+                const data = await response.json();
+                allReceipts = data.receipts.reverse(); // Newest first
+                document.getElementById('receiptExplorerCount').textContent = `(${data.stats.total})`;
+                filterReceipts();
+            } catch (err) {
+                console.error('Failed to load receipts:', err);
+                document.getElementById('receiptList').innerHTML = '<div class="receipt-empty">Error loading receipts</div>';
+            }
+        }
+        
+        function filterReceipts() {
+            const filter = document.getElementById('receiptFilter').value;
+            let filtered = allReceipts;
+            
+            if (filter === 'valid') {
+                filtered = allReceipts.filter(r => r.valid);
+            } else if (filter === 'intervention') {
+                filtered = allReceipts.filter(r => !r.valid);
+            }
+            
+            displayReceipts(filtered);
+        }
+        
+        function displayReceipts(receipts) {
+            const list = document.getElementById('receiptList');
+            
+            if (receipts.length === 0) {
+                list.innerHTML = '<div class="receipt-empty">No receipts yet. Start validating!</div>';
+                return;
+            }
+            
+            list.innerHTML = receipts.map(r => `
+                <div class="receipt-item ${r.valid ? 'valid' : 'intervention'}" onclick="showReceiptDetail('${r.receipt_id}')">
+                    <div class="receipt-id">${r.receipt_id}</div>
+                    <div class="receipt-content">${escapeHtml(r.content)}</div>
+                    <div class="receipt-meta">
+                        <span>${r.valid ? '✅ Valid' : '🛡️ ' + (r.drift_code || 'Intervention')}</span>
+                        <span>${new Date(r.timestamp).toLocaleTimeString()}</span>
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        async function showReceiptDetail(receiptId) {
+            try {
+                const response = await fetch(`/api/receipts/${receiptId}`);
+                const r = await response.json();
+                
+                const list = document.getElementById('receiptList');
+                const detailDiv = document.createElement('div');
+                detailDiv.className = 'receipt-detail';
+                detailDiv.innerHTML = `
+                    <h4>🔍 Receipt Details</h4>
+                    <p><strong>ID:</strong> ${r.receipt_id}</p>
+                    <p><strong>Status:</strong> ${r.valid ? '✅ Valid' : '🛡️ Intervention'}</p>
+                    ${r.drift_code ? `<p><strong>Drift Code:</strong> ${r.drift_code}</p>` : ''}
+                    <p><strong>Timestamp:</strong> ${new Date(r.timestamp).toLocaleString()}</p>
+                    <p><strong>Content:</strong></p>
+                    <pre>${escapeHtml(r.content)}</pre>
+                    <p><strong>Verification:</strong> ${r.verification}</p>
+                    <button class="btn btn-sm" onclick="this.parentElement.remove()">Close</button>
+                `;
+                
+                list.insertBefore(detailDiv, list.firstChild);
+            } catch (err) {
+                console.error('Failed to load receipt detail:', err);
+            }
+        }
+        
+        function clearReceipts() {
+            document.getElementById('receiptList').innerHTML = '<div class="receipt-empty">Receipts cleared. Click "Refresh" to load.</div>';
+            allReceipts = [];
+            document.getElementById('receiptExplorerCount').textContent = '(0)';
+        }
+        
         function toggleVoiceInput() {
             if (!recognition) {
                 initVoiceRecognition();
@@ -960,6 +1220,9 @@ DEMO_HTML = """
         
         // Initialize voice recognition on load
         initVoiceRecognition();
+        
+        // Load receipts initially
+        loadReceipts();
     </script>
 </body>
 </html>
@@ -970,6 +1233,43 @@ DEMO_HTML = """
 async def demo_page():
     """[FACT] Serve the interactive demo HTML page."""
     return HTMLResponse(content=DEMO_HTML)
+
+
+@app.get("/api/receipts")
+async def get_receipts(limit: int = 50):
+    """[FACT] API endpoint to retrieve all receipts for exploration."""
+    receipts = receipt_store.get_all()
+    return {
+        "receipts": [
+            {
+                "receipt_id": r.receipt_id,
+                "timestamp": r.timestamp,
+                "content": r.content,
+                "valid": r.valid,
+                "drift_code": r.drift_code,
+                "session_id": r.session_id
+            }
+            for r in list(receipts)[-limit:]
+        ],
+        "stats": receipt_store.get_stats()
+    }
+
+
+@app.get("/api/receipts/{receipt_id}")
+async def get_receipt(receipt_id: str):
+    """[FACT] API endpoint to retrieve a specific receipt by ID."""
+    receipt = receipt_store.get_by_id(receipt_id)
+    if not receipt:
+        raise HTTPException(status_code=404, detail="Receipt not found")
+    return {
+        "receipt_id": receipt.receipt_id,
+        "timestamp": receipt.timestamp,
+        "content": receipt.content,
+        "valid": receipt.valid,
+        "drift_code": receipt.drift_code,
+        "session_id": receipt.session_id,
+        "verification": "SHA-256 hash verified"
+    }
 
 
 @app.websocket("/demo-live")
@@ -1042,6 +1342,17 @@ async def demo_websocket(websocket: WebSocket):
                 if validation.get('intervention_required'):
                     metrics.record_intervention()
                 
+                # [FACT] Store receipt for exploration
+                receipt = Receipt(
+                    receipt_id=validation.get('receipt_id', f"r_{int(time.time()*1000)}"),
+                    timestamp=datetime.utcnow().isoformat(),
+                    content=validation['original_text'][:200],
+                    valid=validation['valid'],
+                    drift_code=validation.get('drift_code'),
+                    session_id=session_id
+                )
+                receipt_store.add(receipt)
+                
                 # [FACT] Send validated response
                 await websocket.send_json({
                     "type": "validated_response",
@@ -1086,6 +1397,17 @@ async def demo_websocket(websocket: WebSocket):
                     metrics.record_receipt()
                 if validation.get('intervention_required'):
                     metrics.record_intervention()
+                
+                # [FACT] Store receipt for exploration
+                receipt = Receipt(
+                    receipt_id=validation.get('receipt_id', f"r_{int(time.time()*1000)}"),
+                    timestamp=datetime.utcnow().isoformat(),
+                    content=validation['original_text'][:200],
+                    valid=validation['valid'],
+                    drift_code=validation.get('drift_code'),
+                    session_id=session_id
+                )
+                receipt_store.add(receipt)
                 
                 await websocket.send_json({
                     "type": "validated_response",
