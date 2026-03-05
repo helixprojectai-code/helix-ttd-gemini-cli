@@ -362,6 +362,83 @@ DEMO_HTML = """
         .legend-dot.p95 { background: #ffaa00; }
         .legend-dot.p99 { background: #ff4444; }
         
+        /* [FACT] Federation Panel Styles */
+        .federation-panel {
+            background: rgba(0, 0, 0, 0.2);
+        }
+        
+        .federation-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .federation-node {
+            background: rgba(0, 255, 136, 0.05);
+            border: 1px solid rgba(0, 255, 136, 0.3);
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+        
+        .federation-node:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 20px rgba(0, 255, 136, 0.2);
+        }
+        
+        .federation-node.current {
+            background: rgba(0, 255, 136, 0.15);
+            border-color: #00ff88;
+            box-shadow: 0 0 20px rgba(0, 255, 136, 0.3);
+        }
+        
+        .node-icon {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+        
+        .node-name {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #00ff88;
+            font-family: 'Courier New', monospace;
+        }
+        
+        .node-provider {
+            font-size: 0.8rem;
+            color: #888;
+            margin-top: 5px;
+        }
+        
+        .node-status {
+            font-size: 0.85rem;
+            color: #00ff88;
+            margin-top: 10px;
+            font-weight: bold;
+        }
+        
+        .node-role {
+            font-size: 0.75rem;
+            color: #aaa;
+            margin-top: 5px;
+            font-style: italic;
+        }
+        
+        .federation-info {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 8px;
+            padding: 15px;
+            border-left: 3px solid #00ff88;
+        }
+        
+        .federation-info p {
+            margin: 5px 0;
+            color: #aaa;
+            font-size: 0.9rem;
+        }
+        
         .output-area {
             background: rgba(0, 0, 0, 0.3);
             border-radius: 8px;
@@ -566,6 +643,44 @@ DEMO_HTML = """
                 <span><span class="legend-dot p50"></span>p50</span>
                 <span><span class="legend-dot p95"></span>p95</span>
                 <span><span class="legend-dot p99"></span>p99</span>
+            </div>
+        </div>
+        
+        <div class="panel federation-panel">
+            <h2>🌐 Federation Status (4/4 Nodes Online)</h2>
+            <div class="federation-grid">
+                <div class="federation-node online">
+                    <div class="node-icon">🦉</div>
+                    <div class="node-name">KIMI</div>
+                    <div class="node-provider">Moonshot AI</div>
+                    <div class="node-status">● Online</div>
+                    <div class="node-role">Lead Architect</div>
+                </div>
+                <div class="federation-node online">
+                    <div class="node-icon">💎</div>
+                    <div class="node-name">GEMS</div>
+                    <div class="node-provider">Google AI Studio</div>
+                    <div class="node-status">● Online</div>
+                    <div class="node-role">Multimodal</div>
+                </div>
+                <div class="federation-node online">
+                    <div class="node-icon">🐋</div>
+                    <div class="node-name">DEEPSEEK</div>
+                    <div class="node-provider">Local RTX 3050</div>
+                    <div class="node-status">● Online</div>
+                    <div class="node-role">Local Inference</div>
+                </div>
+                <div class="federation-node online current">
+                    <div class="node-icon">☁️</div>
+                    <div class="node-name">GCS-GUARDIAN</div>
+                    <div class="node-provider">Google Cloud Run</div>
+                    <div class="node-status">● Online</div>
+                    <div class="node-role">⚡ YOU ARE HERE</div>
+                </div>
+            </div>
+            <div class="federation-info">
+                <p>🔄 <strong>Cross-node validation:</strong> Drift alerts propagated to all nodes via Pub/Sub</p>
+                <p>🔐 <strong>Quorum attestation:</strong> 2-of-3 node verification for critical decisions</p>
             </div>
         </div>
         
