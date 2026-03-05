@@ -29,6 +29,7 @@ from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse, JSONResponse
 from federation_receipts import FederationReceiptManager
+from gemini_text_client import create_gemini_text_client, GeminiTextClient
 
 # [FACT] Import demo components
 
@@ -114,6 +115,20 @@ async def api_info():
                 "live": "/live (WebSocket)",
                 "demo": "/ (Interactive Demo)",
             },
+        },
+    )
+
+
+@app.get("/api/gemini-status")
+async def gemini_status():
+    """[FACT] Check if Gemini Text API is available."""
+    client = create_gemini_text_client()
+    return JSONResponse(
+        status_code=200,
+        content={
+            "available": client.is_available(),
+            "mode": "LIVE" if client.is_available() else "SIMULATION",
+            "error": None if client.is_available() else "GEMINI_API_KEY not configured",
         },
     )
 

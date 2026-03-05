@@ -459,10 +459,22 @@ DEMO_HTML = """
                 addLog('system', '[OK] Secure Handshake with Constitutional Lattice complete.');
                 addLog('system', '[NET] Federation: 4 nodes online (KIMI, GEMS, DEEPSEEK, GCS-GUARDIAN)');
                 addLog('system', '[AI] DEEPSEEK: R1 reasoning model initialized for edge case detection');
-                // [HYPOTHESIS] Check if Gemini Live API is available
-                // For now, show SIMULATION until real API integration complete
-                setGeminiMode('SIMULATION');
-                addLog('system', '[MODE] Gemini Live: SIMULATION (Real API integration in progress)');
+                // [FACT] Check Gemini API availability via REST endpoint
+                fetch('/api/gemini-status')
+                    .then(r => r.json())
+                    .then(data => {
+                        if (data.available) {
+                            setGeminiMode('LIVE');
+                            addLog('system', '[MODE] Gemini Text API: LIVE');
+                        } else {
+                            setGeminiMode('SIMULATION');
+                            addLog('system', '[MODE] Gemini Text API: SIMULATION - ' + (data.error || 'Not configured'));
+                        }
+                    })
+                    .catch(() => {
+                        setGeminiMode('SIMULATION');
+                        addLog('system', '[MODE] Gemini Text API: SIMULATION');
+                    });
                 startFederationSimulation();
             };
             ws.onclose = () => { 
