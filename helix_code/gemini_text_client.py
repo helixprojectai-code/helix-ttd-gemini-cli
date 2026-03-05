@@ -25,10 +25,10 @@ class GeminiTextClient:
     """[FACT] Client for Gemini Text API with constitutional validation hook.
     
     [HYPOTHESIS] Wraps Gemini API with mandatory validation step.
-    [ASSUMPTION] Model: gemini-1.5-flash for low latency.
+    [ASSUMPTION] Model: gemini-2.5-pro-preview for latest capabilities.
     """
 
-    def __init__(self, api_key: str | None = None, model: str = "gemini-1.5-flash-latest"):
+    def __init__(self, api_key: str | None = None, model: str = "gemini-2.5-pro-preview-03-25"):
         """[FACT] Initialize Gemini client with optional API key."""
         self.api_key = api_key or os.getenv("GEMINI_API_KEY")
         self.model = model
