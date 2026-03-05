@@ -112,7 +112,12 @@ class ReceiptStore:
         self.receipts_by_id: dict[str, Receipt] = {}
 
     def add(self, receipt: Receipt):
-        """[FACT] Add a receipt to the store."""
+        """[FACT] Add a receipt to the store and prune if overflowing."""
+        if len(self.receipts) >= self.receipts.maxlen:
+            # Remove oldest from mapping
+            oldest = self.receipts[0]
+            self.receipts_by_id.pop(oldest.receipt_id, None)
+            
         self.receipts.append(receipt)
         self.receipts_by_id[receipt.receipt_id] = receipt
 
