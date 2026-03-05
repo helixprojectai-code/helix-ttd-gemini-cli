@@ -17,7 +17,7 @@ from pathlib import Path
 from typing import Any, Dict, Optional, Set
 
 # [FACT] FastAPI and WebSocket imports
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect, HTTPException
+from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 
@@ -226,7 +226,9 @@ app = FastAPI()
 
 @app.get("/", response_class=HTMLResponse)
 async def get_demo():
-    from live_demo_server_html import DEMO_HTML # Assuming we extract HTML to its own file for clarity
+    from live_demo_server_html import (
+        DEMO_HTML,  # Assuming we extract HTML to its own file for clarity
+    )
     return HTMLResponse(content=DEMO_HTML)
 
 @app.websocket("/demo-live")

@@ -35,6 +35,7 @@ except ImportError:
 # [FACT] Import our Constitutional Guardian
 from constitutional_compliance import ConstitutionalCompliance
 
+
 @dataclass
 class LiveSession:
     """[FACT] Represents a live validation session."""

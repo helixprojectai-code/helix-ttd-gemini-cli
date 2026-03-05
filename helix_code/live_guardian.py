@@ -21,17 +21,17 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent))
 
 import uvicorn
-from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import HTMLResponse, JSONResponse
-
-# [FACT] Import demo components
-from live_demo_server import DEMO_HTML, demo_websocket_handler
 
 # [FACT] Import Helix-TTD core modules
 from constitutional_compliance import ConstitutionalCompliance
-from federation_receipts import FederationReceiptManager
 from drift_telemetry import DriftTelemetry
+from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import HTMLResponse, JSONResponse
+from federation_receipts import FederationReceiptManager
+
+# [FACT] Import demo components
+from live_demo_server import DEMO_HTML, demo_websocket_handler
 
 # [FACT] FastAPI application for Cloud Run
 app = FastAPI(

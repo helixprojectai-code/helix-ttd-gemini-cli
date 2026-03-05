@@ -1,7 +1,8 @@
 import asyncio
-import websockets
 import json
 import logging
+
+import websockets
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("WS-Verify")

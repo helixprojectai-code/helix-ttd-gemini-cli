@@ -12,18 +12,19 @@ This module demonstrates use of:
 - Cloud Build: CI/CD pipeline automation
 """
 
-import os
-import json
 import base64
+import json
+import os
+from dataclasses import asdict, dataclass
 from datetime import datetime
-from typing import Dict, List, Optional, Any
-from dataclasses import dataclass, asdict
+from typing import Any, Dict, List, Optional
 
 # [FACT] Google Cloud client libraries
 try:
-    from google.cloud import pubsub_v1, storage, secretmanager, logging as cloud_logging
-    from google.cloud.logging.handlers import CloudLoggingHandler
     from google.api_core import retry
+    from google.cloud import logging as cloud_logging
+    from google.cloud import pubsub_v1, secretmanager, storage
+    from google.cloud.logging.handlers import CloudLoggingHandler
     GCP_AVAILABLE = True
 except ImportError:
     GCP_AVAILABLE = False
