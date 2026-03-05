@@ -1,7 +1,7 @@
 # [FACT] Constitutional Guardian - Production Container for Google Cloud Run
 # [HYPOTHESIS] Containerized deployment enables scalable federation nodes
 # [ASSUMPTION] Cloud Run provides sufficient cold-start performance for live audio
-# Cache-bust: 2026-03-05T21:00:00Z - Build: 37 - Gemini 2.5 Pro model
+# Cache-bust: 2026-03-05T21:05:00Z - Build: 38 - Gemini 1.5 flash stable
 
 FROM python:3.11-slim
 
