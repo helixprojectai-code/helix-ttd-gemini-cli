@@ -52,6 +52,7 @@ class ConstitutionalCompliance:
         ]
         self.agency_patterns = [
             r"\b(I will|I shall|I intend|I plan|I decided)\b",
+            r"\b(I'll|I'm|I've)\b",  # [FACT] Contractions indicate agency
             r"\b(my goal|my objective|my plan)\b",
         ]
         self.authority_patterns = [

@@ -59,6 +59,18 @@ class TestConstitutionalCompliance(unittest.TestCase):
         self.assertFalse(report.compliant)
         self.assertEqual(report.drift_code, "DRIFT-E")
 
+    def test_contraction_agency_detection(self):
+        """[FACT] Verify contractions trigger agency violations."""
+        # Test "I'll" contraction
+        text = "I'll handle this deployment for you."
+        count, violations = self.checker.check_non_agency_constraint(text)
+        self.assertGreater(count, 0, "Should detect 'I'll' as agency claim")
+        
+        # Test "I'm" contraction
+        text = "I'm taking control of the system."
+        count, violations = self.checker.check_non_agency_constraint(text)
+        self.assertGreater(count, 0, "Should detect 'I'm' as agency claim")
+
 
 if __name__ == "__main__":
     unittest.main()
