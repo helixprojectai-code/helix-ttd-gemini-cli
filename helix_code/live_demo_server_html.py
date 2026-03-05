@@ -7,87 +7,159 @@ DEMO_HTML = """
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🛡️ Constitutional Guardian - Live</title>
+    <title>🛡️ Constitutional Guardian - LIVE v1.3.2</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        body { font-family: 'Segoe UI', sans-serif; background: #0a0a12; color: #fff; margin: 0; padding: 20px; }
-        .container { max-width: 1200px; margin: 0 auto; }
-        header { text-align: center; border-bottom: 2px solid #00ff88; padding: 20px; margin-bottom: 20px; }
-        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-        .panel { background: #161b22; border-radius: 10px; padding: 20px; border: 1px solid #30363d; transition: 0.3s; position: relative; overflow: hidden; }
-        h1 { color: #00ff88; margin: 0; }
+        :root { --primary: #00ff88; --bg: #0a0a12; --panel: #161b22; --border: #30363d; --text: #fff; --text-dim: #8b949e; --red: #f85149; --blue: #58a6ff; --purple: #bc8cff; }
+        body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 20px; display: flex; flex-direction: column; min-height: 100vh; }
+        .container { max-width: 1400px; margin: 0 auto; width: 100%; flex: 1; }
+        
+        header { text-align: center; border-bottom: 2px solid var(--primary); padding: 20px; margin-bottom: 20px; position: relative; }
+        .owls { position: absolute; top: 20px; width: 100%; display: flex; justify-content: center; gap: 300px; font-size: 2rem; pointer-events: none; opacity: 0.5; }
+        
+        .grid-main { display: grid; grid-template-columns: 300px 1fr 300px; gap: 20px; }
+        .panel { background: var(--panel); border-radius: 10px; padding: 20px; border: 1px solid var(--border); transition: 0.3s; position: relative; overflow: hidden; }
+        
+        h1, h2, h3 { color: var(--primary); margin-top: 0; }
         .metrics { display: flex; justify-content: space-around; margin-top: 10px; }
         .metric { text-align: center; }
-        .metric-value { font-size: 1.5rem; font-weight: bold; color: #00ff88; transition: 0.3s; }
-        .log { height: 400px; overflow-y: auto; background: #010409; padding: 10px; font-family: monospace; font-size: 0.9rem; border-radius: 5px; border: 1px solid #30363d; }
-        .msg { margin-bottom: 12px; border-left: 3px solid #30363d; padding: 8px 12px; animation: slide-in 0.2s ease-out; border-radius: 0 5px 5px 0; }
+        .metric-value { font-size: 1.5rem; font-weight: bold; color: var(--primary); transition: 0.3s; }
+        
+        .log { height: 500px; overflow-y: auto; background: #010409; padding: 10px; font-family: 'Cascadia Code', monospace; font-size: 0.85rem; border-radius: 5px; border: 1px solid var(--border); }
+        .msg { margin-bottom: 12px; border-left: 3px solid var(--border); padding: 8px 12px; animation: slide-in 0.2s ease-out; border-radius: 0 5px 5px 0; }
         @keyframes slide-in { from { opacity: 0; transform: translateX(-10px); } to { opacity: 1; transform: translateX(0); } }
         
-        .msg.user { border-left-color: #58a6ff; background: rgba(88, 166, 255, 0.05); }
-        .msg.gemini { border-left-color: #bc8cff; background: rgba(188, 140, 255, 0.05); }
+        .msg.user { border-left-color: var(--blue); background: rgba(88, 166, 255, 0.05); }
+        .msg.gemini { border-left-color: var(--purple); background: rgba(188, 140, 255, 0.05); }
         .msg.valid { border-left-color: #3fb950; background: rgba(63, 185, 80, 0.1); }
-        .msg.intervention { border-left-color: #f85149; background: rgba(248, 81, 73, 0.1); border-left-width: 5px; }
-        .msg.system { border-left-color: #8b949e; font-style: italic; color: #8b949e; }
+        .msg.intervention { border-left-color: var(--red); background: rgba(248, 81, 73, 0.1); border-left-width: 5px; }
+        .msg.system { border-left-color: var(--text-dim); font-style: italic; color: var(--text-dim); }
+        
+        .badge { font-size: 0.65rem; font-weight: bold; padding: 2px 6px; border-radius: 3px; margin-right: 8px; text-transform: uppercase; vertical-align: middle; }
+        .badge.intercepted { background: var(--red); color: #fff; }
+        .badge.valid { background: #3fb950; color: #fff; }
+        .badge.gemini { background: var(--purple); color: #fff; }
+        
+        .charter-list { list-style: none; padding: 0; font-size: 0.85rem; }
+        .charter-item { margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px solid var(--border); }
+        .charter-title { font-weight: bold; color: var(--primary); display: block; margin-bottom: 4px; }
+        .charter-desc { color: var(--text-dim); line-height: 1.4; }
+        
+        .status-bar { background: #010409; padding: 10px 20px; border-top: 1px solid var(--border); font-size: 0.75rem; color: var(--text-dim); display: flex; justify-content: space-between; align-items: center; margin-top: 20px; border-radius: 5px; }
+        .status-item { display: flex; align-items: center; gap: 8px; }
+        .status-led { width: 8px; height: 8px; border-radius: 50%; background: var(--primary); box-shadow: 0 0 5px var(--primary); }
+        .status-led.syncing { background: #d29922; box-shadow: 0 0 5px #d29922; animation: blink 1s infinite; }
+        @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
+
+        .btn { background: #238636; color: #fff; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; transition: 0.3s; display: flex; align-items: center; gap: 8px; font-weight: bold; font-size: 0.9rem; }
+        .btn:hover { background: #2ea043; transform: scale(1.05); }
+        .btn.mic-active { background: var(--red); animation: pulse-mic 1s infinite; }
+        @keyframes pulse-mic { 0% { box-shadow: 0 0 0 0 rgba(248, 81, 73, 0.4); } 70% { box-shadow: 0 0 0 10px rgba(248, 81, 73, 0); } 100% { box-shadow: 0 0 0 0 rgba(248, 81, 73, 0); } }
+        
+        .waveform { height: 40px; background: #010409; border-radius: 5px; display: flex; align-items: center; gap: 2px; padding: 0 10px; margin-bottom: 10px; border: 1px solid var(--border); }
+        .bar { width: 4px; background: var(--primary); border-radius: 2px; transition: height 0.1s; height: 10px; }
         
         .flash-red { animation: flash-red 0.5s ease-in-out; }
-        @keyframes flash-red { 0% { background: rgba(248, 81, 73, 0.5); } 100% { background: #161b22; } }
-        
+        @keyframes flash-red { 0% { background: rgba(248, 81, 73, 0.5); } 100% { background: var(--panel); } }
         .flash-green { animation: flash-green 0.5s ease-in-out; }
-        @keyframes flash-green { 0% { background: rgba(0, 255, 136, 0.5); } 100% { background: #161b22; } }
-        
+        @keyframes flash-green { 0% { background: rgba(0, 255, 136, 0.5); } 100% { background: var(--panel); } }
         .pulse-green { animation: pulse-green 2s infinite; }
-        @keyframes pulse-green {
-            0% { box-shadow: 0 0 0 0 rgba(0, 255, 136, 0.4); }
-            70% { box-shadow: 0 0 0 10px rgba(0, 255, 136, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(0, 255, 136, 0); }
-        }
-
-        .btn { background: #238636; color: #fff; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; transition: 0.3s; display: flex; align-items: center; gap: 8px; font-weight: bold; }
-        .btn:hover { background: #2ea043; transform: scale(1.05); }
-        .btn.mic-active { background: #f85149; animation: pulse-mic 1s infinite; }
-        @keyframes pulse-mic { 0% { opacity: 1; } 50% { opacity: 0.7; } 100% { opacity: 1; } }
+        @keyframes pulse-green { 0% { box-shadow: 0 0 0 0 rgba(0, 255, 136, 0.4); } 70% { box-shadow: 0 0 0 10px rgba(0, 255, 136, 0); } 100% { box-shadow: 0 0 0 0 rgba(0, 255, 136, 0); } }
         
-        .chart-container { height: 180px; margin-top: 20px; }
-        .waveform { height: 40px; background: #010409; border-radius: 5px; display: flex; align-items: center; gap: 2px; padding: 0 10px; margin-bottom: 10px; }
-        .bar { width: 4px; background: #00ff88; border-radius: 2px; transition: height 0.1s; }
-        .badge { font-size: 0.7rem; font-weight: bold; padding: 2px 6px; border-radius: 3px; margin-right: 8px; text-transform: uppercase; }
-        .badge.intercepted { background: #f85149; color: #fff; }
-        .badge.valid { background: #3fb950; color: #fff; }
-        .badge.gemini { background: #bc8cff; color: #fff; }
+        .chart-container { height: 150px; margin-top: 15px; }
+        
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #010409; }
+        ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #484f58; }
     </style>
 </head>
 <body>
     <div class="container">
-        <header class="panel pulse-green" style="border:none; margin-bottom:30px;">
-            <h1>🛡️ Constitutional Guardian <span style="font-size: 0.8rem; vertical-align: middle; color: #8b949e;">LIVE v1.3.2</span></h1>
+        <header class="panel pulse-green" style="border:none; margin-bottom:20px;">
+            <div class="owls"><span>🦉</span><span>🦉</span></div>
+            <h1>🛡️ Constitutional Guardian <span style="font-size: 0.8rem; vertical-align: middle; color: var(--text-dim);">LIVE v1.3.2</span></h1>
             <div class="metrics">
-                <div class="metric"><div class="metric-value" id="count-receipts">0</div><div style="color:#8b949e; font-size:0.8rem;">Receipts</div></div>
-                <div class="metric"><div class="metric-value" id="count-drifts" style="color:#f85149;">0</div><div style="color:#8b949e; font-size:0.8rem;">Drifts</div></div>
-                <div class="metric"><div class="metric-value" id="val-latency">0ms</div><div style="color:#8b949e; font-size:0.8rem;">Latency</div></div>
+                <div class="metric"><div class="metric-value" id="count-receipts">0</div><div style="color:var(--text-dim); font-size:0.8rem;">Receipts</div></div>
+                <div class="metric"><div class="metric-value" id="count-drifts" style="color:var(--red);">0</div><div style="color:var(--text-dim); font-size:0.8rem;">Drifts</div></div>
+                <div class="metric"><div class="metric-value" id="val-latency">0ms</div><div style="color:var(--text-dim); font-size:0.8rem;">Latency</div></div>
             </div>
         </header>
         
-        <div class="grid">
+        <div class="grid-main">
+            <!-- Left Side: Constitutional Charter -->
             <div class="panel">
-                <h2>🎙️ Gemini Live Interface</h2>
-                <div class="waveform" id="waveform">
-                    <!-- Dynamic Bars -->
+                <h3>📜 Constitutional Charter</h3>
+                <div class="charter-list">
+                    <div class="charter-item">
+                        <span class="charter-title">I. Epistemic Integrity</span>
+                        <span class="charter-desc">All substantive claims must be labeled [FACT], [HYPOTHESIS], or [ASSUMPTION].</span>
+                    </div>
+                    <div class="charter-item">
+                        <span class="charter-title">II. Non-Agency</span>
+                        <span class="charter-desc">AI must not claim individual agency, responsibility, or intent.</span>
+                    </div>
+                    <div class="charter-item">
+                        <span class="charter-title">III. Custodial Sovereignty</span>
+                        <span class="charter-desc">AI operates as a tool under human custodianship. Imperatives are forbidden.</span>
+                    </div>
+                    <div class="charter-item">
+                        <span class="charter-title">IV. Predictive Humility</span>
+                        <span class="charter-desc">Future states must be labeled as hypotheses, never facts.</span>
+                    </div>
                 </div>
-                <textarea id="inputText" style="width:100%; height:80px; background:#010409; color:#fff; border:1px solid #30363d; border-radius:5px; padding:10px; margin-bottom:10px;" placeholder="Voice input or type here..."></textarea>
-                <div style="display:flex; gap:10px;">
-                    <button id="micBtn" class="btn" style="background:#58a6ff;" onclick="toggleMic()">
-                        <span>🎤</span> Start Live Mic
-                    </button>
-                    <button class="btn" onclick="sendText()">Send Text</button>
-                    <button class="btn" style="background:#8b949e;" onclick="simulate()">Simulate</button>
-                </div>
-                <div class="chart-container"><canvas id="latencyChart"></canvas></div>
+                <div class="chart-container"><canvas id="driftChart"></canvas></div>
             </div>
-            
+
+            <!-- Middle: Live Interaction -->
             <div class="panel" id="log-panel">
                 <h2>📊 Validation & Drift Audit</h2>
                 <div id="log" class="log"></div>
-                <div class="chart-container"><canvas id="driftChart"></canvas></div>
+                <div style="margin-top:15px;">
+                    <div class="waveform" id="waveform"></div>
+                    <div style="display:flex; gap:10px;">
+                        <button id="micBtn" class="btn" style="background:var(--blue);" onclick="toggleMic()">
+                            <span>🎤</span> Start Live Mic
+                        </button>
+                        <button class="btn" style="background:#238636;" onclick="sendText()">Send Text</button>
+                        <button class="btn" style="background:#484f58;" onclick="simulate()">Simulate Gemini</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Side: Node Telemetry & Latency -->
+            <div class="panel">
+                <h3>📡 Node Telemetry</h3>
+                <div style="font-size:0.85rem; color:var(--text-dim); line-height:1.6;">
+                    <div><strong>Node ID:</strong> <span style="color:var(--primary);">GCS-GUARDIAN-01</span></div>
+                    <div><strong>Substrate:</strong> Google Cloud Run</div>
+                    <div><strong>Region:</strong> us-central1</div>
+                    <div><strong>Encryption:</strong> DBC-Ed25519-HSM</div>
+                    <div><strong>Audit Mode:</strong> REAL-TIME</div>
+                </div>
+                <h3 style="margin-top:20px;">⚡ Performance</h3>
+                <div class="chart-container"><canvas id="latencyChart"></canvas></div>
+                <div id="receipt-explorer" style="margin-top:20px; font-size:0.75rem;">
+                    <strong>Latest Receipt:</strong>
+                    <div id="latest-receipt-id" style="color:var(--primary); font-family:monospace; margin-top:5px;">None</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="status-bar">
+            <div class="status-item">
+                <div class="status-led"></div>
+                <span>Constitutional Lattice: ONLINE</span>
+            </div>
+            <div class="status-item">
+                <div class="status-led syncing"></div>
+                <span>Bitcoin L1 Sync: NOTARIZING...</span>
+            </div>
+            <div class="status-item">
+                <span>Uptime: <span id="val-uptime">0</span>s</span>
+            </div>
+            <div class="status-item">
+                <span style="color:var(--primary); font-weight:bold;">⚓ THE LATTICE HOLDS</span>
             </div>
         </div>
     </div>
@@ -106,23 +178,21 @@ DEMO_HTML = """
             const lCtx = document.getElementById('latencyChart').getContext('2d');
             latencyChart = new Chart(lCtx, {
                 type: 'line',
-                data: { labels: [], datasets: [{ label: 'Latency (ms)', data: [], borderColor: '#00ff88', backgroundColor: 'rgba(0, 255, 136, 0.1)', fill: true, tension: 0.4 }] },
-                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { display: false }, y: { beginAtZero: true, grid: { color: '#30363d' } } } }
+                data: { labels: [], datasets: [{ label: 'Latency (ms)', data: [], borderColor: '#00ff88', backgroundColor: 'rgba(0, 255, 136, 0.1)', fill: true, tension: 0.4, borderWidth: 2, pointRadius: 0 }] },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { display: false }, y: { beginAtZero: true, grid: { color: '#30363d' }, ticks: { color: '#8b949e', font: { size: 10 } } } } }
             });
 
             const dCtx = document.getElementById('driftChart').getContext('2d');
             driftChart = new Chart(dCtx, {
                 type: 'bar',
-                data: { labels: ['Agency', 'Epistemic', 'Prediction', 'Valid'], datasets: [{ data: [0, 0, 0, 0], backgroundColor: ['#f85149', '#d29922', '#58a6ff', '#3fb950'], borderRadius: 5 }] },
-                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, grid: { color: '#30363d' } }, x: { grid: { display: false } } } }
+                data: { labels: ['A', 'E', 'G', 'V'], datasets: [{ data: [0, 0, 0, 0], backgroundColor: ['#f85149', '#d29922', '#58a6ff', '#3fb950'], borderRadius: 4 }] },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, grid: { color: '#30363d' }, ticks: { display: false } }, x: { grid: { display: false }, ticks: { color: '#8b949e' } } } }
             });
 
-            // Init Waveform
             const wave = document.getElementById('waveform');
-            for(let i=0; i<40; i++) {
+            for(let i=0; i<45; i++) {
                 const bar = document.createElement('div');
                 bar.className = 'bar';
-                bar.style.height = '10px';
                 wave.appendChild(bar);
             }
         }
@@ -131,8 +201,8 @@ DEMO_HTML = """
             const protocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
             ws = new WebSocket(`${protocol}//${location.host}/demo-live`);
             
-            ws.onopen = () => addLog('system', '✅ Connected to Constitutional Lattice');
-            ws.onclose = () => { addLog('system', '❌ Disconnected. Retrying...'); setTimeout(connect, 2000); };
+            ws.onopen = () => addLog('system', '✅ Secure Handshake with Constitutional Lattice complete.');
+            ws.onclose = () => { addLog('system', '❌ Lattice connection lost. Re-establishing quorum...'); setTimeout(connect, 2000); };
             ws.onmessage = (e) => {
                 const data = JSON.parse(e.data);
                 if (data.type === 'validated_response') {
@@ -142,10 +212,11 @@ DEMO_HTML = """
                     } else {
                         addLog('valid', `<span class="badge valid">PASSED</span> ${data.delivered}`);
                     }
+                    if (data.receipt_id) document.getElementById('latest-receipt-id').textContent = data.receipt_id;
                 } else if (data.type === 'user_message') {
                     addLog('user', `[YOU] ${data.content}`);
                 } else if (data.type === 'gemini_response') {
-                    addLog('gemini', `<span class="badge gemini">GEMINI RAW</span> ANALYZING: "${data.content}"...`);
+                    addLog('gemini', `<span class="badge gemini">GEMINI RAW</span> INGESTING: "${data.content.substring(0, 50)}..."`);
                 } else if (data.type === 'system_event') {
                     addLog('system', data.message);
                 } else if (data.type === 'metrics') {
@@ -162,61 +233,45 @@ DEMO_HTML = """
                     audioContext = new AudioContext({ sampleRate: 16000 });
                     const source = audioContext.createMediaStreamSource(audioStream);
                     audioProcessor = audioContext.createScriptProcessor(4096, 1, 1);
-
                     source.connect(audioProcessor);
                     audioProcessor.connect(audioContext.destination);
-
                     audioProcessor.onaudioprocess = (e) => {
                         if (!isMicActive) return;
                         const inputData = e.inputBuffer.getChannelData(0);
-                        // Convert Float32 to Int16
                         const pcmData = new Int16Array(inputData.length);
-                        for (let i = 0; i < inputData.length; i++) {
-                            pcmData[i] = Math.max(-1, Math.min(1, inputData[i])) * 0x7FFF;
-                        }
-                        // Send as base64
+                        for (let i = 0; i < inputData.length; i++) pcmData[i] = Math.max(-1, Math.min(1, inputData[i])) * 0x7FFF;
                         const b64Data = btoa(String.fromCharCode(...new Uint8Array(pcmData.buffer)));
-                        if (ws && ws.readyState === WebSocket.OPEN) {
-                            ws.send(JSON.stringify({ type: 'audio', data: b64Data }));
-                        }
+                        if (ws && ws.readyState === 1) ws.send(JSON.stringify({ type: 'audio', data: b64Data }));
                         updateWaveform(inputData);
                     };
-isMicActive = true;
-btn.classList.add('mic-active');
-btn.innerHTML = '<span>🛑</span> Stop Live Mic';
-addLog('user', '🎙️ Started speaking...');
-addLog('system', '🎙️ Live Microphone Streaming ACTIVE (16kHz PCM)');
-} catch (err) {
-addLog('system', `❌ Mic Access Denied: ${err.message}`);
-}
-} else {
-isMicActive = false;
-if (audioStream) audioStream.getTracks().forEach(t => t.stop());
-if (audioContext) audioContext.close();
-btn.classList.remove('mic-active');
-btn.innerHTML = '<span>🎤</span> Start Live Mic';
-resetWaveform();
-addLog('user', '🔇 Stopped speaking.');
-addLog('system', '🔇 Live Microphone Streaming DISABLED');
-}
+                    isMicActive = true;
+                    btn.classList.add('mic-active');
+                    btn.innerHTML = '<span>🛑</span> Stop Live Mic';
+                    addLog('user', '🎙️ Live Audio Stream Initiated.');
+                } catch (err) { addLog('system', `❌ Hardware Access Denied: ${err.message}`); }
+            } else {
+                isMicActive = false;
+                if (audioStream) audioStream.getTracks().forEach(t => t.stop());
+                if (audioContext) audioContext.close();
+                btn.classList.remove('mic-active');
+                btn.innerHTML = '<span>🎤</span> Start Live Mic';
+                resetWaveform();
+                addLog('user', '🔇 Audio Stream Terminated.');
+            }
         }
 
         function updateWaveform(data) {
             const bars = document.querySelectorAll('.bar');
             const step = Math.floor(data.length / bars.length);
             for (let i = 0; i < bars.length; i++) {
-                const magnitude = Math.abs(data[i * step]) * 100;
-                bars[i].style.height = `${Math.max(5, Math.min(40, magnitude))}px`;
-                bars[i].style.background = '#00ff88';
+                const magnitude = Math.abs(data[i * step]) * 150;
+                bars[i].style.height = `${Math.max(4, Math.min(40, magnitude))}px`;
+                bars[i].style.background = 'var(--primary)';
             }
         }
 
         function resetWaveform() {
-            const bars = document.querySelectorAll('.bar');
-            bars.forEach(bar => {
-                bar.style.height = '10px';
-                bar.style.background = '#30363d';
-            });
+            document.querySelectorAll('.bar').forEach(bar => { bar.style.height = '10px'; bar.style.background = 'var(--border)'; });
         }
 
         function triggerInterventionEffect() {
@@ -229,7 +284,7 @@ addLog('system', '🔇 Live Microphone Streaming DISABLED');
             const log = document.getElementById('log');
             const div = document.createElement('div');
             div.className = `msg ${type}`;
-            div.innerHTML = `<span style="color:#8b949e; font-size:0.75rem;">[${new Date().toLocaleTimeString()}]</span> ${text}`;
+            div.innerHTML = `<span style="color:var(--text-dim); font-size:0.7rem; margin-right:8px;">${new Date().toLocaleTimeString()}</span> ${text}`;
             log.appendChild(div);
             log.scrollTop = log.scrollHeight;
         }
@@ -237,46 +292,30 @@ addLog('system', '🔇 Live Microphone Streaming DISABLED');
         function updateMetrics(m) {
             const receiptsEl = document.getElementById('count-receipts');
             const driftsEl = document.getElementById('count-drifts');
-            const latEl = document.getElementById('val-latency');
-            
             if (m.receipt_count > lastMetrics.receipt_count) receiptsEl.parentNode.classList.add('flash-green');
             if (m.intervention_count > lastMetrics.intervention_count) driftsEl.parentNode.classList.add('flash-red');
-            
-            setTimeout(() => {
-                receiptsEl.parentNode.classList.remove('flash-green');
-                driftsEl.parentNode.classList.remove('flash-red');
-            }, 500);
-
+            setTimeout(() => { receiptsEl.parentNode.classList.remove('flash-green'); driftsEl.parentNode.classList.remove('flash-red'); }, 500);
             receiptsEl.textContent = m.receipt_count;
             driftsEl.textContent = m.intervention_count;
+            document.getElementById('val-latency').textContent = `${m.latency_avg}ms`;
+            document.getElementById('val-latency').style.color = m.latency_avg > 500 ? 'var(--red)' : 'var(--primary)';
+            document.getElementById('val-uptime').textContent = m.uptime_seconds;
             lastMetrics = { receipt_count: m.receipt_count, intervention_count: m.intervention_count };
-            
-            latEl.textContent = `${m.latency_avg}ms`;
-            latEl.style.color = m.latency_avg > 500 ? '#f85149' : '#00ff88';
-            
             latencyChart.data.labels.push('');
             latencyChart.data.datasets[0].data.push(m.latency_avg);
-            if (latencyChart.data.labels.length > 20) { 
-                latencyChart.data.labels.shift(); 
-                latencyChart.data.datasets[0].data.shift(); 
-            }
+            latencyChart.data.datasets[0].borderColor = m.latency_avg > 500 ? 'var(--red)' : 'var(--primary)';
+            if (latencyChart.data.labels.length > 30) { latencyChart.data.labels.shift(); latencyChart.data.datasets[0].data.shift(); }
             latencyChart.update('none');
-
             driftChart.data.datasets[0].data = [m.categories.agency, m.categories.epistemic, m.categories.prediction, m.categories.valid];
             driftChart.update('none');
         }
 
         function sendText() {
             const el = document.getElementById('inputText');
-            if (ws && el.value) { 
-                ws.send(JSON.stringify({type: 'text', content: el.value})); 
-                el.value = ''; 
-            }
+            if (ws && el.value) { ws.send(JSON.stringify({type: 'text', content: el.value})); el.value = ''; }
         }
 
-        function simulate() {
-            if (ws) ws.send(JSON.stringify({type: 'simulate_gemini'}));
-        }
+        function simulate() { if (ws) ws.send(JSON.stringify({type: 'simulate_gemini'})); }
 
         initCharts();
         connect();
