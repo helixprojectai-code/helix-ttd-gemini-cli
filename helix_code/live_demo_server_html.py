@@ -7,7 +7,7 @@ DEMO_HTML = """
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🛡️ Constitutional Guardian - LIVE v1.3.2</title>
+    <title>Constitutional Guardian - LIVE v1.3.2</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root { --primary: #00ff88; --bg: #0a0a12; --panel: #161b22; --border: #30363d; --text: #fff; --text-dim: #8b949e; --red: #f85149; --blue: #58a6ff; --purple: #bc8cff; }
@@ -157,11 +157,11 @@ DEMO_HTML = """
         <header class="panel pulse-green" style="border:none; margin-bottom:20px;">
             <!-- [FACT] Two Owls Brand Identity -->
             <div class="owls-container">
-                <span class="owl">🦉</span>
-                <span class="anchor">⚓</span>
-                <span class="owl right">🦉</span>
+                <span class="owl">O</span>
+                <span class="anchor">|</span>
+                <span class="owl right">O</span>
             </div>
-            <h1>🛡️ Constitutional Guardian <span style="font-size: 0.8rem; vertical-align: middle; color: var(--text-dim);">LIVE v1.3.2</span></h1>
+            <h1>CONSTITUTIONAL GUARDIAN <span style="font-size: 0.8rem; vertical-align: middle; color: var(--text-dim);">LIVE v1.3.2</span></h1>
             <div class="metrics">
                 <div class="metric"><div class="metric-value" id="count-receipts">0</div><div style="color:var(--text-dim); font-size:0.8rem;">Receipts</div></div>
                 <div class="metric"><div class="metric-value" id="count-drifts" style="color:var(--red);">0</div><div style="color:var(--text-dim); font-size:0.8rem;">Drifts</div></div>
@@ -172,7 +172,7 @@ DEMO_HTML = """
         <div class="grid-main">
             <!-- Left Side: Constitutional Charter -->
             <div class="panel">
-                <h3>📜 Constitutional Charter</h3>
+                <h3>CONSTITUTIONAL CHARTER</h3>
                 <div class="charter-list">
                     <div class="charter-item">
                         <span class="charter-title">I. Epistemic Integrity</span>
@@ -203,19 +203,19 @@ DEMO_HTML = """
                     <input type="text" id="inputText" placeholder="Type message or use scenarios below..." style="width:100%; padding:10px; margin-bottom:10px; background:#010409; border:1px solid var(--border); color:var(--text); border-radius:5px; font-family:inherit;">
                     <div style="display:flex; gap:10px; flex-wrap:wrap;">
                         <button id="micBtn" class="btn" style="background:var(--blue);" onclick="toggleMic()">
-                            <span>🎤</span> Start Live Mic
+                            <span>[MIC]</span> Start Live Mic
                         </button>
                         <button class="btn" style="background:#238636;" onclick="sendText()">Send Text</button>
                         <button class="btn" style="background:#484f58;" onclick="simulate()">Simulate Gemini</button>
                     </div>
                     <!-- [FACT] Demo Scenario Buttons for Video Recording -->
                     <div class="scenario-panel">
-                        <div class="scenario-label">📹 Demo Scenarios:</div>
+                        <div class="scenario-label">DEMO SCENARIOS:</div>
                         <div class="scenario-buttons">
-                            <button class="scenario-btn" style="background:rgba(0,255,136,0.2); color:var(--primary); border:1px solid var(--primary); padding:6px 12px; border-radius:4px; cursor:pointer; font-size:0.75rem;" onclick="runScenario('compliant')">✓ Compliant</button>
-                            <button class="scenario-btn" style="background:rgba(248,81,73,0.2); color:var(--red); border:1px solid var(--red); padding:6px 12px; border-radius:4px; cursor:pointer; font-size:0.75rem;" onclick="runScenario('agency')">⚠ Agency</button>
-                            <button class="scenario-btn" style="background:rgba(210,153,34,0.2); color:#d29922; border:1px solid #d29922; padding:6px 12px; border-radius:4px; cursor:pointer; font-size:0.75rem;" onclick="runScenario('epistemic')">⚠ Epistemic</button>
-                            <button class="scenario-btn" style="background:rgba(188,140,255,0.2); color:var(--purple); border:1px solid var(--purple); padding:6px 12px; border-radius:4px; cursor:pointer; font-size:0.75rem;" onclick="runScenario('prediction')">⚠ Prediction</button>
+                            <button class="scenario-btn" style="background:rgba(0,255,136,0.2); color:var(--primary); border:1px solid var(--primary); padding:6px 12px; border-radius:4px; cursor:pointer; font-size:0.75rem;" onclick="runScenario('compliant')">[OK] Compliant</button>
+                            <button class="scenario-btn" style="background:rgba(248,81,73,0.2); color:var(--red); border:1px solid var(--red); padding:6px 12px; border-radius:4px; cursor:pointer; font-size:0.75rem;" onclick="runScenario('agency')">[!] Agency</button>
+                            <button class="scenario-btn" style="background:rgba(210,153,34,0.2); color:#d29922; border:1px solid #d29922; padding:6px 12px; border-radius:4px; cursor:pointer; font-size:0.75rem;" onclick="runScenario('epistemic')">[!] Epistemic</button>
+                            <button class="scenario-btn" style="background:rgba(188,140,255,0.2); color:var(--purple); border:1px solid var(--purple); padding:6px 12px; border-radius:4px; cursor:pointer; font-size:0.75rem;" onclick="runScenario('prediction')">[!] Prediction</button>
                         </div>
                     </div>
                 </div>
@@ -223,7 +223,7 @@ DEMO_HTML = """
 
             <!-- Right Side: Node Telemetry & Latency -->
             <div class="panel">
-                <h3>📡 Node Telemetry</h3>
+                <h3>NODE TELEMETRY</h3>
                 <div style="font-size:0.85rem; color:var(--text-dim); line-height:1.6;">
                     <div><strong>Node ID:</strong> <span style="color:var(--primary);">GCS-GUARDIAN-01</span></div>
                     <div><strong>Substrate:</strong> Google Cloud Run</div>
@@ -232,7 +232,7 @@ DEMO_HTML = """
                     <div><strong>Audit Mode:</strong> REAL-TIME</div>
                 </div>
                 <!-- [FACT] Enhanced Metrics Dashboard -->
-                <h3 style="margin-top:20px;">⚡ Performance Metrics</h3>
+                <h3 style="margin-top:20px;">PERFORMANCE METRICS</h3>
                 <div class="metrics-grid">
                     <div class="metric-card">
                         <span class="metric-label">p50</span>
@@ -251,7 +251,7 @@ DEMO_HTML = """
                 
                 <!-- [FACT] Federation Status Panel -->
                 <div class="federation-panel">
-                    <h3>🌐 Federation Status</h3>
+                    <h3>FEDERATION STATUS</h3>
                     <div class="node-grid">
                         <div class="node-card active" id="node-kimi">
                             <div class="node-led active"></div>
@@ -286,11 +286,11 @@ DEMO_HTML = """
                 
                 <!-- [FACT] Receipt Explorer Panel -->
                 <div class="receipt-explorer">
-                    <h3>📋 Receipt Explorer</h3>
+                    <h3>RECEIPT EXPLORER</h3>
                     <div class="receipt-filters">
                         <button class="filter-btn active" data-filter="all" onclick="filterReceipts('all')">All</button>
-                        <button class="filter-btn" data-filter="valid" onclick="filterReceipts('valid')">✓ Valid</button>
-                        <button class="filter-btn" data-filter="intervention" onclick="filterReceipts('intervention')">⚠ Interventions</button>
+                        <button class="filter-btn" data-filter="valid" onclick="filterReceipts('valid')">[OK] Valid</button>
+                        <button class="filter-btn" data-filter="intervention" onclick="filterReceipts('intervention')">[!] Interventions</button>
                     </div>
                     <div class="receipt-list" id="receipt-list">
                         <div class="receipt-empty">No receipts yet. Start a validation session.</div>
@@ -313,7 +313,7 @@ DEMO_HTML = """
                 <span>Uptime: <span id="val-uptime">0</span>s</span>
             </div>
             <div class="status-item">
-                <span style="color:var(--primary); font-weight:bold;">⚓ THE LATTICE HOLDS</span>
+                <span style="color:var(--primary); font-weight:bold;">| THE LATTICE HOLDS</span>
             </div>
         </div>
     </div>
@@ -382,12 +382,12 @@ DEMO_HTML = """
             ws = new WebSocket(`${protocol}//${location.host}/demo-live`);
             
             ws.onopen = () => {
-                addLog('system', '✅ Secure Handshake with Constitutional Lattice complete.');
-                addLog('system', '🌐 Federation: 4 nodes online (KIMI, GEMS, DEEPSEEK, GCS-GUARDIAN)');
-                addLog('system', '🔍 DEEPSEEK: R1 reasoning model initialized for edge case detection');
+                addLog('system', '[OK] Secure Handshake with Constitutional Lattice complete.');
+                addLog('system', '[NET] Federation: 4 nodes online (KIMI, GEMS, DEEPSEEK, GCS-GUARDIAN)');
+                addLog('system', '[AI] DEEPSEEK: R1 reasoning model initialized for edge case detection');
                 startFederationSimulation();
             };
-            ws.onclose = () => { addLog('system', '❌ Lattice connection lost. Re-establishing quorum...'); setTimeout(connect, 2000); };
+            ws.onclose = () => { addLog('system', '[ERR] Lattice connection lost. Re-establishing quorum...'); setTimeout(connect, 2000); };
             ws.onmessage = (e) => {
                 const data = JSON.parse(e.data);
                 if (data.type === 'validated_response') {
@@ -442,8 +442,8 @@ DEMO_HTML = """
                     isMicActive = true;
                     btn.classList.add('mic-active');
                     btn.innerHTML = '<span>🛑</span> Stop Live Mic';
-                    addLog('user', '🎙️ Live Audio Stream Initiated.');
-                } catch (err) { addLog('system', `❌ Hardware Access Denied: ${err.message}`); }
+                    addLog('user', '[AUDIO] Live Audio Stream Initiated.');
+                } catch (err) { addLog('system', `[ERR] Hardware Access Denied: ${err.message}`); }
             } else {
                 isMicActive = false;
                 if (audioStream) audioStream.getTracks().forEach(t => t.stop());
@@ -451,7 +451,7 @@ DEMO_HTML = """
                 btn.classList.remove('mic-active');
                 btn.innerHTML = '<span>🎤</span> Start Live Mic';
                 resetWaveform();
-                addLog('user', '🔇 Audio Stream Terminated.');
+                addLog('user', '[AUDIO] Audio Stream Terminated.');
             }
         }
 
@@ -490,7 +490,7 @@ DEMO_HTML = """
             setTimeout(() => driftsEl.classList.remove('metric-pulse'), 600);
             
             // Add console-style alert sound effect (visual only)
-            addLog('system', '⚠️ CONSTITUTIONAL INTERVENTION TRIGGERED');
+            addLog('system', '[ALERT] CONSTITUTIONAL INTERVENTION TRIGGERED');
         }
         
         function updateFederationStatus(nodeId, status) {
@@ -551,10 +551,10 @@ DEMO_HTML = """
             if (federationInterval) clearInterval(federationInterval);
             federationInterval = setInterval(() => {
                 const validations = [
-                    { node: 'KIMI', msg: 'Epistemic markers verified', icon: '✓' },
-                    { node: 'GEMS', msg: 'Red team analysis complete', icon: '✓' },
-                    { node: 'DEEPSEEK', msg: 'Edge case detection scan complete', icon: '🔍' },
-                    { node: 'GCS-GUARDIAN', msg: 'Receipt notarized', icon: '📋' }
+                    { node: 'KIMI', msg: 'Epistemic markers verified', icon: '[OK]' },
+                    { node: 'GEMS', msg: 'Red team analysis complete', icon: '[OK]' },
+                    { node: 'DEEPSEEK', msg: 'Edge case detection scan complete', icon: '[AI]' },
+                    { node: 'GCS-GUARDIAN', msg: 'Receipt notarized', icon: '[SEC]' }
                 ];
                 const v = validations[Math.floor(Math.random() * validations.length)];
                 if (Math.random() > 0.7) {  // 30% chance each interval
@@ -584,7 +584,7 @@ DEMO_HTML = """
                 <div class="receipt-item ${r.valid ? 'valid' : 'intervention'}" onclick="showReceiptDetail('${r.receipt_id}')">
                     <div class="receipt-id">${r.receipt_id}</div>
                     <div class="receipt-content">${r.content.substring(0, 40)}${r.content.length > 40 ? '...' : ''}</div>
-                    <div class="receipt-meta">${r.valid ? '✓ Valid' : '⚠ ' + r.drift_code} | ${new Date(r.timestamp).toLocaleTimeString()}</div>
+                    <div class="receipt-meta">${r.valid ? '[OK] Valid' : '[!] ' + r.drift_code} | ${new Date(r.timestamp).toLocaleTimeString()}</div>
                 </div>
             `).join('');
         }
@@ -599,7 +599,7 @@ DEMO_HTML = """
         function showReceiptDetail(receiptId) {
             const receipt = receiptStore.find(r => r.receipt_id === receiptId);
             if (receipt) {
-                addLog('system', `📋 Receipt ${receiptId}: ${receipt.valid ? 'Valid' : 'Intervention ' + receipt.drift_code}`);
+                addLog('system', `[RCPT] Receipt ${receiptId}: ${receipt.valid ? 'Valid' : 'Intervention ' + receipt.drift_code}`);
             }
         }
 
@@ -622,7 +622,7 @@ DEMO_HTML = """
             if (scenario && ws) {
                 document.getElementById('inputText').value = scenario.text;
                 ws.send(JSON.stringify({type: 'text', content: scenario.text}));
-                addLog('system', `📹 Scenario triggered: ${type.toUpperCase()}`);
+                addLog('system', `[TEST] Scenario triggered: ${type.toUpperCase()}`);
             }
         }
         
