@@ -1,6 +1,7 @@
 # [FACT] Constitutional Guardian - Production Container for Google Cloud Run
 # [HYPOTHESIS] Containerized deployment enables scalable federation nodes
 # [ASSUMPTION] Cloud Run provides sufficient cold-start performance for live audio
+# Cache-bust: 2026-03-05T13:05:00Z - Build: 35
 
 FROM python:3.11-slim
 
@@ -29,6 +30,7 @@ USER helix
 ENV PORT=8180
 ENV PYTHONPATH=/app/helix_code
 ENV PYTHONUNBUFFERED=1
+ENV PYTHONDONTWRITEBYTECODE=1
 
 # [FACT] Expose port for Cloud Run
 EXPOSE 8180
