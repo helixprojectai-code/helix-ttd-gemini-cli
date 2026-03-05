@@ -1,7 +1,7 @@
 # [FACT] Constitutional Guardian - Production Container for Google Cloud Run
 # [HYPOTHESIS] Containerized deployment enables scalable federation nodes
 # [ASSUMPTION] Cloud Run provides sufficient cold-start performance for live audio
-# Cache-bust: 2026-03-05T13:05:00Z - Build: 35
+# Cache-bust: 2026-03-05T20:30:00Z - Build: 36 - Force rebuild for google-genai
 
 FROM python:3.11-slim
 
