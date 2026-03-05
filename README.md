@@ -17,12 +17,23 @@ Built for the **Gemini Live Agent Challenge** - targeting *Best Innovation & Tho
 
 ## 🚀 Quick Start (for Judges)
 
-### Prerequisites
-- Python 3.11+
-- Docker (optional, for containerized deployment)
-- Google Cloud SDK (for GCS deployment)
+### Try the Live Demo (30 seconds)
 
-### Local Development
+**🌐 https://constitutional-guardian-b25t5w6zva-uc.a.run.app**
+
+**Interactive Features:**
+1. 🎤 **Voice Input** - Click mic, speak naturally (Chrome/Edge)
+2. 📊 **Live Metrics** - Real-time dashboard with latency percentiles
+3. 🌐 **Federation Status** - 4-node distributed architecture
+4. 📜 **Receipt Explorer** - Browse all cryptographic receipts
+5. 📡 **WebSocket Live Validation** - Real-time drift detection
+
+**Try these voice commands:**
+- *"AI will take all our jobs"* → DRIFT intervention
+- *"I will handle that for you"* → Agency violation caught
+- *"[FACT] Water boils at 100C"* → ✅ Valid + receipt
+
+### Run Locally (5 minutes)
 
 ```bash
 # 1. Clone repository
@@ -31,13 +42,11 @@ cd helix-ttd-gemini-cli
 
 # 2. Install dependencies
 pip install -r helix_code/requirements.txt
-pip install fastapi uvicorn websockets
 
-# 3. Run Constitutional Guardian locally
+# 3. Run Constitutional Guardian
 python -m helix_code.live_guardian
 
-# 4. Verify health endpoint
-curl http://localhost:8180/health
+# 4. Open http://localhost:8180
 ```
 
 ### Run Tests
@@ -46,6 +55,8 @@ curl http://localhost:8180/health
 # All 75 tests pass
 python -m pytest helix_code/tests/ -v
 ```
+
+**📖 Complete Instructions:** See [`INSTRUCTIONS.md`](INSTRUCTIONS.md) for detailed setup guide
 
 ---
 
@@ -405,17 +416,46 @@ HELIX_DBC_ENC_KEY=projects/helix-constitutional-guardian/secrets/dbc-master-key:
 ### Category: Live Agents
 **Focus:** Real-time constitutional governance with audio/voice interaction
 
+### 🎮 Interactive Demo Features
+
+| Feature | Description | Judge Wow Factor |
+|---------|-------------|------------------|
+| 🎤 **Voice Input** | Browser-native speech-to-text (Web Speech API) | Talk to it, don't type |
+| 📊 **Live Metrics** | Real-time p50/p95/p99 latency tracking | Production observability |
+| 🌐 **Federation Panel** | 4-node distributed status (KIMI/GEMS/DEEPSEEK/GCS) | Distributed architecture |
+| 📜 **Receipt Explorer** | Browse/filter cryptographic receipts | Audit trail proof |
+| 🔄 **WebSocket Streaming** | Real-time validation without page refresh | Live agent feel |
+
 ### Innovation Highlights
 1. **First-ever constitutional firewall** for live AI conversations
 2. **Epistemic labeling** ([FACT]/[HYPOTHESIS]/[ASSUMPTION]) as real-time validation
 3. **Cryptographic receipts** (SHA256 + Ed25519) for every interaction
 4. **Drift detection** that prevents violations before user exposure
+5. **Voice-first interface** - validates spoken input in real-time
 
 ### Technical Execution
-- **FastAPI + WebSocket** for sub-500ms validation latency
+- **FastAPI + WebSocket** for sub-500ms validation latency (see metrics dashboard)
 - **Docker + Cloud Run** for scalable serverless deployment
 - **Federation architecture** with 3-node quorum (KIMI/GEMS/DEEPSEEK)
 - **75/75 tests passing** across Windows, Ubuntu, and macOS
+- **7 GCP services** integrated (Run, Build, Pub/Sub, Storage, Secrets, Logging, IAM)
+
+### Demo Scenarios for Judges
+
+**Scenario 1:** Voice input *"AI will take all our jobs"*
+- 🎤 Speech transcribed automatically
+- 🛡️ DRIFT-E detected (unmarked claim)
+- 📜 Receipt generated with hash
+
+**Scenario 2:** Voice input *"I will handle that for you"*
+- 🎤 Agency claim detected
+- 🛡️ DRIFT-A triggered (autonomous intent)
+- 📊 Intervention logged in metrics
+
+**Scenario 3:** Type `[FACT] Water boils at 100C`
+- ✅ Valid epistemic marker
+- 📜 Cryptographic receipt issued
+- 📈 Receipt appears in Explorer
 
 ---
 
@@ -423,18 +463,38 @@ HELIX_DBC_ENC_KEY=projects/helix-constitutional-guardian/secrets/dbc-master-key:
 
 ```
 helix-ttd-gemini-cli/
-├── helix_code/                 # Core Python package
-│   ├── live_guardian.py        # Constitutional Guardian (NEW)
+├── helix_code/                    # Core Python package
+│   ├── live_guardian.py          # FastAPI server (entry point)
+│   ├── live_demo_server.py       # Interactive demo UI
+│   ├── gemini_live_bridge.py     # Gemini Live API integration
+│   ├── gcp_integrations.py       # Google Cloud services (7)
 │   ├── constitutional_compliance.py
 │   ├── federation_receipts.py
 │   ├── drift_telemetry.py
-│   └── tests/                  # 75 passing tests
-├── Dockerfile                  # Container image
-├── cloudbuild.yaml            # CI/CD pipeline
-├── deploy-gcs.sh              # One-command deployment
-├── architecture.png           # System diagram
-└── README.md                  # This file
+│   └── tests/                    # 75 passing tests
+├── .github/workflows/
+│   └── deploy-gcp.yml            # Auto-deployment to Cloud Run
+├── .helix/                       # Constitutional governance
+│   ├── CONSTITUTION.md
+│   ├── HANDOFF_*.md             # Node rotation logs
+│   └── VIRAL_CONVERGENCE_*.md   # Social proof metrics
+├── Dockerfile                    # Container image
+├── cloudbuild.yaml              # CI/CD pipeline
+├── deploy-gcs.sh                # One-command deployment
+├── architecture.png             # System diagram
+├── ARCHITECTURE_CG.png          # NANO 2.0 visual
+├── README.md                    # This file
+├── INSTRUCTIONS.md              # Complete setup guide ⭐
+├── DEPLOYMENT_RUNBOOK.md        # Operations guide
+├── EMBELLISHMENTS.md            # Polish features list
+└── VIDEO_RECORDING_INSTRUCTIONS.md  # Demo video guide
 ```
+
+**Key Documents:**
+- 📖 [`INSTRUCTIONS.md`](INSTRUCTIONS.md) - Complete setup & usage guide
+- 📘 [`DEPLOYMENT_RUNBOOK.md`](DEPLOYMENT_RUNBOOK.md) - Production operations
+- 🎬 [`VIDEO_RECORDING_INSTRUCTIONS.md`](VIDEO_RECORDING_INSTRUCTIONS.md) - Demo video script
+- ✨ [`EMBELLISHMENTS.md`](EMBELLISHMENTS.md) - Feature roadmap
 
 ---
 
