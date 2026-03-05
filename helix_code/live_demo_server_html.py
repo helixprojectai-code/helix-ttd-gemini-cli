@@ -110,6 +110,30 @@ DEMO_HTML = """
         
         .chart-container { height: 150px; margin-top: 15px; }
         
+        /* [FACT] Enhanced Metrics Dashboard Styles */
+        .metrics-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 15px 0; }
+        .metric-card { background: #010409; padding: 10px; border-radius: 6px; border: 1px solid var(--border); text-align: center; }
+        .metric-card .metric-label { font-size: 0.65rem; color: var(--text-dim); text-transform: uppercase; display: block; }
+        .metric-card .metric-value { font-size: 1.1rem; color: var(--primary); font-weight: bold; font-family: 'Cascadia Code', monospace; }
+        .metric-card:hover { border-color: var(--primary); }
+        
+        /* [FACT] Receipt Explorer Styles */
+        .receipt-explorer { margin-top: 20px; }
+        .receipt-filters { display: flex; gap: 6px; margin: 10px 0; }
+        .filter-btn { background: transparent; border: 1px solid var(--border); color: var(--text-dim); padding: 4px 10px; border-radius: 4px; cursor: pointer; font-size: 0.7rem; transition: all 0.2s; }
+        .filter-btn:hover { border-color: var(--primary); color: var(--primary); }
+        .filter-btn.active { background: rgba(0, 255, 136, 0.1); border-color: var(--primary); color: var(--primary); }
+        .receipt-list { max-height: 200px; overflow-y: auto; background: #010409; border-radius: 6px; border: 1px solid var(--border); }
+        .receipt-item { padding: 8px 10px; border-bottom: 1px solid var(--border); font-size: 0.75rem; cursor: pointer; transition: background 0.2s; }
+        .receipt-item:hover { background: rgba(0, 255, 136, 0.05); }
+        .receipt-item:last-child { border-bottom: none; }
+        .receipt-item.valid { border-left: 3px solid #3fb950; }
+        .receipt-item.intervention { border-left: 3px solid var(--red); }
+        .receipt-id { color: var(--primary); font-family: monospace; font-size: 0.65rem; }
+        .receipt-content { color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 2px; }
+        .receipt-meta { color: var(--text-dim); font-size: 0.6rem; margin-top: 2px; }
+        .receipt-empty { padding: 20px; text-align: center; color: var(--text-dim); font-size: 0.75rem; font-style: italic; }
+        
         ::-webkit-scrollbar { width: 8px; }
         ::-webkit-scrollbar-track { background: #010409; }
         ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
@@ -195,7 +219,22 @@ DEMO_HTML = """
                     <div><strong>Encryption:</strong> DBC-Ed25519-HSM</div>
                     <div><strong>Audit Mode:</strong> REAL-TIME</div>
                 </div>
-                <h3 style="margin-top:20px;">⚡ Performance</h3>
+                <!-- [FACT] Enhanced Metrics Dashboard -->
+                <h3 style="margin-top:20px;">⚡ Performance Metrics</h3>
+                <div class="metrics-grid">
+                    <div class="metric-card">
+                        <span class="metric-label">p50</span>
+                        <span class="metric-value" id="latency-p50">0ms</span>
+                    </div>
+                    <div class="metric-card">
+                        <span class="metric-label">p95</span>
+                        <span class="metric-value" id="latency-p95">0ms</span>
+                    </div>
+                    <div class="metric-card">
+                        <span class="metric-label">p99</span>
+                        <span class="metric-value" id="latency-p99">0ms</span>
+                    </div>
+                </div>
                 <div class="chart-container"><canvas id="latencyChart"></canvas></div>
                 
                 <!-- [FACT] Federation Status Panel -->
@@ -233,9 +272,18 @@ DEMO_HTML = """
                     </div>
                 </div>
                 
-                <div id="receipt-explorer" style="margin-top:20px; font-size:0.75rem;">
-                    <strong>Latest Receipt:</strong>
-                    <div id="latest-receipt-id" style="color:var(--primary); font-family:monospace; margin-top:5px;">None</div>
+                <!-- [FACT] Receipt Explorer Panel -->
+                <div class="receipt-explorer">
+                    <h3>📋 Receipt Explorer</h3>
+                    <div class="receipt-filters">
+                        <button class="filter-btn active" data-filter="all" onclick="filterReceipts('all')">All</button>
+                        <button class="filter-btn" data-filter="valid" onclick="filterReceipts('valid')">✓ Valid</button>
+                        <button class="filter-btn" data-filter="intervention" onclick="filterReceipts('intervention')">⚠ Interventions</button>
+                    </div>
+                    <div class="receipt-list" id="receipt-list">
+                        <div class="receipt-empty">No receipts yet. Start a validation session.</div>
+                    </div>
+                    <div id="latest-receipt-id" style="color:var(--primary); font-family:monospace; margin-top:10px; font-size:0.7rem; text-align:center;">Latest: None</div>
                 </div>
             </div>
         </div>
@@ -267,6 +315,8 @@ DEMO_HTML = """
         let audioProcessor = null;
         let audioStream = null;
         let lastMetrics = { receipt_count: 0, intervention_count: 0 };
+        let receiptStore = [];  // [FACT] Local receipt cache for explorer
+        let currentFilter = 'all';  // [FACT] Current receipt filter
 
         function initCharts() {
             const lCtx = document.getElementById('latencyChart').getContext('2d');
@@ -306,7 +356,17 @@ DEMO_HTML = """
                     } else {
                         addLog('valid', `<span class="badge valid">PASSED</span> ${data.delivered}`);
                     }
-                    if (data.receipt_id) document.getElementById('latest-receipt-id').textContent = data.receipt_id;
+                    if (data.receipt_id) {
+                        document.getElementById('latest-receipt-id').textContent = data.receipt_id;
+                        // [FACT] Add to receipt explorer
+                        addReceipt({
+                            receipt_id: data.receipt_id,
+                            content: data.original || data.delivered,
+                            valid: data.valid,
+                            drift_code: data.drift_code,
+                            timestamp: new Date().toISOString()
+                        });
+                    }
                 } else if (data.type === 'user_message') {
                     addLog('user', `[YOU] ${data.content}`);
                 } else if (data.type === 'gemini_response') {
@@ -418,6 +478,12 @@ DEMO_HTML = """
             document.getElementById('val-latency').textContent = `${m.latency_avg}ms`;
             document.getElementById('val-latency').style.color = m.latency_avg > 500 ? 'var(--red)' : 'var(--primary)';
             document.getElementById('val-uptime').textContent = m.uptime_seconds;
+            
+            // [FACT] Update percentile metrics
+            if (m.latency_p50) document.getElementById('latency-p50').textContent = `${Math.round(m.latency_p50)}ms`;
+            if (m.latency_p95) document.getElementById('latency-p95').textContent = `${Math.round(m.latency_p95)}ms`;
+            if (m.latency_p99) document.getElementById('latency-p99').textContent = `${Math.round(m.latency_p99)}ms`;
+            
             lastMetrics = { receipt_count: m.receipt_count, intervention_count: m.intervention_count };
             latencyChart.data.labels.push('');
             latencyChart.data.datasets[0].data.push(m.latency_avg);
@@ -426,6 +492,46 @@ DEMO_HTML = """
             latencyChart.update('none');
             driftChart.data.datasets[0].data = [m.categories.agency, m.categories.epistemic, m.categories.prediction, m.categories.valid];
             driftChart.update('none');
+        }
+        
+        // [FACT] Receipt Explorer Functions
+        function addReceipt(receipt) {
+            receiptStore.unshift(receipt);  // Add to beginning
+            if (receiptStore.length > 50) receiptStore.pop();  // Keep last 50
+            renderReceiptList();
+        }
+        
+        function renderReceiptList() {
+            const list = document.getElementById('receipt-list');
+            const filtered = currentFilter === 'all' ? receiptStore : 
+                receiptStore.filter(r => currentFilter === 'valid' ? r.valid : !r.valid);
+            
+            if (filtered.length === 0) {
+                list.innerHTML = '<div class="receipt-empty">No receipts match filter.</div>';
+                return;
+            }
+            
+            list.innerHTML = filtered.map(r => `
+                <div class="receipt-item ${r.valid ? 'valid' : 'intervention'}" onclick="showReceiptDetail('${r.receipt_id}')">
+                    <div class="receipt-id">${r.receipt_id}</div>
+                    <div class="receipt-content">${r.content.substring(0, 40)}${r.content.length > 40 ? '...' : ''}</div>
+                    <div class="receipt-meta">${r.valid ? '✓ Valid' : '⚠ ' + r.drift_code} | ${new Date(r.timestamp).toLocaleTimeString()}</div>
+                </div>
+            `).join('');
+        }
+        
+        function filterReceipts(filter) {
+            currentFilter = filter;
+            document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelector(`[data-filter="${filter}"]`).classList.add('active');
+            renderReceiptList();
+        }
+        
+        function showReceiptDetail(receiptId) {
+            const receipt = receiptStore.find(r => r.receipt_id === receiptId);
+            if (receipt) {
+                addLog('system', `📋 Receipt ${receiptId}: ${receipt.valid ? 'Valid' : 'Intervention ' + receipt.drift_code}`);
+            }
         }
 
         function sendText() {

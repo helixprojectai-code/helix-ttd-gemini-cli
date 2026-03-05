@@ -66,6 +66,14 @@ class LiveMetrics:
         else:
             self.epistemic_count += 1
 
+    def _calculate_percentile(self, percentile: float) -> float:
+        """[FACT] Calculate latency percentile from history."""
+        if not self.latency_history:
+            return 0.0
+        sorted_latencies = sorted(self.latency_history)
+        index = int(len(sorted_latencies) * percentile / 100)
+        return sorted_latencies[min(index, len(sorted_latencies) - 1)]
+
     def to_dict(self) -> dict:
         """[FACT] Convert metrics to dictionary for UI telemetry."""
         latency_sum = sum(self.latency_history)
@@ -78,6 +86,9 @@ class LiveMetrics:
             "intervention_count": self.intervention_count,
             "error_count": self.error_count,
             "latency_avg": round(avg, 2),
+            "latency_p50": round(self._calculate_percentile(50), 2),
+            "latency_p95": round(self._calculate_percentile(95), 2),
+            "latency_p99": round(self._calculate_percentile(99), 2),
             "uptime_seconds": int(uptime),
             "categories": {
                 "agency": self.agency_count,
