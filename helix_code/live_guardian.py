@@ -21,8 +21,11 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent))
 
 from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, HTMLResponse
 import uvicorn
+
+# [FACT] Import demo components
+from live_demo_server import DEMO_HTML, demo_websocket_handler
 
 # [FACT] Import Helix-TTD core modules
 from constitutional_compliance import ConstitutionalCompliance
@@ -73,9 +76,17 @@ async def health_check():
     )
 
 
-@app.get("/")
+@app.get("/", response_class=HTMLResponse)
 async def root():
-    """[FACT] Root endpoint with service info."""
+    """[FACT] Root endpoint serves interactive demo page."""
+    # Import demo HTML from live_demo_server
+    from live_demo_server import DEMO_HTML
+    return HTMLResponse(content=DEMO_HTML)
+
+
+@app.get("/api")
+async def api_info():
+    """[FACT] API info endpoint."""
     return JSONResponse(
         status_code=200,
         content={
@@ -86,6 +97,7 @@ async def root():
                 "health": "/health",
                 "validate": "/validate (POST)",
                 "live": "/live (WebSocket)",
+                "demo": "/ (Interactive Demo)",
             },
         },
     )
@@ -166,6 +178,14 @@ async def live_websocket(websocket: WebSocket):
     except Exception as e:
         print(f"[ERROR] Live session error: {e}")
         await websocket.close()
+
+
+@app.websocket("/demo-live")
+async def demo_websocket(websocket: WebSocket):
+    """[FACT] Interactive demo WebSocket with Constitutional Guardian validation."""
+    # Import here to avoid circular dependency
+    from live_demo_server import demo_websocket_handler
+    await demo_websocket_handler(websocket)
 
 
 # [FACT] ADK Agent Wrapper (for future Google ADK integration)
