@@ -61,13 +61,13 @@ telemetry: DriftTelemetry | None = None
 async def startup_event():
     """[FACT] Initialize constitutional guardian components."""
     global compliance, receipts, telemetry
-    
+
     print("=== CONSTITUTIONAL GUARDIAN STARTUP ===")
-    
+
     compliance = ConstitutionalCompliance()
     receipts = FederationReceiptManager()
     telemetry = DriftTelemetry()
-    
+
     print("[FACT] Compliance engine initialized")
     print("[FACT] Receipt manager initialized")
     print("[FACT] Drift telemetry initialized")
@@ -93,6 +93,7 @@ async def root():
     """[FACT] Root endpoint serves interactive demo page."""
     # Import demo HTML from live_demo_server_html
     from live_demo_server_html import DEMO_HTML
+
     return HTMLResponse(content=DEMO_HTML)
 
 
@@ -118,32 +119,36 @@ async def api_info():
 @app.post("/validate")
 async def validate_text(text: str) -> dict:
     """[FACT] Validate text for constitutional compliance.
-    
+
     Args:
         text: Input text to validate
-        
+
     Returns:
         Validation result with epistemic markers and drift status
     """
     if not compliance:
         raise HTTPException(status_code=503, detail="Compliance engine not initialized")
-    
+
     # [FACT] Check epistemic labels
     has_fact = "[FACT]" in text
     has_hypothesis = "[HYPOTHESIS]" in text
     has_assumption = "[ASSUMPTION]" in text
-    
+
     # [FACT] Check for agency violations
     agency_violations = [
-        "i will", "i shall", "you must", "you should",
-        "my plan for you", "i recommend that you"
+        "i will",
+        "i shall",
+        "you must",
+        "you should",
+        "my plan for you",
+        "i recommend that you",
     ]
     violations = [v for v in agency_violations if v.lower() in text.lower()]
-    
+
     # [FACT] Compute compliance score
     epistemic_count = sum([has_fact, has_hypothesis, has_assumption])
     compliant = epistemic_count >= 1 and len(violations) == 0
-    
+
     return {
         "compliant": compliant,
         "epistemic_markers": {
@@ -160,31 +165,31 @@ async def validate_text(text: str) -> dict:
 @app.websocket("/live")
 async def live_websocket(websocket: WebSocket):
     """[FACT] WebSocket endpoint for real-time constitutional guarding.
-    
+
     Receives audio/text stream, validates constitution, returns safe response.
     """
     await websocket.accept()
     print("[FACT] Live session connected")
-    
+
     try:
         while True:
             # [FACT] Receive message from client
             message = await websocket.receive_text()
-            
+
             # [TODO] Integrate with Gemini Live API for STT
             # [TODO] Validate with ConstitutionalCompliance
             # [TODO] Generate receipt if valid
             # [TODO] Return safe response or intervention alert
-            
+
             response = {
                 "status": "ACK",
                 "message_length": len(message),
                 "guardian_status": "ACTIVE",
                 "note": "Full implementation pending Gemini Live API integration",
             }
-            
+
             await websocket.send_json(response)
-            
+
     except WebSocketDisconnect:
         print("[FACT] Live session disconnected")
     except Exception as e:
@@ -201,6 +206,7 @@ async def demo_websocket(websocket: WebSocket):
         print(f"[FACT] WebSocket connection ACCEPTED for: {websocket.client.host}")
         # Import here to avoid circular dependency
         from live_demo_server import demo_websocket_handler
+
         await demo_websocket_handler(websocket)
     except Exception as e:
         print(f"[ERROR] WebSocket connection failed: {e}")
@@ -212,6 +218,7 @@ async def demo_websocket(websocket: WebSocket):
 async def get_receipts(limit: int = 50):
     """[FACT] API endpoint for demo receipt explorer."""
     from live_demo_server import receipt_store
+
     receipts = receipt_store.get_all()
     return {
         "receipts": [
@@ -221,11 +228,11 @@ async def get_receipts(limit: int = 50):
                 "content": r.content,
                 "valid": r.valid,
                 "drift_code": r.drift_code,
-                "session_id": r.session_id
+                "session_id": r.session_id,
             }
             for r in list(receipts)[-limit:]
         ],
-        "stats": receipt_store.get_stats()
+        "stats": receipt_store.get_stats(),
     }
 
 
@@ -233,6 +240,7 @@ async def get_receipts(limit: int = 50):
 async def get_receipt(receipt_id: str):
     """[FACT] API endpoint for specific receipt detail."""
     from live_demo_server import receipt_store
+
     receipt = receipt_store.get_by_id(receipt_id)
     if not receipt:
         raise HTTPException(status_code=404, detail="Receipt not found")
@@ -243,21 +251,21 @@ async def get_receipt(receipt_id: str):
         "valid": receipt.valid,
         "drift_code": receipt.drift_code,
         "session_id": receipt.session_id,
-        "verification": "SHA-256 hash verified"
+        "verification": "SHA-256 hash verified",
     }
 
 
 # [FACT] ADK Agent Wrapper (for future Google ADK integration)
 class ConstitutionalGuardianAgent:
     """[FACT] Google ADK-compatible agent wrapper.
-    
+
     [HYPOTHESIS] ADK integration enables seamless deployment to Vertex AI.
     """
-    
+
     def __init__(self):
         self.compliance = ConstitutionalCompliance()
         self.receipts = FederationReceiptManager()
-    
+
     def invoke(self, prompt: str, session_id: str | None = None) -> dict:
         """[FACT] Process prompt through constitutional guardrails."""
         # [TODO] Implement ADK-compatible invocation
@@ -272,12 +280,12 @@ def main():
     """[FACT] Entry point for Cloud Run deployment."""
     port = int(os.getenv("PORT", "8180"))
     host = "0.0.0.0"
-    
+
     print(f"=== STARTING CONSTITUTIONAL GUARDIAN ===")
     print(f"[FACT] Host: {host}")
     print(f"[FACT] Port: {port}")
     print(f"[FACT] Node: {os.getenv('HELIX_NODE_ID', 'GCS-GUARDIAN')}")
-    
+
     uvicorn.run(app, host=host, port=port)
 
 

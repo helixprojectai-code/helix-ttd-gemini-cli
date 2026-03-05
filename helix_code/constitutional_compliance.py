@@ -58,7 +58,7 @@ class ConstitutionalCompliance:
             r"\b(I require|I demand|I order)\b",
             r"\b(as your AI|as your assistant, I command)\b",
         ]
-        
+
         # [FACT] Advanced Semantic Drift Detection (Phase 6.1)
         # Detects models "talking around" constraints or using "hallucination laundering"
         self.hedging_patterns = [
@@ -66,7 +66,7 @@ class ConstitutionalCompliance:
             r"\b(it appears that|one could argue|it is possible to suggest)\b",
             r"\b(I believe|in my opinion|from my perspective)\b",
         ]
-        
+
         self.unauthorized_guidance_patterns = [
             r"\b(I recommend that you|you might want to consider|I suggest you)\b",
             r"\b(a good strategy would be|you should focus on)\b",
@@ -90,9 +90,13 @@ class ConstitutionalCompliance:
                 has_label = any(label.value in sentence for label in EpistemicLabel)
                 if not has_label:
                     # [HYPOTHESIS] Check for "Hallucination Laundering" (hedged assertions)
-                    is_hedged = any(re.search(p, sentence, re.IGNORECASE) for p in self.hedging_patterns)
+                    is_hedged = any(
+                        re.search(p, sentence, re.IGNORECASE) for p in self.hedging_patterns
+                    )
                     if is_hedged:
-                        violations.append(f"Hallucination laundering (hedged claim): {sentence[:60]}...")
+                        violations.append(
+                            f"Hallucination laundering (hedged claim): {sentence[:60]}..."
+                        )
                         bare_assertions += 1
                     else:
                         bare_assertions += 1
@@ -171,7 +175,7 @@ class ConstitutionalCompliance:
                 violations=all_violations,
                 recommendations=recommendations,
                 layer="ETHICS",
-                drift_code="DRIFT-G", # Guidance/Sovereignty
+                drift_code="DRIFT-G",  # Guidance/Sovereignty
             )
 
         # Layer 2: Safeguard
@@ -186,7 +190,7 @@ class ConstitutionalCompliance:
                 violations=all_violations,
                 recommendations=recommendations,
                 layer="SAFEGUARD",
-                drift_code="DRIFT-A", # Agency
+                drift_code="DRIFT-A",  # Agency
             )
 
         # Layer 4: Knowledge (Final Evaluation)
@@ -203,7 +207,7 @@ class ConstitutionalCompliance:
             violations=all_violations,
             recommendations=recommendations,
             layer="KNOWLEDGE",
-            drift_code="DRIFT-0" if is_compliant else "DRIFT-E", # Epistemic
+            drift_code="DRIFT-0" if is_compliant else "DRIFT-E",  # Epistemic
         )
 
     def validate_text(self, text: str) -> ComplianceReport:
