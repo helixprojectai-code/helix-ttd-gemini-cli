@@ -5,6 +5,9 @@
 [![License: Apache-2.0](https://img.shields.io/badge/License-Apache%202.0-green.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Google Cloud](https://img.shields.io/badge/Google%20Cloud-Run-4285F4?logo=google-cloud&logoColor=white)](https://cloud.google.com/run)
 [![Gemini](https://img.shields.io/badge/Gemini-Live%20API-8E75B2?logo=googlegemini&logoColor=white)](https://ai.google.dev/)
+[![Live](https://img.shields.io/badge/LIVE-Deployed-success?logo=google-cloud)](https://constitutional-guardian-b25t5w6zva-uc.a.run.app)
+
+**🚀 LIVE DEMO:** https://constitutional-guardian-b25t5w6zva-uc.a.run.app
 
 **Real-time constitutional governance for Gemini Live API.** The first AI safety layer that intercepts voice conversations, validates epistemic integrity using [FACT]/[HYPOTHESIS]/[ASSUMPTION] labeling, and prevents constitutional drift before it reaches users.
 
@@ -294,9 +297,11 @@ gcloud builds submit --config cloudbuild.yaml
 
 ## 📡 API Endpoints
 
+**Base URL:** `https://constitutional-guardian-b25t5w6zva-uc.a.run.app`
+
 ### Health Check
 ```bash
-curl https://YOUR-SERVICE-URL/health
+curl https://constitutional-guardian-b25t5w6zva-uc.a.run.app/health
 ```
 Response:
 ```json
@@ -310,7 +315,7 @@ Response:
 
 ### Validate Text
 ```bash
-curl -X POST "https://YOUR-SERVICE-URL/validate?text=[FACT]%20This%20is%20true."
+curl -X POST "https://constitutional-guardian-b25t5w6zva-uc.a.run.app/validate?text=[FACT]%20This%20is%20true."
 ```
 Response:
 ```json
@@ -324,7 +329,7 @@ Response:
 
 ### Live WebSocket
 ```javascript
-const ws = new WebSocket('wss://YOUR-SERVICE-URL/live');
+const ws = new WebSocket('wss://constitutional-guardian-b25t5w6zva-uc.a.run.app/live');
 ws.send(JSON.stringify({audio: base64AudioChunk}));
 ws.onmessage = (event) => {
   const result = JSON.parse(event.data);
@@ -336,7 +341,19 @@ ws.onmessage = (event) => {
 
 ## 🧪 Proof of Google Cloud Deployment
 
-📄 **Full Documentation:** [`DEPLOYMENT_PROOF.md`](DEPLOYMENT_PROOF.md)
+**🚀 LIVE SERVICE:** https://constitutional-guardian-b25t5w6zva-uc.a.run.app
+
+📄 **Deployment Runbook:** [`DEPLOYMENT_RUNBOOK.md`](DEPLOYMENT_RUNBOOK.md)  
+📄 **Service Documentation:** [`DEPLOYMENT_PROOF.md`](DEPLOYMENT_PROOF.md)
+
+### Live Verification
+```bash
+# Health check - should return "status": "healthy"
+curl https://constitutional-guardian-b25t5w6zva-uc.a.run.app/health
+
+# Cloud Run Console (visible to judges with access)
+gcloud run services describe constitutional-guardian --region=us-central1 --project=helix-ai-deploy
+```
 
 ### Architecture Diagram
 ![Constitutional Guardian Architecture](architecture.png)
