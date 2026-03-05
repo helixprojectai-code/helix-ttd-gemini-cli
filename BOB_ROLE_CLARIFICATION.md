@@ -1,7 +1,7 @@
 # Role Clarification - Audit Anchor Platform
 
 **To:** Bob  
-**From:** Eli J. Ralston  
+**From:** Stephen Hope  
 **Re:** Scope and Role Definition
 
 ---
@@ -119,7 +119,7 @@ If expectations differ, let's discuss before any work begins.
 
 ---
 
-**Eli J. Ralston**  
+**Stephen Hope**  
 Managing Principal, Rusted Gate Advisory
 
 ---

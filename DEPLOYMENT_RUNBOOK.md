@@ -554,7 +554,7 @@ gcloud run services delete constitutional-guardian --region=us-central1
 
 ### 10.3 Contact
 
-**Maintainer:** Eli J. Ralston  
+**Maintainer:** Stephen Hope  
 **Email:** helix.project.ai@helixprojectai.com  
 **Organization:** helixprojectai-code
 
@@ -564,8 +564,8 @@ gcloud run services delete constitutional-guardian --region=us-central1
 
 | Date | Version | Changes | Author |
 |------|---------|---------|--------|
-| 2026-03-05 | 1.0 | Initial deployment | Eli J. Ralston |
-| 2026-03-05 | 1.1 | Switched from Cloud Build to Docker + Artifact Registry | Eli J. Ralston |
+| 2026-03-05 | 1.0 | Initial deployment | Stephen Hope |
+| 2026-03-05 | 1.1 | Switched from Cloud Build to Docker + Artifact Registry | Stephen Hope |
 
 ---
 

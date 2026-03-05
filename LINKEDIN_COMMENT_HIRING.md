@@ -6,7 +6,7 @@
 
 ## The Hiring Pipeline Didn't Break. It Is Ungoverned.
 
-**By Eli J. Ralston** — edited with AI
+**By Stephen Hope** — edited with AI
 
 ---
 
@@ -155,7 +155,7 @@ Most organizations have not. And the talent they are losing because of it will n
 
 ---
 
-**Eli J. Ralston** | Managing Principal, Rusted Gate Advisory
+**Stephen Hope** | Managing Principal, Rusted Gate Advisory
 
 Rusted Gate Advisory works with organizations navigating the gap between where they are and where they need to be — in technology, leadership, and organizational design. Sometimes the gate is rusted shut for a reason. Sometimes it just needs the right key.
 
