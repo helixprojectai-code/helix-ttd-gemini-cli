@@ -13,26 +13,13 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libffi-dev \
     && rm -rf /var/lib/apt/lists/*
 
-# [FACT] Copy dependency files first (layer caching)
-COPY helix_code/requirements.txt ./
-COPY pyproject.toml ./
-
-# [FACT] Install Python dependencies
-RUN pip install --no-cache-dir -r requirements.txt \
-    fastapi \
-    uvicorn \
-    websockets \
-    google-adk \
-    google-cloud-speech \
-    google-cloud-pubsub \
-    google-cloud-storage
-
-# [FACT] Copy application code
+# [FACT] Copy application code and dependency files
 COPY helix_code/ ./helix_code/
 COPY tools/ ./tools/
+COPY pyproject.toml ./
 
-# [FACT] Install helix_code as editable package
-RUN pip install -e ./helix_code
+# [FACT] Install dependencies from synced requirements.txt
+RUN pip install --no-cache-dir -r helix_code/requirements.txt
 
 # [FACT] Create non-root user for security (Cloud Run best practice)
 RUN useradd -m -u 1000 helix && chown -R helix:helix /app
@@ -40,6 +27,7 @@ USER helix
 
 # [FACT] Cloud Run requires PORT env var (default 8180)
 ENV PORT=8180
+ENV PYTHONPATH=/app/helix_code
 ENV PYTHONUNBUFFERED=1
 
 # [FACT] Expose port for Cloud Run
@@ -50,4 +38,5 @@ HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
     CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:8180/health')" || exit 1
 
 # [FACT] Start Constitutional Guardian service
-CMD ["python", "-m", "helix_code.live_guardian"]
+# [HYPOTHESIS] Running directly via python solves module resolution issues in containers
+CMD ["python", "helix_code/live_guardian.py"]
