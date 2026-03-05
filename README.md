@@ -366,8 +366,13 @@ curl https://constitutional-guardian-b25t5w6zva-uc.a.run.app/health
 gcloud run services describe constitutional-guardian --region=us-central1 --project=helix-ai-deploy
 ```
 
-### Architecture Diagram
+### Architecture Diagrams
+
+**System Architecture:**
 ![Constitutional Guardian Architecture](architecture.png)
+
+**NANO 2.0 Visual Overview:**
+![NANO 2.0 Architecture](ARCHITECTURE_CG.png)
 
 ### GCP Services Used
 
