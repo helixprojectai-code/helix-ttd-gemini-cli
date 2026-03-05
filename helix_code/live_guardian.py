@@ -35,8 +35,10 @@ from drift_telemetry import DriftTelemetry
 # [FACT] FastAPI application for Cloud Run
 app = FastAPI(
     title="Constitutional Guardian",
-    description="Real-time constitutional compliance for Gemini Live API",
+    description="Real-time constitutional compliance for Gemini Live API. Validates epistemic integrity using [FACT]/[HYPOTHESIS]/[ASSUMPTION] markers.",
     version="1.0.0",
+    docs_url="/docs",
+    redoc_url="/redoc",
 )
 
 # [FACT] Global state (initialized on startup)
