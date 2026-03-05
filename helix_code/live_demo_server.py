@@ -117,7 +117,7 @@ class ReceiptStore:
             # Remove oldest from mapping
             oldest = self.receipts[0]
             self.receipts_by_id.pop(oldest.receipt_id, None)
-            
+
         self.receipts.append(receipt)
         self.receipts_by_id[receipt.receipt_id] = receipt
 
@@ -171,10 +171,11 @@ async def demo_websocket_handler(websocket: WebSocket):
                     continue
 
                 if msg_type == "audio":
-                    # [FACT] Stream real audio to Gemini Live
+                    # [FACT] Stream real audio to Gemini Live with narrative hint
                     audio_data = data.get("data", "")
+                    narrative = data.get("narrative", None)
                     if audio_data:
-                        await bridge.stream_audio_to_gemini(session, audio_data)
+                        await bridge.stream_audio_to_gemini(session, audio_data, narrative=narrative)
                     continue
 
                 if msg_type in ["text", "simulate_gemini"]:
