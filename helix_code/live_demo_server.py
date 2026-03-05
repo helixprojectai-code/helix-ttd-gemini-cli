@@ -222,11 +222,17 @@ async def demo_websocket_handler(websocket: WebSocket):
                             "message": "[GEMINI] Sending to Live API..."
                         })
                         
+                        # [DEBUG] Log what's being sent
+                        logger.info(f"[DEBUG] Sending to Gemini - prompt length: {len(prompt)}, content: '{prompt[:50]}...'")
+                        
                         gemini_result = await client.generate_response(
                             prompt=prompt,
                             system_instruction="You are a helpful AI assistant. Use epistemic markers [FACT], [HYPOTHESIS], [ASSUMPTION] for substantive claims. Never claim agency - you are a tool, not an agent.",
                             temperature=0.7,
                         )
+                        
+                        # [DEBUG] Log what came back
+                        logger.info(f"[DEBUG] Gemini result - success: {gemini_result['success']}, text length: {len(gemini_result.get('text') or '')}, error: {gemini_result.get('error')}")
                         
                         if gemini_result["success"]:
                             content = gemini_result["text"]

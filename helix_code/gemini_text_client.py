@@ -91,6 +91,17 @@ class GeminiTextClient:
             if system_instruction:
                 config.system_instruction = system_instruction
 
+            # [DEBUG] Verify prompt before sending
+            print(f"[DEBUG] About to call Gemini API with prompt: '{prompt[:50]}...' (len={len(prompt)})")
+            if not prompt or not prompt.strip():
+                return {
+                    "success": False,
+                    "text": None,
+                    "error": "Cannot send empty prompt to Gemini API",
+                    "model": self.model,
+                    "tokens": None,
+                }
+            
             # [FACT] Call Gemini API (async)
             response = await self.client.aio.models.generate_content(
                 model=self.model,
@@ -120,10 +131,15 @@ class GeminiTextClient:
             }
 
         except Exception as e:
+            error_msg = f"Gemini API error: {str(e)}"
+            print(f"[ERROR] {error_msg}")
+            print(f"[ERROR] Exception type: {type(e)}")
+            import traceback
+            print(f"[ERROR] Traceback: {traceback.format_exc()}")
             return {
                 "success": False,
                 "text": None,
-                "error": f"Gemini API error: {str(e)}",
+                "error": error_msg,
                 "model": self.model,
                 "tokens": None,
             }
