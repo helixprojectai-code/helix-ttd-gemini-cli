@@ -36,6 +36,7 @@ class GeminiTextClient:
         
         if self.api_key:
             self.client = genai.Client(api_key=self.api_key)
+            print(f"[FACT] Gemini client initialized with model: {self.model}")
         else:
             print("[WARNING] No GEMINI_API_KEY set. Text API unavailable.")
 
