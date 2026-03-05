@@ -12,19 +12,16 @@ This module demonstrates use of:
 - Cloud Build: CI/CD pipeline automation
 """
 
-import base64
 import json
 import os
 from dataclasses import asdict, dataclass
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 # [FACT] Google Cloud client libraries
 try:
-    from google.api_core import retry
     from google.cloud import logging as cloud_logging
     from google.cloud import pubsub_v1, secretmanager, storage
-    from google.cloud.logging.handlers import CloudLoggingHandler
 
     GCP_AVAILABLE = True
 except ImportError:
@@ -39,7 +36,7 @@ class FederationEvent:
     node_id: str
     event_type: str  # 'drift_detected', 'receipt_created', 'compliance_check'
     timestamp: str
-    payload: Dict[str, Any]
+    payload: dict[str, Any]
     receipt_hash: str
 
 
@@ -53,7 +50,7 @@ class CloudPubSubFederation:
     Documentation: https://cloud.google.com/pubsub/docs
     """
 
-    def __init__(self, project_id: Optional[str] = None):
+    def __init__(self, project_id: str | None = None):
         self.project_id = project_id or os.getenv("GOOGLE_CLOUD_PROJECT")
         self.topic_name = "constitutional-federation"
         self.subscription_name = "guardian-subscription"
@@ -141,7 +138,7 @@ class CloudStorageReceipts:
     Documentation: https://cloud.google.com/storage/docs
     """
 
-    def __init__(self, bucket_name: Optional[str] = None):
+    def __init__(self, bucket_name: str | None = None):
         self.bucket_name = bucket_name or os.getenv("GCS_RECEIPT_BUCKET")
 
         if GCP_AVAILABLE and self.bucket_name:
@@ -151,7 +148,7 @@ class CloudStorageReceipts:
             self.client = None
             self.bucket = None
 
-    def store_receipt(self, receipt_id: str, receipt_data: Dict) -> str:
+    def store_receipt(self, receipt_id: str, receipt_data: dict) -> str:
         """[FACT] Store cryptographic receipt in GCS with versioning.
 
         Args:
@@ -186,7 +183,7 @@ class CloudStorageReceipts:
 
         return f"gs://{self.bucket_name}/{blob_path}"
 
-    def retrieve_receipt(self, receipt_id: str) -> Optional[Dict]:
+    def retrieve_receipt(self, receipt_id: str) -> dict | None:
         """[FACT] Retrieve receipt from GCS by ID."""
         if not self.client:
             return None
@@ -201,7 +198,7 @@ class CloudStorageReceipts:
 
         return None
 
-    def _local_fallback_store(self, receipt_id: str, receipt_data: Dict) -> str:
+    def _local_fallback_store(self, receipt_id: str, receipt_data: dict) -> str:
         """[FACT] Local filesystem fallback for development."""
         import os
 
@@ -224,7 +221,7 @@ class SecretManagerDBC:
     Documentation: https://cloud.google.com/secret-manager/docs
     """
 
-    def __init__(self, project_id: Optional[str] = None):
+    def __init__(self, project_id: str | None = None):
         self.project_id = project_id or os.getenv("GOOGLE_CLOUD_PROJECT")
 
         if GCP_AVAILABLE and self.project_id:
@@ -276,7 +273,7 @@ class SecretManagerDBC:
 
         return version.name
 
-    def retrieve_dbc_key(self, agent_name: str) -> Optional[bytes]:
+    def retrieve_dbc_key(self, agent_name: str) -> bytes | None:
         """[FACT] Retrieve DBC private key from Secret Manager."""
         if not self.client:
             return self._local_fallback_retrieve(agent_name)
@@ -292,7 +289,7 @@ class SecretManagerDBC:
         print(f"[LOCAL MODE] Would store DBC key for {agent_name}")
         return f"local-{agent_name}"
 
-    def _local_fallback_retrieve(self, agent_name: str) -> Optional[bytes]:
+    def _local_fallback_retrieve(self, agent_name: str) -> bytes | None:
         """[FACT] Local fallback for key retrieval."""
         key = os.getenv(f"HELIX_DBC_KEY_{agent_name.upper()}")
         return key.encode() if key else None
@@ -319,7 +316,7 @@ class CloudAuditLogger:
             self.logger = None
 
     def log_compliance_check(
-        self, session_id: str, text: str, result: Dict, receipt_id: Optional[str] = None
+        self, session_id: str, text: str, result: dict, receipt_id: str | None = None
     ) -> None:
         """[FACT] Log constitutional compliance check to Cloud Logging.
 
@@ -358,7 +355,7 @@ class CloudAuditLogger:
             print(f"[AUDIT] {json.dumps(log_entry)}")
 
     def log_drift_detection(
-        self, session_id: str, drift_type: str, severity: str, details: Dict
+        self, session_id: str, drift_type: str, severity: str, details: dict
     ) -> None:
         """[FACT] Log constitutional drift detection event."""
         log_entry = {
@@ -407,7 +404,7 @@ class CloudRunDeployment:
         self.region = os.getenv("GOOGLE_CLOUD_REGION", "us-central1")
         self.project_id = os.getenv("GOOGLE_CLOUD_PROJECT")
 
-    def get_deployment_info(self) -> Dict:
+    def get_deployment_info(self) -> dict:
         """[FACT] Return current Cloud Run deployment information.
 
         Returns:
@@ -426,7 +423,7 @@ class CloudRunDeployment:
             }
 
         # [FACT] Construct Cloud Run service URL
-        service_url = f"https://{self.service_name}-" f"{self.project_id}-{self.region}.a.run.app"
+        service_url = f"https://{self.service_name}-{self.project_id}-{self.region}.a.run.app"
 
         return {
             "status": "deployed",
@@ -435,7 +432,7 @@ class CloudRunDeployment:
             "region": self.region,
             "url": service_url,
             "console_link": (
-                f"https://console.cloud.google.com/run/detail/" f"{self.region}/{self.service_name}"
+                f"https://console.cloud.google.com/run/detail/{self.region}/{self.service_name}"
             ),
         }
 
@@ -454,7 +451,7 @@ class CloudRunDeployment:
 
 
 # [FACT] Convenience function for service initialization
-def initialize_gcp_services() -> Dict:
+def initialize_gcp_services() -> dict:
     """[FACT] Initialize all GCP services for Constitutional Guardian.
 
     Returns:
