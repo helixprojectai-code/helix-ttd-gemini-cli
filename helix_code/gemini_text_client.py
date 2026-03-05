@@ -37,8 +37,10 @@ class GeminiTextClient:
         if self.api_key:
             self.client = genai.Client(api_key=self.api_key)
             print(f"[FACT] Gemini client initialized with model: {self.model}")
+            print(f"[FACT] API Key (first 8 chars): {self.api_key[:8]}...")
         else:
             print("[WARNING] No GEMINI_API_KEY set. Text API unavailable.")
+            print(f"[DEBUG] os.getenv('GEMINI_API_KEY') = {os.getenv('GEMINI_API_KEY')}")
 
     def is_available(self) -> bool:
         """[FACT] Check if Gemini API is configured and available."""
@@ -98,6 +100,11 @@ class GeminiTextClient:
 
             # [FACT] Extract response text
             text = response.text if response.text else ""
+            
+            # [DEBUG] Log raw response
+            print(f"[DEBUG] Gemini raw response: '{text[:100]}...' (len={len(text)})")
+            print(f"[DEBUG] Response type: {type(response)}")
+            print(f"[DEBUG] Response candidates: {len(response.candidates) if response.candidates else 0}")
             
             # [FACT] Get token usage if available
             tokens = None
