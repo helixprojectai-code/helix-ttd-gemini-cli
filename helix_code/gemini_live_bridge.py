@@ -94,7 +94,7 @@ class GeminiLiveBridge:
         self.sessions[session_id] = session
         return session
 
-    async def start_gemini_live(self, session: LiveSession, model_id: str = "gemini-1.5-flash"):
+    async def start_gemini_live(self, session: LiveSession, model_id: str = "gemini-2.5-flash"):
         """[FACT] Start the actual Gemini Live API session."""
         if not self.client:
             print("[WARNING] Gemini Client not available.")
