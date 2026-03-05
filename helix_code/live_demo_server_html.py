@@ -145,6 +145,13 @@ DEMO_HTML = """
         .clear-btn { background: rgba(248, 81, 73, 0.1); border: 1px solid var(--red); color: var(--red); padding: 4px 10px; border-radius: 4px; cursor: pointer; font-size: 0.65rem; transition: all 0.2s; }
         .clear-btn:hover { background: var(--red); color: #fff; }
         
+        /* [FACT] Gemini Live Mode Indicator */
+        .mode-indicator { margin: 15px 0; padding: 8px 12px; background: #010409; border: 1px solid var(--border); border-radius: 6px; text-align: center; }
+        .mode-indicator.live { border-color: var(--primary); box-shadow: 0 0 10px rgba(0, 255, 136, 0.2); }
+        .mode-label { font-size: 0.65rem; color: var(--text-dim); display: block; }
+        .mode-status { font-size: 0.8rem; font-weight: bold; color: #d29922; }
+        .mode-status.live { color: var(--primary); }
+        
         /* [FACT] Scenario Panel Styles */
         .scenario-panel { margin-top: 15px; padding-top: 15px; border-top: 1px solid var(--border); }
         .scenario-label { font-size: 0.75rem; color: var(--text-dim); margin-bottom: 10px; font-weight: 500; }
@@ -266,6 +273,12 @@ DEMO_HTML = """
                     </div>
                 </div>
                 <div class="chart-container"><canvas id="latencyChart"></canvas></div>
+                
+                <!-- [FACT] Gemini Live Mode Indicator -->
+                <div class="mode-indicator" id="mode-indicator">
+                    <span class="mode-label">GEMINI LIVE:</span>
+                    <span class="mode-status" id="mode-status">SIMULATION</span>
+                </div>
                 
                 <!-- [FACT] Federation Status Panel -->
                 <div class="federation-panel">
@@ -413,6 +426,21 @@ DEMO_HTML = """
                 wave.appendChild(bar);
             }
         }
+        
+        // [FACT] Update Gemini Live mode indicator
+        function setGeminiMode(mode) {
+            const indicator = document.getElementById('mode-indicator');
+            const status = document.getElementById('mode-status');
+            if (mode === 'LIVE') {
+                status.textContent = 'LIVE API';
+                status.classList.add('live');
+                indicator.classList.add('live');
+            } else {
+                status.textContent = 'SIMULATION';
+                status.classList.remove('live');
+                indicator.classList.remove('live');
+            }
+        }
 
         let reconnectAttempts = 0;
         let reconnectDelay = 2000;
@@ -428,6 +456,10 @@ DEMO_HTML = """
                 addLog('system', '[OK] Secure Handshake with Constitutional Lattice complete.');
                 addLog('system', '[NET] Federation: 4 nodes online (KIMI, GEMS, DEEPSEEK, GCS-GUARDIAN)');
                 addLog('system', '[AI] DEEPSEEK: R1 reasoning model initialized for edge case detection');
+                // [HYPOTHESIS] Check if Gemini Live API is available
+                // For now, show SIMULATION until real API integration complete
+                setGeminiMode('SIMULATION');
+                addLog('system', '[MODE] Gemini Live: SIMULATION (Real API integration in progress)');
                 startFederationSimulation();
             };
             ws.onclose = () => { 
