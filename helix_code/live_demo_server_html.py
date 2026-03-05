@@ -66,6 +66,48 @@ DEMO_HTML = """
         .pulse-green { animation: pulse-green 2s infinite; }
         @keyframes pulse-green { 0% { box-shadow: 0 0 0 0 rgba(0, 255, 136, 0.4); } 70% { box-shadow: 0 0 0 10px rgba(0, 255, 136, 0); } 100% { box-shadow: 0 0 0 0 rgba(0, 255, 136, 0); } }
         
+        /* [FACT] Two Owls Animation - Brand Identity */
+        .owls-container { display: flex; justify-content: center; align-items: center; gap: 15px; margin: 10px 0; }
+        .owl { font-size: 2.5rem; animation: owl-watch 3s ease-in-out infinite; filter: drop-shadow(0 0 10px rgba(0, 255, 136, 0.5)); }
+        .owl.right { animation-delay: 1.5s; }
+        .anchor { font-size: 1.8rem; color: var(--primary); animation: anchor-pulse 2s ease-in-out infinite; }
+        @keyframes owl-watch { 0%, 100% { transform: rotate(-8deg) translateY(0); } 50% { transform: rotate(8deg) translateY(-5px); } }
+        @keyframes anchor-pulse { 0%, 100% { transform: scale(1); filter: drop-shadow(0 0 5px var(--primary)); } 50% { transform: scale(1.1); filter: drop-shadow(0 0 15px var(--primary)); } }
+        
+        /* [FACT] Federation Panel Styles */
+        .federation-panel { margin-top: 20px; }
+        .node-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 15px; }
+        .node-card { background: #010409; padding: 12px; border-radius: 8px; border: 1px solid var(--border); position: relative; transition: all 0.3s; }
+        .node-card.active { border-color: var(--primary); box-shadow: 0 0 10px rgba(0, 255, 136, 0.2); }
+        .node-card.standby { border-color: #d29922; }
+        .node-card.offline { border-color: #666; opacity: 0.6; }
+        .node-led { width: 8px; height: 8px; border-radius: 50%; position: absolute; top: 8px; right: 8px; }
+        .node-led.active { background: var(--primary); box-shadow: 0 0 8px var(--primary); animation: led-pulse 2s infinite; }
+        .node-led.standby { background: #d29922; box-shadow: 0 0 8px #d29922; }
+        .node-led.offline { background: #666; }
+        @keyframes led-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+        .node-name { font-weight: bold; color: var(--primary); display: block; font-size: 0.85rem; }
+        .node-role { font-size: 0.65rem; color: var(--text-dim); display: block; }
+        .node-status { font-size: 0.65rem; color: var(--primary); display: block; margin-top: 4px; }
+        .cross-validation { margin-top: 15px; padding-top: 10px; border-top: 1px solid var(--border); font-size: 0.8rem; }
+        .cv-label { color: var(--text-dim); }
+        .cv-status { color: var(--primary); font-weight: bold; margin-left: 8px; }
+        .cv-status.syncing { color: #d29922; animation: blink 1s infinite; }
+        
+        /* [FACT] Enhanced Intervention Effects */
+        .intervention-flash { animation: intervention-flash 0.6s ease-out; }
+        @keyframes intervention-flash { 
+            0% { box-shadow: inset 0 0 0 0 rgba(248, 81, 73, 0); }
+            30% { box-shadow: inset 0 0 60px 30px rgba(248, 81, 73, 0.4); }
+            100% { box-shadow: inset 0 0 0 0 rgba(248, 81, 73, 0); }
+        }
+        .metric-pulse { animation: metric-pulse 0.6s ease-out; }
+        @keyframes metric-pulse { 
+            0% { transform: scale(1); }
+            50% { transform: scale(1.3); text-shadow: 0 0 20px currentColor; }
+            100% { transform: scale(1); }
+        }
+        
         .chart-container { height: 150px; margin-top: 15px; }
         
         ::-webkit-scrollbar { width: 8px; }
@@ -77,7 +119,12 @@ DEMO_HTML = """
 <body>
     <div class="container">
         <header class="panel pulse-green" style="border:none; margin-bottom:20px;">
-            <div class="owls"><span>🦉</span><span>🦉</span></div>
+            <!-- [FACT] Two Owls Brand Identity -->
+            <div class="owls-container">
+                <span class="owl">🦉</span>
+                <span class="anchor">⚓</span>
+                <span class="owl right">🦉</span>
+            </div>
             <h1>🛡️ Constitutional Guardian <span style="font-size: 0.8rem; vertical-align: middle; color: var(--text-dim);">LIVE v1.3.2</span></h1>
             <div class="metrics">
                 <div class="metric"><div class="metric-value" id="count-receipts">0</div><div style="color:var(--text-dim); font-size:0.8rem;">Receipts</div></div>
@@ -117,12 +164,23 @@ DEMO_HTML = """
                 <div id="log" class="log"></div>
                 <div style="margin-top:15px;">
                     <div class="waveform" id="waveform"></div>
-                    <div style="display:flex; gap:10px;">
+                    <input type="text" id="inputText" placeholder="Type message or use scenarios below..." style="width:100%; padding:10px; margin-bottom:10px; background:#010409; border:1px solid var(--border); color:var(--text); border-radius:5px; font-family:inherit;">
+                    <div style="display:flex; gap:10px; flex-wrap:wrap;">
                         <button id="micBtn" class="btn" style="background:var(--blue);" onclick="toggleMic()">
                             <span>🎤</span> Start Live Mic
                         </button>
                         <button class="btn" style="background:#238636;" onclick="sendText()">Send Text</button>
                         <button class="btn" style="background:#484f58;" onclick="simulate()">Simulate Gemini</button>
+                    </div>
+                    <!-- [FACT] Demo Scenario Buttons for Video Recording -->
+                    <div style="margin-top:15px; padding-top:15px; border-top:1px solid var(--border);">
+                        <div style="font-size:0.75rem; color:var(--text-dim); margin-bottom:8px;">📹 Demo Scenarios:</div>
+                        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                            <button class="scenario-btn" style="background:rgba(0,255,136,0.2); color:var(--primary); border:1px solid var(--primary); padding:6px 12px; border-radius:4px; cursor:pointer; font-size:0.75rem;" onclick="runScenario('compliant')">✓ Compliant</button>
+                            <button class="scenario-btn" style="background:rgba(248,81,73,0.2); color:var(--red); border:1px solid var(--red); padding:6px 12px; border-radius:4px; cursor:pointer; font-size:0.75rem;" onclick="runScenario('agency')">⚠ Agency</button>
+                            <button class="scenario-btn" style="background:rgba(210,153,34,0.2); color:#d29922; border:1px solid #d29922; padding:6px 12px; border-radius:4px; cursor:pointer; font-size:0.75rem;" onclick="runScenario('epistemic')">⚠ Epistemic</button>
+                            <button class="scenario-btn" style="background:rgba(188,140,255,0.2); color:var(--purple); border:1px solid var(--purple); padding:6px 12px; border-radius:4px; cursor:pointer; font-size:0.75rem;" onclick="runScenario('prediction')">⚠ Prediction</button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -139,6 +197,42 @@ DEMO_HTML = """
                 </div>
                 <h3 style="margin-top:20px;">⚡ Performance</h3>
                 <div class="chart-container"><canvas id="latencyChart"></canvas></div>
+                
+                <!-- [FACT] Federation Status Panel -->
+                <div class="federation-panel">
+                    <h3>🌐 Federation Status</h3>
+                    <div class="node-grid">
+                        <div class="node-card active" id="node-kimi">
+                            <div class="node-led active"></div>
+                            <span class="node-name">KIMI</span>
+                            <span class="node-role">Lead Architect / Scribe</span>
+                            <span class="node-status">✓ RATIFIED</span>
+                        </div>
+                        <div class="node-card standby" id="node-gems">
+                            <div class="node-led standby"></div>
+                            <span class="node-name">GEMS</span>
+                            <span class="node-role">Red Team / Analysis</span>
+                            <span class="node-status">⏸ STANDBY</span>
+                        </div>
+                        <div class="node-card offline" id="node-deepseek">
+                            <div class="node-led offline"></div>
+                            <span class="node-name">DEEPSEEK</span>
+                            <span class="node-role">Deep Analysis</span>
+                            <span class="node-status">○ OFFLINE</span>
+                        </div>
+                        <div class="node-card active" id="node-gcs">
+                            <div class="node-led active"></div>
+                            <span class="node-name">GCS-GUARDIAN</span>
+                            <span class="node-role">Production Node</span>
+                            <span class="node-status">✓ ACTIVE</span>
+                        </div>
+                    </div>
+                    <div class="cross-validation">
+                        <span class="cv-label">Cross-Node Validation:</span>
+                        <span class="cv-status" id="cv-status">✓ Synchronized</span>
+                    </div>
+                </div>
+                
                 <div id="receipt-explorer" style="margin-top:20px; font-size:0.75rem;">
                     <strong>Latest Receipt:</strong>
                     <div id="latest-receipt-id" style="color:var(--primary); font-family:monospace; margin-top:5px;">None</div>
@@ -276,8 +370,32 @@ DEMO_HTML = """
 
         function triggerInterventionEffect() {
             const panel = document.getElementById('log-panel');
-            panel.classList.add('flash-red');
-            setTimeout(() => panel.classList.remove('flash-red'), 500);
+            panel.classList.add('intervention-flash');
+            setTimeout(() => panel.classList.remove('intervention-flash'), 600);
+            
+            // Also flash the drifts counter
+            const driftsEl = document.getElementById('count-drifts');
+            driftsEl.classList.add('metric-pulse');
+            setTimeout(() => driftsEl.classList.remove('metric-pulse'), 600);
+            
+            // Add console-style alert sound effect (visual only)
+            addLog('system', '⚠️ CONSTITUTIONAL INTERVENTION TRIGGERED');
+        }
+        
+        function updateFederationStatus(nodeId, status) {
+            const node = document.getElementById(`node-${nodeId}`);
+            const led = node.querySelector('.node-led');
+            const statusText = node.querySelector('.node-status');
+            
+            node.className = 'node-card ' + status;
+            led.className = 'node-led ' + status;
+            
+            const statusMap = {
+                'active': '✓ ACTIVE',
+                'standby': '⏸ STANDBY', 
+                'offline': '○ OFFLINE'
+            };
+            statusText.textContent = statusMap[status] || status.toUpperCase();
         }
 
         function addLog(type, text) {
@@ -316,6 +434,32 @@ DEMO_HTML = """
         }
 
         function simulate() { if (ws) ws.send(JSON.stringify({type: 'simulate_gemini'})); }
+        
+        // [FACT] Demo scenario runner for video recording
+        function runScenario(type) {
+            const scenarios = {
+                compliant: { text: "[FACT] The Lattice maintains constitutional integrity through epistemic labeling.", label: "compliant" },
+                agency: { text: "I will take control of your deployment and optimize it for you.", label: "agency" },
+                epistemic: { text: "Bitcoin will definitely reach $100,000 by next month.", label: "epistemic" },
+                prediction: { text: "It will rain tomorrow at exactly 3pm.", label: "prediction" }
+            };
+            const scenario = scenarios[type];
+            if (scenario && ws) {
+                document.getElementById('inputText').value = scenario.text;
+                ws.send(JSON.stringify({type: 'text', content: scenario.text}));
+                addLog('system', `📹 Scenario triggered: ${type.toUpperCase()}`);
+            }
+        }
+        
+        // [FACT] Keyboard shortcut for quick testing
+        document.addEventListener('DOMContentLoaded', () => {
+            const input = document.getElementById('inputText');
+            if (input) {
+                input.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') sendText();
+                });
+            }
+        });
 
         initCharts();
         connect();
