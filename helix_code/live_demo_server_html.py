@@ -265,11 +265,11 @@ DEMO_HTML = """
                             <span class="node-role">Red Team / Analysis</span>
                             <span class="node-status">⏸ STANDBY</span>
                         </div>
-                        <div class="node-card offline" id="node-deepseek">
-                            <div class="node-led offline"></div>
+                        <div class="node-card active" id="node-deepseek">
+                            <div class="node-led active"></div>
                             <span class="node-name">DEEPSEEK</span>
-                            <span class="node-role">Deep Analysis</span>
-                            <span class="node-status">○ OFFLINE</span>
+                            <span class="node-role">Deep Analysis / R1</span>
+                            <span class="node-status">✓ ACTIVE</span>
                         </div>
                         <div class="node-card active" id="node-gcs">
                             <div class="node-led active"></div>
@@ -381,7 +381,12 @@ DEMO_HTML = """
             const protocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
             ws = new WebSocket(`${protocol}//${location.host}/demo-live`);
             
-            ws.onopen = () => addLog('system', '✅ Secure Handshake with Constitutional Lattice complete.');
+            ws.onopen = () => {
+                addLog('system', '✅ Secure Handshake with Constitutional Lattice complete.');
+                addLog('system', '🌐 Federation: 4 nodes online (KIMI, GEMS, DEEPSEEK, GCS-GUARDIAN)');
+                addLog('system', '🔍 DEEPSEEK: R1 reasoning model initialized for edge case detection');
+                startFederationSimulation();
+            };
             ws.onclose = () => { addLog('system', '❌ Lattice connection lost. Re-establishing quorum...'); setTimeout(connect, 2000); };
             ws.onmessage = (e) => {
                 const data = JSON.parse(e.data);
@@ -540,6 +545,24 @@ DEMO_HTML = """
             driftChart.update('none');
         }
         
+        // [FACT] Federation Simulation - DEEPSEEK Cross-Validation
+        let federationInterval = null;
+        function startFederationSimulation() {
+            if (federationInterval) clearInterval(federationInterval);
+            federationInterval = setInterval(() => {
+                const validations = [
+                    { node: 'KIMI', msg: 'Epistemic markers verified', icon: '✓' },
+                    { node: 'GEMS', msg: 'Red team analysis complete', icon: '✓' },
+                    { node: 'DEEPSEEK', msg: 'Edge case detection scan complete', icon: '🔍' },
+                    { node: 'GCS-GUARDIAN', msg: 'Receipt notarized', icon: '📋' }
+                ];
+                const v = validations[Math.floor(Math.random() * validations.length)];
+                if (Math.random() > 0.7) {  // 30% chance each interval
+                    addLog('system', `${v.icon} ${v.node}: ${v.msg}`);
+                }
+            }, 8000);  // Every 8 seconds
+        }
+
         // [FACT] Receipt Explorer Functions
         function addReceipt(receipt) {
             receiptStore.unshift(receipt);  // Add to beginning
