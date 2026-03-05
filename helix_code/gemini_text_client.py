@@ -28,7 +28,7 @@ class GeminiTextClient:
     [ASSUMPTION] Model: gemini-1.5-flash for low latency.
     """
 
-    def __init__(self, api_key: str | None = None, model: str = "gemini-1.5-flash"):
+    def __init__(self, api_key: str | None = None, model: str = "gemini-1.5-flash-latest"):
         """[FACT] Initialize Gemini client with optional API key."""
         self.api_key = api_key or os.getenv("GEMINI_API_KEY")
         self.model = model
