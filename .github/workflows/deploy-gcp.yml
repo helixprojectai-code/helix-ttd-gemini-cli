@@ -1,23 +1,26 @@
 # [FACT] GitHub Actions workflow for automated Cloud Run deployment
 # [HYPOTHESIS] CI/CD automation improves deployment reliability and speed
-# [ASSUMPTION] GCP_SA_KEY secret is configured in GitHub repository
+# 
+# AUTHENTICATION: Workload Identity Federation (no stored keys)
+# More secure than Service Account Keys - uses OIDC tokens
+#
+# Required GitHub Secrets:
+# - WORKLOAD_IDENTITY_PROVIDER: projects/PROJECT_NUMBER/locations/global/workloadIdentityPools/POOL/providers/PROVIDER
+# - GCP_PROJECT_ID: helix-ai-deploy
 
 name: Deploy to Google Cloud Run
 
 on:
-  # [FACT] Deploy on every push to main branch
   push:
     branches: [ main ]
-  
-  # [FACT] Allow manual deployment trigger
   workflow_dispatch:
 
-# [FACT] Required permissions for GCP authentication
 permissions:
   contents: read
+  id-token: write  # Required for Workload Identity Federation
 
 env:
-  PROJECT_ID: helix-constitutional-guardian
+  PROJECT_ID: helix-ai-deploy
   SERVICE_NAME: constitutional-guardian
   REGION: us-central1
 
@@ -27,43 +30,35 @@ jobs:
     runs-on: ubuntu-latest
     
     steps:
-      # [FACT] Checkout repository code
       - name: Checkout repository
         uses: actions/checkout@v4
       
-      # [FACT] Authenticate to Google Cloud using Service Account Key
-      - name: Setup GCP Authentication
+      # [FACT] Authenticate to GCP using Workload Identity Federation
+      - name: Authenticate to Google Cloud
         id: auth
         uses: google-github-actions/auth@v2
         with:
-          credentials_json: ${{ secrets.GCP_SA_KEY }}
+          workload_identity_provider: ${{ secrets.WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: github-deployer@${{ env.PROJECT_ID }}.iam.gserviceaccount.com
           project_id: ${{ env.PROJECT_ID }}
       
-      # [FACT] Setup Google Cloud SDK
       - name: Setup Cloud SDK
         uses: google-github-actions/setup-gcloud@v2
         with:
           project_id: ${{ env.PROJECT_ID }}
       
-      # [FACT] Configure Docker authentication for GCR
       - name: Configure Docker
-        run: |
-          gcloud auth configure-docker gcr.io --quiet
+        run: gcloud auth configure-docker gcr.io --quiet
       
-      # [FACT] Build and push container using Cloud Build
-      - name: Build Container Image
+      # [FACT] Build and deploy
+      - name: Build and Deploy
         run: |
-          echo "=== Building container image ==="
+          echo "=== Building container ==="
           gcloud builds submit \
             --tag gcr.io/${{ env.PROJECT_ID }}/${{ env.SERVICE_NAME }}:${{ github.sha }} \
             --timeout=20m \
             --quiet
-          echo "=== Build complete ==="
-      
-      # [FACT] Deploy to Cloud Run
-      - name: Deploy to Cloud Run
-        id: deploy
-        run: |
+          
           echo "=== Deploying to Cloud Run ==="
           gcloud run deploy ${{ env.SERVICE_NAME }} \
             --image gcr.io/${{ env.PROJECT_ID }}/${{ env.SERVICE_NAME }}:${{ github.sha }} \
@@ -72,72 +67,18 @@ jobs:
             --allow-unauthenticated \
             --memory 1Gi \
             --cpu 2 \
-            --concurrency 100 \
-            --max-instances 10 \
             --port 8180 \
-            --set-env-vars "HELIX_NODE_ID=GCS-GUARDIAN,HELIX_ENV=production,GOOGLE_CLOUD_PROJECT=${{ env.PROJECT_ID }},GOOGLE_CLOUD_REGION=${{ env.REGION }}" \
-            --service-account github-deployer@${{ env.PROJECT_ID }}.iam.gserviceaccount.com \
+            --set-env-vars "HELIX_NODE_ID=GCS-GUARDIAN,HELIX_ENV=production,GOOGLE_CLOUD_PROJECT=${{ env.PROJECT_ID }}" \
             --quiet
           
-          # [FACT] Get deployed service URL
           SERVICE_URL=$(gcloud run services describe ${{ env.SERVICE_NAME }} \
             --region ${{ env.REGION }} \
             --format 'value(status.url)')
           
-          echo "service_url=${SERVICE_URL}" >> $GITHUB_OUTPUT
-          echo "=== Deployment complete ==="
-          echo "Service URL: ${SERVICE_URL}"
+          echo "service_url=$SERVICE_URL" >> $GITHUB_OUTPUT
+          echo "Deployed to: $SERVICE_URL"
       
-      # [FACT] Verify deployment with health check
       - name: Verify Deployment
         run: |
-          SERVICE_URL="${{ steps.deploy.outputs.service_url }}"
-          echo "=== Verifying deployment ==="
-          echo "Health check: ${SERVICE_URL}/health"
-          
-          # Wait for service to be ready
           sleep 10
-          
-          # Perform health check
-          HEALTH_STATUS=$(curl -s -o /dev/null -w "%{http_code}" "${SERVICE_URL}/health" || echo "000")
-          
-          if [ "$HEALTH_STATUS" = "200" ]; then
-            echo "✅ Health check passed!"
-            curl -s "${SERVICE_URL}/health" | jq .
-          else
-            echo "⚠️ Health check returned status: ${HEALTH_STATUS}"
-            echo "Service may still be starting up..."
-          fi
-      
-      # [FACT] Output deployment summary
-      - name: Deployment Summary
-        run: |
-          echo ""
-          echo "=========================================="
-          echo "🦉⚓🦉 CONSTITUTIONAL GUARDIAN DEPLOYED"
-          echo "=========================================="
-          echo "Service: ${{ env.SERVICE_NAME }}"
-          echo "Region: ${{ env.REGION }}"
-          echo "URL: ${{ steps.deploy.outputs.service_url }}"
-          echo "Health: ${{ steps.deploy.outputs.service_url }}/health"
-          echo "Commit: ${{ github.sha }}"
-          echo "=========================================="
-      
-      # [FACT] Comment deployment URL on commit (optional)
-      - name: Comment on Commit
-        if: github.event_name == 'push'
-        uses: actions/github-script@v7
-        with:
-          script: |
-            github.rest.repos.createCommitComment({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              commit_sha: context.sha,
-              body: `🚀 **Constitutional Guardian Deployed**
-              
-              - **URL:** ${{ steps.deploy.outputs.service_url }}
-              - **Health Check:** ${{ steps.deploy.outputs.service_url }}/health
-              - **Commit:** ${context.sha.substring(0, 7)}
-              
-              *Deployed via GitHub Actions to Google Cloud Run*`
-            })
+          curl -s "${{ steps.deploy.outputs.service_url }}/health" | jq .
