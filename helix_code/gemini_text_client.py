@@ -91,8 +91,8 @@ class GeminiTextClient:
             if system_instruction:
                 config.system_instruction = system_instruction
 
-            # [FACT] Call Gemini API
-            response = self.client.models.generate_content(
+            # [FACT] Call Gemini API (async)
+            response = await self.client.aio.models.generate_content(
                 model=self.model,
                 contents=prompt,
                 config=config,
