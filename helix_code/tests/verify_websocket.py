@@ -44,9 +44,9 @@ async def test_websocket():
                 msg3 = await websocket.recv()
                 data3 = json.loads(msg3)
 
-            assert data3["type"] == "validated_response", (
-                f"Expected validation, got {data3['type']}"
-            )
+            assert (
+                data3["type"] == "validated_response"
+            ), f"Expected validation, got {data3['type']}"
             assert data3["valid"], "Expected [FACT] to be valid"
             logger.info(f"Validation received: Valid={data3['valid']}")
 
@@ -64,9 +64,9 @@ async def test_websocket():
                 msg4 = await websocket.recv()
                 data4 = json.loads(msg4)
 
-            assert data4["type"] == "validated_response", (
-                f"Expected validation, got {data4['type']}"
-            )
+            assert (
+                data4["type"] == "validated_response"
+            ), f"Expected validation, got {data4['type']}"
             assert not data4["valid"], "Expected missing marker to be invalid"
             logger.info(f"Validation received: Valid={data4['valid']} (Correctly Flagged)")
 
