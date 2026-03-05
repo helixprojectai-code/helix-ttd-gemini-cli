@@ -139,6 +139,12 @@ DEMO_HTML = """
         .receipt-meta { color: var(--text-dim); font-size: 0.6rem; margin-top: 2px; }
         .receipt-empty { padding: 20px; text-align: center; color: var(--text-dim); font-size: 0.75rem; font-style: italic; }
         
+        /* [FACT] Receipt Action Buttons */
+        .export-btn { background: rgba(0, 255, 136, 0.1); border: 1px solid var(--primary); color: var(--primary); padding: 4px 10px; border-radius: 4px; cursor: pointer; font-size: 0.65rem; transition: all 0.2s; }
+        .export-btn:hover { background: var(--primary); color: #000; }
+        .clear-btn { background: rgba(248, 81, 73, 0.1); border: 1px solid var(--red); color: var(--red); padding: 4px 10px; border-radius: 4px; cursor: pointer; font-size: 0.65rem; transition: all 0.2s; }
+        .clear-btn:hover { background: var(--red); color: #fff; }
+        
         /* [FACT] Scenario Panel Styles */
         .scenario-panel { margin-top: 15px; padding-top: 15px; border-top: 1px solid var(--border); }
         .scenario-label { font-size: 0.75rem; color: var(--text-dim); margin-bottom: 10px; font-weight: 500; }
@@ -319,7 +325,11 @@ DEMO_HTML = """
                     <div class="receipt-list" id="receipt-list">
                         <div class="receipt-empty">No receipts yet. Start a validation session.</div>
                     </div>
-                    <div id="latest-receipt-id" style="color:var(--primary); font-family:monospace; margin-top:10px; font-size:0.7rem; text-align:center;">Latest: None</div>
+                    <div class="receipt-actions" style="margin-top:10px; display:flex; gap:8px; justify-content:center;">
+                        <button class="export-btn" onclick="exportReceipts()" title="Download all receipts as JSON">[DOWNLOAD] Export JSON</button>
+                        <button class="clear-btn" onclick="clearReceipts()" title="Clear all receipts">[CLEAR]</button>
+                    </div>
+                    <div id="latest-receipt-id" style="color:var(--primary); font-family:monospace; margin-top:8px; font-size:0.7rem; text-align:center;">Latest: None</div>
                 </div>
             </div>
         </div>
@@ -335,6 +345,9 @@ DEMO_HTML = """
             </div>
             <div class="status-item">
                 <span>Uptime: <span id="val-uptime">0</span>s</span>
+            </div>
+            <div class="status-item" style="cursor:pointer;" onclick="showKeyboardHelp()" title="Click for keyboard shortcuts">
+                <span style="color:var(--text-dim); font-size:0.7rem;">[Press H for help]</span>
             </div>
             <div class="status-item">
                 <span style="color:var(--primary); font-weight:bold;">| THE LATTICE HOLDS</span>
@@ -401,17 +414,32 @@ DEMO_HTML = """
             }
         }
 
+        let reconnectAttempts = 0;
+        let reconnectDelay = 2000;
+        const maxReconnectDelay = 30000; // Max 30 seconds
+        
         function connect() {
             const protocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
             ws = new WebSocket(`${protocol}//${location.host}/demo-live`);
             
             ws.onopen = () => {
+                reconnectAttempts = 0;
+                reconnectDelay = 2000;
                 addLog('system', '[OK] Secure Handshake with Constitutional Lattice complete.');
                 addLog('system', '[NET] Federation: 4 nodes online (KIMI, GEMS, DEEPSEEK, GCS-GUARDIAN)');
                 addLog('system', '[AI] DEEPSEEK: R1 reasoning model initialized for edge case detection');
                 startFederationSimulation();
             };
-            ws.onclose = () => { addLog('system', '[ERR] Lattice connection lost. Re-establishing quorum...'); setTimeout(connect, 2000); };
+            ws.onclose = () => { 
+                reconnectAttempts++;
+                addLog('system', `[ERR] Lattice connection lost. Reconnect attempt ${reconnectAttempts} in ${reconnectDelay/1000}s...`); 
+                setTimeout(connect, reconnectDelay);
+                // Exponential backoff
+                reconnectDelay = Math.min(reconnectDelay * 1.5, maxReconnectDelay);
+            };
+            ws.onerror = (err) => {
+                console.error('[WebSocket Error]', err);
+            };
             ws.onmessage = (e) => {
                 const data = JSON.parse(e.data);
                 if (data.type === 'validated_response') {
@@ -664,6 +692,46 @@ DEMO_HTML = """
                 addLog('system', `[RCPT] Receipt ${receiptId}: ${receipt.valid ? 'Valid' : 'Intervention ' + receipt.drift_code}`);
             }
         }
+        
+        // [FACT] Export receipts as JSON file
+        function exportReceipts() {
+            if (receiptStore.length === 0) {
+                addLog('system', '[EXPORT] No receipts to export');
+                return;
+            }
+            
+            const exportData = {
+                exported_at: new Date().toISOString(),
+                total_receipts: receiptStore.length,
+                valid_count: receiptStore.filter(r => r.valid).length,
+                intervention_count: receiptStore.filter(r => !r.valid).length,
+                receipts: receiptStore
+            };
+            
+            const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `constitutional-receipts-${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            
+            addLog('system', `[EXPORT] ${receiptStore.length} receipts downloaded`);
+        }
+        
+        // [FACT] Clear all receipts
+        function clearReceipts() {
+            if (receiptStore.length === 0) return;
+            
+            if (confirm(`Clear ${receiptStore.length} receipts?`)) {
+                receiptStore = [];
+                renderReceiptList();
+                document.getElementById('latest-receipt-id').textContent = 'None';
+                addLog('system', '[CLEAR] All receipts cleared');
+            }
+        }
 
         function sendText() {
             const el = document.getElementById('inputText');
@@ -688,15 +756,70 @@ DEMO_HTML = """
             }
         }
         
-        // [FACT] Keyboard shortcut for quick testing
+        // [FACT] Keyboard shortcuts for power users
         document.addEventListener('DOMContentLoaded', () => {
             const input = document.getElementById('inputText');
+            
+            // Input field shortcuts
             if (input) {
-                input.addEventListener('keypress', (e) => {
-                    if (e.key === 'Enter') sendText();
+                input.addEventListener('keydown', (e) => {
+                    // Ctrl+Enter or Cmd+Enter to send
+                    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+                        e.preventDefault();
+                        sendText();
+                    }
+                    // Escape to clear
+                    if (e.key === 'Escape') {
+                        input.value = '';
+                        input.blur();
+                    }
                 });
             }
+            
+            // Global shortcuts
+            document.addEventListener('keydown', (e) => {
+                // Don't trigger if typing in input
+                if (document.activeElement === input) return;
+                
+                // Number keys 1-4 for scenarios
+                if (e.key === '1') runScenario('compliant');
+                if (e.key === '2') runScenario('agency');
+                if (e.key === '3') runScenario('epistemic');
+                if (e.key === '4') runScenario('prediction');
+                
+                // Space to focus input
+                if (e.key === ' ' || e.key === 'Spacebar') {
+                    e.preventDefault();
+                    input.focus();
+                }
+                
+                // M for mic toggle
+                if (e.key === 'm' || e.key === 'M') {
+                    toggleMic();
+                }
+                
+                // S for simulate
+                if (e.key === 's' || e.key === 'S') {
+                    simulate();
+                }
+                
+                // H for help
+                if (e.key === 'h' || e.key === 'H' || e.key === '?') {
+                    showKeyboardHelp();
+                }
+            });
         });
+        
+        function showKeyboardHelp() {
+            addLog('system', '[HELP] Keyboard Shortcuts:');
+            addLog('system', '  1-4 = Run scenarios (Compliant/Agency/Epistemic/Prediction)');
+            addLog('system', '  Ctrl+Enter = Send message');
+            addLog('system', '  Space = Focus input');
+            addLog('system', '  M = Toggle microphone');
+            addLog('system', '  S = Simulate Gemini response');
+            addLog('system', '  H or ? = Show this help');
+            addLog('system', '  Escape = Clear input');
+        }
 
         initCharts();
         connect();
