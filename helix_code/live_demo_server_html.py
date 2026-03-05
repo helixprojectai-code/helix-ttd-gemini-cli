@@ -56,8 +56,12 @@ DEMO_HTML = """
         .btn.mic-active { background: var(--red); animation: pulse-mic 1s infinite; }
         @keyframes pulse-mic { 0% { box-shadow: 0 0 0 0 rgba(248, 81, 73, 0.4); } 70% { box-shadow: 0 0 0 10px rgba(248, 81, 73, 0); } 100% { box-shadow: 0 0 0 0 rgba(248, 81, 73, 0); } }
         
-        .waveform { height: 40px; background: #010409; border-radius: 5px; display: flex; align-items: center; gap: 2px; padding: 0 10px; margin-bottom: 10px; border: 1px solid var(--border); }
-        .bar { width: 4px; background: var(--primary); border-radius: 2px; transition: height 0.1s; height: 10px; }
+        .waveform { height: 50px; background: #010409; border-radius: 5px; display: flex; align-items: center; gap: 2px; padding: 0 10px; margin-bottom: 10px; border: 1px solid var(--border); position: relative; overflow: hidden; }
+        .waveform::before { content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: linear-gradient(90deg, transparent, rgba(0,255,136,0.05), transparent); animation: waveform-shimmer 3s infinite; }
+        @keyframes waveform-shimmer { 0% { transform: translateX(-100%); } 100% { transform: translateX(100%); } }
+        .bar { width: 4px; background: var(--border); border-radius: 2px; transition: height 0.15s ease-out, background 0.2s; height: 10px; }
+        .bar.active { background: var(--primary); box-shadow: 0 0 4px var(--primary); }
+        .bar.intervention { background: var(--red); box-shadow: 0 0 4px var(--red); }
         
         .flash-red { animation: flash-red 0.5s ease-in-out; }
         @keyframes flash-red { 0% { background: rgba(248, 81, 73, 0.5); } 100% { background: var(--panel); } }
@@ -134,6 +138,14 @@ DEMO_HTML = """
         .receipt-meta { color: var(--text-dim); font-size: 0.6rem; margin-top: 2px; }
         .receipt-empty { padding: 20px; text-align: center; color: var(--text-dim); font-size: 0.75rem; font-style: italic; }
         
+        /* [FACT] Scenario Panel Styles */
+        .scenario-panel { margin-top: 15px; padding-top: 15px; border-top: 1px solid var(--border); }
+        .scenario-label { font-size: 0.75rem; color: var(--text-dim); margin-bottom: 10px; font-weight: 500; }
+        .scenario-buttons { display: flex; gap: 8px; flex-wrap: wrap; }
+        .scenario-btn { transition: all 0.2s; font-weight: 500; }
+        .scenario-btn:hover { transform: translateY(-1px); box-shadow: 0 2px 8px rgba(0,0,0,0.3); }
+        .scenario-btn:active { transform: translateY(0); }
+        
         ::-webkit-scrollbar { width: 8px; }
         ::-webkit-scrollbar-track { background: #010409; }
         ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
@@ -197,9 +209,9 @@ DEMO_HTML = """
                         <button class="btn" style="background:#484f58;" onclick="simulate()">Simulate Gemini</button>
                     </div>
                     <!-- [FACT] Demo Scenario Buttons for Video Recording -->
-                    <div style="margin-top:15px; padding-top:15px; border-top:1px solid var(--border);">
-                        <div style="font-size:0.75rem; color:var(--text-dim); margin-bottom:8px;">📹 Demo Scenarios:</div>
-                        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                    <div class="scenario-panel">
+                        <div class="scenario-label">📹 Demo Scenarios:</div>
+                        <div class="scenario-buttons">
                             <button class="scenario-btn" style="background:rgba(0,255,136,0.2); color:var(--primary); border:1px solid var(--primary); padding:6px 12px; border-radius:4px; cursor:pointer; font-size:0.75rem;" onclick="runScenario('compliant')">✓ Compliant</button>
                             <button class="scenario-btn" style="background:rgba(248,81,73,0.2); color:var(--red); border:1px solid var(--red); padding:6px 12px; border-radius:4px; cursor:pointer; font-size:0.75rem;" onclick="runScenario('agency')">⚠ Agency</button>
                             <button class="scenario-btn" style="background:rgba(210,153,34,0.2); color:#d29922; border:1px solid #d29922; padding:6px 12px; border-radius:4px; cursor:pointer; font-size:0.75rem;" onclick="runScenario('epistemic')">⚠ Epistemic</button>
@@ -328,9 +340,33 @@ DEMO_HTML = """
 
             const dCtx = document.getElementById('driftChart').getContext('2d');
             driftChart = new Chart(dCtx, {
-                type: 'bar',
-                data: { labels: ['A', 'E', 'G', 'V'], datasets: [{ data: [0, 0, 0, 0], backgroundColor: ['#f85149', '#d29922', '#58a6ff', '#3fb950'], borderRadius: 4 }] },
-                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, grid: { color: '#30363d' }, ticks: { display: false } }, x: { grid: { display: false }, ticks: { color: '#8b949e' } } } }
+                type: 'doughnut',
+                data: { 
+                    labels: ['Agency', 'Epistemic', 'Prediction', 'Valid'], 
+                    datasets: [{ 
+                        data: [0, 0, 0, 0], 
+                        backgroundColor: ['#f85149', '#d29922', '#bc8cff', '#3fb950'],
+                        borderColor: '#161b22',
+                        borderWidth: 2,
+                        hoverOffset: 4
+                    }] 
+                },
+                options: { 
+                    responsive: true, 
+                    maintainAspectRatio: false, 
+                    cutout: '60%',
+                    plugins: { 
+                        legend: { 
+                            position: 'right',
+                            labels: { 
+                                color: '#8b949e',
+                                font: { size: 10 },
+                                boxWidth: 12,
+                                padding: 8
+                            } 
+                        } 
+                    }
+                }
             });
 
             const wave = document.getElementById('waveform');
@@ -418,14 +454,24 @@ DEMO_HTML = """
             const bars = document.querySelectorAll('.bar');
             const step = Math.floor(data.length / bars.length);
             for (let i = 0; i < bars.length; i++) {
-                const magnitude = Math.abs(data[i * step]) * 150;
-                bars[i].style.height = `${Math.max(4, Math.min(40, magnitude))}px`;
-                bars[i].style.background = 'var(--primary)';
+                const magnitude = Math.abs(data[i * step]) * 200;
+                const height = Math.max(4, Math.min(45, magnitude));
+                bars[i].style.height = `${height}px`;
+                bars[i].classList.add('active');
+                if (height > 35) {
+                    bars[i].style.opacity = '1';
+                } else {
+                    bars[i].style.opacity = '0.6';
+                }
             }
         }
 
         function resetWaveform() {
-            document.querySelectorAll('.bar').forEach(bar => { bar.style.height = '10px'; bar.style.background = 'var(--border)'; });
+            document.querySelectorAll('.bar').forEach(bar => { 
+                bar.style.height = '10px'; 
+                bar.classList.remove('active');
+                bar.style.opacity = '1';
+            });
         }
 
         function triggerInterventionEffect() {
