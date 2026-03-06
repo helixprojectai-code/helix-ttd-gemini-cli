@@ -128,8 +128,8 @@ class NodeSpawner:
 
     def _apply_constitutional_prefix(self, node_id: str, prompt: str) -> str:
         """Prepend Helix constitutional context to prompt."""
-        node = self.config.NODES.get(node_id, {})
-        role = node.get("role", "Federation Node")
+        node: dict = self.config.NODES.get(node_id, {})  # type: ignore[assignment]
+        role = node.get("role", "Federation Node")  # type: ignore[union-attr]
 
         return self.config.CONSTITUTIONAL_PREFIX.format(role=role, node_id=node_id.upper()) + prompt
 
@@ -175,7 +175,7 @@ class NodeSpawner:
 
     def spawn(self, node_id: str, prompt: str) -> FederationResponse:
         """Execute prompt on specified node with constitutional wrapping."""
-        node = self.config.NODES.get(node_id)
+        node: dict = self.config.NODES.get(node_id)  # type: ignore[assignment]
         if not node:
             return FederationResponse(
                 node_id=node_id,
@@ -195,7 +195,7 @@ class NodeSpawner:
 
         try:
             # Build command with proper arg placement
-            args = node["args"].copy()
+            args: list = node["args"].copy()
             if "-p" in args:
                 p_index = args.index("-p") + 1
                 args.insert(p_index, constitutional_prompt)
@@ -318,9 +318,9 @@ class ReceiptGenerator:
 
 """
         for resp in session.responses:
-            node_info = FederationConfig.NODES.get(resp.node_id, {})
-            display = node_info.get("display", resp.node_id)
-            role = node_info.get("role", "Unknown")
+            node_info: dict = FederationConfig.NODES.get(resp.node_id, {})  # type: ignore[assignment]
+            display = node_info.get("display", resp.node_id)  # type: ignore[union-attr]
+            role = node_info.get("role", "Unknown")  # type: ignore[union-attr]
 
             content += f"""### {display} ({role})
 
@@ -416,7 +416,8 @@ Commands:
 
         responses = []
         for node_id in self.config.NODES.keys():
-            print(f"\nQuerying {self.config.NODES[node_id]['display']}...", end=" ", flush=True)
+            node_config: dict = self.config.NODES[node_id]  # type: ignore[assignment]
+            print(f"\nQuerying {node_config['display']}...", end=" ", flush=True)  # type: ignore[index]
             resp = self.spawner.spawn(node_id, prompt)
             status = "OK" if resp.exit_code == 0 else "FAIL"
             print(f"{status} ({resp.duration_ms}ms)")
@@ -433,13 +434,13 @@ Commands:
 
         return session
 
-    def run_table(self, node_id: str, prompt: str) -> LatticeSession:
+    def run_table(self, node_id: str, prompt: str) -> LatticeSession | None:
         """Single node focus."""
         if node_id not in self.config.NODES:
             print(f"[ERROR] Unknown node: {node_id}")
             return None
 
-        node = self.config.NODES[node_id]
+        node: dict = self.config.NODES.get(node_id)  # type: ignore[assignment]
         print(f"\n[TABLE] {node['display']} — {node['role']}")
         print("-" * 60)
 
@@ -467,12 +468,13 @@ Commands:
         print()
 
         for node_id, config in self.config.NODES.items():
-            cmd_path = shutil.which(config["command"])
+            config_dict: dict = config  # type: ignore[assignment]
+            cmd_path: str | None = shutil.which(config_dict["command"])
             if cmd_path:
                 status = f"[AVAILABLE] {cmd_path}"
             else:
                 status = "[NOT FOUND]"
-            print(f"{config['display']:12} {status}")
+            print(f"{config_dict['display']:12} {status}")
 
     def interactive_loop(self) -> None:
         """Main interactive shell."""
@@ -577,14 +579,14 @@ def main() -> int:
         shell.show_receipts()
     elif args.door:
         # One-shot door mode
-        session = shell.run_door(args.door)
-        receipt = shell.receipts.generate(session)
+        door_session = shell.run_door(args.door)
+        receipt = shell.receipts.generate(door_session)
         print(f"\n[RECEIPT] {receipt}")
     elif args.table and args.prompt:
         # One-shot table mode
-        session = shell.run_table(args.table, args.prompt)
-        if session:
-            receipt = shell.receipts.generate(session)
+        table_session: LatticeSession | None = shell.run_table(args.table, args.prompt)
+        if table_session:
+            receipt = shell.receipts.generate(table_session)
             print(f"\n[RECEIPT] {receipt}")
     elif args.table:
         parser.error("--table requires --prompt")
@@ -596,6 +598,8 @@ def main() -> int:
     else:
         # Interactive mode (default)
         shell.interactive_loop()
+
+    return 0
 
 
 if __name__ == "__main__":

@@ -253,7 +253,7 @@ class NamingConvention:
 
     def list_by_origin(self, origin: str) -> list[tuple[str, HelixFilename]]:
         """List all files by origin node."""
-        results = []
+        results: list[tuple[str, HelixFilename]] = []
 
         for dir_path in self.base_path.rglob("*"):
             if dir_path.is_file():
@@ -265,7 +265,7 @@ class NamingConvention:
 
     def list_by_type(self, file_type: str) -> list[tuple[str, HelixFilename]]:
         """List all files by type."""
-        results = []
+        results: list[tuple[str, HelixFilename]] = []
         target_dir = self._get_target_directory(file_type)
         type_path = self.base_path / target_dir
 

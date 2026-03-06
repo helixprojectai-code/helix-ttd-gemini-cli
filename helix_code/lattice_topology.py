@@ -183,6 +183,9 @@ class RPICycle:
         if not all([self.research, self.plan, self.implementation]):
             return None
 
+        # All positions are non-None here
+        assert self.research is not None and self.plan is not None and self.implementation is not None
+
         # Join Research and Plan
         intermediate = self.research.join(self.plan)
         # Join result with Implementation

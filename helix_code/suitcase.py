@@ -252,6 +252,7 @@ class MultiCloudReplicator:
 
         # [FACT] Always replicate to Azure (primary)
         azure = self.providers[CloudProvider.AZURE]
+        assert azure is not None, "Azure provider must be configured"
         results["azure"] = azure.upload_suitcase(bundle, serializer)
 
         # [ASSUMPTION] Replicate to GCS if configured

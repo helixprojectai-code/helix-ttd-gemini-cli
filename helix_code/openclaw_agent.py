@@ -84,6 +84,10 @@ class ConstitutionalCheckpoint:
     merkle_hash: str = ""
     prev_checkpoint_hash: str = ""
     risk_metrics: dict[str, Any] = field(default_factory=dict)
+    # DBC signature fields
+    dbc_id: str | None = None
+    dbc_signature: str | None = None
+    signature_timestamp: str | None = None
 
     def compute_hash(self) -> str:
         """Compute cryptographically secure checkpoint hash (P0 Fix)"""
@@ -114,6 +118,7 @@ class AgentAction:
     epistemic_basis: EpistemicLabel
     estimated_risk: float  # 0.0 - 1.0
     requires_approval: bool = False
+    effective_risk: float = 0.0  # Calculated effective risk after multipliers
 
 
 @dataclass
@@ -127,6 +132,7 @@ class AgentPlan:
     estimated_completion: float
     constitutional_clearance: bool = False
     plan_checkpoint: ConstitutionalCheckpoint | None = None
+    total_effective_risk: float = 0.0  # Calculated total risk after validation
 
 
 @dataclass
@@ -350,7 +356,7 @@ class DBCIdentity:
         """
         self.dbc_path = dbc_path or self._find_dbc()
         self.dbc_data: dict = {}
-        self._private_key: Ed25519PrivateKey | None = None  # v1.3.2: Proper Ed25519 key
+        self._private_key: Ed25519PrivateKey | bytes | None = None  # v1.3.2: Proper Ed25519 key or bytes for HMAC
         self._loaded = False
         self._crypto_available = CRYPTO_AVAILABLE
 
@@ -597,7 +603,9 @@ class DBCIdentity:
 
     def _get_legacy_key(self) -> str:
         """[FACT] Legacy key derivation for backward compatibility (DEPRECATED)."""
-        if self._private_key:
+        if isinstance(self._private_key, bytes):
+            return self._private_key.decode()
+        if isinstance(self._private_key, str):
             return self._private_key
         # This should never happen in v1.3.2+
         raise RuntimeError("[CRITICAL] Legacy key derivation disabled in v1.3.2+")
@@ -959,7 +967,7 @@ class FederatedCheckpointValidator:
         """
         # Create signature over checkpoint ID and merkle hash
         data = f"{checkpoint.checkpoint_id}:{checkpoint.merkle_hash}".encode()
-        signature = self.local_dbc.sign(data.decode())
+        signature = self.local_dbc.sign(data)
 
         checkpoint.dbc_id = self.local_dbc.dbc_id
         checkpoint.dbc_signature = signature
@@ -1103,6 +1111,8 @@ class CheckpointStore:
         Returns:
             Signature bundle with metadata for verification.
         """
+        assert self._dbc is not None, "DBC identity required for signing"
+
         timestamp = datetime.now(timezone.utc)
         timestamp_str = timestamp.isoformat()
 
