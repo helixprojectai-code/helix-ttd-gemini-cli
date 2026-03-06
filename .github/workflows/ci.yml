@@ -99,7 +99,7 @@ jobs:
 
       - name: Install linting tools
         run: |
-          pip install ruff black isort
+          pip install ruff black==24.1.1 isort
 
       - name: Verify LF line endings
         run: |
