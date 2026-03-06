@@ -85,7 +85,7 @@ class FederationConfig:
             "display": "[G+] GEMINI PRO",
             "role": "Deep Reasoning / Edge Case Analysis",
             "command": "gemini",
-            "args": ["--model", "gemini-3.1-pro"],
+            "args": ["--model", "gemini-3.1-pro-preview"],
             "color": "\033[95m",  # Magenta
             "reasoning_mode": True,
         },

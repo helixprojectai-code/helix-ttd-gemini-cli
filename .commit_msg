@@ -1,6 +1,0 @@
-feat: add Gemini 3.1 Pro support with deep reasoning mode
-
-- Add gems-pro node to federation_cli.py with reasoning capabilities
-- Update gemini_live_bridge.py with SUPPORTED_MODELS registry
-- Add reasoning_mode parameter for edge case analysis
-- Update banner to show 5 nodes including gems-pro
