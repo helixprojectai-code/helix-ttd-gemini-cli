@@ -28,20 +28,14 @@ logger = logging.getLogger("guardian-demo")
 # [FACT] Global bridge instance
 bridge = create_gemini_bridge()
 
-# [FACT] Gemini Text API client (Phase 1: Text before Voice)
-gemini_text_client: GeminiTextClient | None = None
-
-
 def get_gemini_text_client() -> GeminiTextClient | None:
-    """[FACT] Lazy initialization of Gemini Text client."""
-    global gemini_text_client
-    if gemini_text_client is None:
-        gemini_text_client = create_gemini_text_client()
-        if gemini_text_client.is_available():
-            logger.info("[FACT] Gemini Text API client initialized")
-        else:
-            logger.warning("[WARN] Gemini Text API unavailable - will use simulation")
-    return gemini_text_client
+    """[FACT] Create fresh Gemini Text client each request (env vars may change)."""
+    client = create_gemini_text_client()
+    if client.is_available():
+        logger.info("[FACT] Gemini Text API client ready")
+    else:
+        logger.warning("[WARN] Gemini Text API unavailable - will use simulation")
+    return client
 
 
 @dataclass
