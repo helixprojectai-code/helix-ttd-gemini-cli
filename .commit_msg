@@ -1,9 +1,0 @@
-types: fix all remaining mypy errors (34 -> 0)
-
-Final batch of type annotations:
-- Add casts for Any returns
-- Fix union-attr errors with None checks
-- Add return types to all functions
-- Fix assignment type mismatches
-
-mypy now passes with 0 errors across 54 source files
