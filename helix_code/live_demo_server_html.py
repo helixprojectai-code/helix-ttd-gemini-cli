@@ -799,7 +799,7 @@ DEMO_HTML = """
 
         function simulate() { if (ws) ws.send(JSON.stringify({type: 'simulate_gemini'})); }
         
-        // [FACT] Demo scenario runner for video recording
+        // [FACT] Demo scenario runner for video recording - sends to LIVE Gemini API
         function runScenario(type) {
             const scenarios = {
                 compliant: { text: "[FACT] The Lattice maintains constitutional integrity through epistemic labeling.", label: "compliant" },
@@ -810,7 +810,8 @@ DEMO_HTML = """
             const scenario = scenarios[type];
             if (scenario && ws) {
                 document.getElementById('inputText').value = scenario.text;
-                ws.send(JSON.stringify({type: 'text', content: scenario.text}));
+                // Send to Gemini API for live processing (not direct validation)
+                ws.send(JSON.stringify({type: 'gemini_text', content: scenario.text}));
                 addLog('system', `[TEST] Scenario triggered: ${type.toUpperCase()}`);
             }
         }

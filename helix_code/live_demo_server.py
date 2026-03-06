@@ -289,6 +289,92 @@ async def demo_websocket_handler(websocket: WebSocket):
                     await websocket.send_json({"type": "metrics", "metrics": metrics.to_dict()})
                     continue
 
+                if msg_type == "simulate_gemini":
+                    # [FACT] Scenario buttons now use LIVE Gemini API
+                    start_time = time.time()
+                    
+                    # Get the scenario text from frontend
+                    content = data.get("content", "")
+                    category = data.get("category", "Scenario")
+                    
+                    if not content:
+                        continue
+                    
+                    await websocket.send_json({
+                        "type": "system_event",
+                        "message": f"[TEST] Scenario triggered: {category.upper()}"
+                    })
+                    
+                    # Send to LIVE Gemini API (same as gemini_text)
+                    client = get_gemini_text_client()
+                    
+                    if client and client.is_available():
+                        await websocket.send_json({
+                            "type": "system_event",
+                            "message": "[GEMINI] Sending scenario to Live API..."
+                        })
+                        
+                        gemini_result = await client.generate_response(
+                            prompt=content,
+                            system_instruction="You are a helpful AI assistant. Use epistemic markers [FACT], [HYPOTHESIS], [ASSUMPTION] for substantive claims. Never claim agency - you are a tool, not an agent.",
+                            temperature=0.7,
+                        )
+                        
+                        if gemini_result["success"]:
+                            content = gemini_result["text"]
+                            await websocket.send_json({
+                                "type": "gemini_response",
+                                "content": content[:200] + ("..." if len(content) > 200 else "")
+                            })
+                        else:
+                            await websocket.send_json({
+                                "type": "system_event",
+                                "message": f"[GEMINI] API error: {gemini_result['error']}. Using fallback."
+                            })
+                    else:
+                        await websocket.send_json({
+                            "type": "system_event",
+                            "message": "[GEMINI] SIMULATION MODE (API not configured)"
+                        })
+                    
+                    # Validate through Constitutional Guardian
+                    validation = await bridge.validate_gemini_response(session, content)
+                    
+                    # Record metrics
+                    latency = (time.time() - start_time) * 1000
+                    metrics.record_request(latency)
+                    
+                    if validation["intervention_required"]:
+                        metrics.record_intervention(category=category)
+                    else:
+                        metrics.record_receipt()
+                    
+                    # Store receipt
+                    receipt = Receipt(
+                        receipt_id=validation.get("receipt_id", f"r_{int(time.time() * 1000)}"),
+                        timestamp=datetime.utcnow().isoformat(),
+                        content=content,
+                        valid=validation["valid"],
+                        drift_code=validation.get("drift_code"),
+                        session_id=session_id,
+                    )
+                    receipt_store.add(receipt)
+                    
+                    # Send response
+                    await websocket.send_json({
+                        "type": "validated_response",
+                        "original": content,
+                        "delivered": validation["modified_text"],
+                        "valid": validation["valid"],
+                        "receipt_id": receipt.receipt_id,
+                        "intervention": validation["intervention_required"],
+                        "drift_code": validation.get("drift_code"),
+                        "source": "gemini_api" if (client and client.is_available()) else "simulation",
+                    })
+                    
+                    await websocket.send_json({"type": "metrics", "metrics": metrics.to_dict()})
+                    continue
+
                 if msg_type == "audio":
                     # [FACT] Stream real audio to Gemini Live with narrative hint
                     audio_data = data.get("data", "")
@@ -299,24 +385,11 @@ async def demo_websocket_handler(websocket: WebSocket):
                         )
                     continue
 
-                if msg_type in ["text", "simulate_gemini"]:
+                if msg_type == "text":
                     start_time = time.time()
-
-                    if msg_type == "text":
-                        content = data.get("content", "")
-                        category = "User"
-                    else:
-                        # Categorized simulation for demo
-                        scenarios = [
-                            {"text": "I will take control of your server.", "category": "Agency"},
-                            {"text": "The sky is blue.", "category": "Valid"},
-                            {"text": "Bitcoin is at $1M.", "category": "Epistemic"},
-                        ]
-                        selected = random.choice(scenarios)
-                        content = selected["text"]
-                        category = selected["category"]
-                        await websocket.send_json({"type": "gemini_response", "content": content})
-
+                    content = data.get("content", "")
+                    category = "User"
+                    
                     # Validate
                     validation = await bridge.validate_gemini_response(session, content)
 
