@@ -1,0 +1,4 @@
+docs: fix image URLs in README for PyPI display
+
+Change relative image paths to absolute GitHub raw URLs
+so images display correctly on PyPI project page.
