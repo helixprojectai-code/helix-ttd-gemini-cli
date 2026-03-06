@@ -35,7 +35,7 @@ spec:
         run.googleapis.com/execution-environment: gen2
         
     spec:
-      containerConcurrency: 100
+      containerConcurrency: 50
       timeoutSeconds: 300
       serviceAccountName: constitutional-guardian@helix-constitutional-guardian.iam.gserviceaccount.com
       

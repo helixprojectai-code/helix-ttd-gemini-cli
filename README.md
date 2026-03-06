@@ -8,6 +8,7 @@ This project is a submission for the **Gemini Live Agent Challenge (March 2026)*
 ## 🚀 Key Features
 
 - **🎙️ Live Multimodal Auditing:** Intercepts 16kHz PCM audio chunks from the browser, transcribes via Gemini Live, and validates intent in real-time.
+- **🧠 Reasoning Engine (Gemini 2.5 Pro):** Utilizes state-of-the-art reasoning capabilities. Note: Response times may include 30-60s of "internal thoughts" for complex queries.
 - **🛡️ Constitutional Invariants:** Enforces the "Four Immutable Invariants" (Epistemic, Agency, Guidance, Prediction).
 - **📊 Real-time Dashboard:** High-fidelity Chart.js dashboard showing latency, drift counts, and audit logs with visual "Intervention" flashes.
 - **⚓ Cryptographic Receipts:** Generates non-repudiable receipts for every valid AI response, ready for Bitcoin L1 notarization.
