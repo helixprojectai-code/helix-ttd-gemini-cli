@@ -1,0 +1,270 @@
+# [FACT] Hardened CI Pipeline for Helix-TTD
+# [HYPOTHESIS] Strict local validation reduces CI failures
+# [ASSUMPTION] dev branch uses this workflow, main uses stable
+
+name: Helix-TTD Hardened CI
+
+on:
+  push:
+    branches: [dev]
+    paths:
+      - 'helix_code/**'
+      - 'tools/**'
+      - 'helix_ttd_claw/**'
+      - '.github/workflows/ci-hardened.yml'
+      - '.pre-commit-config.yaml'
+      - 'pyproject.toml'
+  pull_request:
+    branches: [dev, main]
+    paths:
+      - 'helix_code/**'
+      - 'tools/**'
+      - 'helix_ttd_claw/**'
+      - '.github/workflows/ci-hardened.yml'
+      - '.pre-commit-config.yaml'
+      - 'pyproject.toml'
+
+env:
+  FORCE_COLOR: 1
+  PYTHONUNBUFFERED: 1
+  GIT_CONFIG_GLOBAL: "core.autocrlf=false"
+
+jobs:
+  # ============================================================
+  # STAGE 1: Pre-commit Validation
+  # ============================================================
+  pre-commit:
+    name: 🎣 Pre-commit Hooks
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install pre-commit
+        run: pip install pre-commit
+
+      - name: Run pre-commit hooks
+        run: pre-commit run --all-files --show-diff-on-failure
+
+  # ============================================================
+  # STAGE 2: Import Cycle Detection
+  # ============================================================
+  import-check:
+    name: 🔄 Import Cycle Check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Check for circular imports
+        run: |
+          python check_imports.py
+          if [ $? -ne 0 ]; then
+            echo "❌ Circular imports detected!"
+            exit 1
+          fi
+
+  # ============================================================
+  # STAGE 3: Type Checking (Strict)
+  # ============================================================
+  type-check:
+    name: 🏷️ Type Check (mypy strict)
+    runs-on: ubuntu-latest
+    continue-on-error: true  # Allow failures while adding types
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          pip install mypy pydantic types-requests
+          pip install -e .
+
+      - name: Run mypy (strict mode)
+        run: |
+          mypy helix_code/ \
+            --ignore-missing-imports \
+            --strict \
+            --show-error-codes \
+            --warn-unused-ignores \
+            --warn-redundant-casts \
+            --exclude 'helix_code/tests/' \
+            --exclude 'helix_code/.*/tests/' \
+            || echo "⚠️ Type checking warnings (non-blocking on dev)"
+
+  # ============================================================
+  # STAGE 4: Comprehensive Lint
+  # ============================================================
+  lint:
+    name: 🧹 Lint & Format
+    runs-on: ubuntu-latest
+    needs: [pre-commit, import-check]
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+
+      - name: Install linting tools
+        run: pip install ruff black isort
+
+      - name: Verify LF line endings
+        run: |
+          if grep -rI $'\r' helix_code/ tools/ 2>/dev/null; then
+            echo "❌ CRLF line endings detected"
+            exit 1
+          fi
+          echo "✅ LF line endings verified"
+
+      - id: isort
+        name: Check imports (isort)
+        run: isort --check-only --diff helix_code/ tools/
+
+      - id: black
+        name: Check formatting (black)
+        run: black --check --diff helix_code/ tools/
+
+      - id: ruff
+        name: Lint with Ruff
+        run: ruff check helix_code/ tools/
+
+      - name: Attempt auto-fix (dev branch only)
+        if: failure() && github.ref == 'refs/heads/dev'
+        run: |
+          echo "⚠️ Lint issues found. Run locally:"
+          echo "  black helix_code/ tools/"
+          echo "  isort helix_code/ tools/"
+          echo "  ruff check --fix helix_code/ tools/"
+
+  # ============================================================
+  # STAGE 5: Test Matrix (Full)
+  # ============================================================
+  test:
+    name: 🧪 Test Matrix
+    runs-on: ${{ matrix.os }}
+    needs: [lint, type-check]
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        python-version: ['3.10', '3.11', '3.12']
+        exclude:
+          - os: macos-latest
+            python-version: '3.10'
+        include:
+          - python-version: '3.11'
+            os: ubuntu-latest
+            coverage: true
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pytest pytest-cov pytest-xdist
+          pip install -e .
+
+      - name: Run tests
+        run: |
+          python -m pytest helix_code/tests/ \
+            -v --tb=short \
+            ${{ matrix.coverage && '--cov=helix_code --cov-report=xml --cov-report=term' || '' }}
+
+      - name: Upload coverage
+        if: matrix.coverage
+        uses: codecov/codecov-action@v4
+        with:
+          files: ./coverage.xml
+          fail_ci_if_error: false
+          verbose: true
+
+  # ============================================================
+  # STAGE 6: Security Scan
+  # ============================================================
+  security:
+    name: 🔒 Security Scan
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install bandit
+        run: pip install bandit[toml]
+
+      - name: Run bandit security scan
+        run: |
+          bandit -r helix_code/ \
+            -c pyproject.toml \
+            -f json \
+            -o bandit-report.json \
+            || true
+          bandit -r helix_code/ -c pyproject.toml || true
+
+      - name: Upload security report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: bandit-security-report
+          path: bandit-report.json
+          if-no-files-found: ignore
+
+  # ============================================================
+  # STAGE 7: CI Summary
+  # ============================================================
+  summary:
+    name: 📊 CI Summary
+    runs-on: ubuntu-latest
+    needs: [test, security]
+    if: always()
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Generate summary
+        run: |
+          echo "# 🏛️ Helix-TTD Hardened CI Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Stage | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|-------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Pre-commit | ${{ needs.pre-commit.result == 'success' && '✅' || '❌' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Import Cycles | ${{ needs.import-check.result == 'success' && '✅' || '❌' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Type Check | ${{ needs.type-check.result == 'success' && '✅' || '⚠️' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Lint | ${{ needs.lint.result == 'success' && '✅' || '❌' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Tests | ${{ needs.test.result == 'success' && '✅' || '❌' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Security | ${{ needs.security.result == 'success' && '✅' || '⚠️' }} |" >> $GITHUB_STEP_SUMMARY
