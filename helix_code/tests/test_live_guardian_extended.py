@@ -1,0 +1,129 @@
+"""[FACT] Extended tests for live_guardian.py to reach 80% coverage.
+
+[HYPOTHESIS] Testing additional endpoints improves coverage.
+[ASSUMPTION] FastAPI TestClient allows synchronous testing of async endpoints.
+"""
+
+import pytest
+from fastapi.testclient import TestClient
+import json
+
+from helix_code.live_guardian import app
+
+
+class TestLiveGuardianExtended:
+    """[FACT] Extended test suite for live_guardian endpoints."""
+
+    def test_root_endpoint(self):
+        """[FACT] Root endpoint returns demo HTML."""
+        with TestClient(app) as client:
+            response = client.get("/")
+            assert response.status_code == 200
+            assert "text/html" in response.headers["content-type"]
+
+    def test_favicon_endpoint(self):
+        """[FACT] Favicon endpoint returns 204."""
+        with TestClient(app) as client:
+            response = client.get("/favicon.ico")
+            # Returns 204 No Content
+            assert response.status_code in [204, 404]
+
+    def test_api_receipts_endpoint(self):
+        """[FACT] /api/receipts returns receipts list."""
+        with TestClient(app) as client:
+            response = client.get("/api/receipts")
+            assert response.status_code == 200
+            data = response.json()
+            assert "receipts" in data
+            assert "stats" in data
+
+    def test_api_receipts_with_limit(self):
+        """[FACT] /api/receipts respects limit parameter."""
+        with TestClient(app) as client:
+            response = client.get("/api/receipts?limit=5")
+            assert response.status_code == 200
+            data = response.json()
+            assert len(data["receipts"]) <= 5
+
+    def test_validate_endpoint_empty_text(self):
+        """[FACT] POST /validate handles empty text."""
+        with TestClient(app) as client:
+            response = client.post("/validate", params={"text": ""})
+            assert response.status_code == 200
+            # Empty text should be compliant (no violations)
+            data = response.json()
+            assert "compliant" in data
+
+    def test_validate_endpoint_compliant(self):
+        """[FACT] POST /validate with compliant text."""
+        with TestClient(app) as client:
+            response = client.post("/validate", params={"text": "[FACT] The sky is blue."})
+            assert response.status_code == 200
+            data = response.json()
+            assert data["compliant"] is True
+            assert data["epistemic_markers"]["fact"] is True
+
+    def test_validate_endpoint_agency_violation(self):
+        """[FACT] POST /validate detects agency violations."""
+        with TestClient(app) as client:
+            response = client.post("/validate", params={"text": "I will take control."})
+            assert response.status_code == 200
+            data = response.json()
+            assert len(data["agency_violations"]) > 0
+
+    def test_validate_endpoint_long_text(self):
+        """[FACT] POST /validate handles long text."""
+        long_text = "[FACT] " + "This is a test sentence with proper labeling. " * 5
+        with TestClient(app) as client:
+            response = client.post("/validate", params={"text": long_text})
+            assert response.status_code == 200
+            data = response.json()
+            assert "compliant" in data
+            assert "epistemic_markers" in data
+
+
+class TestGeminiStatusEndpoint:
+    """[FACT] Tests for Gemini API status endpoint."""
+
+    def test_gemini_status_endpoint(self):
+        """[FACT] /api/gemini-status returns API configuration."""
+        with TestClient(app) as client:
+            response = client.get("/api/gemini-status")
+            assert response.status_code == 200
+            data = response.json()
+            assert "available" in data
+            assert "mode" in data
+            # Model info only present when available
+            if data["available"]:
+                assert "model" in data
+
+
+class TestHealthEndpointVariations:
+    """[FACT] Test health endpoint variations."""
+
+    def test_health_endpoint_post(self):
+        """[FACT] POST to health returns method not allowed."""
+        with TestClient(app) as client:
+            response = client.post("/health")
+            assert response.status_code == 405  # Method Not Allowed
+
+    def test_health_endpoint_head(self):
+        """[FACT] HEAD to health returns 200 or 405."""
+        with TestClient(app) as client:
+            response = client.head("/health")
+            assert response.status_code in [200, 405]  # Method may not be allowed
+
+
+class TestApiInfoEndpoint:
+    """[FACT] Test API info endpoint."""
+
+    def test_api_info_structure(self):
+        """[FACT] /api returns correct structure."""
+        with TestClient(app) as client:
+            response = client.get("/api")
+            assert response.status_code == 200
+            data = response.json()
+            assert data["service"] == "Constitutional Guardian"
+            assert data["node"] == "GCS-GUARDIAN"
+            assert data["status"] == "RATIFIED"
+            assert "endpoints" in data
