@@ -7,6 +7,7 @@
 [![Ruff](https://img.shields.io/badge/lint-ruff-261230?labelColor=grey)](https://github.com/astral-sh/ruff)
 [![Black](https://img.shields.io/badge/format-black-000000?labelColor=grey)](https://github.com/psf/black)
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue)](LICENSE)
+[![PyPI](https://img.shields.io/pypi/v/helix-ttd-gemini)](https://pypi.org/project/helix-ttd-gemini/)
 
 <img src="ARCHITECTURE_CG.png" alt="Constitutional Guardian Architecture" width="100%">
 
@@ -43,6 +44,22 @@ This project is a submission for the **Gemini Live Agent Challenge (March 2026)*
 | **Peak Daily Cloners** | 147 | Single day |
 
 **[HYPOTHESIS]** 7.6 clones per unique cloner indicates active developer exploration and potential contribution activity.
+
+## 📦 Installation
+
+### From PyPI (Recommended)
+
+```bash
+pip install helix-ttd-gemini
+```
+
+### From Source
+
+```bash
+git clone https://github.com/helixprojectai-code/helix-ttd-gemini-cli.git
+cd helix-ttd-gemini-cli
+pip install -e .
+```
 
 ## 🛠️ Getting Started
 
