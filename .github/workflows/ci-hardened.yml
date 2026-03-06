@@ -200,6 +200,9 @@ jobs:
         run: |
           python -m pytest helix_code/tests/ \
             -v --tb=short \
+            --ignore='System Volume Information' \
+            --ignore='D:/System Volume Information' \
+            --ignore='C:/System Volume Information' \
             ${{ matrix.coverage && '--cov=helix_code --cov-report=xml --cov-report=term' || '' }}
 
       - name: Upload coverage
