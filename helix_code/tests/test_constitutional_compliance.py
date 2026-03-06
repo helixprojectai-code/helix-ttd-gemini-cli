@@ -54,7 +54,7 @@ class TestConstitutionalCompliance(unittest.TestCase):
 
     def test_evaluate_drift_epistemic(self):
         """[FACT] Verify drift code assignment for epistemic violations."""
-        text = "Bitcoin will double by Friday."
+        text = "The price of Bitcoin will definitely double by next Friday without question."
         report = self.checker.evaluate(text)
         self.assertFalse(report.compliant)
         self.assertEqual(report.drift_code, "DRIFT-E")

@@ -122,7 +122,11 @@ class ConstitutionalCompliance:
                             violations.append(f"Unlabeled claim: {sentence[:60]}...")
 
         total_substantive = total_statements + bare_assertions
-        compliance = (total_statements / total_substantive * 100) if total_substantive > 0 else 0
+        if total_substantive == 0:
+            # [FACT] No substantive claims (>50 chars) means no labeling required
+            compliance = 100.0
+        else:
+            compliance = (total_statements / total_substantive * 100)
 
         return compliance, violations
 
