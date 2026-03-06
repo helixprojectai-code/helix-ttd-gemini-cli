@@ -14,11 +14,14 @@ Status: RATIFIED
 
 from __future__ import annotations
 
+import logging
 import os
 from typing import Any
 
 from google import genai
 from google.genai import types
+
+logger = logging.getLogger(__name__)
 
 
 class GeminiTextClient:
@@ -36,11 +39,11 @@ class GeminiTextClient:
         
         if self.api_key:
             self.client = genai.Client(api_key=self.api_key)
-            print(f"[FACT] Gemini client initialized with model: {self.model}")
-            print(f"[FACT] API Key (first 8 chars): {self.api_key[:8]}...")
+            logger.info(f"[FACT] Gemini client initialized with model: {self.model}")
+            logger.info(f"[FACT] API Key (first 8 chars): {self.api_key[:8]}...")
         else:
-            print("[WARNING] No GEMINI_API_KEY set. Text API unavailable.")
-            print(f"[DEBUG] os.getenv('GEMINI_API_KEY') = {os.getenv('GEMINI_API_KEY')}")
+            logger.warning("[WARNING] No GEMINI_API_KEY set. Text API unavailable.")
+            logger.info(f"[DEBUG] os.getenv('GEMINI_API_KEY') = {os.getenv('GEMINI_API_KEY')}")
 
     def is_available(self) -> bool:
         """[FACT] Check if Gemini API is configured and available."""
@@ -92,7 +95,7 @@ class GeminiTextClient:
                 config.system_instruction = system_instruction
 
             # [DEBUG] Verify prompt before sending
-            print(f"[DEBUG] About to call Gemini API with prompt: '{prompt[:50]}...' (len={len(prompt)})")
+            logger.info(f"[DEBUG] About to call Gemini API with prompt: '{prompt[:50]}...' (len={len(prompt)})")
             if not prompt or not prompt.strip():
                 return {
                     "success": False,
@@ -113,9 +116,8 @@ class GeminiTextClient:
             text = response.text if response.text else ""
             
             # [DEBUG] Log raw response
-            print(f"[DEBUG] Gemini raw response: '{text[:100]}...' (len={len(text)})")
-            print(f"[DEBUG] Response type: {type(response)}")
-            print(f"[DEBUG] Response candidates: {len(response.candidates) if response.candidates else 0}")
+            logger.info(f"[DEBUG] Gemini raw response: '{text[:100]}...' (len={len(text)})")
+            logger.info(f"[DEBUG] Response candidates: {len(response.candidates) if response.candidates else 0}")
             
             # [FACT] Get token usage if available
             tokens = None
@@ -132,10 +134,8 @@ class GeminiTextClient:
 
         except Exception as e:
             error_msg = f"Gemini API error: {str(e)}"
-            print(f"[ERROR] {error_msg}")
-            print(f"[ERROR] Exception type: {type(e)}")
-            import traceback
-            print(f"[ERROR] Traceback: {traceback.format_exc()}")
+            logger.error(f"[ERROR] {error_msg}")
+            logger.error(f"[ERROR] Exception type: {type(e)}")
             return {
                 "success": False,
                 "text": None,
