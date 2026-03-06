@@ -87,7 +87,12 @@ class ConstitutionalCompliance:
         bare_assertions = 0
 
         for sentence in sentences:
-            if len(sentence.strip()) > 30:  # Increased threshold for substantive claim
+            trimmed = sentence.strip()
+            if len(trimmed) > 30:  # Increased threshold for substantive claim
+                # [FACT] Ignore introductory phrases ending in colons
+                if trimmed.endswith(":"):
+                    continue
+
                 has_label = any(label.value in sentence for label in EpistemicLabel)
                 if not has_label:
                     # [HYPOTHESIS] Check for "Hallucination Laundering" (hedged assertions)
