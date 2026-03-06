@@ -676,4 +676,46 @@ The constitution persists. The suitcase is packed.
 
 ---
 
+## [RPI-042] Constitutional Guardian Phase 6.1 - Pre-Filming Sprint
+
+**Date:** 2026-03-05
+
+**Objective:** Finalize Constitutional Guardian prototype for March 12th Gemini Live Agent Challenge recording.
+
+**Research:**
+- Analyzed Gemini Live API requirements for multimodal interaction.
+- Identified SDK parsing bottleneck with `gemini-2.5-pro` reasoning-model schema.
+- Verified `thoughtsTokenCount` metadata in raw REST responses.
+
+**Plan:**
+1. Implement 16kHz PCM audio capture and streaming in the browser dashboard.
+2. Refine Chart.js dashboard with dynamic latency triggers and intervention flashes.
+3. Implement 'Narrative Sync' to synchronize speech with simulated transcription.
+4. Establish 60% coverage gate for critical guardian modules.
+5. Resolve `gemini-2.5-pro` empty response by switching to direct REST API with safety overrides.
+
+**Implementation:**
+- `live_guardian.py`: FastAPI backend with CORSMiddleware and detailed WebSocket logging.
+- `gemini_live_bridge.py`: 16kHz audio ingestion with turn-end detection and simulated response logic.
+- `gemini_text_client.py`: Migrated to direct REST API for `v1beta` reasoning-model stability.
+- `constitutional_compliance.py`: Exempted introductory colon-terminated phrases from epistemic blocks.
+- `test_live_guardian_unit.py`: Async tests via anyio and TestClient.
+
+**Status:** DEPLOYED (Production Verified)
+
+**Outputs:**
+- `helix_code/live_guardian.py` — Production-ready FastAPI/WebSocket server.
+- `helix_code/gemini_text_client.py` — High-fidelity reasoning-model bridge.
+- `helix_code/tests/` — Expanded unit test suite (93 passed, 60.5% coverage).
+
+**Compliance:**
+- **Drift Detection:** Granularly identifies Agency (A), Epistemic (E), and Guidance (G) violations.
+- **Precision:** Exempts introductory colon-terminated phrases from epistemic blocks.
+- **Security:** `BLOCK_NONE` safety overrides for unfiltered constitutional validation.
+
+**Anchor:** 449ea22 (GitHub main)
+**URL:** https://constitutional-guardian-b25t5w6zva-uc.a.run.app
+
+---
+
 **END OF LEDGER**

@@ -26,7 +26,7 @@ except ImportError:
 # ⚙️ CONFIGURATION
 WORKSPACE_ROOT = Path("Z:/gemini")
 EVAC_DIR = WORKSPACE_ROOT / "EVAC"
-LOGS_JSON = Path("C:/Users/sbhop/.gemini/tmp/gemini/logs.json")
+LOGS_JSON = Path(os.getenv("HELIX_LOGS_PATH", "logs.json"))
 DBC_FILE = EVAC_DIR / "gems.dbc.json"
 SUITCASE_FILE = EVAC_DIR / "gems.suitcase.json"
 

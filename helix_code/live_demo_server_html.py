@@ -16,7 +16,8 @@ DEMO_HTML = """
         .container { max-width: 1400px; margin: 0 auto; width: 100%; flex: 1; }
         
         header { text-align: center; border-bottom: 2px solid var(--primary); padding: 20px; margin-bottom: 20px; position: relative; }
-        .owls { position: absolute; top: 20px; width: 100%; display: flex; justify-content: center; gap: 300px; font-size: 2rem; pointer-events: none; opacity: 0.5; }
+        .owls-container { position: absolute; top: 15px; width: 100%; left: 0; pointer-events: none; display: flex; justify-content: space-between; padding: 0 40px; box-sizing: border-box; }
+        .owl-icon { font-size: 2.5rem; filter: drop-shadow(0 0 5px var(--primary)); opacity: 0.8; }
         
         .grid-main { display: grid; grid-template-columns: 300px 1fr 300px; gap: 20px; }
         .panel { background: var(--panel); border-radius: 10px; padding: 20px; border: 1px solid var(--border); transition: 0.3s; position: relative; overflow: hidden; }
