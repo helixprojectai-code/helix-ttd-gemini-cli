@@ -127,15 +127,17 @@ class GeminiTextClient:
             
             # [DEBUG] Log detailed response structure
             logger.info(f"[DEBUG] Gemini raw response: '{text[:100]}...' (len={len(text)})")
-            logger.info(f"[DEBUG] Response candidates: {len(response.candidates) if response.candidates else 0}")
-            if response.candidates:
-                for i, c in enumerate(response.candidates):
-                    logger.info(f"[DEBUG] Candidate {i}: content={c.content is not None}, finish_reason={getattr(c, 'finish_reason', 'N/A')}")
-                    if c.content:
-                        logger.info(f"[DEBUG]   Content parts: {len(c.content.parts) if c.content.parts else 0}")
-                        if c.content.parts:
-                            for j, p in enumerate(c.content.parts):
-                                logger.info(f"[DEBUG]   Part {j}: text={getattr(p, 'text', None) is not None}, type={type(p)}")
+            logger.info(f"[DEBUG] Response type: {type(response)}")
+            logger.info(f"[DEBUG] Response candidates count: {len(response.candidates) if response.candidates else 0}")
+            logger.info(f"[DEBUG] Response has candidates attr: {hasattr(response, 'candidates')}")
+            
+            # Try to dump raw response
+            try:
+                import json
+                resp_dict = response.model_dump() if hasattr(response, 'model_dump') else str(response)
+                logger.info(f"[DEBUG] Raw response dump: {resp_dict[:500]}...")
+            except Exception as e:
+                logger.info(f"[DEBUG] Could not dump response: {e}")
             
             # [FACT] Get token usage if available
             tokens = None
