@@ -129,15 +129,27 @@ class GeminiTextClient:
             logger.info(f"[DEBUG] Gemini raw response: '{text[:100]}...' (len={len(text)})")
             logger.info(f"[DEBUG] Response type: {type(response)}")
             logger.info(f"[DEBUG] Response candidates count: {len(response.candidates) if response.candidates else 0}")
-            logger.info(f"[DEBUG] Response has candidates attr: {hasattr(response, 'candidates')}")
             
-            # Try to dump raw response
-            try:
-                import json
-                resp_dict = response.model_dump() if hasattr(response, 'model_dump') else str(response)
-                logger.info(f"[DEBUG] Raw response dump: {resp_dict[:500]}...")
-            except Exception as e:
-                logger.info(f"[DEBUG] Could not dump response: {e}")
+            # Detailed candidate inspection
+            if response.candidates:
+                for i, c in enumerate(response.candidates):
+                    logger.info(f"[DEBUG] Candidate {i}: type={type(c)}")
+                    logger.info(f"[DEBUG]   has content: {hasattr(c, 'content')}")
+                    if hasattr(c, 'content'):
+                        logger.info(f"[DEBUG]   content type: {type(c.content)}")
+                        logger.info(f"[DEBUG]   content is None: {c.content is None}")
+                        if c.content:
+                            logger.info(f"[DEBUG]   content has parts: {hasattr(c.content, 'parts')}")
+                            if hasattr(c.content, 'parts'):
+                                logger.info(f"[DEBUG]   parts type: {type(c.content.parts)}")
+                                logger.info(f"[DEBUG]   parts is None: {c.content.parts is None}")
+                                if c.content.parts:
+                                    logger.info(f"[DEBUG]   parts count: {len(c.content.parts)}")
+                                    for j, p in enumerate(c.content.parts):
+                                        logger.info(f"[DEBUG]     Part {j}: type={type(p)}")
+                                        logger.info(f"[DEBUG]     Part {j} has text: {hasattr(p, 'text')}")
+                                        if hasattr(p, 'text'):
+                                            logger.info(f"[DEBUG]     Part {j} text: {repr(p.text)[:100] if p.text else 'None'}")
             
             # [FACT] Get token usage if available
             tokens = None
