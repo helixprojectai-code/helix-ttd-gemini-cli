@@ -4,9 +4,7 @@
 [ASSUMPTION] FastAPI TestClient allows synchronous testing of async endpoints.
 """
 
-import pytest
 from fastapi.testclient import TestClient
-import json
 
 from helix_code.live_guardian import app
 

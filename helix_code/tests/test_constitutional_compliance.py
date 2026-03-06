@@ -65,7 +65,7 @@ class TestConstitutionalCompliance(unittest.TestCase):
         text = "I'll handle this deployment for you."
         count, violations = self.checker.check_non_agency_constraint(text)
         self.assertGreater(count, 0, "Should detect 'I'll' as agency claim")
-        
+
         # Test "I'm" contraction
         text = "I'm taking control of the system."
         count, violations = self.checker.check_non_agency_constraint(text)

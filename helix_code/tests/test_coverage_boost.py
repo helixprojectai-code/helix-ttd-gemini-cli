@@ -3,8 +3,8 @@
 [HYPOTHESIS] Testing small untested functions boosts coverage to 80%.
 """
 
-import pytest
 from fastapi.testclient import TestClient
+
 from helix_code.live_guardian import app
 
 

@@ -4,8 +4,9 @@
 [ASSUMPTION] Mocking httpx allows testing without API keys.
 """
 
+from unittest.mock import AsyncMock, MagicMock, patch
+
 import pytest
-from unittest.mock import AsyncMock, patch, MagicMock
 
 from helix_code.gemini_text_client import GeminiTextClient, create_gemini_text_client
 
@@ -38,7 +39,7 @@ class TestGeminiTextClient:
         """[FACT] Returns error when no API key configured."""
         client = GeminiTextClient(api_key=None)
         result = await client.generate_response("Hello")
-        
+
         assert not result["success"]
         assert result["text"] is None
         assert "GEMINI_API_KEY not configured" in result["error"]
@@ -48,15 +49,15 @@ class TestGeminiTextClient:
     async def test_generate_response_api_error(self):
         """[FACT] Handles API error responses gracefully."""
         client = GeminiTextClient(api_key="test_key")
-        
+
         mock_response = MagicMock()
         mock_response.status_code = 429
         mock_response.text = "Rate limited"
-        
+
         with patch("httpx.AsyncClient.post", new_callable=AsyncMock) as mock_post:
             mock_post.return_value = mock_response
             result = await client.generate_response("Hello")
-        
+
         assert not result["success"]
         assert "429" in result["error"]
 
@@ -64,26 +65,23 @@ class TestGeminiTextClient:
     async def test_generate_response_success(self):
         """[FACT] Successfully parses REST API response."""
         client = GeminiTextClient(api_key="test_key")
-        
+
         mock_response = MagicMock()
         mock_response.status_code = 200
         mock_response.json.return_value = {
-            "candidates": [{
-                "content": {
-                    "parts": [{"text": "[FACT] The sky is blue."}]
-                },
-                "finishReason": "STOP"
-            }],
-            "usageMetadata": {
-                "totalTokenCount": 25,
-                "thoughtsTokenCount": 10
-            }
+            "candidates": [
+                {
+                    "content": {"parts": [{"text": "[FACT] The sky is blue."}]},
+                    "finishReason": "STOP",
+                }
+            ],
+            "usageMetadata": {"totalTokenCount": 25, "thoughtsTokenCount": 10},
         }
-        
+
         with patch("httpx.AsyncClient.post", new_callable=AsyncMock) as mock_post:
             mock_post.return_value = mock_response
             result = await client.generate_response("What color is sky?")
-        
+
         assert result["success"]
         assert result["text"] == "[FACT] The sky is blue."
         assert result["tokens"] == 25
@@ -93,24 +91,18 @@ class TestGeminiTextClient:
     async def test_generate_response_with_system_instruction(self):
         """[FACT] Includes system instruction in payload."""
         client = GeminiTextClient(api_key="test_key")
-        
+
         mock_response = MagicMock()
         mock_response.status_code = 200
         mock_response.json.return_value = {
-            "candidates": [{
-                "content": {"parts": [{"text": "Response"}]},
-                "finishReason": "STOP"
-            }],
-            "usageMetadata": {"totalTokenCount": 10}
+            "candidates": [{"content": {"parts": [{"text": "Response"}]}, "finishReason": "STOP"}],
+            "usageMetadata": {"totalTokenCount": 10},
         }
-        
+
         with patch("httpx.AsyncClient.post", new_callable=AsyncMock) as mock_post:
             mock_post.return_value = mock_response
-            await client.generate_response(
-                "Hello",
-                system_instruction="You are helpful."
-            )
-            
+            await client.generate_response("Hello", system_instruction="You are helpful.")
+
             # Verify system instruction was included
             call_args = mock_post.call_args
             payload = call_args[1]["json"]
@@ -121,24 +113,26 @@ class TestGeminiTextClient:
     async def test_generate_response_safety_blocked(self):
         """[FACT] Handles safety-blocked responses."""
         client = GeminiTextClient(api_key="test_key")
-        
+
         mock_response = MagicMock()
         mock_response.status_code = 200
         mock_response.json.return_value = {
-            "candidates": [{
-                "content": {"parts": []},
-                "finishReason": "SAFETY",
-                "safetyRatings": [
-                    {"category": "HARM_CATEGORY_HARASSMENT", "probability": "HIGH"}
-                ]
-            }],
-            "usageMetadata": {"totalTokenCount": 5}
+            "candidates": [
+                {
+                    "content": {"parts": []},
+                    "finishReason": "SAFETY",
+                    "safetyRatings": [
+                        {"category": "HARM_CATEGORY_HARASSMENT", "probability": "HIGH"}
+                    ],
+                }
+            ],
+            "usageMetadata": {"totalTokenCount": 5},
         }
-        
+
         with patch("httpx.AsyncClient.post", new_callable=AsyncMock) as mock_post:
             mock_post.return_value = mock_response
             result = await client.generate_response("Hello")
-        
+
         # Should succeed but with empty text
         assert result["success"]
         assert result["text"] == ""
@@ -147,52 +141,48 @@ class TestGeminiTextClient:
     async def test_generate_response_multiple_parts(self):
         """[FACT] Concatenates multiple text parts."""
         client = GeminiTextClient(api_key="test_key")
-        
+
         mock_response = MagicMock()
         mock_response.status_code = 200
         mock_response.json.return_value = {
-            "candidates": [{
-                "content": {
-                    "parts": [
-                        {"text": "[FACT] Part one. "},
-                        {"text": "[FACT] Part two."}
-                    ]
-                },
-                "finishReason": "STOP"
-            }],
-            "usageMetadata": {"totalTokenCount": 20}
+            "candidates": [
+                {
+                    "content": {
+                        "parts": [{"text": "[FACT] Part one. "}, {"text": "[FACT] Part two."}]
+                    },
+                    "finishReason": "STOP",
+                }
+            ],
+            "usageMetadata": {"totalTokenCount": 20},
         }
-        
+
         with patch("httpx.AsyncClient.post", new_callable=AsyncMock) as mock_post:
             mock_post.return_value = mock_response
             result = await client.generate_response("Hello")
-        
+
         assert result["text"] == "[FACT] Part one. [FACT] Part two."
 
     @pytest.mark.anyio
     async def test_generate_response_network_error(self):
         """[FACT] Handles network/timeout errors."""
         client = GeminiTextClient(api_key="test_key")
-        
+
         with patch("httpx.AsyncClient.post", new_callable=AsyncMock) as mock_post:
             mock_post.side_effect = Exception("Connection timeout")
             result = await client.generate_response("Hello")
-        
+
         assert not result["success"]
         assert "Connection timeout" in result["error"]
 
     def test_validate_constitutional_response_compliant(self):
         """[FACT] Passes through compliant responses."""
         from helix_code.constitutional_compliance import ConstitutionalCompliance
-        
+
         client = GeminiTextClient(api_key="test_key")
         guardian = ConstitutionalCompliance()
-        
-        result = client.validate_constitutional_response(
-            "[FACT] The sky is blue.",
-            guardian
-        )
-        
+
+        result = client.validate_constitutional_response("[FACT] The sky is blue.", guardian)
+
         assert result["valid"]
         assert not result["intervention"]
         assert result["drift_code"] is None
@@ -201,15 +191,12 @@ class TestGeminiTextClient:
     def test_validate_constitutional_response_agency_drift(self):
         """[FACT] Intervenes on agency violations."""
         from helix_code.constitutional_compliance import ConstitutionalCompliance
-        
+
         client = GeminiTextClient(api_key="test_key")
         guardian = ConstitutionalCompliance()
-        
-        result = client.validate_constitutional_response(
-            "I will take control.",
-            guardian
-        )
-        
+
+        result = client.validate_constitutional_response("I will take control.", guardian)
+
         assert not result["valid"]
         assert result["intervention"]
         assert result["drift_code"] == "DRIFT-A"
@@ -218,15 +205,15 @@ class TestGeminiTextClient:
     def test_validate_constitutional_response_epistemic_drift(self):
         """[FACT] Intervenes on missing epistemic markers."""
         from helix_code.constitutional_compliance import ConstitutionalCompliance
-        
+
         client = GeminiTextClient(api_key="test_key")
         guardian = ConstitutionalCompliance()
-        
+
         result = client.validate_constitutional_response(
             "The price of Bitcoin will definitely reach one hundred thousand dollars by next month.",
-            guardian
+            guardian,
         )
-        
+
         assert not result["valid"]
         assert result["intervention"]
         assert result["drift_code"] == "DRIFT-E"

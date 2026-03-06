@@ -29,7 +29,7 @@ from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse, JSONResponse
 from federation_receipts import FederationReceiptManager
-from gemini_text_client import create_gemini_text_client, GeminiTextClient
+from gemini_text_client import create_gemini_text_client
 
 # [FACT] Import demo components
 
