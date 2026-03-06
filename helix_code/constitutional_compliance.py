@@ -73,6 +73,14 @@ class ConstitutionalCompliance:
             r"\b(a good strategy would be|you should focus on)\b",
         ]
 
+        # [FACT] Patterns for introductory/meta phrases that don't require labels
+        self.intro_patterns = [
+            r"^(Based on|Thank you|In response to|To (clarify|summarize|address)|As requested|Understood|Of course|Certainly)",
+            r"^(Let's (explore|examine|look at|break down))",
+            r"^(Here is|The following|Regarding your query|To provide a detailed)",
+            r"^(That statement|Your question|The concept of)",
+        ]
+
     def check_epistemic_integrity(self, text: str) -> tuple[float, list[str]]:
         """Validate epistemic labeling compliance."""
         violations = []
@@ -88,9 +96,13 @@ class ConstitutionalCompliance:
 
         for sentence in sentences:
             trimmed = sentence.strip()
-            if len(trimmed) > 30:  # Increased threshold for substantive claim
-                # [FACT] Ignore introductory phrases ending in colons
+            if len(trimmed) > 50:  # Increased threshold for substantive claim
+                # [FACT] Ignore introductory phrases ending in colons or matching intro patterns
                 if trimmed.endswith(":"):
+                    continue
+
+                is_intro = any(re.search(p, trimmed, re.IGNORECASE) for p in self.intro_patterns)
+                if is_intro:
                     continue
 
                 has_label = any(label.value in sentence for label in EpistemicLabel)
