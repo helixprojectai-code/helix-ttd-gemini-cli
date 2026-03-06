@@ -206,3 +206,17 @@ exclude_lines = [
 ]
 show_missing = true
 fail_under = 79.5
+
+# ============================================================
+# BANDIT: Security Scanning
+# ============================================================
+[tool.bandit]
+exclude_dirs = ["helix_code/tests", "tools", ".venv", "venv", ".git"]
+skips = [
+    "B101",  # assert_used (common in tests)
+    "B311",  # random (cryptographic use only in tests)
+]
+severity = "medium"
+confidence = "medium"
+# Note: B105 (hardcoded_password) and B106 (hardcoded_password_funcarg)
+# are flagged in test files but safe for test fixtures
