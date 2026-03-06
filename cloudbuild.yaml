@@ -38,8 +38,6 @@ steps:
       - '--platform'
       - 'managed'
       - '--allow-unauthenticated'
-      - '--set-env-vars'
-      - 'HELIX_NODE_ID=GCS-GUARDIAN,HELIX_ENV=production'
       - '--memory'
       - '1Gi'
       - '--cpu'
