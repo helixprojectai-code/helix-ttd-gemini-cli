@@ -7,6 +7,7 @@ provides compelling proof of the Gemini Live Agent Challenge submission.
 import asyncio
 import json
 import logging
+import os
 import random
 import time
 from collections import deque
@@ -28,14 +29,26 @@ logger = logging.getLogger("guardian-demo")
 # [FACT] Global bridge instance
 bridge = create_gemini_bridge()
 
+# [FACT] Cached Gemini client with key-change detection
+gemini_text_client: GeminiTextClient | None = None
+gemini_cached_key: str | None = None
+
 def get_gemini_text_client() -> GeminiTextClient | None:
-    """[FACT] Create fresh Gemini Text client each request (env vars may change)."""
-    client = create_gemini_text_client()
-    if client.is_available():
-        logger.info("[FACT] Gemini Text API client ready")
-    else:
-        logger.warning("[WARN] Gemini Text API unavailable - will use simulation")
-    return client
+    """[FACT] Lazy init with key-change detection to avoid recreating client."""
+    global gemini_text_client, gemini_cached_key
+    
+    current_key = os.getenv("GEMINI_API_KEY")
+    
+    # Create new client if: (1) no client exists, or (2) key changed
+    if gemini_text_client is None or current_key != gemini_cached_key:
+        gemini_cached_key = current_key
+        gemini_text_client = create_gemini_text_client()
+        if gemini_text_client.is_available():
+            logger.info("[FACT] Gemini Text API client initialized")
+        else:
+            logger.warning("[WARN] Gemini Text API unavailable - will use simulation")
+    
+    return gemini_text_client
 
 
 @dataclass
