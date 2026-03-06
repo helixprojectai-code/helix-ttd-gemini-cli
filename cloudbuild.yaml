@@ -48,6 +48,8 @@ steps:
       - '300'
       - '--max-instances'
       - '10'
+      - '--set-secrets'
+      - 'GEMINI_API_KEY=GEMINI_API_KEY:latest'
 
 # [FACT] Store images in Container Registry
 images:

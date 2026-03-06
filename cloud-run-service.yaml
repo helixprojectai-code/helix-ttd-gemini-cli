@@ -68,11 +68,17 @@ spec:
             - name: GCS_RECEIPT_BUCKET
               value: "constitutional-receipts-helix"
             
-            # [FACT] Secret Manager reference (injected at runtime)
             - name: HELIX_DBC_ENC_KEY
               valueFrom:
                 secretKeyRef:
                   name: dbc-master-key
+                  key: latest
+            
+            # [FACT] Gemini API Key (injected from Secret Manager)
+            - name: GEMINI_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: GEMINI_API_KEY
                   key: latest
           
           resources:

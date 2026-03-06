@@ -78,6 +78,7 @@ jobs:
             --cpu 2 \
             --port 8180 \
             --set-env-vars "HELIX_NODE_ID=GCS-GUARDIAN,HELIX_ENV=production,GOOGLE_CLOUD_PROJECT=${{ env.PROJECT_ID }}" \
+            --set-secrets "GEMINI_API_KEY=GEMINI_API_KEY:latest" \
             --quiet
           
           SERVICE_URL=$(gcloud run services describe ${{ env.SERVICE_NAME }} \
