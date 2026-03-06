@@ -371,8 +371,7 @@ class FederationShell:
 
     def print_banner(self):
         """Display Rick's Café welcome."""
-        print(
-            """
+        print("""
 Rick's Cafe CLI - Constitutional Federation Lounge [REAL MODE]
 ==============================================================
 
@@ -394,8 +393,7 @@ Commands:
   /status           Node availability check
   /quit             Exit
 
-"""
-        )
+""")
 
     def run_door(self, prompt: str) -> LatticeSession:
         """Broadcast to all nodes."""
