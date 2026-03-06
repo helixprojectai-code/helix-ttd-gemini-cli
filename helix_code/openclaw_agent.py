@@ -37,7 +37,7 @@ from dataclasses import dataclass, field
 from datetime import date, datetime, timedelta, timezone
 from enum import Enum, auto
 from pathlib import Path
-from typing import Any
+from typing import Any, TypedDict
 
 # v1.3.2: Ed25519 asymmetric cryptography
 try:
@@ -51,6 +51,16 @@ try:
     CRYPTO_AVAILABLE = True
 except ImportError:
     CRYPTO_AVAILABLE = False  # Fallback to HMAC with warnings
+
+
+class ToolEntry(TypedDict):
+    """Type definition for registered tool entries."""
+
+    function: Callable[..., Any]
+    risk_level: float
+    registered_at: float
+    module: str | None
+    name: str
 
 
 class AgencyLevel(Enum):
@@ -312,7 +322,7 @@ class RiskConfiguration:
         if not hasattr(self, "_calibration_history"):
             return {"status": "insufficient_data", "tools": {}}
 
-        report = {"status": "active", "tools": {}}
+        report: dict[str, Any] = {"status": "active", "tools": {}}
         for tool_name, history in self._calibration_history.items():
             if len(history) >= 5:
                 recent = history[-20:]
@@ -515,8 +525,8 @@ class DBCIdentity:
                 fernet_key = base64.urlsafe_b64encode(
                     hashlib.sha256(enc_key.encode()).digest()[:32]
                 )
-                f = Fernet(fernet_key)
-                encrypted_private = f.encrypt(private_key_bytes)
+                fernet = Fernet(fernet_key)
+                encrypted_private = fernet.encrypt(private_key_bytes)
                 encrypted_private_str = encrypted_private.decode()
             else:
                 # Warning: private key will be in memory only
@@ -565,17 +575,17 @@ class DBCIdentity:
     @property
     def dbc_id(self) -> str:
         """[FACT] Return DBC identifier."""
-        return self.dbc_data.get("dbc_id", "UNKNOWN")
+        return str(self.dbc_data.get("dbc_id", "UNKNOWN"))
 
     @property
     def agent_name(self) -> str:
         """[FACT] Return agent name from DBC."""
-        return self.dbc_data.get("agent_name", "Unknown")
+        return str(self.dbc_data.get("agent_name", "Unknown"))
 
     @property
     def public_key(self) -> str:
         """[FACT] Return public key for signature verification."""
-        return self.dbc_data.get("public_key", "UNKNOWN")
+        return str(self.dbc_data.get("public_key", "UNKNOWN"))
 
     def sign(self, data: bytes) -> str:
         """[FACT] v1.3.2: Sign data using Ed25519 private key.
@@ -606,7 +616,7 @@ class DBCIdentity:
         if isinstance(self._private_key, bytes):
             return self._private_key.decode()
         if isinstance(self._private_key, str):
-            return self._private_key
+            return self._private_key  # type: ignore[unreachable]
         # This should never happen in v1.3.2+
         raise RuntimeError("[CRITICAL] Legacy key derivation disabled in v1.3.2+")
 
@@ -870,7 +880,7 @@ class FederatedCheckpointValidator:
         Returns:
             Validation result dictionary.
         """
-        result = {
+        result: dict[str, Any] = {
             "valid": False,
             "origin_node": origin_node_id,
             "checks": {},
@@ -1455,7 +1465,7 @@ class SIEMExporter:
             checkpoint: Optional checkpoint associated with event
             **kwargs: Additional event attributes
         """
-        event = {
+        event: dict[str, Any] = {
             "timestamp": datetime.now().isoformat(),
             "severity": self._map_severity(event_type, checkpoint),
             "event_type": f"helix.ttd.{event_type}",
@@ -1827,9 +1837,9 @@ class MetricsCollector:
                 lines.append(f"{name}{{{labels}}} {value}")
 
             # Gauges
-            for name, value in self._gauges.items():
-                lines.append(f"# TYPE {name} gauge")
-                lines.append(f"{name}{{{labels}}} {value}")
+            for g_name, g_value in self._gauges.items():
+                lines.append(f"# TYPE {g_name} gauge")
+                lines.append(f"{g_name}{{{labels}}} {g_value}")
 
             # Histograms
             for hist_name, samples in [
@@ -2083,7 +2093,7 @@ class HelixConstitutionalGate:
         for step in plan.steps:
             # P0 Fix: Type check first
             if not isinstance(step.epistemic_basis, EpistemicLabel):
-                return False, f"Invalid epistemic basis type: {type(step.epistemic_basis)}"
+                return False, f"Invalid epistemic basis type: {type(step.epistemic_basis)}"  # type: ignore[unreachable]
 
             if step.epistemic_basis == EpistemicLabel.UNVERIFIED:
                 return False, "Unverified epistemic basis for action"
@@ -2407,7 +2417,8 @@ class CustodianApprovalAPI:
         with self._lock:
             if request_id not in self._pending:
                 # Already decided
-                for resp in list(self._responses.queue):
+                pending_responses: list[dict] = list(self._responses.queue)
+                for resp in pending_responses:
                     if resp["request_id"] == request_id:
                         return resp
                 return None
@@ -2489,7 +2500,7 @@ class CustodianApprovalAPI:
 
         return None
 
-    def _record_history(self, request: dict):
+    def _record_history(self, request: dict) -> None:
         """Record request to history for audit trail."""
         self._history.append(request.copy())
         if len(self._history) > self._max_history:
@@ -2552,7 +2563,7 @@ class OpenClawAgent:
         self.gate = HelixConstitutionalGate(agency_tier, risk_config)
         self.plan_history: list[AgentPlan] = []
         self.execution_log: list[dict] = []
-        self.available_tools: dict[str, Callable] = {}
+        self.available_tools: dict[str, ToolEntry] = {}
 
         # P1: Thread safety
         self._tool_lock = threading.Lock()
@@ -2601,7 +2612,7 @@ class OpenClawAgent:
 
         Remove newlines, control chars, and null bytes from strings.
         """
-        result = {}
+        result: dict[str, Any] = {}
         for k, v in data.items():
             if isinstance(v, str):
                 sanitized = v.replace("\n", " ").replace("\r", " ").replace("\x00", "")
@@ -2610,7 +2621,7 @@ class OpenClawAgent:
             elif isinstance(v, dict):
                 result[k] = self._sanitize_audit_data(v)
             elif isinstance(v, list):
-                sanitized_list = []
+                sanitized_list: list[Any] = []
                 for item in v:
                     if isinstance(item, str):
                         s = item.replace("\n", " ").replace("\r", " ").replace("\x00", "")
@@ -2650,7 +2661,7 @@ class OpenClawAgent:
                     del self._memo_cache[cache_key]
             return None
 
-    def _cache_result(self, action: AgentAction, result: Any):
+    def _cache_result(self, action: AgentAction, result: Any) -> None:
         """Store result in cache with current timestamp."""
         with self._memo_lock:
             cache_key = self._get_memo_key(action)
@@ -2662,7 +2673,7 @@ class OpenClawAgent:
                 for key, _ in sorted_items[:100]:
                     del self._memo_cache[key]
 
-    def clear_memo_cache(self):
+    def clear_memo_cache(self) -> None:
         """Clear all cached results."""
         with self._memo_lock:
             self._memo_cache.clear()
@@ -2704,7 +2715,7 @@ class OpenClawAgent:
             return "UNKNOWN_EVENT"
         return event_type
 
-    def _rotate_logs_if_needed(self):
+    def _rotate_logs_if_needed(self) -> None:
         """P2: Rotate logs based on size and age (30-day retention)."""
         try:
             log_dir = os.path.dirname(self.audit_log_path)
@@ -2739,7 +2750,7 @@ class OpenClawAgent:
             # FIX #3: Log the error instead of silently failing
             print(f"[WARN] Log rotation check failed: {e}", file=sys.stderr)
 
-    def _rotate_current_log(self):
+    def _rotate_current_log(self) -> None:
         """Rotate the current log file (timestamp-based)."""
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         rotated_path = f"{self.audit_log_path}.{timestamp}"
@@ -2753,7 +2764,7 @@ class OpenClawAgent:
         except Exception as e:
             print(f"[WARN] Unexpected error during log rotation: {e}", file=sys.stderr)
 
-    def _init_audit_log(self):
+    def _init_audit_log(self) -> None:
         """P2: Initialize append-only audit log"""
         try:
             log_dir = os.path.dirname(self.audit_log_path)
@@ -2779,7 +2790,7 @@ class OpenClawAgent:
                 error_msg = error_msg.replace(home_dir, "~")
             print(f"WARN: Could not init audit log: {error_msg}", file=sys.stderr)
 
-    def _append_audit(self, event_type: str, data: dict):
+    def _append_audit(self, event_type: str, data: dict) -> None:
         """P2: Append event to audit log (fsync for durability, sanitized)"""
         try:
             self._rotate_logs_if_needed()
@@ -2806,7 +2817,7 @@ class OpenClawAgent:
                 error_msg = error_msg.replace(home_dir, "~")
             print(f"WARN: Audit log write failed: {error_msg}", file=sys.stderr)
 
-    def register_tool(self, name: str, function: Callable, risk_level: float = 0.5):
+    def register_tool(self, name: str, function: Callable[..., Any], risk_level: float = 0.5) -> None:
         """Register a tool with the agent - requires constitutional approval.
 
         P1/P2 Hardened: Type validation, thread-safe, no lambdas/builtins.
@@ -2818,7 +2829,7 @@ class OpenClawAgent:
         if inspect.isfunction(function) and function.__name__ == "<lambda>":
             raise ValueError(f"Tool '{name}': Lambda functions not allowed")
 
-        if inspect.isbuiltin(function):
+        if inspect.isbuiltin(function):  # type: ignore[unreachable]
             raise ValueError(f"Tool '{name}': Builtin functions not allowed (pickle safety)")
 
         func_module = getattr(function, "__module__", None)
@@ -2959,7 +2970,7 @@ class OpenClawAgent:
 
             start_time = time.time()
 
-            results = {
+            results: dict[str, Any] = {
                 "plan_id": plan.plan_id,
                 "checkpoints": [],
                 "executions": [],
@@ -3203,7 +3214,7 @@ class OpenClawAgent:
                 if isinstance(action.parameters, dict):
                     result = tool_func(**action.parameters)
                 else:
-                    result = tool_func(action.parameters)
+                    result = tool_func(action.parameters)  # type: ignore[unreachable]
 
             # ENHANCEMENT #5: Cache the result for future use
             self._cache_result(action, result)
@@ -3270,7 +3281,7 @@ class OpenClawAgent:
                 }
 
             start_time = time.time()
-            results = {
+            results: dict[str, Any] = {
                 "plan_id": plan.plan_id,
                 "checkpoints": [],
                 "executions": [],
@@ -3384,7 +3395,7 @@ class OpenClawAgent:
                     if isinstance(action.parameters, dict):
                         result = await tool_func(**action.parameters)
                     else:
-                        result = await tool_func(action.parameters)
+                        result = await tool_func(action.parameters)  # type: ignore[unreachable]
                 return {"status": "success", "result": result}
             except Exception as e:
                 return {"status": "execution_failed", "error": str(e)}
@@ -3477,7 +3488,7 @@ class OpenClawAgent:
             plan_checkpoint=plan_checkpoint,
         )
 
-    def save_plan_state(self, plan: AgentPlan, filepath: str):
+    def save_plan_state(self, plan: AgentPlan, filepath: str) -> None:
         """Save plan state to file for later resumption."""
         with open(filepath, "w") as f:
             f.write(self.plan_to_json(plan))

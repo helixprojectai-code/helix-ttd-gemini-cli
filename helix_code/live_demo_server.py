@@ -96,7 +96,7 @@ class LiveMetrics:
             return 0.0
         sorted_latencies = sorted(self.latency_history)
         index = int(len(sorted_latencies) * percentile / 100)
-        return sorted_latencies[min(index, len(sorted_latencies) - 1)]
+        return float(sorted_latencies[min(index, len(sorted_latencies) - 1)])
 
     def to_dict(self) -> dict:
         """[FACT] Convert metrics to dictionary for UI telemetry."""
@@ -134,7 +134,7 @@ class Receipt:
     timestamp: str
     content: str
     valid: bool
-    drift_code: str = None
+    drift_code: str | None = None
     session_id: str = ""
 
 
@@ -148,7 +148,7 @@ class ReceiptStore:
 
     def add(self, receipt: Receipt) -> None:
         """[FACT] Add a receipt to the store and prune if overflowing."""
-        if len(self.receipts) >= self.receipts.maxlen:
+        if self.receipts.maxlen is not None and len(self.receipts) >= self.receipts.maxlen:
             # Remove oldest from mapping
             oldest = self.receipts[0]
             self.receipts_by_id.pop(oldest.receipt_id, None)
@@ -160,7 +160,7 @@ class ReceiptStore:
         """[FACT] Retrieve all stored receipts."""
         return list(self.receipts)
 
-    def get_by_id(self, receipt_id: str) -> Receipt:
+    def get_by_id(self, receipt_id: str) -> Receipt | None:
         """[FACT] Retrieve a specific receipt by ID."""
         return self.receipts_by_id.get(receipt_id)
 
@@ -264,6 +264,8 @@ async def demo_websocket_handler(websocket: WebSocket) -> None:
                                 await asyncio.sleep(delay)
 
                         # [DEBUG] Log what came back
+                        if gemini_result is None:
+                            gemini_result = {"success": False, "error": "No result"}
                         logger.info(
                             f"[DEBUG] Gemini result - success: {gemini_result['success']}, text length: {len(gemini_result.get('text') or '')}, error: {gemini_result.get('error')}"
                         )

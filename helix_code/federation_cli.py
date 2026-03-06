@@ -128,8 +128,8 @@ class NodeSpawner:
 
     def _apply_constitutional_prefix(self, node_id: str, prompt: str) -> str:
         """Prepend Helix constitutional context to prompt."""
-        node: dict = self.config.NODES.get(node_id, {})  # type: ignore[assignment]
-        role = node.get("role", "Federation Node")  # type: ignore[union-attr]
+        node: dict = self.config.NODES.get(node_id, {})
+        role = node.get("role", "Federation Node")
 
         return self.config.CONSTITUTIONAL_PREFIX.format(role=role, node_id=node_id.upper()) + prompt
 
@@ -318,9 +318,9 @@ class ReceiptGenerator:
 
 """
         for resp in session.responses:
-            node_info: dict = FederationConfig.NODES.get(resp.node_id, {})  # type: ignore[assignment]
-            display = node_info.get("display", resp.node_id)  # type: ignore[union-attr]
-            role = node_info.get("role", "Unknown")  # type: ignore[union-attr]
+            node_info: dict = FederationConfig.NODES.get(resp.node_id, {})
+            display = node_info.get("display", resp.node_id)
+            role = node_info.get("role", "Unknown")
 
             content += f"""### {display} ({role})
 
@@ -416,8 +416,8 @@ Commands:
 
         responses = []
         for node_id in self.config.NODES.keys():
-            node_config: dict = self.config.NODES[node_id]  # type: ignore[assignment]
-            print(f"\nQuerying {node_config['display']}...", end=" ", flush=True)  # type: ignore[index]
+            node_config: dict = self.config.NODES[node_id]
+            print(f"\nQuerying {node_config['display']}...", end=" ", flush=True)
             resp = self.spawner.spawn(node_id, prompt)
             status = "OK" if resp.exit_code == 0 else "FAIL"
             print(f"{status} ({resp.duration_ms}ms)")
