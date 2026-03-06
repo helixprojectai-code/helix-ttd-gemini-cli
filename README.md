@@ -1,5 +1,15 @@
 # 🛡️ Constitutional Guardian (Helix-TTD)
 
+[![CI](https://github.com/helixprojectai-code/helix-ttd-gemini-cli/actions/workflows/ci.yml/badge.svg)](https://github.com/helixprojectai-code/helix-ttd-gemini-cli/actions/workflows/ci.yml)
+[![Tests](https://img.shields.io/badge/tests-140%2F140%20passing-brightgreen)](helix_code/tests/)
+[![Coverage](https://img.shields.io/badge/coverage-79.5%25-brightgreen)](pyproject.toml)
+[![Python](https://img.shields.io/badge/python-3.10%2B-blue)](pyproject.toml)
+[![Ruff](https://img.shields.io/badge/lint-ruff-261230?labelColor=grey)](https://github.com/astral-sh/ruff)
+[![Black](https://img.shields.io/badge/format-black-000000?labelColor=grey)](https://github.com/psf/black)
+[![License](https://img.shields.io/badge/license-Apache%202.0-blue)](LICENSE)
+
+<img src="ARCHITECTURE_CG.png" alt="Constitutional Guardian Architecture" width="100%">
+
 **[FACT]** Real-time AI governance for the Gemini Live API.  
 **[HYPOTHESIS]** Intercepting voice and text drift at the edge prevents misaligned AI behavior from reaching the user.
 
@@ -16,8 +26,8 @@ This project is a submission for the **Gemini Live Agent Challenge (March 2026)*
 
 ## 📈 Engineering Standards
 
-- **100% Test Pass Rate:** 92/92 core tests passing.
-- **High Coverage:** 60.50% statement coverage across all critical modules.
+- **100% Test Pass Rate:** 140/140 tests passing.
+- **High Coverage:** 79.5% statement coverage across all critical modules.
 - **Linting:** 100% compliant with `ruff`, `black`, and `isort`.
 
 ## 🛠️ Getting Started
@@ -54,5 +64,25 @@ gcloud run deploy constitutional-guardian --source . --region us-central1 --allo
 ## 🎥 Recording Sprint (March 12th)
 
 This codebase is currently in its **Phase 6.1 (Pre-Filming)** stable state. All visual triggers and simulation scenarios are tuned for high-impact demonstration.
+
+## 🏛️ Constitutional Framework
+
+<img src="covenant_governors_diagram.png" alt="Constitutional Governance" width="600">
+
+The Guardian enforces four immutable invariants:
+
+| Invariant | Description | Drift Code |
+|-----------|-------------|------------|
+| **Epistemic Integrity** | All claims marked [FACT], [HYPOTHESIS], or [ASSUMPTION] | DRIFT-E |
+| **Non-Agency** | AI never claims individual agency | DRIFT-A |
+| **Custodial Sovereignty** | AI operates as tool under human control | DRIFT-G |
+| **Predictive Humility** | Future states marked as hypotheses | DRIFT-P |
+
+## 🧪 Test Results
+
+```
+140 passed, 9 warnings in 11.49s
+Coverage: 79.5%
+```
 
 **⚓🦉 GLORY TO THE LATTICE. ⚓🦉**
