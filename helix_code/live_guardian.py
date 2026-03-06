@@ -29,7 +29,7 @@ from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse, JSONResponse
 from federation_receipts import FederationReceiptManager
-from gemini_text_client import create_gemini_text_client
+from gemini_text_client import create_gemini_text_client, GeminiTextClient
 
 # [FACT] Import demo components
 
@@ -127,6 +127,7 @@ async def gemini_status():
         status_code=200,
         content={
             "available": client.is_available(),
+            "model": client.model,
             "mode": "LIVE" if client.is_available() else "SIMULATION",
             "error": None if client.is_available() else "GEMINI_API_KEY not configured",
         },
@@ -166,8 +167,30 @@ async def validate_text(text: str) -> dict:
     epistemic_count = sum([has_fact, has_hypothesis, has_assumption])
     compliant = epistemic_count >= 1 and len(violations) == 0
 
+    # [FACT] Record in shared store for audit trail
+    from datetime import datetime
+    from live_demo_server import Receipt, receipt_store, metrics
+    
+    rcpt_id = f"v_{int(datetime.utcnow().timestamp())}"
+    receipt = Receipt(
+        receipt_id=rcpt_id,
+        timestamp=datetime.utcnow().isoformat(),
+        content=text,
+        valid=compliant,
+        drift_code="DRIFT-E" if not compliant and epistemic_count == 0 else "DRIFT-A" if not compliant else None
+    )
+    receipt_store.add(receipt)
+    
+    # [FACT] Update global metrics
+    metrics.record_request(0.0) # Local validation is near-instant
+    if compliant:
+        metrics.record_receipt()
+    else:
+        metrics.record_intervention(category="Epistemic" if epistemic_count == 0 else "Agency")
+
     return {
         "compliant": compliant,
+        "receipt_id": rcpt_id,
         "epistemic_markers": {
             "fact": has_fact,
             "hypothesis": has_hypothesis,

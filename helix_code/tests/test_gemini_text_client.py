@@ -14,8 +14,9 @@ from helix_code.gemini_text_client import GeminiTextClient, create_gemini_text_c
 class TestGeminiTextClient:
     """[FACT] Test suite for Gemini REST client."""
 
-    def test_init_without_api_key(self):
+    def test_init_without_api_key(self, monkeypatch):
         """[FACT] Client initializes but unavailable without key."""
+        monkeypatch.delenv("GEMINI_API_KEY", raising=False)
         client = GeminiTextClient(api_key=None)
         assert not client.is_available()
         assert client.api_key is None
@@ -35,8 +36,9 @@ class TestGeminiTextClient:
         assert client.api_key == "env_key_12345"
 
     @pytest.mark.anyio
-    async def test_generate_response_no_api_key(self):
+    async def test_generate_response_no_api_key(self, monkeypatch):
         """[FACT] Returns error when no API key configured."""
+        monkeypatch.delenv("GEMINI_API_KEY", raising=False)
         client = GeminiTextClient(api_key=None)
         result = await client.generate_response("Hello")
 
