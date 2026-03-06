@@ -170,6 +170,7 @@ jobs:
           pip install -e helix_code/
 
       - name: Run tests
+        shell: bash
         env:
           HELIX_DBC_ENC_KEY: ${{ matrix.dbc_mode == 'secure' && 'ci_dummy_enc_key' || '' }}
           HELIX_ALLOW_INSECURE_DBC: ${{ matrix.dbc_mode == 'insecure' && '1' || '' }}

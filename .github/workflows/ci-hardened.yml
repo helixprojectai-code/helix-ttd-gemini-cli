@@ -196,6 +196,7 @@ jobs:
           pip install -e .
 
       - name: Run tests
+        shell: bash
         run: |
           python -m pytest helix_code/tests/ \
             -v --tb=short \
