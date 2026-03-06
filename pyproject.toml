@@ -30,6 +30,14 @@ classifiers = [
 [project.scripts]
 helix = "helix_cli:main"
 
+# ============================================================
+# SETUPTOOLS: Package Discovery
+# ============================================================
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["helix_code*", "helix_ttd_claw*"]
+exclude = ["helix_code.tests*", "tools*", "docs*", "EVAC*", "*.tests*", "*.tests.*", "tests.*", "tests*"]
+
 [project.optional-dependencies]
 dev = [
     "pytest>=7.0",
