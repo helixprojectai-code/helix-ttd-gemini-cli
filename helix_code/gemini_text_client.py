@@ -112,8 +112,18 @@ class GeminiTextClient:
                 config=config,
             )
 
-            # [FACT] Extract response text
-            text = response.text if response.text else ""
+            # [FACT] Extract response text from candidates
+            text = ""
+            if response.candidates:
+                for candidate in response.candidates:
+                    if candidate.content and candidate.content.parts:
+                        for part in candidate.content.parts:
+                            if part.text:
+                                text += part.text
+            
+            # Fallback to response.text if available
+            if not text and response.text:
+                text = response.text
             
             # [DEBUG] Log raw response
             logger.info(f"[DEBUG] Gemini raw response: '{text[:100]}...' (len={len(text)})")
