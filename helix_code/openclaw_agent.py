@@ -618,7 +618,7 @@ class DBCIdentity:
         if isinstance(self._private_key, bytes):
             return self._private_key.decode()
         if isinstance(self._private_key, str):
-            return self._private_key  # type: ignore[unreachable]
+            return self._private_key
         # This should never happen in v1.3.2+
         raise RuntimeError("[CRITICAL] Legacy key derivation disabled in v1.3.2+")
 
@@ -2839,7 +2839,7 @@ class OpenClawAgent:
         if inspect.isfunction(function) and function.__name__ == "<lambda>":
             raise ValueError(f"Tool '{name}': Lambda functions not allowed")
 
-        if inspect.isbuiltin(function):  # type: ignore
+        if inspect.isbuiltin(function):
             raise ValueError(f"Tool '{name}': Builtin functions not allowed (pickle safety)")
 
         func_module = getattr(function, "__module__", None)
