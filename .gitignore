@@ -16,3 +16,8 @@ GIT/
 # OS Files
 Thumbs.db
 .DS_Store
+
+# Test coverage artifacts
+.coverage
+htmlcov/
+.coverage.*
