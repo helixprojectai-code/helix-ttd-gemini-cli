@@ -94,13 +94,36 @@ class GeminiLiveBridge:
         self.sessions[session_id] = session
         return session
 
-    async def start_gemini_live(self, session: LiveSession, model_id: str = "gemini-2.5-flash"):
-        """[FACT] Start the actual Gemini Live API session."""
+    # [FACT] Supported Gemini models with capabilities
+    SUPPORTED_MODELS = {
+        "gemini-2.5-flash": {"reasoning": False, "description": "Fast, efficient responses"},
+        "gemini-3.1-pro": {"reasoning": True, "description": "Deep reasoning, edge case analysis"},
+    }
+
+    async def start_gemini_live(
+        self,
+        session: LiveSession,
+        model_id: str = "gemini-2.5-flash",
+        reasoning_mode: bool = False,
+    ):
+        """[FACT] Start the actual Gemini Live API session.
+
+        Args:
+            session: Active live session instance
+            model_id: Gemini model to use (default: gemini-2.5-flash)
+            reasoning_mode: Enable deep reasoning mode for complex analysis
+        """
         if not self.client:
             print("[WARNING] Gemini Client not available.")
             return
 
+        # [HYPOTHESIS] Configure response modalities based on model capabilities
         config = {"response_modalities": ["TEXT"]}  # Force text for validation
+
+        # [FACT] Enable reasoning mode for Gemini 3.1 Pro
+        if reasoning_mode and model_id == "gemini-3.1-pro":
+            config["reasoning_mode"] = True
+            print(f"[FACT] Gemini 3.1 Pro reasoning mode enabled for session: {session.session_id}")
 
         # [HYPOTHESIS] Bidirectional context manager for live connection
         async with self.client.aio.live.connect(model=model_id, config=config) as gemini_session:

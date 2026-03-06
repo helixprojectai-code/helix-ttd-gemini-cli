@@ -81,6 +81,14 @@ class FederationConfig:
             "args": ["-p", "--print", "--quiet"],
             "color": "\033[91m",  # Red
         },
+        "gems-pro": {
+            "display": "[G+] GEMINI PRO",
+            "role": "Deep Reasoning / Edge Case Analysis",
+            "command": "gemini",
+            "args": ["--model", "gemini-3.1-pro"],
+            "color": "\033[95m",  # Magenta
+            "reasoning_mode": True,
+        },
     }
 
     RESET = "\033[0m"
@@ -380,7 +388,7 @@ Rick's Cafe CLI - Constitutional Federation Lounge [REAL MODE]
 [!] 4 nodes will be queried in parallel
 [!] Press Ctrl+C to cancel a slow response
 
-[FACT] 4 nodes registered: claude | gems | codex | kimi
+[FACT] 5 nodes registered: claude | gems | gems-pro | codex | kimi
 [HYPOTHESIS] Multi-model synthesis reduces individual bias
 [ASSUMPTION] All CLIs available in PATH
 
@@ -388,6 +396,7 @@ Commands:
   <prompt>          Broadcast to all nodes (Door Mode)
   /claude <prompt>  Single node (Table Mode)
   /gems <prompt>    Single node
+  /gems-pro <prompt>  Gemini 3.1 Pro (Deep Reasoning Mode)
   /codex <prompt>   Single node
   /kimi <prompt>    Single node
   /receipts         Show session history
