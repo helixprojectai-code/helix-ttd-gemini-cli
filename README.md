@@ -1,6 +1,6 @@
 # 🛡️ Constitutional Guardian (Helix-TTD)
 
-[![CI](https://github.com/helixprojectai-code/helix-ttd-gemini-cli/actions/workflows/ci.yml/badge.svg)](https://github.com/helixprojectai-code/helix-ttd-gemini-cli/actions/workflows/ci.yml)
+[![CI](https://github.com/helixprojectai-code/helix-ttd-gemini-cli/actions/workflows/ci-hardened.yml/badge.svg)](https://github.com/helixprojectai-code/helix-ttd-gemini-cli/actions/workflows/ci-hardened.yml)
 [![Tests](https://img.shields.io/badge/tests-140%2F140%20passing-brightgreen)](helix_code/tests/)
 [![Coverage](https://img.shields.io/badge/coverage-79.5%25-brightgreen)](pyproject.toml)
 [![Python](https://img.shields.io/badge/python-3.10%2B-blue)](pyproject.toml)
