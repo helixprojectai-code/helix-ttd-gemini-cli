@@ -23,6 +23,7 @@ class ForbiddenPattern(TypedDict, total=False):
     exclude_files: list[str]
     warning_only: bool
 
+
 # Directories to scan
 SCAN_DIRS = ["code", "helix-ttd-gemini-cli-fresh"]
 EXCLUDE_PATTERNS = ["__pycache__", ".pyc", "check_constitutional.py"]

@@ -2839,7 +2839,7 @@ class OpenClawAgent:
         if inspect.isfunction(function) and function.__name__ == "<lambda>":
             raise ValueError(f"Tool '{name}': Lambda functions not allowed")
 
-        if inspect.isbuiltin(function):  # type: ignore[unreachable]
+        if inspect.isbuiltin(function):  # type: ignore
             raise ValueError(f"Tool '{name}': Builtin functions not allowed (pickle safety)")
 
         func_module = getattr(function, "__module__", None)
