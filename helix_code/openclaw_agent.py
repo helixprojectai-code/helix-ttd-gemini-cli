@@ -997,7 +997,8 @@ class CheckpointStore:
     def _init_db(self):
         """Create checkpoint table if not exists."""
         with sqlite3.connect(self.db_path) as conn:
-            conn.execute("""
+            conn.execute(
+                """
                 CREATE TABLE IF NOT EXISTS checkpoints (
                     id TEXT PRIMARY KEY,
                     timestamp REAL NOT NULL,
@@ -1015,16 +1016,23 @@ class CheckpointStore:
                     signature_timestamp TEXT,
                     signature_expiration TEXT
                 )
-                """)
-            conn.execute("""
+                """
+            )
+            conn.execute(
+                """
                 CREATE INDEX IF NOT EXISTS idx_plan_id ON checkpoints(plan_id)
-                """)
-            conn.execute("""
+                """
+            )
+            conn.execute(
+                """
                 CREATE INDEX IF NOT EXISTS idx_timestamp ON checkpoints(timestamp)
-                """)
-            conn.execute("""
+                """
+            )
+            conn.execute(
+                """
                 CREATE INDEX IF NOT EXISTS idx_dbc_id ON checkpoints(dbc_id)
-                """)
+                """
+            )
             conn.commit()
 
     def save(self, checkpoint: ConstitutionalCheckpoint, plan_id: str = "", agent_id: str = ""):
