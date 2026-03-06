@@ -28,7 +28,7 @@ classifiers = [
 ]
 
 [project.scripts]
-helix = "helix_cli:main"
+helix = "helix_code.helix_cli:main"
 
 # ============================================================
 # SETUPTOOLS: Package Discovery
