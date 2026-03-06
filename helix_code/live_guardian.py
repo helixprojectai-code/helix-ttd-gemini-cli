@@ -123,15 +123,15 @@ async def api_info():
 async def gemini_status():
     """[FACT] Check if Gemini Text API is available."""
     client = create_gemini_text_client()
-    return JSONResponse(
-        status_code=200,
-        content={
-            "available": client.is_available(),
-            "model": client.model,
-            "mode": "LIVE" if client.is_available() else "SIMULATION",
-            "error": None if client.is_available() else "GEMINI_API_KEY not configured",
-        },
-    )
+    response_content = {
+        "available": client.is_available(),
+        "mode": "LIVE" if client.is_available() else "SIMULATION",
+        "error": None if client.is_available() else "GEMINI_API_KEY not configured",
+    }
+    # Include model info when available
+    if client.is_available():
+        response_content["model"] = client.model
+    return JSONResponse(status_code=200, content=response_content)
 
 
 @app.post("/validate")
