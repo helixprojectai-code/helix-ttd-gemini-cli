@@ -30,6 +30,20 @@ This project is a submission for the **Gemini Live Agent Challenge (March 2026)*
 - **High Coverage:** 79.5% statement coverage across all critical modules.
 - **Linting:** 100% compliant with `ruff`, `black`, and `isort`.
 
+## 📊 Repository Traction (March 5, 2026)
+
+**[FACT]** The Constitutional Guardian is gaining significant developer interest.
+
+| Metric | Value | Period |
+|--------|-------|--------|
+| **Git Clones** | 3,571 | Last 14 days (Feb 24-Mar 5) |
+| **Unique Cloners** | 471 | Last 14 days |
+| **Repository Views** | 711 | Last 14 days |
+| **Peak Daily Clones** | 1,223 | Single day |
+| **Peak Daily Cloners** | 147 | Single day |
+
+**[HYPOTHESIS]** 7.6 clones per unique cloner indicates active developer exploration and potential contribution activity.
+
 ## 🛠️ Getting Started
 
 ### Local Development
