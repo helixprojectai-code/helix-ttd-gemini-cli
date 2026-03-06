@@ -14,9 +14,10 @@ This module demonstrates use of:
 
 import json
 import os
+from collections.abc import Callable
 from dataclasses import asdict, dataclass
 from datetime import datetime
-from typing import Any, Callable, cast
+from typing import Any, cast
 
 # [FACT] Google Cloud client libraries
 try:

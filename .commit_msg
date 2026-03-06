@@ -1,0 +1,7 @@
+types: fix final 8 mypy errors
+
+- Add types to check_constitutional.py and check_imports.py
+- Fix helix_ttd_claw/utils/__init__.py annotation
+- Fix openclaw_agent.py return types
+
+All mypy checks now pass (56 source files)

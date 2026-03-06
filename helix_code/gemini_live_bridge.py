@@ -96,7 +96,10 @@ class GeminiLiveBridge:
     # [FACT] Supported Gemini models with capabilities
     SUPPORTED_MODELS = {
         "gemini-2.5-flash": {"reasoning": False, "description": "Fast, efficient responses"},
-        "gemini-3.1-pro-preview": {"reasoning": True, "description": "Deep reasoning, edge case analysis"},
+        "gemini-3.1-pro-preview": {
+            "reasoning": True,
+            "description": "Deep reasoning, edge case analysis",
+        },
     }
 
     async def start_gemini_live(

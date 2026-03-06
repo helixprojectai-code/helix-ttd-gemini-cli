@@ -8,13 +8,27 @@ Part of CI/CD hardening for helix-ttd-gemini v1.4.0
 import re
 import sys
 from pathlib import Path
+from typing import TypedDict
+
+
+class ConstitutionalCheck(TypedDict):
+    pattern: re.Pattern[str]
+    required: bool
+    description: str
+
+
+class ForbiddenPattern(TypedDict, total=False):
+    pattern: re.Pattern[str]
+    description: str
+    exclude_files: list[str]
+    warning_only: bool
 
 # Directories to scan
 SCAN_DIRS = ["code", "helix-ttd-gemini-cli-fresh"]
 EXCLUDE_PATTERNS = ["__pycache__", ".pyc", "check_constitutional.py"]
 
 # Constitutional patterns to check
-CONSTITUTIONAL_CHECKS = {
+CONSTITUTIONAL_CHECKS: dict[str, ConstitutionalCheck] = {
     "creator_intent": {
         "pattern": re.compile(r"CREATOR_INTENT|CreatorIntent|creator_intent", re.IGNORECASE),
         "required": False,
@@ -33,7 +47,7 @@ CONSTITUTIONAL_CHECKS = {
 }
 
 # Forbidden patterns (anti-patterns)
-FORBIDDEN_PATTERNS = {
+FORBIDDEN_PATTERNS: dict[str, ForbiddenPattern] = {
     "hardcoded_secret": {
         "pattern": re.compile(
             r'(password|secret|key|token)\s*=\s*["\'][^"\']{3,}["\']', re.IGNORECASE
@@ -80,39 +94,37 @@ def check_file(file_path: Path) -> dict[str, list[dict[str, object]]]:
         return results
 
     # Check for constitutional patterns
-    for name, check in CONSTITUTIONAL_CHECKS.items():
-        pattern: re.Pattern[str] = check["pattern"]
-        matches = pattern.findall(content)
+    for check_name, check in CONSTITUTIONAL_CHECKS.items():
+        matches = check["pattern"].findall(content)
         if matches:
             results["constitutional_hits"].append(
                 {
-                    "check": name,
+                    "check": check_name,
                     "description": check["description"],
                     "count": len(matches),
                 }
             )
 
     # Check for forbidden patterns
-    for name, check in FORBIDDEN_PATTERNS.items():
+    for pattern_name, forbidden_check in FORBIDDEN_PATTERNS.items():
         # Skip excluded files
-        if any(excl in str(file_path) for excl in check.get("exclude_files", [])):
+        if any(excl in str(file_path) for excl in forbidden_check.get("exclude_files", [])):
             continue
 
         for line_num, line in enumerate(lines, 1):
-            pattern: re.Pattern[str] = check["pattern"]
-            if pattern.search(line):
+            if forbidden_check["pattern"].search(line):
                 # Skip lines with # nosec or # noqa
                 if "# nosec" in line or "# noqa" in line:
                     continue
 
                 issue = {
-                    "check": name,
-                    "description": check["description"],
+                    "check": pattern_name,
+                    "description": forbidden_check["description"],
                     "line": line_num,
                     "content": line.strip()[:80],
                 }
 
-                if check.get("warning_only"):
+                if forbidden_check.get("warning_only"):
                     results["warnings"].append(issue)
                 else:
                     results["violations"].append(issue)

@@ -20,7 +20,9 @@ class TempCWD:
         os.chdir(self._tmp.name)
         return Path(self._tmp.name)
 
-    def __exit__(self, exc_type: type[BaseException] | None, exc: BaseException | None, tb: Any) -> None:
+    def __exit__(
+        self, exc_type: type[BaseException] | None, exc: BaseException | None, tb: Any
+    ) -> None:
         os.chdir(self._orig)
         self._tmp.cleanup()
 

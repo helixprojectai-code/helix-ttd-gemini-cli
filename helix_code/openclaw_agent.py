@@ -366,7 +366,9 @@ class DBCIdentity:
         """
         self.dbc_path = dbc_path or self._find_dbc()
         self.dbc_data: dict = {}
-        self._private_key: Ed25519PrivateKey | bytes | None = None  # v1.3.2: Proper Ed25519 key or bytes for HMAC
+        self._private_key: Ed25519PrivateKey | bytes | None = (
+            None  # v1.3.2: Proper Ed25519 key or bytes for HMAC
+        )
         self._loaded = False
         self._crypto_available = CRYPTO_AVAILABLE
 
@@ -602,7 +604,7 @@ class DBCIdentity:
         if self._crypto_available and isinstance(self._private_key, Ed25519PrivateKey):
             # v1.3.2: True Ed25519 signature
             signature = self._private_key.sign(data)
-            return signature.hex()
+            return str(signature.hex())
         else:
             # Fallback: HMAC (NOT FOR PRODUCTION)
             if isinstance(self._private_key, bytes):
@@ -1053,7 +1055,9 @@ class CheckpointStore:
             )
             conn.commit()
 
-    def save(self, checkpoint: ConstitutionalCheckpoint, plan_id: str = "", agent_id: str = "") -> None:
+    def save(
+        self, checkpoint: ConstitutionalCheckpoint, plan_id: str = "", agent_id: str = ""
+    ) -> None:
         """Persist a checkpoint to the database with optional DBC signature.
 
         v1.3.0: If DBC identity is configured, signs the checkpoint hash
@@ -1536,7 +1540,9 @@ class SIEMExporter:
                 "endpoint": self.endpoint,
             }
 
-    def export_drift_alert(self, checkpoint: ConstitutionalCheckpoint, context: dict[str, Any] | None = None) -> dict[str, Any]:
+    def export_drift_alert(
+        self, checkpoint: ConstitutionalCheckpoint, context: dict[str, Any] | None = None
+    ) -> dict[str, Any]:
         """Export a drift detection alert (high priority)."""
         return self.export_event(
             "drift_detected",
@@ -1910,7 +1916,9 @@ class MetricsCollector:
         c = f + 1 if f + 1 < len(sorted_samples) else f
         return sorted_samples[f] + (k - f) * (sorted_samples[c] - sorted_samples[f])
 
-    def record_plan_execution(self, plan: AgentPlan, duration_seconds: float, success: bool) -> None:
+    def record_plan_execution(
+        self, plan: AgentPlan, duration_seconds: float, success: bool
+    ) -> None:
         """Record metrics for a completed plan execution."""
         self.increment("plans_executed_total" if success else "plans_rejected_total")
         self.record_latency("plan", duration_seconds)
@@ -2817,7 +2825,9 @@ class OpenClawAgent:
                 error_msg = error_msg.replace(home_dir, "~")
             print(f"WARN: Audit log write failed: {error_msg}", file=sys.stderr)
 
-    def register_tool(self, name: str, function: Callable[..., Any], risk_level: float = 0.5) -> None:
+    def register_tool(
+        self, name: str, function: Callable[..., Any], risk_level: float = 0.5
+    ) -> None:
         """Register a tool with the agent - requires constitutional approval.
 
         P1/P2 Hardened: Type validation, thread-safe, no lambdas/builtins.

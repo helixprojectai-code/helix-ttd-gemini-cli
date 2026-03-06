@@ -282,9 +282,7 @@ class LookseeAuditor:
                 data: dict[str, Any] = json.load(f)
                 report["nodes_validated"].append(data["auditor_node"])
                 drift_code = data.get("drift_code", "DRIFT-0")
-                report["drift_summary"][drift_code] = (
-                    report["drift_summary"].get(drift_code, 0) + 1
-                )
+                report["drift_summary"][drift_code] = report["drift_summary"].get(drift_code, 0) + 1
 
         # Generate recommendations
         if report["drift_summary"]["DRIFT-C"] > 0:

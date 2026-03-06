@@ -279,7 +279,7 @@ class ConstitutionalConstant:
     _instance: ConstitutionalConstant | None = None
     _initialized: bool
 
-    def __new__(cls) -> "ConstitutionalConstant":
+    def __new__(cls) -> ConstitutionalConstant:
         if cls._instance is None:
             cls._instance = super().__new__(cls)
             cls._instance._initialized = False
