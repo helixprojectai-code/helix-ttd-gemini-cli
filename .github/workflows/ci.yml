@@ -166,6 +166,7 @@ jobs:
           python -m pip install --upgrade pip
           pip install pytest pytest-cov pytest-xdist
           pip install cryptography
+          pip install -r helix_code/requirements.txt
           pip install -e helix_code/
 
       - name: Run tests
