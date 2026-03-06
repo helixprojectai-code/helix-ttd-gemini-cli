@@ -302,7 +302,7 @@ class TestOpenClawHardening(unittest.TestCase):
             def layer_name(self) -> str:
                 return "MutatingLayer"
 
-            def evaluate(self, plan: AgentPlan):
+            def evaluate(self, plan: AgentPlan) -> tuple[bool, float, list[Any]]:
                 plan.steps.clear()
                 return True, 1.0, []
 
@@ -384,7 +384,7 @@ class TestOpenClawAgent(unittest.TestCase):
 
         with TempCWD():
 
-            def noop(x):
+            def noop(x: Any) -> Any:
                 return x
 
             agent = OpenClawAgent(agency_tier=AgencyLevel.CUSTODIAN_GATE)

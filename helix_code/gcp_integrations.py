@@ -16,7 +16,7 @@ import json
 import os
 from dataclasses import asdict, dataclass
 from datetime import datetime
-from typing import Any, Callable
+from typing import Any, Callable, cast
 
 # [FACT] Google Cloud client libraries
 try:
@@ -194,7 +194,7 @@ class CloudStorageReceipts:
         for blob in blobs:
             if receipt_id in blob.name:
                 data = blob.download_as_string()
-                return json.loads(data)
+                return cast(dict[Any, Any], json.loads(data))
 
         return None
 

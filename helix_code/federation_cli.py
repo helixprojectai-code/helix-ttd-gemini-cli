@@ -21,6 +21,7 @@ import time
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
+from typing import Any
 
 
 @dataclass
@@ -52,7 +53,7 @@ class LatticeSession:
 class FederationConfig:
     """Node registry and configuration."""
 
-    NODES = {
+    NODES: dict[str, dict[str, Any]] = {
         "claude": {
             "display": "[O] CLAUDE",
             "role": "Oyster / Resonance",
@@ -128,7 +129,7 @@ class NodeSpawner:
 
     def _apply_constitutional_prefix(self, node_id: str, prompt: str) -> str:
         """Prepend Helix constitutional context to prompt."""
-        node: dict = self.config.NODES.get(node_id, {})
+        node: dict[str, Any] = self.config.NODES.get(node_id, {})
         role = node.get("role", "Federation Node")
 
         return self.config.CONSTITUTIONAL_PREFIX.format(role=role, node_id=node_id.upper()) + prompt
@@ -318,7 +319,7 @@ class ReceiptGenerator:
 
 """
         for resp in session.responses:
-            node_info: dict = FederationConfig.NODES.get(resp.node_id, {})
+            node_info: dict[str, Any] = FederationConfig.NODES.get(resp.node_id, {})
             display = node_info.get("display", resp.node_id)
             role = node_info.get("role", "Unknown")
 
@@ -416,7 +417,7 @@ Commands:
 
         responses = []
         for node_id in self.config.NODES.keys():
-            node_config: dict = self.config.NODES[node_id]
+            node_config: dict[str, Any] = self.config.NODES.get(node_id, {})
             print(f"\nQuerying {node_config['display']}...", end=" ", flush=True)
             resp = self.spawner.spawn(node_id, prompt)
             status = "OK" if resp.exit_code == 0 else "FAIL"
@@ -468,13 +469,12 @@ Commands:
         print()
 
         for node_id, config in self.config.NODES.items():
-            config_dict: dict = config  # type: ignore[assignment]
-            cmd_path: str | None = shutil.which(config_dict["command"])
+            cmd_path: str | None = shutil.which(config["command"])
             if cmd_path:
                 status = f"[AVAILABLE] {cmd_path}"
             else:
                 status = "[NOT FOUND]"
-            print(f"{config_dict['display']:12} {status}")
+            print(f"{config['display']:12} {status}")
 
     def interactive_loop(self) -> None:
         """Main interactive shell."""

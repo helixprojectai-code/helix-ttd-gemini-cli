@@ -232,7 +232,7 @@ class ShlorpianTopology:
         coord2 = self.coordinates.get(char2, (0, 0))
 
         # Euclidean distance in 2D character space
-        return ((coord1[0] - coord2[0]) ** 2 + (coord1[1] - coord2[1]) ** 2) ** 0.5
+        return float(((coord1[0] - coord2[0]) ** 2 + (coord1[1] - coord2[1]) ** 2) ** 0.5)
 
     def get_constellation(
         self, center: ShlorpianCharacter, radius: float = 1.0

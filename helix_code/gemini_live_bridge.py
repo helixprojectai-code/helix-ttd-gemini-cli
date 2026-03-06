@@ -73,15 +73,14 @@ class GeminiLiveBridge:
         self.api_key = api_key or os.getenv("GEMINI_API_KEY")
         self.sessions: dict[str, LiveSession] = {}
         self.on_intervention: Callable | None = None
+        self.client: Any = None
 
         if GENAI_AVAILABLE and self.api_key:
             self.client = genai.Client(
                 api_key=self.api_key, http_options={"api_version": "v1alpha"}
             )
-        else:
-            self.client = None
-            if not self.api_key:
-                print("[WARNING] GEMINI_API_KEY not set. Gemini Live integration disabled.")
+        elif not self.api_key:
+            print("[WARNING] GEMINI_API_KEY not set. Gemini Live integration disabled.")
 
     async def create_session(self, session_id: str) -> LiveSession:
         """[FACT] Create a new validated live session."""
@@ -118,7 +117,7 @@ class GeminiLiveBridge:
             return
 
         # [HYPOTHESIS] Configure response modalities based on model capabilities
-        config = {"response_modalities": ["TEXT"]}  # Force text for validation
+        config: dict[str, Any] = {"response_modalities": ["TEXT"]}  # Force text for validation
 
         # [FACT] Enable reasoning mode for Gemini 3.1 Pro
         if reasoning_mode and model_id == "gemini-3.1-pro-preview":

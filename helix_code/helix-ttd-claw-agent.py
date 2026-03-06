@@ -5,7 +5,7 @@ Imports all classes from openclaw_agent (canonical importable module)
 and runs usage examples. Run directly with: python helix-ttd-claw-agent.py
 """
 
-from typing import Any
+from typing import Any, cast
 
 from openclaw_agent import (
     AgencyLevel,
@@ -53,7 +53,7 @@ def example_bounded_agent_workflow() -> dict[str, Any]:
 
     print(f"  Merkle Root: {results['final_anchor']}")
 
-    return results
+    return cast(dict[str, Any], results)
 
 
 def example_high_risk_gate() -> None:
@@ -185,7 +185,7 @@ def example_granular_risk_tuning() -> None:
     for name, risk_config in configs:
         agent = OpenClawAgent(agency_tier=AgencyLevel.CUSTODIAN_GATE, risk_config=risk_config)
 
-        def noop(x):
+        def noop(x: Any) -> Any:
             return x
 
         agent.register_tool("database_migrate", noop, risk_level=0.8)

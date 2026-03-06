@@ -4,6 +4,8 @@
 [ASSUMPTION] Mocking Gemini client allows testing without API calls.
 """
 
+from typing import Any
+
 from helix_code.live_demo_server import LiveMetrics, Receipt, ReceiptStore, get_gemini_text_client
 
 
@@ -89,7 +91,9 @@ class TestReceiptStore:
         store.add(receipt)
 
         assert len(store.get_all()) == 1
-        assert store.get_by_id("test_001").content == "Test content"
+        result = store.get_by_id("test_001")
+        assert result is not None
+        assert result.content == "Test content"
 
     def test_get_all(self) -> None:
         """[FACT] Retrieves all receipts."""
@@ -139,7 +143,7 @@ class TestReceiptStore:
 class TestGeminiTextClientCache:
     """[FACT] Test suite for client caching logic."""
 
-    def test_get_gemini_text_client_caching(self, monkeypatch) -> None:
+    def test_get_gemini_text_client_caching(self, monkeypatch: Any) -> None:
         """[FACT] Client is cached and reused."""
         monkeypatch.setenv("GEMINI_API_KEY", "test_key_12345")
 
@@ -155,7 +159,7 @@ class TestGeminiTextClientCache:
         # Should be same instance
         assert client1 is client2
 
-    def test_get_gemini_text_client_key_change(self, monkeypatch) -> None:
+    def test_get_gemini_text_client_key_change(self, monkeypatch: Any) -> None:
         """[FACT] New client created when key changes."""
         monkeypatch.setenv("GEMINI_API_KEY", "key_1")
 

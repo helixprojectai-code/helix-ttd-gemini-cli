@@ -518,7 +518,7 @@ app = FastAPI()
 
 
 @app.get("/", response_class=HTMLResponse)
-async def get_demo():
+async def get_demo() -> HTMLResponse:
     """[FACT] Serve the interactive demo HTML page."""
     from live_demo_server_html import (
         DEMO_HTML,  # Assuming we extract HTML to its own file for clarity
@@ -528,7 +528,7 @@ async def get_demo():
 
 
 @app.websocket("/demo-live")
-async def standalone_websocket(websocket: WebSocket):
+async def standalone_websocket(websocket: WebSocket) -> None:
     """[FACT] Standalone WebSocket endpoint for local testing."""
     await websocket.accept()
     await demo_websocket_handler(websocket)

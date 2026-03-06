@@ -25,7 +25,9 @@ def test_receipt_store() -> None:
     store.add(receipt)
 
     assert len(store.get_all()) == 1
-    assert store.get_by_id("r1").content == "[FACT] Test"
+    receipt_result = store.get_by_id("r1")
+    assert receipt_result is not None
+    assert receipt_result.content == "[FACT] Test"
     assert store.get_stats()["total"] == 1
 
 

@@ -16,6 +16,7 @@ import re
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
+from typing import Any
 
 
 @dataclass
@@ -280,7 +281,7 @@ class NamingConvention:
 
         return sorted(results, key=lambda x: x[1].date, reverse=True)
 
-    def generate_manifest_entry(self, filename: HelixFilename, **kwargs) -> dict:
+    def generate_manifest_entry(self, filename: HelixFilename, **kwargs: Any) -> dict:
         """Generate MANIFEST.json entry for file."""
         entry = {
             "id": f"HELIX-{filename.origin}-{filename.file_type}-{filename.sequence}",

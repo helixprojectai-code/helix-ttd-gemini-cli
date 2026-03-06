@@ -4,6 +4,7 @@
 [ASSUMPTION] Mocking httpx allows testing without API keys.
 """
 
+from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -14,7 +15,7 @@ from helix_code.gemini_text_client import GeminiTextClient, create_gemini_text_c
 class TestGeminiTextClient:
     """[FACT] Test suite for Gemini REST client."""
 
-    def test_init_without_api_key(self, monkeypatch) -> None:
+    def test_init_without_api_key(self, monkeypatch: Any) -> None:
         """[FACT] Client initializes but unavailable without key."""
         monkeypatch.delenv("GEMINI_API_KEY", raising=False)
         client = GeminiTextClient(api_key=None)
@@ -28,7 +29,7 @@ class TestGeminiTextClient:
         assert client.api_key == "test_key_12345"
         assert client.model == "gemini-2.5-pro"
 
-    def test_init_uses_env_var(self, monkeypatch) -> None:
+    def test_init_uses_env_var(self, monkeypatch: Any) -> None:
         """[FACT] Client reads API key from environment."""
         monkeypatch.setenv("GEMINI_API_KEY", "env_key_12345")
         client = create_gemini_text_client()
@@ -36,7 +37,7 @@ class TestGeminiTextClient:
         assert client.api_key == "env_key_12345"
 
     @pytest.mark.anyio
-    async def test_generate_response_no_api_key(self, monkeypatch) -> None:
+    async def test_generate_response_no_api_key(self, monkeypatch: Any) -> None:
         """[FACT] Returns error when no API key configured."""
         monkeypatch.delenv("GEMINI_API_KEY", raising=False)
         client = GeminiTextClient(api_key=None)
