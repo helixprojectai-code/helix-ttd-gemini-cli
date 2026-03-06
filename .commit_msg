@@ -1,0 +1,6 @@
+feat: add retry loop with exponential backoff for 503 errors
+
+- Implements 3 retries with 1s, 2s, 4s exponential backoff
+- Only retries on 503 Service Unavailable errors
+- Falls back to simulation only after all retries exhausted
+- Shows retry status messages to user via WebSocket

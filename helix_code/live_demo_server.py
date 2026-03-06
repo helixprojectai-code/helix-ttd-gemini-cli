@@ -220,7 +220,7 @@ async def demo_websocket_handler(websocket: WebSocket) -> None:
                     client = get_gemini_text_client()
 
                     if client and client.is_available():
-                        # [FACT] Call REAL Gemini API
+                        # [FACT] Call REAL Gemini API with retry logic for 503 errors
                         await websocket.send_json(
                             {"type": "system_event", "message": "[GEMINI] Sending to Live API..."}
                         )
@@ -230,11 +230,38 @@ async def demo_websocket_handler(websocket: WebSocket) -> None:
                             f"[DEBUG] Sending to Gemini - prompt length: {len(prompt)}, content: '{prompt[:50]}...'"
                         )
 
-                        gemini_result = await client.generate_response(
-                            prompt=prompt,
-                            system_instruction="You are a helpful AI assistant. Use epistemic markers [FACT], [HYPOTHESIS], [ASSUMPTION] for substantive claims. Never claim agency - you are a tool, not an agent.",
-                            temperature=0.7,
-                        )
+                        # [FACT] Retry loop with exponential backoff for 503 errors
+                        max_retries = 3
+                        base_delay = 1.0  # seconds
+                        gemini_result = None
+
+                        for attempt in range(max_retries):
+                            gemini_result = await client.generate_response(
+                                prompt=prompt,
+                                system_instruction="You are a helpful AI assistant. Use epistemic markers [FACT], [HYPOTHESIS], [ASSUMPTION] for substantive claims. Never claim agency - you are a tool, not an agent.",
+                                temperature=0.7,
+                            )
+
+                            # Check if we got a 503 error
+                            error_msg = gemini_result.get("error", "")
+                            if gemini_result["success"] or "503" not in str(error_msg):
+                                # Success or non-retryable error - break immediately
+                                break
+
+                            # 503 error - retry with exponential backoff
+                            if attempt < max_retries - 1:
+                                delay = base_delay * (2**attempt)  # 1s, 2s, 4s
+                                logger.warning(
+                                    f"[GEMINI] 503 error on attempt {attempt + 1}/{max_retries}. "
+                                    f"Retrying in {delay:.1f}s..."
+                                )
+                                await websocket.send_json(
+                                    {
+                                        "type": "system_event",
+                                        "message": f"[GEMINI] API busy (503). Retrying in {delay:.1f}s...",
+                                    }
+                                )
+                                await asyncio.sleep(delay)
 
                         # [DEBUG] Log what came back
                         logger.info(
