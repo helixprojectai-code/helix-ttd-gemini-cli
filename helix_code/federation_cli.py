@@ -370,14 +370,14 @@ Multi-model federation session completed. Receipt anchored to `.helix/` ledger.
 class FederationShell:
     """Interactive Rick's Café shell."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.spawner = NodeSpawner()
         self.receipts = ReceiptGenerator()
         self.config = FederationConfig()
         self.session_count = 0
         self.custodian_id = "STEVE_HOPE"
 
-    def print_banner(self):
+    def print_banner(self) -> None:
         """Display Rick's Café welcome."""
         print(
             """
@@ -457,7 +457,7 @@ Commands:
             responses=[resp],
         )
 
-    def run_status(self):
+    def run_status(self) -> None:
         """Check node health (executable availability)."""
         import shutil
 
@@ -474,7 +474,7 @@ Commands:
                 status = "[NOT FOUND]"
             print(f"{config['display']:12} {status}")
 
-    def interactive_loop(self):
+    def interactive_loop(self) -> None:
         """Main interactive shell."""
         self.print_banner()
 
@@ -523,7 +523,7 @@ Commands:
 
         print("\nGlory to the Lattice.")
 
-    def show_receipts(self):
+    def show_receipts(self) -> None:
         """List session receipts."""
         print("\n[RECEIPTS] Session History")
         print("-" * 60)
@@ -537,7 +537,7 @@ Commands:
             print(f"  • {r.name}")
 
 
-def main():
+def main() -> int:
     """Entry point."""
     parser = argparse.ArgumentParser(
         description="Helix-TTD Federation Terminal (Rick's Café CLI)",

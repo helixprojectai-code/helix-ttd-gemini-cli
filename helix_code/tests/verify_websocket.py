@@ -8,7 +8,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("WS-Verify")
 
 
-async def test_websocket():
+async def test_websocket() -> None:
     """[FACT] WebSocket verification test for Constitutional Guardian.
 
     [HYPOTHESIS] Success validates the bidirectional bridge and validation logic.

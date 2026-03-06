@@ -70,17 +70,17 @@ class LiveMetrics:
     prediction_count: int = 0
     valid_count: int = 0
 
-    def record_request(self, latency_ms: float):
+    def record_request(self, latency_ms: float) -> None:
         """[FACT] Record a single request and its latency."""
         self.request_count += 1
         self.latency_history.append(latency_ms)
 
-    def record_receipt(self):
+    def record_receipt(self) -> None:
         """[FACT] Record a successful constitutional receipt."""
         self.receipt_count += 1
         self.valid_count += 1
 
-    def record_intervention(self, category: str = "Epistemic"):
+    def record_intervention(self, category: str = "Epistemic") -> None:
         """[FACT] Record a constitutional intervention by category."""
         self.intervention_count += 1
         if category == "Agency":
@@ -146,7 +146,7 @@ class ReceiptStore:
         self.receipts: deque = deque(maxlen=max_receipts)
         self.receipts_by_id: dict[str, Receipt] = {}
 
-    def add(self, receipt: Receipt):
+    def add(self, receipt: Receipt) -> None:
         """[FACT] Add a receipt to the store and prune if overflowing."""
         if len(self.receipts) >= self.receipts.maxlen:
             # Remove oldest from mapping
@@ -173,7 +173,7 @@ receipt_store = ReceiptStore()
 
 
 # [FACT] Unified WebSocket Handler
-async def demo_websocket_handler(websocket: WebSocket):
+async def demo_websocket_handler(websocket: WebSocket) -> None:
     """[FACT] Central WebSocket handler for demo validation.
 
     Used by both standalone server and integrated live_guardian.py.

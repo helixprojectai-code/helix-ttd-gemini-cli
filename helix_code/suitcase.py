@@ -81,7 +81,7 @@ class SuitcaseSerializer:
     [HYPOTHESIS] Compression + encryption for efficient secure storage.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.compression_level = 9  # Max compression
 
     def serialize(self, bundle: SuitcaseBundle) -> bytes:
@@ -235,7 +235,7 @@ class MultiCloudReplicator:
     [HYPOTHESIS] Constitutional continuity survives single-cloud failure.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.providers = {
             CloudProvider.AZURE: AzureBlobStorage(),
             # [NOTE] GCS and AWS implementations would follow same pattern

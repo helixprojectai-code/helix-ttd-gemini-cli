@@ -59,7 +59,7 @@ class ShlorpianTopology:
     [HYPOTHESIS] Topology provides coordinate system for constitutional roles.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         # [FACT] Canonical cast mapping ratified in [LORE-002]
         self.roles: dict[ShlorpianCharacter, ConstitutionalRole] = {
             ShlorpianCharacter.KORVO: ConstitutionalRole(
@@ -365,7 +365,7 @@ class ShlorpianDriftDetector:
     [HYPOTHESIS] Distinguishes character-function navigation from persona adoption.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.topology = ShlorpianTopology()
         self.violations: list[dict[str, Any]] = []
 

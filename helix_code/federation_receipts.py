@@ -77,7 +77,7 @@ class FederationReceipt:
     attesting_nodes: list[str] = None  # Nodes that verified this receipt
     quorum_reached: bool = False
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         if self.attesting_nodes is None:
             self.attesting_nodes = []
 
@@ -239,7 +239,7 @@ class QuorumAttestation:
 
     QUORUM_THRESHOLD = 2  # 2-of-3 nodes required
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.attestations: dict[str, list[str]] = {}  # receipt_id -> attesting_nodes
         self.quorum_results: dict[str, bool] = {}
 
@@ -289,7 +289,7 @@ class CrossNodeVerifier:
     [HYPOTHESIS] Ed25519 signatures provide non-repudiable attestation.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.verification_results: dict[str, dict[str, Any]] = {}
 
     def verify_cross_node(self, receipt: FederationReceipt, expected_node: NodeType) -> bool:

@@ -206,7 +206,7 @@ class FederationRouter:
     [HYPOTHESIS] Stateless dispatch with parallel inference aggregation.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.nodes = {
             "kimi": {"type": "cloud", "status": "online"},
             "gems": {"type": "cloud", "status": "online"},

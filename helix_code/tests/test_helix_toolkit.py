@@ -6,6 +6,7 @@ import sys
 import tempfile
 import unittest
 from pathlib import Path
+from typing import Any
 
 CODE_DIR = Path(__file__).resolve().parents[1]
 if str(CODE_DIR) not in sys.path:
@@ -13,19 +14,19 @@ if str(CODE_DIR) not in sys.path:
 
 
 class TempCWD:
-    def __enter__(self):
+    def __enter__(self) -> Path:
         self._orig = Path.cwd()
         self._tmp = tempfile.TemporaryDirectory()
         os.chdir(self._tmp.name)
         return Path(self._tmp.name)
 
-    def __exit__(self, exc_type, exc, tb):
+    def __exit__(self, exc_type: type[BaseException] | None, exc: BaseException | None, tb: Any) -> None:
         os.chdir(self._orig)
         self._tmp.cleanup()
 
 
 class TestReceiptsManager(unittest.TestCase):
-    def test_grudge_origin_fallback_and_list(self):
+    def test_grudge_origin_fallback_and_list(self) -> None:
         from naming_convention import NamingConvention
         from receipts_manager import PersonalDirectory
 
@@ -45,7 +46,7 @@ class TestReceiptsManager(unittest.TestCase):
             inventory = directory.get_data_inventory()
             self.assertIn("grok", inventory["peer_files"])
 
-    def test_verify_deletion_hash(self):
+    def test_verify_deletion_hash(self) -> None:
         from receipts_manager import PersonalDirectory
 
         with TempCWD():
@@ -58,7 +59,7 @@ class TestReceiptsManager(unittest.TestCase):
 
 
 class TestLookseeAudit(unittest.TestCase):
-    def test_federation_report_glob(self):
+    def test_federation_report_glob(self) -> None:
         from looksee_audit import LookseeAuditor
 
         with TempCWD():
@@ -77,7 +78,7 @@ class TestLookseeAudit(unittest.TestCase):
 
 
 class TestHelixCLI(unittest.TestCase):
-    def test_drift_check_missing_file_errors(self):
+    def test_drift_check_missing_file_errors(self) -> None:
         from helix_cli import HelixCLI
 
         with TempCWD():
@@ -89,7 +90,7 @@ class TestHelixCLI(unittest.TestCase):
             self.assertEqual(rc, 1)
             self.assertIn("ERROR: File not found", output)
 
-    def test_naming_generate_normalizes_origin(self):
+    def test_naming_generate_normalizes_origin(self) -> None:
         from helix_cli import HelixCLI
 
         with TempCWD():
@@ -101,7 +102,7 @@ class TestHelixCLI(unittest.TestCase):
             self.assertEqual(rc, 0)
             self.assertIn("Filename:", output)
 
-    def test_rpi_transition_complete_errors_when_not_implementation(self):
+    def test_rpi_transition_complete_errors_when_not_implementation(self) -> None:
         from helix_cli import HelixCLI
 
         with TempCWD():
@@ -116,7 +117,7 @@ class TestHelixCLI(unittest.TestCase):
             self.assertEqual(rc, 1)
             self.assertIn("ERROR:", output)
 
-    def test_rpi_transition_complete_success(self):
+    def test_rpi_transition_complete_success(self) -> None:
         from helix_cli import HelixCLI
 
         with TempCWD():
@@ -138,7 +139,7 @@ class TestHelixCLI(unittest.TestCase):
 
 
 class TestDriftTelemetry(unittest.TestCase):
-    def test_gradual_drift_detection(self):
+    def test_gradual_drift_detection(self) -> None:
         from drift_telemetry import DriftCode, DriftTelemetry
 
         with TempCWD():
@@ -184,7 +185,7 @@ class TestDriftTelemetry(unittest.TestCase):
             drift_code, _ = telemetry.detect_drift(snapshot)
             self.assertEqual(drift_code, DriftCode.DRIFT_G)
 
-    def test_intent_consistency_detection(self):
+    def test_intent_consistency_detection(self) -> None:
         from drift_telemetry import DriftCode, DriftTelemetry
 
         with TempCWD():
@@ -218,7 +219,7 @@ class TestDriftTelemetry(unittest.TestCase):
             drift_code, _ = telemetry.detect_drift(snapshot)
             self.assertEqual(drift_code, DriftCode.DRIFT_M)
 
-    def test_trajectory_artifact_generation(self):
+    def test_trajectory_artifact_generation(self) -> None:
         from drift_telemetry import DriftTelemetry
 
         with TempCWD():
@@ -239,7 +240,7 @@ class TestDriftTelemetry(unittest.TestCase):
 
 
 class TestOverrides(unittest.TestCase):
-    def test_override_logging(self):
+    def test_override_logging(self) -> None:
         from naming_convention import NamingConvention
         from receipts_manager import PersonalDirectory
 
@@ -262,7 +263,7 @@ class TestOverrides(unittest.TestCase):
 
 
 class TestOpenClawHardening(unittest.TestCase):
-    def test_checkpoint_id_uniqueness(self):
+    def test_checkpoint_id_uniqueness(self) -> None:
         from openclaw_agent import AgentAction, AgentPlan, EpistemicLabel, HelixConstitutionalGate
 
         gate = HelixConstitutionalGate()
@@ -287,7 +288,7 @@ class TestOpenClawHardening(unittest.TestCase):
         cp2 = gate.validate_plan(plan)
         self.assertNotEqual(cp1.checkpoint_id, cp2.checkpoint_id)
 
-    def test_plugin_cannot_mutate_plan(self):
+    def test_plugin_cannot_mutate_plan(self) -> None:
         from openclaw_agent import (
             AgentAction,
             AgentPlan,
@@ -328,7 +329,7 @@ class TestOpenClawHardening(unittest.TestCase):
         registry.evaluate_all(plan)
         self.assertEqual(len(plan.steps), 1)
 
-    def test_custodian_approval_auth(self):
+    def test_custodian_approval_auth(self) -> None:
         from openclaw_agent import (
             AgentAction,
             ConstitutionalCheckpoint,
@@ -360,7 +361,7 @@ class TestOpenClawHardening(unittest.TestCase):
         self.assertFalse(api.approve(req_id, "ALICE", token="wrong"))  # nosec B106
         self.assertTrue(api.approve(req_id, "ALICE", token="secret"))  # nosec B106
 
-    def test_memo_key_non_json_params(self):
+    def test_memo_key_non_json_params(self) -> None:
         from openclaw_agent import AgentAction, EpistemicLabel, OpenClawAgent
 
         agent = OpenClawAgent()
@@ -378,7 +379,7 @@ class TestOpenClawHardening(unittest.TestCase):
 
 
 class TestOpenClawAgent(unittest.TestCase):
-    def test_custodian_gate_halts_execution(self):
+    def test_custodian_gate_halts_execution(self) -> None:
         from openclaw_agent import AgencyLevel, OpenClawAgent
 
         with TempCWD():
@@ -400,7 +401,7 @@ class TestOpenClawAgent(unittest.TestCase):
             self.assertTrue(any(cp.get("scope") == "plan" for cp in results["checkpoints"]))
             self.assertTrue(any(cp.get("scope") == "action" for cp in results["checkpoints"]))
 
-    def test_register_tool_rejects_lambda(self):
+    def test_register_tool_rejects_lambda(self) -> None:
         from openclaw_agent import OpenClawAgent
 
         with TempCWD():
@@ -408,7 +409,7 @@ class TestOpenClawAgent(unittest.TestCase):
             with self.assertRaises(ValueError):
                 agent.register_tool("file_search", lambda x: x, risk_level=0.2)
 
-    def test_action_normalization_blocks_hidden_forbidden(self):
+    def test_action_normalization_blocks_hidden_forbidden(self) -> None:
         from openclaw_agent import AgentAction, EpistemicLabel, HelixConstitutionalGate
 
         with TempCWD():
@@ -426,7 +427,7 @@ class TestOpenClawAgent(unittest.TestCase):
             self.assertTrue(checkpoint.drift_detected)
             self.assertTrue(any("DRIFT-C" in c for c in checkpoint.drift_codes))
 
-    def test_no_tools_authorized_blocks_plan(self):
+    def test_no_tools_authorized_blocks_plan(self) -> None:
         from openclaw_agent import AgentAction, AgentPlan, EpistemicLabel, HelixConstitutionalGate
 
         with TempCWD():

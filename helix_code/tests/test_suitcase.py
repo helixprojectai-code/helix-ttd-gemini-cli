@@ -28,7 +28,7 @@ from suitcase import (
 )
 
 
-def test_cloud_provider_enum():
+def test_cloud_provider_enum() -> None:
     """[FACT] 3 cloud providers: Azure (primary), GCP (secondary), AWS (tertiary)."""
     assert CloudProvider.AZURE.value == "azure"
     assert CloudProvider.GCP.value == "gcp"
@@ -36,7 +36,7 @@ def test_cloud_provider_enum():
     print("[PASS] CloudProvider enum")
 
 
-def test_suitcase_bundle_creation():
+def test_suitcase_bundle_creation() -> None:
     """[FACT] Suitcase bundle contains complete constitutional state."""
     bundle = SuitcaseBundle(
         bundle_id="test_bundle_001",
@@ -62,7 +62,7 @@ def test_suitcase_bundle_creation():
     print("[PASS] SuitcaseBundle creation")
 
 
-def test_suitcase_serializer():
+def test_suitcase_serializer() -> None:
     """[FACT] Serializer compresses and decompresses bundles with integrity check."""
     serializer = SuitcaseSerializer()
 
@@ -101,7 +101,7 @@ def test_suitcase_serializer():
     print("[PASS] SuitcaseSerializer")
 
 
-def test_azure_blob_storage():
+def test_azure_blob_storage() -> None:
     """[FACT] Azure Blob Storage configured as primary."""
     azure = AzureBlobStorage(account_name="helixttdstorage", container_name="helix-ttd-suitcases")
 
@@ -119,7 +119,7 @@ def test_azure_blob_storage():
     print("[PASS] AzureBlobStorage")
 
 
-def test_azure_key_vault():
+def test_azure_key_vault() -> None:
     """[FACT] Azure Key Vault manages encryption keys."""
     vault = AzureKeyVault(vault_name="helix-ttd-vault")
 
@@ -130,7 +130,7 @@ def test_azure_key_vault():
     print("[PASS] AzureKeyVault")
 
 
-def test_multicloud_replicator():
+def test_multicloud_replicator() -> None:
     """[FACT] Replicate across Azure (primary), GCS, AWS."""
     replicator = MultiCloudReplicator()
 
@@ -164,7 +164,7 @@ def test_multicloud_replicator():
     print("[PASS] MultiCloudReplicator")
 
 
-def test_evac_state_manager():
+def test_evac_state_manager() -> None:
     """[FACT] EVAC coordinates suitcase creation, storage, and recovery."""
     with tempfile.TemporaryDirectory() as tmpdir:
         manager = EVACStateManager(local_cache_dir=Path(tmpdir), cloud_provider=CloudProvider.AZURE)
@@ -206,7 +206,7 @@ def test_evac_state_manager():
         print("[PASS] EVACStateManager")
 
 
-def test_compression_efficiency():
+def test_compression_efficiency() -> None:
     """[FACT] gzip compression reduces storage size."""
     serializer = SuitcaseSerializer()
 
@@ -242,7 +242,7 @@ def test_compression_efficiency():
     print("[PASS] Compression efficiency")
 
 
-def test_integrity_verification():
+def test_integrity_verification() -> None:
     """[FACT] Tampered bundles fail integrity check."""
     serializer = SuitcaseSerializer()
 
@@ -276,7 +276,7 @@ def test_integrity_verification():
     print("[PASS] Integrity verification")
 
 
-def test_evac_status():
+def test_evac_status() -> None:
     """[FACT] EVAC status reports system configuration."""
     status = get_evac_status()
 
@@ -290,7 +290,7 @@ def test_evac_status():
     print("[PASS] EVAC status")
 
 
-def test_azure_regions():
+def test_azure_regions() -> None:
     """[FACT] Azure deployed to East US 2 and West Europe."""
     azure = AzureBlobStorage()
 
@@ -305,7 +305,7 @@ def test_azure_regions():
     print("[PASS] Azure regions")
 
 
-def test_bundle_completeness():
+def test_bundle_completeness() -> None:
     """[FACT] Suitcase captures all constitutional state layers."""
     bundle = SuitcaseBundle(
         bundle_id="complete_test",
@@ -336,7 +336,7 @@ def test_bundle_completeness():
     print("[PASS] Bundle completeness")
 
 
-def main():
+def main() -> int:
     """[FACT] Run all Milestone 4 tests."""
     print("=" * 60)
     print("v1.4.0 Milestone 4: EVAC 'Suitcase' Tests")

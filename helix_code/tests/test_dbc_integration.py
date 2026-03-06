@@ -18,18 +18,18 @@ from openclaw_agent import CRYPTO_AVAILABLE, CheckpointStore, ConstitutionalChec
 class TestDBCIdentity(unittest.TestCase):
     """[FACT] Test DBC identity loading and signing."""
 
-    def setUp(self):
+    def setUp(self) -> None:
         """[FACT] Create temp directory for test DBC files."""
         self.temp_dir = tempfile.mkdtemp()
         self.dbc_path = Path(self.temp_dir) / "test.dbc.json"
 
-    def tearDown(self):
+    def tearDown(self) -> None:
         """[FACT] Clean up temp files."""
         import shutil
 
         shutil.rmtree(self.temp_dir, ignore_errors=True)
 
-    def test_dbc_create_and_load(self):
+    def test_dbc_create_and_load(self) -> None:
         """[FACT] Test DBC creation and loading."""
         # Create new DBC
         identity = DBCIdentity(self.dbc_path).load_or_create(
@@ -46,7 +46,7 @@ class TestDBCIdentity(unittest.TestCase):
         self.assertEqual(identity2.agent_name, "Test-Agent")
         self.assertEqual(identity2.dbc_id, identity.dbc_id)
 
-    def test_dbc_sign_and_verify(self):
+    def test_dbc_sign_and_verify(self) -> None:
         """[FACT] Test DBC signing and verification."""
         identity = DBCIdentity(self.dbc_path).load_or_create(agent_name="Test-Agent")
 
@@ -66,7 +66,7 @@ class TestDBCIdentity(unittest.TestCase):
         # Verify wrong data fails
         self.assertFalse(identity.verify(b"wrong data", signature))
 
-    def test_dbc_signature_determinism(self):
+    def test_dbc_signature_determinism(self) -> None:
         """[FACT] Test that same data produces same signature."""
         identity = DBCIdentity(self.dbc_path).load_or_create()
 
@@ -81,7 +81,7 @@ class TestDBCIdentity(unittest.TestCase):
 class TestCheckpointStoreDBCSigning(unittest.TestCase):
     """[FACT] Test checkpoint store with DBC signing."""
 
-    def setUp(self):
+    def setUp(self) -> None:
         """[FACT] Create temp directory and DBC identity."""
         self.temp_dir = tempfile.mkdtemp()
         self.dbc_path = Path(self.temp_dir) / "test.dbc.json"
@@ -90,13 +90,13 @@ class TestCheckpointStoreDBCSigning(unittest.TestCase):
         self.identity = DBCIdentity(self.dbc_path).load_or_create(agent_name="Test-Agent")
         self.store = CheckpointStore(db_path=str(self.db_path), dbc_identity=self.identity)
 
-    def tearDown(self):
+    def tearDown(self) -> None:
         """[FACT] Clean up temp files."""
         import shutil
 
         shutil.rmtree(self.temp_dir, ignore_errors=True)
 
-    def test_save_checkpoint_with_signature(self):
+    def test_save_checkpoint_with_signature(self) -> None:
         """[FACT] Test saving checkpoint with DBC signature."""
         import time
 
@@ -129,7 +129,7 @@ class TestCheckpointStoreDBCSigning(unittest.TestCase):
         self.assertIsNotNone(row[1])  # signature
         self.assertIsNotNone(row[2])  # timestamp
 
-    def test_verify_signature(self):
+    def test_verify_signature(self) -> None:
         """[FACT] Test signature verification."""
         import time
 
@@ -152,7 +152,7 @@ class TestCheckpointStoreDBCSigning(unittest.TestCase):
         self.assertTrue(result["valid"])
         self.assertEqual(result["dbc_id"], self.identity.dbc_id)
 
-    def test_store_without_identity(self):
+    def test_store_without_identity(self) -> None:
         """[FACT] Test store works without DBC identity (backwards compat)."""
         store_no_dbc = CheckpointStore(db_path=str(self.db_path) + "_no_dbc")
 
@@ -181,7 +181,7 @@ class TestCheckpointStoreDBCSigning(unittest.TestCase):
 class TestDBCMerkleChain(unittest.TestCase):
     """[FACT] Test DBC-signed checkpoint chaining for audit trails."""
 
-    def setUp(self):
+    def setUp(self) -> None:
         """[FACT] Create temp directory and store."""
         self.temp_dir = tempfile.mkdtemp()
         self.dbc_path = Path(self.temp_dir) / "test.dbc.json"
@@ -190,13 +190,13 @@ class TestDBCMerkleChain(unittest.TestCase):
         self.identity = DBCIdentity(self.dbc_path).load_or_create(agent_name="Chain-Test-Agent")
         self.store = CheckpointStore(db_path=str(self.db_path), dbc_identity=self.identity)
 
-    def tearDown(self):
+    def tearDown(self) -> None:
         """[FACT] Clean up."""
         import shutil
 
         shutil.rmtree(self.temp_dir, ignore_errors=True)
 
-    def test_checkpoint_chain_integrity(self):
+    def test_checkpoint_chain_integrity(self) -> None:
         """[FACT] Test chain of DBC-signed checkpoints."""
         import time
 

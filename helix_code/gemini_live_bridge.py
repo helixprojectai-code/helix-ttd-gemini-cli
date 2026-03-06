@@ -105,7 +105,7 @@ class GeminiLiveBridge:
         session: LiveSession,
         model_id: str = "gemini-2.5-flash",
         reasoning_mode: bool = False,
-    ):
+    ) -> None:
         """[FACT] Start the actual Gemini Live API session.
 
         Args:
@@ -203,7 +203,7 @@ class GeminiLiveBridge:
 
     async def stream_audio_to_gemini(
         self, session: LiveSession, audio_base64: str, narrative: str | None = None
-    ):
+    ) -> None:
         """[FACT] Send audio to active Gemini Live session."""
         session.audio_chunk_count += 1
         if narrative:
@@ -262,7 +262,7 @@ class GeminiLiveBridge:
             )  # nosec B311 - test simulation only, not cryptographic
         return await self.handle_gemini_response(session, {"text": simulated})
 
-    async def close_session(self, session_id: str):
+    async def close_session(self, session_id: str) -> None:
         """[FACT] Close an active session and cleanup resources."""
         session = self.sessions.pop(session_id, None)
         if session and session.gemini_session:

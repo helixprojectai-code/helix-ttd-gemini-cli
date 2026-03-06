@@ -102,7 +102,7 @@ class CustodialHierarchy:
     [HYPOTHESIS] Partial order enables command flow without upward leakage.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         # [FACT] Vertical stack defined in CONSTITUTION.md §4
         self.order: dict[str, int] = {
             "custodian": 3,
@@ -196,7 +196,7 @@ class DriftDetector:
     [HYPOTHESIS] Topological verification detects constitutional violations.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.violations: list[dict[str, Any]] = []
 
     def check_epistemic_labeling(

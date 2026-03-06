@@ -44,7 +44,7 @@ class ConstitutionalCompliance:
     - Knowledge Layer: Apply epistemic labels
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         # [FACT] Traditional pattern-based checks
         self.imperative_patterns = [
             r"^(You must|You should|You need to|Do this|Execute)",

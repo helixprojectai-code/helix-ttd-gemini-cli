@@ -19,6 +19,7 @@ Usage:
 import argparse
 import sys
 from pathlib import Path
+from typing import Any
 
 from constitutional_compliance import ConstitutionalCompliance
 
@@ -234,7 +235,7 @@ class HelixCLI:
 
         return 0 if schema["DRIFT"] == "DRIFT-0" else 1
 
-    def cmd_receipt_issue(self, node_id: str, action: str, **kwargs) -> int:
+    def cmd_receipt_issue(self, node_id: str, action: str, **kwargs: Any) -> int:
         """Issue cryptographic receipt for action."""
         node_id = node_id.upper()
         print(self._label_output("[FACT]", f"Issuing receipt for {node_id}:{action}"))
@@ -456,7 +457,7 @@ class HelixCLI:
         return 0
 
 
-def main():
+def main() -> int:
     """Main entry point with argument parsing."""
     parser = argparse.ArgumentParser(
         description="Helix-TTD Constitutional CLI",

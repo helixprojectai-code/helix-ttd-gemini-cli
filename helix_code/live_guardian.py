@@ -58,7 +58,7 @@ telemetry: DriftTelemetry | None = None
 
 
 @app.on_event("startup")
-async def startup_event():
+async def startup_event() -> None:
     """[FACT] Initialize constitutional guardian components.
 
     [HYPOTHESIS] Early initialization ensures all dependent services are ready for the demo.
@@ -78,7 +78,7 @@ async def startup_event():
 
 
 @app.get("/health")
-async def health_check():
+async def health_check() -> JSONResponse:
     """[FACT] Cloud Run health check endpoint for node status."""
     return JSONResponse(
         status_code=200,
@@ -92,7 +92,7 @@ async def health_check():
 
 
 @app.get("/", response_class=HTMLResponse)
-async def root():
+async def root() -> HTMLResponse:
     """[FACT] Root endpoint serves the interactive demo dashboard."""
     # Import demo HTML from live_demo_server_html
     from live_demo_server_html import DEMO_HTML
@@ -101,7 +101,7 @@ async def root():
 
 
 @app.get("/api")
-async def api_info():
+async def api_info() -> JSONResponse:
     """[FACT] API info endpoint for architectural discovery."""
     return JSONResponse(
         status_code=200,

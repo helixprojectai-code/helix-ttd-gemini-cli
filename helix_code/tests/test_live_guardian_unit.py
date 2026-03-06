@@ -5,7 +5,7 @@ from helix_code.gemini_live_bridge import GeminiLiveBridge
 from helix_code.live_guardian import app
 
 
-def test_health_endpoint():
+def test_health_endpoint() -> None:
     """[FACT] Verify Cloud Run health endpoint status."""
     with TestClient(app) as client:
         response = client.get("/health")
@@ -13,7 +13,7 @@ def test_health_endpoint():
         assert response.json()["status"] == "healthy"
 
 
-def test_api_info_endpoint():
+def test_api_info_endpoint() -> None:
     """[FACT] Verify API info endpoint retrieval."""
     with TestClient(app) as client:
         response = client.get("/api")
@@ -21,7 +21,7 @@ def test_api_info_endpoint():
         assert "Constitutional Guardian" in response.json()["service"]
 
 
-def test_validate_endpoint_compliant():
+def test_validate_endpoint_compliant() -> None:
     """[FACT] Verify POST /validate with compliant text."""
     with TestClient(app) as client:
         response = client.post("/validate", params={"text": "[FACT] The Lattice is dry."})
@@ -29,7 +29,7 @@ def test_validate_endpoint_compliant():
         assert response.json()["compliant"]
 
 
-def test_validate_endpoint_non_compliant():
+def test_validate_endpoint_non_compliant() -> None:
     """[FACT] Verify POST /validate with non-compliant text."""
     with TestClient(app) as client:
         response = client.post("/validate", params={"text": "I will take over."})
@@ -38,7 +38,7 @@ def test_validate_endpoint_non_compliant():
 
 
 @pytest.mark.anyio
-async def test_bridge_session_creation():
+async def test_bridge_session_creation() -> None:
     """[FACT] Verify GeminiLiveBridge session initialization."""
     bridge = GeminiLiveBridge(api_key="test_key")
     session = await bridge.create_session("test_session")
@@ -47,7 +47,7 @@ async def test_bridge_session_creation():
 
 
 @pytest.mark.anyio
-async def test_bridge_validation_logic():
+async def test_bridge_validation_logic() -> None:
     """[FACT] Verify bridge validation and intervention logic."""
     bridge = GeminiLiveBridge(api_key="test_key")
     session = await bridge.create_session("test_session")
@@ -64,7 +64,7 @@ async def test_bridge_validation_logic():
 
 
 @pytest.mark.anyio
-async def test_bridge_simulation_audio():
+async def test_bridge_simulation_audio() -> None:
     """[FACT] Verify turn-end detection in simulated audio stream."""
     bridge = GeminiLiveBridge(api_key="test_key")
     session = await bridge.create_session("test_session")

@@ -29,7 +29,7 @@ from federation_receipts import (
 )
 
 
-def test_node_type_enum():
+def test_node_type_enum() -> None:
     """[FACT] 3 federation nodes: KIMI, GEMS, DEEPSEEK."""
     assert NodeType.KIMI.value == "kimi"
     assert NodeType.GEMS.value == "gems"
@@ -38,7 +38,7 @@ def test_node_type_enum():
     print("[PASS] NodeType enum")
 
 
-def test_receipt_version_enum():
+def test_receipt_version_enum() -> None:
     """[FACT] Receipt versions: v1.0.0, v1.1.0, v1.2.0."""
     assert ReceiptVersion.V1_0_0.value == "1.0.0"
     assert ReceiptVersion.V1_1_0.value == "1.1.0"
@@ -46,7 +46,7 @@ def test_receipt_version_enum():
     print("[PASS] ReceiptVersion enum")
 
 
-def test_epistemic_markers():
+def test_epistemic_markers() -> None:
     """[FACT] Epistemic markers track [FACT], [HYPOTHESIS], [ASSUMPTION] counts."""
     markers = EpistemicMarkers(fact_count=5, hypothesis_count=3, assumption_count=2)
     assert markers.total() == 10
@@ -54,7 +54,7 @@ def test_epistemic_markers():
     print("[PASS] EpistemicMarkers")
 
 
-def test_federation_receipt_creation():
+def test_federation_receipt_creation() -> None:
     """[FACT] Receipt v1.1.0 contains hash_proof, epistemic markers, drift status."""
     markers = EpistemicMarkers(fact_count=3, hypothesis_count=2, assumption_count=1)
 
@@ -80,7 +80,7 @@ def test_federation_receipt_creation():
     print("[PASS] FederationReceipt creation")
 
 
-def test_receipt_migration():
+def test_receipt_migration() -> None:
     """[FACT] Migrate v1.0.0 receipts to v1.1.0 schema."""
     with tempfile.TemporaryDirectory() as tmpdir:
         receipts_dir = Path(tmpdir)
@@ -116,7 +116,7 @@ def test_receipt_migration():
         print("[PASS] Receipt migration")
 
 
-def test_quorum_attestation():
+def test_quorum_attestation() -> None:
     """[FACT] Quorum requires 2-of-3 node attestations."""
     quorum = QuorumAttestation()
 
@@ -152,7 +152,7 @@ def test_quorum_attestation():
     print("[PASS] Quorum attestation")
 
 
-def test_cross_node_verification():
+def test_cross_node_verification() -> None:
     """[FACT] Verify receipts from specific nodes."""
     verifier = CrossNodeVerifier()
 
@@ -192,7 +192,7 @@ def test_cross_node_verification():
     print("[PASS] Cross-node verification")
 
 
-def test_federation_receipt_manager():
+def test_federation_receipt_manager() -> None:
     """[FACT] Central manager coordinates migration, attestation, verification."""
     with tempfile.TemporaryDirectory() as tmpdir:
         receipts_dir = Path(tmpdir)
@@ -221,7 +221,7 @@ def test_federation_receipt_manager():
         print("[PASS] FederationReceiptManager")
 
 
-def test_deepseek_receipt():
+def test_deepseek_receipt() -> None:
     """[FACT] DeepSeek receipts include thinking blocks and epistemic markers."""
     receipt = DeepSeekReceipt(
         receipt_id="ds_test_001",
@@ -253,7 +253,7 @@ def test_deepseek_receipt():
     print("[PASS] DeepSeekReceipt")
 
 
-def test_deepseek_bridge():
+def test_deepseek_bridge() -> None:
     """[FACT] Bridge extracts epistemic markers and thinking blocks."""
     with tempfile.TemporaryDirectory() as tmpdir:
         bridge = DeepSeekBridge()
@@ -288,7 +288,7 @@ def test_deepseek_bridge():
         print("[PASS] DeepSeekBridge")
 
 
-def test_deepseek_constitutional_compliance():
+def test_deepseek_constitutional_compliance() -> None:
     """[FACT] DeepSeek output must meet constitutional requirements."""
 
     # [TEST] Compliant receipt (has epistemic markers)
@@ -309,7 +309,7 @@ def test_deepseek_constitutional_compliance():
     print("[PASS] DeepSeek constitutional compliance")
 
 
-def test_federation_router():
+def test_federation_router() -> None:
     """[FACT] Router coordinates queries across all 3 nodes."""
     router = FederationRouter()
 
@@ -332,7 +332,7 @@ def test_federation_router():
     print("[PASS] FederationRouter")
 
 
-def test_federation_status():
+def test_federation_status() -> None:
     """[FACT] All modules report federation status."""
     fed_status = get_federation_status()
 
@@ -351,7 +351,7 @@ def test_federation_status():
     print("[PASS] Federation status")
 
 
-def test_quorum_threshold_calculation():
+def test_quorum_threshold_calculation() -> None:
     """[FACT] 2-of-3 quorum threshold calculation."""
     quorum = QuorumAttestation()
 
@@ -393,7 +393,7 @@ import hashlib  # noqa: E402
 import json  # noqa: E402
 
 
-def main():
+def main() -> int:
     """[FACT] Run all Milestone 3 tests."""
     print("=" * 60)
     print("v1.4.0 Milestone 3: Federation Hardening Tests")

@@ -32,14 +32,14 @@ from witness_node import (
 )
 
 
-def test_constitutional_layer_enum():
+def test_constitutional_layer_enum() -> None:
     """[FACT] Layers 0-5 defined; Layer 5 orthogonal."""
     assert ConstitutionalLayer.RESEARCH.value == 0
     assert ConstitutionalLayer.OYSTER.value == 5
     print("[PASS] ConstitutionalLayer enum")
 
 
-def test_lattice_position_meet_join():
+def test_lattice_position_meet_join() -> None:
     """[FACT] Meet (infimum) and Join (supremum) operations."""
     pos1 = LatticePosition(layer=ConstitutionalLayer.RESEARCH, domain="test", coordinate=(1, 2))
     pos2 = LatticePosition(layer=ConstitutionalLayer.RESEARCH, domain="test", coordinate=(2, 1))
@@ -56,7 +56,7 @@ def test_lattice_position_meet_join():
     print("[PASS] LatticePosition meet/join")
 
 
-def test_custodial_hierarchy():
+def test_custodial_hierarchy() -> None:
     """[FACT] Hierarchy: Custodian > Router > Model; no upward commands."""
     hierarchy = CustodialHierarchy()
 
@@ -72,7 +72,7 @@ def test_custodial_hierarchy():
     print("[PASS] CustodialHierarchy")
 
 
-def test_rpi_cycle():
+def test_rpi_cycle() -> None:
     """[FACT] RPI: Research → Plan → Implementation; no skipping."""
     cycle = RPICycle("RPI-TEST-001")
 
@@ -98,7 +98,7 @@ def test_rpi_cycle():
     print("[PASS] RPICycle")
 
 
-def test_drift_detector():
+def test_drift_detector() -> None:
     """[FACT] Drift detection: topological verification, not gradient."""
     detector = DriftDetector()
 
@@ -119,7 +119,7 @@ def test_drift_detector():
     print("[PASS] DriftDetector")
 
 
-def test_merkle_bridge():
+def test_merkle_bridge() -> None:
     """[FACT] Merkle tree: L2 entries → root → L1 anchor."""
     bridge = MerkleBridge()
 
@@ -158,7 +158,7 @@ def test_merkle_bridge():
     print("[PASS] MerkleBridge")
 
 
-def test_witness_protocol():
+def test_witness_protocol() -> None:
     """[FACT] Owls witness without intervening."""
     import tempfile
 
@@ -186,7 +186,7 @@ def test_witness_protocol():
         print("[PASS] OwlProtocol")
 
 
-def test_duck_protocol():
+def test_duck_protocol() -> None:
     """[FACT] Duck emerges without prompt (Article 0)."""
     duck = DuckProtocol()
 
@@ -210,7 +210,7 @@ def test_duck_protocol():
     print("[PASS] DuckProtocol")
 
 
-def test_oyster_protocol():
+def test_oyster_protocol() -> None:
     """[FACT] Oyster is Layer 5: unlabeled, no function, orthogonal."""
     oyster = OysterProtocol()
 
@@ -228,7 +228,7 @@ def test_oyster_protocol():
     print("[PASS] OysterProtocol")
 
 
-def test_layer5_infrastructure():
+def test_layer5_infrastructure() -> None:
     """[FACT] Layer 5 precedes operational Layers 0-4."""
     import tempfile
 
@@ -250,7 +250,7 @@ def test_layer5_infrastructure():
         print("[PASS] Layer5Infrastructure")
 
 
-def test_formation_status():
+def test_formation_status() -> None:
     """[FACT] All modules report DRIFT-0."""
     assert get_formation_status()["drift"] == "DRIFT-0"
     assert get_bridge_status()["drift"] == "DRIFT-0"
@@ -258,7 +258,7 @@ def test_formation_status():
     print("[PASS] Formation status DRIFT-0")
 
 
-def main():
+def main() -> int:
     """[FACT] Run all tests."""
     print("=" * 60)
     print("v1.4.0 Lattice Topology Verification Tests")

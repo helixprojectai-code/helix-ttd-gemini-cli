@@ -167,7 +167,7 @@ class RiskConfiguration:
     daily_risk_budget: float = 10.0  # Max cumulative risk per day
     current_risk_spend: float = 0.0  # Tracked runtime
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         """BUG-3 Fix: Initialize lock in __post_init__ to prevent race condition.
 
         _get_lock() lazy initialization was not thread-safe — two threads could
@@ -238,7 +238,7 @@ class RiskConfiguration:
     # ENHANCEMENT #4: Dynamic Risk Calibration
     def record_execution_outcome(
         self, tool_name: str, planned_risk: float, actual_risk: float, drift_detected: bool
-    ):
+    ) -> None:
         """Record execution outcome for dynamic calibration.
 
         Adjusts tool multipliers based on observed vs predicted risk.
@@ -269,7 +269,7 @@ class RiskConfiguration:
             if len(self._calibration_history[tool_name]) >= 5:
                 self._calibrate_tool_multiplier(tool_name)
 
-    def _calibrate_tool_multiplier(self, tool_name: str):
+    def _calibrate_tool_multiplier(self, tool_name: str) -> None:
         """Adjust tool multiplier based on historical accuracy."""
         history = self._calibration_history.get(tool_name, [])
         if len(history) < 5:
@@ -994,7 +994,7 @@ class CheckpointStore:
         self._dbc = dbc_identity
         self._init_db()
 
-    def _init_db(self):
+    def _init_db(self) -> None:
         """Create checkpoint table if not exists."""
         with sqlite3.connect(self.db_path) as conn:
             conn.execute(
@@ -1035,7 +1035,7 @@ class CheckpointStore:
             )
             conn.commit()
 
-    def save(self, checkpoint: ConstitutionalCheckpoint, plan_id: str = "", agent_id: str = ""):
+    def save(self, checkpoint: ConstitutionalCheckpoint, plan_id: str = "", agent_id: str = "") -> None:
         """Persist a checkpoint to the database with optional DBC signature.
 
         v1.3.0: If DBC identity is configured, signs the checkpoint hash
@@ -1436,8 +1436,8 @@ class SIEMExporter:
         }
 
     def export_event(
-        self, event_type: str, checkpoint: ConstitutionalCheckpoint | None = None, **kwargs
-    ):
+        self, event_type: str, checkpoint: ConstitutionalCheckpoint | None = None, **kwargs: Any
+    ) -> dict[str, Any]:
         """Export a constitutional event in OTel-compatible format.
 
         Args:
@@ -1516,7 +1516,7 @@ class SIEMExporter:
                 "endpoint": self.endpoint,
             }
 
-    def export_drift_alert(self, checkpoint: ConstitutionalCheckpoint, context: dict | None = None):
+    def export_drift_alert(self, checkpoint: ConstitutionalCheckpoint, context: dict[str, Any] | None = None) -> dict[str, Any]:
         """Export a drift detection alert (high priority)."""
         return self.export_event(
             "drift_detected",
@@ -1566,7 +1566,7 @@ class PluginRegistry:
     Manages custom layers that extend the 4-layer pipeline.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         self._plugins: dict[str, ConstitutionalLayer] = {}
         self._lock = threading.Lock()
 
@@ -1755,19 +1755,19 @@ class MetricsCollector:
             "drift_rate": [],
         }
 
-    def increment(self, metric_name: str, value: int = 1):
+    def increment(self, metric_name: str, value: int = 1) -> None:
         """Increment a counter metric."""
         with self._metrics_lock:
             if metric_name in self._counters:
                 self._counters[metric_name] += value
 
-    def set_gauge(self, metric_name: str, value: float):
+    def set_gauge(self, metric_name: str, value: float) -> None:
         """Set a gauge metric to a specific value."""
         with self._metrics_lock:
             if metric_name in self._gauges:
                 self._gauges[metric_name] = value
 
-    def record_latency(self, metric_type: str, seconds: float):
+    def record_latency(self, metric_type: str, seconds: float) -> None:
         """Record execution latency."""
         with self._metrics_lock:
             if metric_type == "plan":
@@ -1780,7 +1780,7 @@ class MetricsCollector:
                 if len(self._action_execution_times) > 1000:
                     self._action_execution_times = self._action_execution_times[-1000:]
 
-    def record_timeseries(self, metric_name: str, value: float):
+    def record_timeseries(self, metric_name: str, value: float) -> None:
         """Record a time-series data point."""
         with self._metrics_lock:
             if metric_name in self._timeseries:
@@ -1890,7 +1890,7 @@ class MetricsCollector:
         c = f + 1 if f + 1 < len(sorted_samples) else f
         return sorted_samples[f] + (k - f) * (sorted_samples[c] - sorted_samples[f])
 
-    def record_plan_execution(self, plan: AgentPlan, duration_seconds: float, success: bool):
+    def record_plan_execution(self, plan: AgentPlan, duration_seconds: float, success: bool) -> None:
         """Record metrics for a completed plan execution."""
         self.increment("plans_executed_total" if success else "plans_rejected_total")
         self.record_latency("plan", duration_seconds)
