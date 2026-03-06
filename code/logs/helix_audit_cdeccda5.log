@@ -1,0 +1,8 @@
+# Helix Audit Log - Initialized 2026-03-01T22:43:12.199653
+# Agent ID: cdeccda5
+# Log Rotation: 30 days / 100MB
+{"data": {"module": "test_helix_toolkit", "risk_level": 0.2, "tool_name": "file_search"}, "ts": "2026-03-01T22:43:12.278978", "type": "TOOL_REGISTERED"}
+{"data": {"module": "test_helix_toolkit", "risk_level": 0.1, "tool_name": "file_read"}, "ts": "2026-03-01T22:43:12.312207", "type": "TOOL_REGISTERED"}
+{"data": {"module": "test_helix_toolkit", "risk_level": 0.3, "tool_name": "static_analysis"}, "ts": "2026-03-01T22:43:12.345200", "type": "TOOL_REGISTERED"}
+{"data": {"custodian_override": null, "plan_id": "plan_1772422992", "steps": 2}, "ts": "2026-03-01T22:43:12.378791", "type": "PLAN_EXECUTION_START"}
+{"data": {"action_id": "act_read", "plan_id": "plan_1772422992"}, "ts": "2026-03-01T22:43:12.425806", "type": "CUSTODIAN_APPROVAL_PENDING"}
