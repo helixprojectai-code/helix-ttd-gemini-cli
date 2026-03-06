@@ -114,11 +114,11 @@ jobs:
 
       - name: Check imports (isort)
         run: |
-          isort --check-only --diff helix_code/ tools/
+          isort --check-only --diff --profile black --line-length 100 helix_code/ tools/
 
       - name: Check formatting (black)
         run: |
-          black --check --diff helix_code/ tools/
+          black --check --diff --line-length 100 helix_code/ tools/
 
       - name: Lint with Ruff
         run: |
