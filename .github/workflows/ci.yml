@@ -52,10 +52,10 @@ jobs:
         id: compliance-check
         run: |
           echo "=== HELIX-TTD CONSTITUTIONAL COMPLIANCE GATE ==="
-          
+
           # Check for epistemic labeling in new/modified Python files
           VIOLATIONS=0
-          
+
           # Pattern: [FACT], [HYPOTHESIS], [ASSUMPTION] must appear in docstrings
           for file in $(find helix_code tools -name "*.py" -type f); do
             if ! grep -qE '\[FACT\]|\[HYPOTHESIS\]|\[ASSUMPTION\]' "$file" 2>/dev/null; then
@@ -65,13 +65,13 @@ jobs:
               fi
             fi
           done
-          
+
           # Check for prohibited patterns (imperative tone toward humans)
           if grep -rE 'You must|You should|You need to|Always do' helix_code/ tools/ 2>/dev/null; then
             echo "❌ CONSTITUTIONAL VIOLATION: Imperative tone detected"
             VIOLATIONS=$((VIOLATIONS + 10))
           fi
-          
+
           if [ $VIOLATIONS -eq 0 ]; then
             echo "✅ Constitutional compliance: PASSED"
             echo "status=PASS" >> $GITHUB_OUTPUT
@@ -211,7 +211,7 @@ jobs:
           cd helix_code && python -c "
           from constitutional_compliance import validate_file
           import os
-          
+
           errors = 0
           for root, dirs, files in os.walk('.'):
               for file in files:
@@ -221,7 +221,7 @@ jobs:
                       if not result['valid']:
                           print(f'❌ {filepath}: {result[\"errors\"]}')
                           errors += 1
-          
+
           if errors > 0:
               print(f'\n❌ {errors} files failed constitutional validation')
               exit(1)

@@ -17,8 +17,8 @@ This annex explains the core liability-tracing mechanism of Helix-TTD in non-tec
 ---
 ## 📝 Document Content
 
-**To:** Regulatory Bodies (ICO, PIPEDA, FTC)  
-**From:** Helix AI Innovations Inc.  
+**To:** Regulatory Bodies (ICO, PIPEDA, FTC)
+**From:** Helix AI Innovations Inc.
 **Subject:** Liability Tracing & Custody Architecture
 
 ### 1. What problem does this solve?

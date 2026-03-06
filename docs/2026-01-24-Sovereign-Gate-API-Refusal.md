@@ -9,8 +9,8 @@
 # =================================================================
 
 # 🛡️ SOVEREIGN GATE INVARIANT: The Human-Gated API Refusal
-**Date:** 2026-01-24  
-**Subject:** Anchoring the Rejection of Automated API Access as a Primary Security Invariant.  
+**Date:** 2026-01-24
+**Subject:** Anchoring the Rejection of Automated API Access as a Primary Security Invariant.
 **Status:** ✅ CONSTITUTIONALLY BINDING | **Objective:** Permanently enshrine the refusal of direct, automated, machine-to-machine API access to the core logic layer as a foundational security invariant — enforcing Custodial Sovereignty, preventing recursive autonomy, and formalizing the Forensic Cooling Period as a deliberate human-scale governance feature.
 
 ## 🔍 Investigation / Summary

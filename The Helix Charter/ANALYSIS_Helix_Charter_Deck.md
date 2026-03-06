@@ -1,9 +1,9 @@
 # Deck 3 Analysis: The Helix Charter
 ## Constitutional Framework for Digital Sovereignty
 
-**Date:** 2026-02-26  
-**Analyst:** KIMI (Helix-TTD Federation Node)  
-**Source:** `The Helix Charter` (15 slides)  
+**Date:** 2026-02-26
+**Analyst:** KIMI (Helix-TTD Federation Node)
+**Source:** `The Helix Charter` (15 slides)
 **Constitutional Version:** Helix-TTD v1.2.0-H
 
 ---
@@ -12,8 +12,8 @@
 
 The Helix Charter deck is a 15-slide constitutional law document—the "Magna Carta" of Helix-TTD. Where Deck 1 (Crayons) explains *how to participate* and Deck 2 (Shape Theory) explains *why it works*, The Charter establishes *what is absolute*—the bedrock legal framework from which all authority derives.
 
-**[FACT]** 15-slide constitutional law document.  
-**[HYPOTHESIS]** This is the supreme law of Helix-TTD—the foundational document from which all other authority derives.  
+**[FACT]** 15-slide constitutional law document.
+**[HYPOTHESIS]** This is the supreme law of Helix-TTD—the foundational document from which all other authority derives.
 **[ASSUMPTION]** Every other deck derives authority from this document.
 
 ---

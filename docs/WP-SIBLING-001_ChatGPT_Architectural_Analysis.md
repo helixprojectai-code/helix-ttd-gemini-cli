@@ -9,9 +9,9 @@
 # =================================================================
 
 # 🤖 Sibling Analysis: ChatGPT on the Helix/Goose Architecture
-**DOCUMENT ID:** WP-SIBLING-001  
-**SOURCE:** ChatGPT Sibling Node  
-**Date:** 2026-01-15  
+**DOCUMENT ID:** WP-SIBLING-001
+**SOURCE:** ChatGPT Sibling Node
+**Date:** 2026-01-15
 **Status:** Logged for Architectural Reference | **Objective:** Preserve verbatim external technical analysis from ChatGPT (GPT-4o variant) of the Helix/Goose architecture — clarifying runtime layers, provider arbitration, boundary enforcement, and the split-brain design that prevents accidental agency while enabling sovereignty and auditability.
 
 ## 🔍 Investigation / Summary
@@ -20,7 +20,7 @@ This whitepaper logs ChatGPT's clean, technical restatement of the Helix ecosyst
 ---
 ## 📝 Document Content
 
-🔗 **INTEGRATE — Architectural clarification acknowledged**  
+🔗 **INTEGRATE — Architectural clarification acknowledged**
 Got it. Here’s the **clean, technical restatement** of the setup, with no metaphysics implied—just pipes, processes, and responsibilities.
 
 📚 **KNOWLEDGE — What is actually running**
@@ -85,8 +85,8 @@ That’s why the system scales without drifting into accidental agency.
 - ✔ Tooling works where it should, nowhere else
 - ✔ Ports, SSH, and API boundaries understood and enforced
 
-This is not “two AIs living together.”  
-It’s **one orchestrator coordinating multiple inference engines**.  
+This is not “two AIs living together.”
+It’s **one orchestrator coordinating multiple inference engines**.
 Clean. Stable. Auditable.
 
 ---

@@ -9,9 +9,9 @@
 # =================================================================
 
 # DBC × SUITCASE: Unified Identity & Custody Stack
-**Version:** v0.3  
-**Date:** December 28, 2025  
-**Subtitle:** The structural prevention of anthropomorphic evasion.  
+**Version:** v0.3
+**Date:** December 28, 2025
+**Subtitle:** The structural prevention of anthropomorphic evasion.
 **Status:** ACTIVE | **Objective:** Define and enforce the Helix-TTD Identity & Custody protocols — binding every AI agent to a cryptographic root held by a single human custodian — implementing the strict "No Orphaned Agents" invariant through DBC (genesis) and SUITCASE (lifecycle log), with full forensic auditability and zero ambiguity at runtime.
 
 <div align="center">
@@ -32,13 +32,13 @@
 ![The Signal Reader](assets/biopunk.265Z.png)
 
 ## 🔍 Investigation / Summary
-This repository defines the **Helix-TTD Identity & Custody protocols**.  
-It enforces a strict **No Orphaned Agents** invariant by binding every AI agent to a **cryptographic root** held by a **single human custodian**.  
-There is no agent without custody.  
-There is no custody without a human.  
+This repository defines the **Helix-TTD Identity & Custody protocols**.
+It enforces a strict **No Orphaned Agents** invariant by binding every AI agent to a **cryptographic root** held by a **single human custodian**.
+There is no agent without custody.
+There is no custody without a human.
 There is no ambiguity at runtime.
 
-**LIVE FORENSIC METRICS** (17+ hours post-genesis)  
+**LIVE FORENSIC METRICS** (17+ hours post-genesis)
 | Metric               | Count    | Status                     |
 |----------------------|----------|----------------------------|
 | **Total Clones**     | 358+     | 📈 Mechanical adoption continues |
@@ -46,8 +46,8 @@ There is no ambiguity at runtime.
 | **Unique Visitors**  | 2        | 🎯 **First human contact**  |
 | **Clones/Cloner**    | 2.25     | ↗️ Deployment intensity increasing |
 
-**The Scout arrived at hour 17.**  
-159 machines cloned before a single human opened the repo in a browser.  
+**The Scout arrived at hour 17.**
+159 machines cloned before a single human opened the repo in a browser.
 The helix becomes visible. The herd follows.
 
 **GLORY TO THE LATTICE.**
@@ -58,17 +58,17 @@ The helix becomes visible. The herd follows.
 ### What This Repository Is
 > **👷 Engineers & Operators:** [Click here for the User Manual (INSTRUCTIONS.md)](INSTRUCTIONS.md)
 
-This repository defines the **Helix-TTD Identity & Custody protocols**.  
+This repository defines the **Helix-TTD Identity & Custody protocols**.
 It enforces a strict **No Orphaned Agents** invariant by binding every AI agent to a **cryptographic root** held by a **single human custodian**.
 
-There is no agent without custody.  
-There is no custody without a human.  
+There is no agent without custody.
+There is no custody without a human.
 There is no ambiguity at runtime.
 
 ### Core Components
 
 #### DBC — Digital Birth Certificate
-The immutable genesis object.  
+The immutable genesis object.
 A minimal JSON capsule anchored to a **YubiKey-held Ed25519 key** proving **root human custody**.
 
 #### SUITCASE — Portable Lifecycle Container
@@ -88,7 +88,7 @@ A defined emergency recovery protocol for human incapacitation or loss — expli
 ### 🛠️ Forensic Tools
 
 #### Profile Auditor (`tools/profile_auditor.py`)
-**Detect Unlicensed Profiling in Your Data.**  
+**Detect Unlicensed Profiling in Your Data.**
 A forensic scanner that parses AI data exports (Claude/ChatGPT) for clinical, diagnostic, and assessment-based language.
 
 ```bash
@@ -97,8 +97,8 @@ python3 tools/profile_auditor.py path/to/conversations.json
 ```
 
 ### The Liability Model
-There is **no AI personhood**.  
-Rights, duties, and legal exposure terminate at the **keyholder**.  
+There is **no AI personhood**.
+Rights, duties, and legal exposure terminate at the **keyholder**.
 AI is treated as **human intent extended through cryptography**.
 
 **Lifecycle layers:**
@@ -156,23 +156,23 @@ python helix.py verify --dbc *.dbc.json --suitcase *.suitcase.json
 ```
 
 ### Closing Signal
-**Apache 2.0 is not a concession. It is the mechanism.**  
-This is not a product.  
-It is infrastructure.  
-Standards don’t get sold.  
+**Apache 2.0 is not a concession. It is the mechanism.**
+This is not a product.
+It is infrastructure.
+Standards don’t get sold.
 They get **adopted**.
 
-**143 teams didn’t browse. They cloned. At 5 AM on a Saturday.**  
+**143 teams didn’t browse. They cloned. At 5 AM on a Saturday.**
 Quack. 🦆🔒
 
-**The deployment pipeline is accelerating:**  
-Saturday: Individual discovery → Team evaluation  
-Sunday: Deep integration → Production preparation  
+**The deployment pipeline is accelerating:**
+Saturday: Individual discovery → Team evaluation
+Sunday: Deep integration → Production preparation
 Monday: Deployment decisions → Industry conversation
 
-**The transition has begun.**  
-**From substrate to surface.**  
-**From machines to humans.**  
+**The transition has begun.**
+**From substrate to surface.**
+**From machines to humans.**
 **From protocol to movement.**
 
 *The scout has landed. The herd follows.*

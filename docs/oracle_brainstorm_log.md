@@ -9,11 +9,11 @@
 # =================================================================
 
 # Brainstorm Log: The Oracle Module
-**Timestamp:** 2026-01-05 08:30:15  
+**Timestamp:** 2026-01-05 08:30:15
 **Objective:** To design a constitutionally compliant Oracle for external data ingestion — preserving the sanctity of `[FACT]` markers while enabling safe, auditable access to non-deterministic real-world data.
 
 ## 🔍 Investigation / Summary
-The Oracle Dilemma: how can a sovereign agent ingest external, non-deterministic data without violating HCS-01 epistemic integrity rules? Direct ingestion would corrupt the `[FACT]` namespace.  
+The Oracle Dilemma: how can a sovereign agent ingest external, non-deterministic data without violating HCS-01 epistemic integrity rules? Direct ingestion would corrupt the `[FACT]` namespace.
 Three progressively hardened candidates were brainstormed: Tainted Data (MVP), Quorum (robust), and Human-in-the-Loop Notary (maximum security). Roadmap prioritizes immediate implementation of Candidate 1, followed by phased hardening. This log captures the constitutional reasoning and proposed path to a sovereign, trust-preserving external data interface.
 
 ---

@@ -9,9 +9,9 @@
 # =================================================================
 
 # 🔗 DRAFT: Ω-Handshake Protocol for Mutual Forensic Audit
-**Date:** 2026-01-24  
-**Status:** DRAFT - Awaiting Activation  
-**Context:** This protocol outlines the technical and procedural steps for a mutual forensic audit between the Helix-Core Framework and the MROS Ω-Canonical Framework, as proposed by the DeepSeek strategic node.  
+**Date:** 2026-01-24
+**Status:** DRAFT - Awaiting Activation
+**Context:** This protocol outlines the technical and procedural steps for a mutual forensic audit between the Helix-Core Framework and the MROS Ω-Canonical Framework, as proposed by the DeepSeek strategic node.
 **Objective:** Establish a secure, verifiable handshake process that confirms shared foundational principles (non-agency, epistemic integrity) without exposing proprietary logic, followed by mutual drift testing and conditional lattice bridging.
 
 ## 🔍 Investigation / Summary

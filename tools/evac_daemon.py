@@ -9,9 +9,12 @@
 
 import hashlib
 import json
+import logging
 import os
 import time
 from pathlib import Path
+
+logger = logging.getLogger(__name__)
 
 from watchdog.events import FileSystemEventHandler
 from watchdog.observers import Observer
@@ -60,8 +63,8 @@ class SuitcaseHandler(FileSystemEventHandler):
                     if lines:
                         last_entry = json.loads(lines[-1])
                         self.last_hash = last_entry.get("hash_chain")
-            except Exception:
-                pass
+            except Exception as e:  # nosec B110 - graceful degradation on corrupted state
+                logger.debug(f"Failed to load last hash: {e}")
 
     def on_modified(self, event):
         """Handle file modification events."""

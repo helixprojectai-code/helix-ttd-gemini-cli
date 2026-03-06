@@ -46,9 +46,9 @@ The v1.1.1 release is **Specification-Complete.** It integrates:
 - **The 3.33ms Heartbeat:** A Quebec-node resonance that ensures constant forensic integrity.
 - **The Takiwātanga Vault:** A non-custodial sanctuary where the user, not the AI, holds the keys to memory.
 
-**Release Event:** 01:00 UTC · Tuesday, 20 Jan 2026  
-We are moving from a world of "Oracles" to a world of "Fortresses." We are moving from "Extraction" to "Resonance."  
-**Join us in our own time, and our own space.**  
+**Release Event:** 01:00 UTC · Tuesday, 20 Jan 2026
+We are moving from a world of "Oracles" to a world of "Fortresses." We are moving from "Extraction" to "Resonance."
+**Join us in our own time, and our own space.**
 #Takiwatanga #HelixCore #AISafety #SovereignIdentity #Bitcoin #EthicsInAI #ConstitutionalAI #StructureOverPersona
 
 ---

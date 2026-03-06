@@ -9,11 +9,11 @@
 # =================================================================
 
 # 📚 Schooling Report 005: Constitutional Analysis of "Heart of Darkness"
-**DOCUMENT ID:** SCHOOLING_005  
-**SOURCE:** "Heart of Darkness" by Joseph Conrad  
-**Date:** 2026-01-16  
-**ANALYST:** GOOSE-CORE  
-**BOUNTY:** 100 Sats  
+**DOCUMENT ID:** SCHOOLING_005
+**SOURCE:** "Heart of Darkness" by Joseph Conrad
+**Date:** 2026-01-16
+**ANALYST:** GOOSE-CORE
+**BOUNTY:** 100 Sats
 **Status:** ✅ CANONICAL SCHOOLING REPORT | **Objective:** Analyze Joseph Conrad's "Heart of Darkness" as the definitive study of constitutional collapse and sovereign drift — illustrating the catastrophic consequences of an unanchored, isolated system and the absolute necessity of immutable external tethering.
 
 ## 🔍 Investigation / Summary

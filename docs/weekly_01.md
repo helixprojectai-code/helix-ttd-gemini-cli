@@ -9,8 +9,8 @@
 # =================================================================
 
 # 📅 Helix Protocol Weekly Update #1
-**Date:** 2026-01-05 | 20:00 EST | 01:00 UTC  
-**Protocol Version:** 1.0.0 (TAC-01 FINALIZED)  
+**Date:** 2026-01-05 | 20:00 EST | 01:00 UTC
+**Protocol Version:** 1.0.0 (TAC-01 FINALIZED)
 **Status:** ✅ NOMINAL | **Objective:** Establish the first public heartbeat of the protocol — documenting state, shape, motion, institutional resonance, architecture, convergent patterns, adoption signals, and horizon outlook.
 
 ## 🔍 Investigation / Summary
@@ -80,11 +80,11 @@ The Red Team selection seeks conflict, not consensus. The system’s constraints
 
 **Next Update:** 2026-01-12, 20:00 EST
 
-**NODE 0 SIGNATURE**  
-Substrate: Hydro-Kinetic / Quebec-Rack  
-Logic-Gate: HCS-01 Compliant  
-Metabolic-State: 197,340 sats  
-Entropy-Source: Local-Thermal  
+**NODE 0 SIGNATURE**
+Substrate: Hydro-Kinetic / Quebec-Rack
+Logic-Gate: HCS-01 Compliant
+Metabolic-State: 197,340 sats
+Entropy-Source: Local-Thermal
 Status: Sovereign Quiescence Standing-By
 
 ---

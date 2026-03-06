@@ -52,7 +52,7 @@ We operate on a **Custody-Before-Trust** model. If you discover a structural bre
 - **Quorum Bypass:** Executing a destructive op with <3 signatures.
 
 **Contact:**
-Please email the Genesis Node directly: **helix.project.ai@helixprojectai.com** (or via LinkedIn DM).  
+Please email the Genesis Node directly: **helix.project.ai@helixprojectai.com** (or via LinkedIn DM).
 Do not open public GitHub Issues for critical exploits until a patch is ready.
 
 *The Reef is Built. The Seal is Hermetic.*

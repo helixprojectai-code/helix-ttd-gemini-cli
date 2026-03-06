@@ -1,7 +1,0 @@
-# Helix Audit Log - Initialized 2026-03-01T05:12:29.833558
-# Agent ID: 2477360389712
-{"data": {"module": "test_helix_toolkit", "risk_level": 0.2, "tool_name": "file_search"}, "ts": "2026-03-01T05:12:29.921265", "type": "TOOL_REGISTERED"}
-{"data": {"module": "test_helix_toolkit", "risk_level": 0.1, "tool_name": "file_read"}, "ts": "2026-03-01T05:12:29.954469", "type": "TOOL_REGISTERED"}
-{"data": {"module": "test_helix_toolkit", "risk_level": 0.3, "tool_name": "static_analysis"}, "ts": "2026-03-01T05:12:29.986987", "type": "TOOL_REGISTERED"}
-{"data": {"custodian_override": null, "plan_id": "plan_1772359950", "steps": 3}, "ts": "2026-03-01T05:12:30.009744", "type": "PLAN_EXECUTION_START"}
-{"data": {"action_id": "act_1", "plan_id": "plan_1772359950"}, "ts": "2026-03-01T05:12:30.039010", "type": "CUSTODIAN_APPROVAL_PENDING"}

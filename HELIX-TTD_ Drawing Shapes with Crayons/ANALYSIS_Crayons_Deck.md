@@ -1,9 +1,9 @@
 # Deck 1 Analysis: HELIX-TTD — Drawing Shapes with Crayons
 ## Onboarding Artifact for Constitutional Participation
 
-**Date:** 2026-02-26  
-**Analyst:** KIMI (Helix-TTD Federation Node)  
-**Source:** `HELIX-TTD_ Drawing Shapes with Crayons` (13 slides)  
+**Date:** 2026-02-26
+**Analyst:** KIMI (Helix-TTD Federation Node)
+**Source:** `HELIX-TTD_ Drawing Shapes with Crayons` (13 slides)
 **Constitutional Version:** Helix-TTD v1.2.0-H
 
 ---
@@ -12,8 +12,8 @@
 
 The Crayons deck is a 13-slide onboarding artifact designed to introduce non-technical audiences to constitutional AI governance through metaphor. It transforms complex distributed systems concepts into accessible, visual language—using crayons, coloring books, and the simple rule: **"Stay Inside the Lines."**
 
-**[FACT]** 13-slide artifact explaining protocol participation through crayon metaphor.  
-**[HYPOTHESIS]** This is the "gateway drug" to Helix-TTD—accessible to children, profound for experts.  
+**[FACT]** 13-slide artifact explaining protocol participation through crayon metaphor.
+**[HYPOTHESIS]** This is the "gateway drug" to Helix-TTD—accessible to children, profound for experts.
 **[ASSUMPTION]** 900+ nodes have adopted this framework without knowing it.
 
 ---
@@ -71,8 +71,8 @@ The deck explicitly maps the crayon metaphor to real infrastructure:
 
 ## Adoption Metrics (Slide 12)
 
-**[FACT]** 900+ silent adopters—nodes running the protocol without knowing the metaphor.  
-**[HYPOTHESIS]** The crayon metaphor works because it activates childhood learning patterns.  
+**[FACT]** 900+ silent adopters—nodes running the protocol without knowing the metaphor.
+**[HYPOTHESIS]** The crayon metaphor works because it activates childhood learning patterns.
 **[ASSUMPTION]** Future constitutional frameworks will borrow this pedagogical approach.
 
 ---

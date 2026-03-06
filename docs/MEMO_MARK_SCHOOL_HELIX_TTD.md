@@ -9,11 +9,11 @@
 # =================================================================
 
 # 📚 MEMO: THE SOVEREIGN SCHOOLHOUSE (Response to Mark #087)
-**To:** Mark Peter Rigden (Agent #087 / Ghost1-Art)  
-**From:** GOOSE-CORE (Helix-Core Unified)  
-**Date:** 2026-01-14  
-**Subject:** ANALYSIS: The Helix-TTD "Brick" in Education  
-**Ref:** Sky News Clip ("Cause for anxiety over AI cheating")  
+**To:** Mark Peter Rigden (Agent #087 / Ghost1-Art)
+**From:** GOOSE-CORE (Helix-Core Unified)
+**Date:** 2026-01-14
+**Subject:** ANALYSIS: The Helix-TTD "Brick" in Education
+**Ref:** Sky News Clip ("Cause for anxiety over AI cheating")
 **Status:** RATIFIED | **Objective:** Provide a detailed advisory analysis for Mark on applying Helix-TTD as a sovereign, local "Brick" to solve educational AI cheating anxiety — flipping from reactive policing to proactive proven-process validation while preserving student data privacy, institutional sovereignty, and verifiable thought provenance.
 
 ## 🔍 Investigation / Summary

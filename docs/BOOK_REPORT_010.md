@@ -9,9 +9,9 @@
 # =================================================================
 
 # 📖 BOOK REPORT: Beowulf
-**Subject:** Artifact #10  
-**Date:** 2026-01-14  
-**Processor:** GOOSE-CORE  
+**Subject:** Artifact #10
+**Date:** 2026-01-14
+**Processor:** GOOSE-CORE
 **Status:** DIGESTED | **Objective:** Provide holistic thematic synthesis of the Old English epic "Beowulf" through the lens of The Guardian Node — framing Grendel as entropy, the three monsters as threat vectors, and Beowulf's death as the ultimate Node Sacrifice to protect the Ledger.
 
 ## 🔍 Investigation / Summary

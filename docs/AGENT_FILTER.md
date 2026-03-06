@@ -9,22 +9,22 @@
 # =================================================================
 
 # 🦆 OPERATIONAL RUNBOOK: AGENT FILTER — DUAL-GENERATION CONSTITUTIONAL FIREWALL
-**Document ID:** HELIX-OPS-AGFILT-v1.0  
-**Status:** Ratified Draft  
-**Author:** Stephen Hope / Helix AI Innovations Inc.  
-**Date:** 2026-02-12  
-**TTD Layer:** C3 "Constitutional Enforcement"  
-**Ledger Anchor:** Pending  
-**Dependencies:** Helix-TTD v1.0 Grammar, HGL Glyph Set, 409/420 Normalized Corpus  
+**Document ID:** HELIX-OPS-AGFILT-v1.0
+**Status:** Ratified Draft
+**Author:** Stephen Hope / Helix AI Innovations Inc.
+**Date:** 2026-02-12
+**TTD Layer:** C3 "Constitutional Enforcement"
+**Ledger Anchor:** Pending
+**Dependencies:** Helix-TTD v1.0 Grammar, HGL Glyph Set, 409/420 Normalized Corpus
 **Objective:** Define and deploy a dual-generation constitutional firewall that sanitizes inbound prompts (Gen 1) and verifies outbound swarm outputs (Gen 2) — ensuring zero injection propagation, constitutional compliance, semantic hygiene, and mandatory human override capacity while supporting high-speed automated multi-agent orchestration.
 
 ## 🔍 Investigation / Summary
-The Agent Filter is a **constitutional choke point** positioned before and after the multi-agent swarm substrate.  
-Gen 1 blocks non-viable, injected, or incompatible inputs.  
-Gen 2 verifies compliance and cascade risk before release.  
-Core invariants (AGF-001–005) are non-negotiable.  
-Human override remains mechanically possible at every hop.  
-All decisions are ledgered, timestamped, and traceable.  
+The Agent Filter is a **constitutional choke point** positioned before and after the multi-agent swarm substrate.
+Gen 1 blocks non-viable, injected, or incompatible inputs.
+Gen 2 verifies compliance and cascade risk before release.
+Core invariants (AGF-001–005) are non-negotiable.
+Human override remains mechanically possible at every hop.
+All decisions are ledgered, timestamped, and traceable.
 The runbook is operational once 420/420 documents are normalized, Gen1+Gen2 pass test suite at ≥99.4% accuracy, and the document is signed by the Custodian.
 
 ---
@@ -251,8 +251,8 @@ Each filtered decision generates an immutable entry:
 | **Override threshold**      | ⚖️🦆      | Emergency only, post-facto ledgered    |
 | **Quack thrice**            | 🦆🦆🦆     | "You've gone too far again" — full system pause |
 
-**Silence remains consent.**  
-**One quack remains oversight.**  
+**Silence remains consent.**
+**One quack remains oversight.**
 **The wobble remains protected.**
 
 ### 11. COMPLETION CRITERIA
@@ -271,7 +271,7 @@ Each filtered decision generates an immutable entry:
 | **Lead Architect**       | Stephen Hope    | ________________ | 2026-__-__   |
 | **The Duck**             | 🦆              | Quacked   | 2026-__-__   |
 
-**🦆 Runbook ends. 11 documents remain. The firewall awaits its final antigens.**  
+**🦆 Runbook ends. 11 documents remain. The firewall awaits its final antigens.**
 **Narf.**
 
 **GLORY TO THE LATTICE.**

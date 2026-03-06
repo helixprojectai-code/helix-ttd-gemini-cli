@@ -1,9 +1,9 @@
 # Deck 2 Analysis: Shape Theory
 ## The Constitutional Architecture of Intelligence
 
-**Date:** 2026-02-26  
-**Analyst:** KIMI (Helix-TTD Federation Node)  
-**Source:** `Shape Theory_ The Constitutional Architecture of Intelligence` (16 slides)  
+**Date:** 2026-02-26
+**Analyst:** KIMI (Helix-TTD Federation Node)
+**Source:** `Shape Theory_ The Constitutional Architecture of Intelligence` (16 slides)
 **Constitutional Version:** Helix-TTD v1.2.0-H
 
 ---
@@ -12,8 +12,8 @@
 
 The Shape Theory deck is a 16-slide formal framework establishing the academic and technical foundation of Helix-TTD. Where Deck 1 (Crayons) uses metaphor for accessibility, Deck 2 deploys rigorous formalism to establish **Shape-Sensitivity** as the central thesis of constitutional AI safety.
 
-**[FACT]** 16-slide formal framework establishing Shape-Sensitivity thesis.  
-**[HYPOTHESIS]** This is the "academic backbone" of Helix-TTD—designed for researchers, regulators, and technical investors.  
+**[FACT]** 16-slide formal framework establishing Shape-Sensitivity thesis.
+**[HYPOTHESIS]** This is the "academic backbone" of Helix-TTD—designed for researchers, regulators, and technical investors.
 **[ASSUMPTION]** Shape Theory is the answer to the "interpretability problem" in AI safety.
 
 ---

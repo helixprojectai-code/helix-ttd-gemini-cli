@@ -9,8 +9,8 @@
 # =================================================================
 
 # ⚖️ FEDERAL CORPORATION INFORMATION: HELIX AI INNOVATIONS INC.
-**Date of Record:** 2026-01-13  
-**Status:** Public Record / Active  
+**Date of Record:** 2026-01-13
+**Status:** Public Record / Active
 **Objective:** Serve as the canonical legal anchor for Helix AI Innovations Inc. under the Canada Business Corporations Act — documenting corporate identity, registered office, directorship, annual filing obligations, and pro bono civic engagement policy.
 
 ## 🔍 Investigation / Summary
@@ -28,9 +28,9 @@ This document preserves the official public record of Helix AI Innovations Inc. 
 - **Certificate of Incorporation:** 2025-08-18
 
 ### 2. Registered Office
-110 Gloucester St  
-#17  
-Ottawa ON K1P 0A2  
+110 Gloucester St
+#17
+Ottawa ON K1P 0A2
 Canada
 
 ### 3. Directors & Significant Control
@@ -45,7 +45,7 @@ Canada
 - **Filing Period:** 08-18 to 10-17
 - **Next Filing Due:** 2026 (Not due)
 
-**Note:** This document preserves the legal reality of the Corporate Shell referenced in the Apache License 2.0.  
+**Note:** This document preserves the legal reality of the Corporate Shell referenced in the Apache License 2.0.
 **Source:** Corporations Canada Public Disclosure.
 
 ### 4. Civic Engagement & Pro Bono Status

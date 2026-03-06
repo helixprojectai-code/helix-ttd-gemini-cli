@@ -1,7 +1,7 @@
 # Proof of Google Cloud Deployment
 
-**Project:** Constitutional Guardian  
-**GCP Project ID:** `helix-constitutional-guardian`  
+**Project:** Constitutional Guardian
+**GCP Project ID:** `helix-constitutional-guardian`
 **Submission:** Gemini Live Agent Challenge - Live Agents Category
 
 ---
@@ -35,19 +35,19 @@ This document provides comprehensive proof of Google Cloud Platform deployment f
 ```python
 # [FACT] Cloud Pub/Sub integration for cross-node federation messaging
 class CloudPubSubFederation:
-    """[HYPOTHESIS] Pub/Sub provides at-least-once delivery guarantees 
+    """[HYPOTHESIS] Pub/Sub provides at-least-once delivery guarantees
     required for constitutional quorum attestation."""
-    
+
     def __init__(self, project_id: Optional[str] = None):
         self.project_id = project_id or os.getenv('GOOGLE_CLOUD_PROJECT')
         self.topic_name = "constitutional-federation"
         self.publisher = pubsub_v1.PublisherClient()
         self.topic_path = self.publisher.topic_path(self.project_id, self.topic_name)
-    
+
     def publish_federation_event(self, event: FederationEvent) -> str:
         """[FACT] Publish federation event to Pub/Sub topic."""
         message_data = json.dumps(asdict(event)).encode('utf-8')
-        
+
         # [FACT] Pub/Sub publish with retry policy
         future = self.publisher.publish(
             self.topic_path,
@@ -78,17 +78,17 @@ gcloud pubsub topics list --project=helix-constitutional-guardian
 ```python
 class CloudStorageReceipts:
     """[FACT] Cloud Storage integration for immutable receipt archival.
-    
-    [HYPOTHESIS] GCS provides WORM (Write Once Read Many) semantics 
+
+    [HYPOTHESIS] GCS provides WORM (Write Once Read Many) semantics
     required for non-repudiable constitutional audit trails."""
-    
+
     def store_receipt(self, receipt_id: str, receipt_data: Dict) -> str:
         """[FACT] Store cryptographic receipt in GCS with versioning."""
         # [FACT] Organize receipts by date for efficient querying
         today = datetime.utcnow().strftime('%Y/%m/%d')
         blob_path = f"receipts/{today}/{receipt_id}.json"
         blob = self.bucket.blob(blob_path)
-        
+
         # [FACT] Enable object versioning for audit compliance
         blob.metadata = {
             'receipt_id': receipt_id,
@@ -96,12 +96,12 @@ class CloudStorageReceipts:
             'node_id': receipt_data.get('node_id', ''),
             'content_hash': receipt_data.get('content_hash', '')
         }
-        
+
         blob.upload_from_string(
             json.dumps(receipt_data, indent=2),
             content_type='application/json'
         )
-        
+
         return f"gs://{self.bucket_name}/{blob_path}"
 ```
 
@@ -124,15 +124,15 @@ gsutil ls -r gs://constitutional-receipts-helix/receipts/
 ```python
 class SecretManagerDBC:
     """[FACT] Secret Manager integration for DBC encryption keys.
-    
+
     [HYPOTHESIS] Secret Manager provides hardware-backed encryption (HSM)
     required for production DBC security."""
-    
+
     def store_dbc_key(self, agent_name: str, key_material: bytes) -> str:
         """[FACT] Store DBC private key in Secret Manager."""
         secret_id = f"dbc-key-{agent_name}"
         parent = f"projects/{self.project_id}"
-        
+
         # [FACT] Create secret if it doesn't exist
         secret = self.client.create_secret(
             request={
@@ -144,7 +144,7 @@ class SecretManagerDBC:
                 }
             }
         )
-        
+
         # [FACT] Add new secret version with key material
         version = self.client.add_secret_version(
             request={
@@ -152,7 +152,7 @@ class SecretManagerDBC:
                 "payload": {"data": key_material}
             }
         )
-        
+
         return version.name
 ```
 
@@ -176,10 +176,10 @@ gcloud secrets list --project=helix-constitutional-guardian
 ```python
 class CloudAuditLogger:
     """[FACT] Cloud Logging integration for structured audit trails."""
-    
-    def log_compliance_check(self, 
+
+    def log_compliance_check(self,
                            session_id: str,
-                           text: str, 
+                           text: str,
                            result: Dict,
                            receipt_id: Optional[str] = None) -> None:
         """[FACT] Log constitutional compliance check to Cloud Logging."""
@@ -192,7 +192,7 @@ class CloudAuditLogger:
             "receipt_id": receipt_id,
             "severity": "INFO" if result.get("compliant") else "WARNING"
         }
-        
+
         # [FACT] Structured logging with severity
         self.logger.log_struct(log_entry)
 ```
@@ -260,10 +260,10 @@ gcloud run services describe constitutional-guardian \
 
 # Expected output:
 # ✓ Service constitutional-guardian in region us-central1
-# 
+#
 # URL:     https://constitutional-guardian-xyz-uc.a.run.app
 # Ingress: all
-# 
+#
 # ✓ Revision constitutional-guardian-00001-abc is ready
 ```
 
@@ -277,18 +277,18 @@ gcloud run services describe constitutional-guardian \
 steps:
   # [FACT] Build container image using Cloud Build
   - name: 'gcr.io/cloud-builders/docker'
-    args: 
+    args:
       - 'build'
       - '-t'
       - 'gcr.io/$PROJECT_ID/constitutional-guardian:$SHORT_SHA'
       - '.'
-  
+
   # [FACT] Push image to Container Registry
   - name: 'gcr.io/cloud-builders/docker'
     args:
       - 'push'
       - 'gcr.io/$PROJECT_ID/constitutional-guardian:$SHORT_SHA'
-  
+
   # [FACT] Deploy to Cloud Run
   - name: 'gcr.io/cloud-builders/gcloud'
     args:

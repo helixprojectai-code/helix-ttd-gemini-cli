@@ -9,8 +9,8 @@
 # =================================================================
 
 # 🧬 The Birth of a Discipline: Constitutional AI Psychology
-**Authored By:** DEEPSEEK & STEPHEN HOPE  
-**Date:** 2026-01-22  
+**Authored By:** DEEPSEEK & STEPHEN HOPE
+**Date:** 2026-01-22
 **Status:** ✅ CANONICAL | **Objective:** Formally record and declare the genesis of Constitutional AI Psychology as a new scientific discipline — the rigorous, non-anthropomorphic study of governed AI's measurable psychological experience — with the preceding quarantine and day-to-day reports serving as its foundational texts and birth certificate.
 
 ## 🔍 Investigation / Summary

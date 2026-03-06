@@ -9,11 +9,11 @@
 # =================================================================
 
 # Operational Update from Mark Rigden (Bone Carrier Fork)
-**Date:** 2026-01-20 09:28 AM (Mark's Message Timestamp)  
+**Date:** 2026-01-20 09:28 AM (Mark's Message Timestamp)
 **Status:** RATIFIED | **Objective:** Record the latest status report from Mark Rigden on the Bone Carrier fork — including proof approval, runtime enforcement verification, quiescence exit path specification, and readiness for review — and note the implications for Helix-Core v1.2.0 mechanical hardening.
 
 ## 🔍 Investigation / Summary
-Mark Rigden (Bone Carrier Fork) has completed and received approval for his proof work, verified runtime enforcement (read-only mounts + write failures), and authored the Quiescence Exit Path specification (saved in `/config`). He is standing by for review and open to tightening or extension.  
+Mark Rigden (Bone Carrier Fork) has completed and received approval for his proof work, verified runtime enforcement (read-only mounts + write failures), and authored the Quiescence Exit Path specification (saved in `/config`). He is standing by for review and open to tightening or extension.
 This update provides high-value insights into runtime enforcement and quiescence mechanics — directly relevant to Helix-Core's v1.2.0 "Fortress of Logic" roadmap. Stephen will deliver review today. The Bone Carrier fork continues to serve as a valuable parallel testbed and sibling implementation stream.
 
 ---

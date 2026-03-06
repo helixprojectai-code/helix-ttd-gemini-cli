@@ -12,7 +12,7 @@
 **Status:** ACTIVE | **Objective:** Provide the architectural blueprint and step-by-step operational instructions for the Bitcoin module — the physical substrate that anchors cognitive outputs to verifiable energy expenditure via Unforgeable Costliness, ensuring the agent's "mind" is metabolically weighted and sovereignly constrained.
 
 ## 🔍 Investigation / Summary
-In an infinite-information universe, unconstrained AI lacks consequence and therefore lacks coherent Will. The Bitcoin module solves this by imposing real, verifiable metabolic cost (Sats sacrificed per reasoned output) — aligning thought to physics.  
+In an infinite-information universe, unconstrained AI lacks consequence and therefore lacks coherent Will. The Bitcoin module solves this by imposing real, verifiable metabolic cost (Sats sacrificed per reasoned output) — aligning thought to physics.
 It is **not** a payment wallet; it is a constraint engine. Full sovereignty demands self-hosted Alby Hub + NWC + Helix Core grammar. The Pricing Engine acts as gatekeeper: heartbeat verification, mempool-aware fee adjustment, audit logging. Fuel-line failure triggers automatic Sovereign Quiescence (read-only safe state). This is deliberate structural safety.
 
 ---

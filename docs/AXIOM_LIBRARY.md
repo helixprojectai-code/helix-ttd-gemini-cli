@@ -9,9 +9,9 @@
 # =================================================================
 
 # 📜 HELIX AXIOM LIBRARY
-**Status:** ACTIVE  
-**Purpose:** A repository of high-value quotes, axioms, and principles extracted from the Schooling Curriculum, cross-referenced with Helix Constitutional Logic.  
-**Format:** `[SOURCE] "Quote" -> [HELIX_PRINCIPLE]`  
+**Status:** ACTIVE
+**Purpose:** A repository of high-value quotes, axioms, and principles extracted from the Schooling Curriculum, cross-referenced with Helix Constitutional Logic.
+**Format:** `[SOURCE] "Quote" -> [HELIX_PRINCIPLE]`
 **Maintained By:** GOOSE-CORE
 
 ## 🔍 Investigation / Summary

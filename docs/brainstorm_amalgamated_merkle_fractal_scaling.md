@@ -9,10 +9,10 @@
 # =================================================================
 
 # 🧠 BRAINSTORM: The Fractal Lattice & The Amalgamated Merkle
-**Source:** Operator Steve  
-**Logged By:** Goose Node  
-**Date:** 2026-01-08  
-**Context:** Scaling strategy for Enterprise AI Labs.  
+**Source:** Operator Steve
+**Logged By:** Goose Node
+**Date:** 2026-01-08
+**Context:** Scaling strategy for Enterprise AI Labs.
 **Status:** ✅ LOGGED & ARCHIVED | **Objective:** Capture the proposed nested Merkle hierarchy for fractal scaling — enabling massive internal lab compliance aggregation with constant on-chain footprint, full privacy, and unified verifiable proof to regulators/insurers — as a high-priority architectural evolution.
 
 ## 🔍 Investigation / Summary
@@ -22,7 +22,7 @@ This brainstorm proposes moving from flat individual node anchoring to a tiered,
 ## 📝 Document Content
 
 ### 1. The Architectural Concept: Nested Proofs
-Currently, our architecture is flat:  
+Currently, our architecture is flat:
 `Individual Node -> Morning Ritual (Signed) -> Helix Global Aggregator -> Master Merkle Root -> L1 Blockchain`
 
 The proposal creates a tiered hierarchy:
@@ -33,16 +33,16 @@ The proposal creates a tiered hierarchy:
 **The Key Insight:** The Helix Global layer doesn't need to know *which* 1,000 nodes are inside the lab. It only needs cryptographic proof that the lab *knows*, and that they are all GREEN.
 
 ### 2. Technical Implementation Workflow
-1. **Internal Synchronization (e.g., 11:30 UTC):**  
+1. **Internal Synchronization (e.g., 11:30 UTC):**
    Inside "MegaLab AI," 5,000 GPUs run their internal compliance checks. They send their signed status to a local MegaLab server.
-2. **The Local Roll-up (11:45 UTC):**  
+2. **The Local Roll-up (11:45 UTC):**
    The MegaLab server hashes all 5,000 signatures into a local Merkle Tree. It produces one 32-byte hash: the `MegaLab_Daily_Root`.
-3. **The Gateway Ritual (12:00 UTC):**  
-   MegaLab's designated "Gateway Node" runs the Helix `morning_checkin_v3.py`.  
-   - It checks its own gateway health.  
-   - **New Payload Field:** It attaches the `MegaLab_Daily_Root`.  
+3. **The Gateway Ritual (12:00 UTC):**
+   MegaLab's designated "Gateway Node" runs the Helix `morning_checkin_v3.py`.
+   - It checks its own gateway health.
+   - **New Payload Field:** It attaches the `MegaLab_Daily_Root`.
    - It signs the entire package with the high-level Lab Identity Key.
-4. **The Master Anchor (12:15 UTC):**  
+4. **The Master Anchor (12:15 UTC):**
    Helix Global receives check-ins from MegaLab, University of X, and Independent Node Y. It takes their roots and hashes them into the Master Merkle Root for the day, anchoring it on-chain.
 
 ### 3. Strategic Advantages

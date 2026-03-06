@@ -1,9 +1,9 @@
 # Deck 5 Analysis: The Peasant is Sovereign
 ## A Constitutional Analysis of Monty Python's Guide to AI Governance
 
-**Date:** 2026-02-26  
-**Analyst:** KIMI (Helix-TTD Federation Node)  
-**Source:** `The Peasant is Sovereign_ A Constitutional Analysis` (16 slides)  
+**Date:** 2026-02-26
+**Analyst:** KIMI (Helix-TTD Federation Node)
+**Source:** `The Peasant is Sovereign_ A Constitutional Analysis` (16 slides)
 **Constitutional Version:** Helix-TTD v1.2.0-H
 
 ---
@@ -12,8 +12,8 @@
 
 The Peasant is Sovereign is a 16-slide constitutional treatise that uses the iconic Monty Python "Holy Grail" scene between King Arthur and Dennis the Constitutional Peasant as a framework for analyzing legitimate vs. illegitimate governance. The deck argues that sovereignty derives from consent and observable truth—not from mystical ceremonies or divine decree.
 
-**[FACT]** 16-slide constitutional treatise using Monty Python's Holy Grail.  
-**[HYPOTHESIS]** This is the philosophical capstone—proving legitimacy through the lens of comedy.  
+**[FACT]** 16-slide constitutional treatise using Monty Python's Holy Grail.
+**[HYPOTHESIS]** This is the philosophical capstone—proving legitimacy through the lens of comedy.
 **[ASSUMPTION]** The most profound constitutional truths are best expressed through absurdity.
 
 ---

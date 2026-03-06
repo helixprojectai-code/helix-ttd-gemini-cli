@@ -21,11 +21,7 @@ from lattice_topology import (
     RPICycle,
     get_formation_status,
 )
-from merkle_bridge import (
-    L2Entry,
-    MerkleBridge,
-    get_bridge_status,
-)
+from merkle_bridge import L2Entry, MerkleBridge, get_bridge_status
 from witness_node import (
     DuckProtocol,
     Layer5Infrastructure,

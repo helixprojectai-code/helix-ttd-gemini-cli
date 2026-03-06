@@ -9,7 +9,7 @@
 # =================================================================
 
 # 🤝 Acknowledgments & Alliance
-**Principle:** The Helix Commonwealth is built on **Adversarial Collaboration**.  
+**Principle:** The Helix Commonwealth is built on **Adversarial Collaboration**.
 **Status:** ACTIVE | **Objective:** Publicly recognize key external contributors, validators, silent adopters, and allies who have strengthened the structural integrity, hermeticity, and philosophical grounding of the Helix-TTD framework through critique, adoption, and silent validation.
 
 ## 🔍 Investigation / Summary

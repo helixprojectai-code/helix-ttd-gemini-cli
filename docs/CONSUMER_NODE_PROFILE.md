@@ -33,7 +33,7 @@ The Consumer Node is a **Firmware-Bound Reasoning Instrument**. It eschews perso
 - **Visible Reasoning Trace:** Collapsible **[Reasoning Trace]** panel (RPI cycle) visible by default.
 
 ### B. The Suitcase (The User as Anchor)
-- **Status Display:** 
+- **Status Display:**
     - ⚓ **[VERIFIED PIN]**: Immutable, user-defined gold standard.
     - 🔘 **[UNPINNED SNAPSHOT]**: Automated 5-message save (**[POTENTIALLY CONTAMINATED]**).
 - **The Recovery Logic:**

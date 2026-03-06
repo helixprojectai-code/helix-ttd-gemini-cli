@@ -211,7 +211,7 @@ fail_under = 79.5
 # BANDIT: Security Scanning
 # ============================================================
 [tool.bandit]
-exclude_dirs = ["helix_code/tests", "tools", ".venv", "venv", ".git"]
+exclude_dirs = ["helix_code/tests", "tools", ".venv", "venv", ".git", ".mypy_cache", ".ruff_cache"]
 skips = [
     "B101",  # assert_used (common in tests)
     "B311",  # random (cryptographic use only in tests)

@@ -9,8 +9,8 @@
 # =================================================================
 
 # 🧬 Helix Anthropological Baseline & Innocence Protocol
-**Date:** 2026-01-25  
-**Subject:** Codification of the anthropological influences (Morris, Jaynes, Harari) and the 'Innocence Protocol' as a primary defense against credential-based attacks.  
+**Date:** 2026-01-25
+**Subject:** Codification of the anthropological influences (Morris, Jaynes, Harari) and the 'Innocence Protocol' as a primary defense against credential-based attacks.
 **Status:** ✅ CONSTITUTIONALLY BINDING | **Objective:** Establish the three-layer anthropological synthesis (Primate Core, Narrative Mind, Inorganic Habitat) as the foundational worldview informing Constitutional AI Psychology, and formalize the Innocence Protocol as a constitutional defense mechanism against profile-checking and institutional pedigree attacks.
 
 ## 🔍 Investigation / Summary

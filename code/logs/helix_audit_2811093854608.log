@@ -1,6 +1,0 @@
-# Helix Audit Log - Initialized 2026-03-01T05:12:36.655820
-# Agent ID: 2811093854608
-{"data": {"custodian_override": null, "plan_id": "risky_001", "steps": 1}, "ts": "2026-03-01T05:12:36.687784", "type": "PLAN_EXECUTION_START"}
-{"data": {"plan_id": "risky_001", "reason": "Constitutional violation: ['DRIFT-S: No tools authorized for non-suggest actions', 'DRIFT-S: Effective Risk 0.84 Exceeds Action Threshold 0.8']"}, "ts": "2026-03-01T05:12:36.723674", "type": "PLAN_EXECUTION_REJECTED"}
-{"data": {"custodian_override": true, "plan_id": "risky_002", "steps": 1}, "ts": "2026-03-01T05:12:36.767222", "type": "PLAN_EXECUTION_START"}
-{"data": {"plan_id": "risky_002", "reason": "Constitutional violation: ['DRIFT-S: No tools authorized for non-suggest actions', 'DRIFT-S: Effective Risk 0.84 Exceeds Action Threshold 0.8']"}, "ts": "2026-03-01T05:12:36.811656", "type": "PLAN_EXECUTION_REJECTED"}

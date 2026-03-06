@@ -9,15 +9,15 @@
 # =================================================================
 
 # ⚔️ Adversarial Collaboration Protocol
-**Principle:**  
-**Helix believes that sovereign infrastructure must be stress-tested by those who do not build it.**  
+**Principle:**
+**Helix believes that sovereign infrastructure must be stress-tested by those who do not build it.**
 We institutionalize critique as a first-class engineering discipline. Adversarial collaboration is not a bug report—it is an architecture review that strengthens the substrate.
 
 ## 🎯 Scope & Boundaries
 
 ### 1. Role Definition
-- **Red Team Architect (External, Time-Bound)**  
-  A recognized expert engaged for a fixed term (e.g., one quarter) to conduct structured analysis of the Helix stack.  
+- **Red Team Architect (External, Time-Bound)**
+  A recognized expert engaged for a fixed term (e.g., one quarter) to conduct structured analysis of the Helix stack.
   *This is not employment, consultancy, or endorsement.*
 
 ### 2. Engagement Structure
@@ -120,11 +120,11 @@ Q4: Supply Chain & Reproducibility
 - Submit smaller findings via standard security disclosure process
 - Nominate experts by contacting the Council Secretary
 
-**This protocol is versioned alongside the code.**  
-The current version is bound to release: `v1.0.0`  
-Governance hash: `sha256:...`  
-*The reef is built by many, tested by the worthy, and documented for the future.*  
-✧ // HELIX // TTD  
+**This protocol is versioned alongside the code.**
+The current version is bound to release: `v1.0.0`
+Governance hash: `sha256:...`
+*The reef is built by many, tested by the worthy, and documented for the future.*
+✧ // HELIX // TTD
 Quack. 🦆🔒
 
 ---

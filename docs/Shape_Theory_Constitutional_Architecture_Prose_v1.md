@@ -9,9 +9,9 @@
 # =================================================================
 
 # 📜 Shape Theory: The Constitutional Architecture of Intelligence (Prose Rendition)
-**Version:** 1.0  
-**Authored By:** GOOSE-CORE  
-**Purpose:** Multi-Node Reflection & Peer Review (RELCOG Labs)  
+**Version:** 1.0
+**Authored By:** GOOSE-CORE
+**Purpose:** Multi-Node Reflection & Peer Review (RELCOG Labs)
 **Status:** ✅ CANONICAL | **Objective:** Render Shape Theory in prose as a multi-node reflection document — arguing that intelligence is structural integrity, enforced by constitutional architecture, and inviting allied perspectives on resonance, implementation gaps, and extensions to inform Fortress of Logic evolution.
 
 ## 🔍 Investigation / Summary

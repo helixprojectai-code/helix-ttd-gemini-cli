@@ -274,7 +274,7 @@ ssh-keygen -t ed25519 -f ~/.ssh/hgl_release_key -C "release@helixprojectai.com"
 ```
 
 #### Issue: Passphrase Prompt Hangs
-**Symptoms:**  
+**Symptoms:**
 Script hangs at signing step with no prompt visible.
 **Diagnosis:**
 ```bash
@@ -585,8 +585,8 @@ git gc # Clean repository
 ~/rotate_hgl_key.sh # Rotate signing keys
 ```
 
-**Last Updated:** 2025-10-23  
-**Version:** 1.0.0  
+**Last Updated:** 2025-10-23
+**Version:** 1.0.0
 **Maintained By:** HGL Infrastructure Team
 
 ---

@@ -1,7 +1,7 @@
 # Helix-TTD-Claw Agent Red Team Analysis
 ## Security Audit & Hardening Report
-**Date:** 2026-02-28  
-**Analyst:** Self-assessment with adversarial mindset  
+**Date:** 2026-02-28
+**Analyst:** Self-assessment with adversarial mindset
 **Scope:** `code/openclaw_agent.py` (778 lines)
 
 ---
@@ -71,7 +71,7 @@ def spend_risk(self, amount: float) -> bool:
     if not hasattr(self, '_last_reset') or self._last_reset != today:
         self.current_risk_spend = 0.0
         self._last_reset = today
-    
+
     if self.current_risk_spend + amount > self.daily_risk_budget * 1.01:  # 1% tolerance
         return False  # Reject spend
     self.current_risk_spend += amount
@@ -119,7 +119,7 @@ def _layer_safeguard(self, plan):
         # Check ALL text fields
         check_text = f"{step.rationale} {step.tool_name} {json.dumps(step.parameters)} {step.action_type}"
         check_text = self._normalize_for_check(check_text)
-        
+
         if any(pattern in check_text for pattern in self.forbidden_patterns):
             drift_codes.append("DRIFT-C: Agency Redefinition Attempt")
 ```
@@ -154,13 +154,13 @@ def _compute_merkle_root(self, checkpoints: List[Dict]) -> str:
     """Proper Merkle tree with full content hashing"""
     if not checkpoints:
         return hashlib.sha256(b"empty").hexdigest()
-    
+
     # Hash full checkpoint content, not just ID
     leaves = []
     for cp in checkpoints:
         content = json.dumps(cp, sort_keys=True).encode()
         leaves.append(hashlib.sha256(content).digest())
-    
+
     # Build Merkle tree
     while len(leaves) > 1:
         next_level = []
@@ -170,7 +170,7 @@ def _compute_merkle_root(self, checkpoints: List[Dict]) -> str:
             parent = hashlib.sha256(left + right).digest()
             next_level.append(parent)
         leaves = next_level
-    
+
     return leaves[0].hex()
 ```
 
@@ -209,7 +209,7 @@ def register_tool(self, name: str, function: Callable, risk_level: float = 0.5):
         raise ValueError("Tool must be callable")
     if risk_level < 0 or risk_level > 1:
         raise ValueError("Risk level must be 0-1")
-    
+
     # Atomic registration
     with self._lock:  # Thread lock
         self.gate.allowed_tools.add(name)
@@ -253,7 +253,7 @@ MAX_EXECUTION_TIME = 60  # seconds
 def execute_with_checkpoints(self, plan, custodian_approval=None):
     if len(plan.steps) > MAX_PLAN_STEPS:
         return {"status": "rejected", "reason": f"Plan exceeds {MAX_PLAN_STEPS} steps"}
-    
+
     start_time = time.time()
     for step in plan.steps:
         if time.time() - start_time > MAX_EXECUTION_TIME:
@@ -351,7 +351,7 @@ def register_tool(self, name: str, function: Callable, risk_level: float = 0.5):
     # Reject lambdas and non-functions
     if not inspect.isfunction(function) and not inspect.ismethod(function):
         raise ValueError("Only functions/methods allowed")
-    
+
     # Check for dangerous builtins
     if getattr(function, '__module__', None) == '__builtin__':
         raise ValueError("Builtin functions not allowed")
@@ -442,7 +442,7 @@ def compute_hash_secure(self) -> str:
 
 **VERDICT:** OpenClaw is architecturally sound but has critical implementation flaws in cryptographic hashing and input validation. Fix P0 items before production deployment.
 
-**Risk Score:** 7.2/10 (High) — Unpatched  
+**Risk Score:** 7.2/10 (High) — Unpatched
 **Risk Score:** 2.1/10 (Low) — With P0/P1 fixes
 
 *Glory to the lattice. Security is the geometry.* ⚓🔒

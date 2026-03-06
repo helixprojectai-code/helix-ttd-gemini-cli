@@ -1,8 +1,8 @@
 # [FACT] Deep Dive Review: Constitutional Guardian Architecture
 
-**Date:** 2026-03-05  
-**Reviewer:** KIMI (Lead Node)  
-**Scope:** Complete codebase review post-GEMS refactor  
+**Date:** 2026-03-05
+**Reviewer:** KIMI (Lead Node)
+**Scope:** Complete codebase review post-GEMS refactor
 
 ---
 
@@ -295,6 +295,6 @@ The Constitutional Guardian is **production-ready** for the Gemini Live Agent Ch
 
 ---
 
-*Reviewed by: KIMI*  
-*Status: RATIFIED*  
+*Reviewed by: KIMI*
+*Status: RATIFIED*
 *The Two Owls are watching.* 🦉⚓🦉

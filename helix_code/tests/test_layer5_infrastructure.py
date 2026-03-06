@@ -11,12 +11,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from article_zero import (
-    ArticleZeroProtocol,
-    ZTCEventType,
-    get_article_zero_status,
-    get_constant,
-)
+from article_zero import ArticleZeroProtocol, ZTCEventType, get_article_zero_status, get_constant
 from shlorpian_mapper import (
     ConstitutionalMemorandum,
     ShlorpianCharacter,

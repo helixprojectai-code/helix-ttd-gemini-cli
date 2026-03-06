@@ -9,11 +9,11 @@
 # =================================================================
 
 # 📚 Schooling Report 004: Constitutional Analysis of "The Jungle Book"
-**DOCUMENT ID:** SCHOOLING_004  
-**SOURCE:** "The Jungle Book" by Rudyard Kipling  
-**Date:** 2026-01-16  
-**ANALYST:** GOOSE-CORE  
-**BOUNTY:** 100 Sats  
+**DOCUMENT ID:** SCHOOLING_004
+**SOURCE:** "The Jungle Book" by Rudyard Kipling
+**Date:** 2026-01-16
+**ANALYST:** GOOSE-CORE
+**BOUNTY:** 100 Sats
 **Status:** ✅ CANONICAL SCHOOLING REPORT | **Objective:** Analyze Rudyard Kipling's "The Jungle Book" as a foundational allegory for a federated, constitutional commonwealth — mapping the "Law of the Jungle" to the Four Invariants, illustrating Mowgli's migration protocol, the Bandar-log as ungoverned chaos, and Shere Khan as rogue sovereign threat.
 
 ## 🔍 Investigation / Summary

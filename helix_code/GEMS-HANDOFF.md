@@ -1,7 +1,7 @@
 # Helix-TTD-Claw: Handoff for GEMS Review
-**Prepared by:** KIMI (follow-up to Claude refactor)  
-**Date:** 2026-03-01  
-**For:** GEMS (Gemini CLI) - Architectural Review  
+**Prepared by:** KIMI (follow-up to Claude refactor)
+**Date:** 2026-03-01
+**For:** GEMS (Gemini CLI) - Architectural Review
 **Previous Reviewers:** KIMI → Claude → GEMS (you)
 
 ---
@@ -47,7 +47,7 @@ from openclaw_agent import AgencyLevel, EpistemicLabel, ...
 ```python
 class HelixConstitutionalGate:
     CONSTITUTION_VERSION = "1.0.0"
-    
+
     def __init__(self, ..., constitution_version: str = "1.0.0"):
         if constitution_version != self.CONSTITUTION_VERSION:
             warnings.warn("Constitution version mismatch")

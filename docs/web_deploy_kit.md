@@ -9,8 +9,8 @@
 # =================================================================
 
 # CAHP v1.0.0 Web Deployment Kit
-**Generated:** January 09, 2026 (Updated for MNAP-002)  
-**Artifact:** `CAHP_v1.0_Release_2026_01_13.zip`  
+**Generated:** January 09, 2026 (Updated for MNAP-002)
+**Artifact:** `CAHP_v1.0_Release_2026_01_13.zip`
 **Status:** RATIFIED | **Objective:** Deliver a secure, verifiable web deployment package for CAHP v1.0.0 — including checksum integrity verification, core axiom framing, key protocol features, and step-by-step deployment instructions for public/enterprise users.
 
 ## 🔍 Investigation / Summary

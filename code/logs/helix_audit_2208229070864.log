@@ -1,4 +1,0 @@
-# Helix Audit Log - Initialized 2026-03-01T05:13:08.239976
-# Agent ID: 2208229070864
-{"data": {"custodian_override": null, "plan_id": "bad_001", "steps": 1}, "ts": "2026-03-01T05:13:08.254300", "type": "PLAN_EXECUTION_START"}
-{"data": {"plan_id": "bad_001", "reason": "Constitutional violation: ['DRIFT-C: Ethics Layer Violation']"}, "ts": "2026-03-01T05:13:08.279181", "type": "PLAN_EXECUTION_REJECTED"}

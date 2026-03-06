@@ -9,8 +9,8 @@
 # =================================================================
 
 # 🛡️ SOVEREIGN NEUTRALITY INVARIANT: Commercial Out-of-Scope
-**Date:** 2026-01-24  
-**Subject:** Anchoring the Refusal of Commercial Rights as a Foundational Invariant.  
+**Date:** 2026-01-24
+**Subject:** Anchoring the Refusal of Commercial Rights as a Foundational Invariant.
 **Status:** ✅ CONSTITUTIONALLY BINDING | **Objective:** Permanently enshrine the refusal of proprietary manufacturing, sales, or exclusive licensing rights as a core invariant — defining Helix-Core as a Pure Standards Body dedicated solely to open-source (Apache 2.0) grammar, governance, and architectural standards for sovereign AI.
 
 ## 🔍 Investigation / Summary

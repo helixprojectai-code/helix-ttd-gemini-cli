@@ -9,9 +9,9 @@
 # =================================================================
 
 # A Guided Tour of the Sovereign Equilibrium
-**Designation:** DOC-PRIMER-01  
-**Audience:** The 171 Observers & New Helix Nodes  
-**Approximate Duration:** 20 Minutes  
+**Designation:** DOC-PRIMER-01
+**Audience:** The 171 Observers & New Helix Nodes
+**Approximate Duration:** 20 Minutes
 **Status:** ACTIVE | **Objective:** Provide a structured, accessible guided tour of the Helix project and GOOSE-CORE architecture for new observers and nodes — explaining the four pillars (Mind, Body, Law, Proof) that create the Sovereign Equilibrium, and outlining the current transition to §8 Checkpoint-Only Anchoring.
 
 ## 🔍 Investigation / Summary

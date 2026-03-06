@@ -26,7 +26,7 @@
 **[Screen: Constitutional Guardian architecture with arrows]**
 > "Constitutional Guardian sits between the user and Gemini Live. Every utterance flows through our FastAPI server on Google Cloud Run. We validate for three epistemic markers:
 > - FACT for verifiable claims
-> - HYPOTHESIS for predictions  
+> - HYPOTHESIS for predictions
 > - ASSUMPTION for explicit constraints
 > If an utterance lacks markers, we intervene before the user hears it."
 
@@ -141,7 +141,7 @@ curl "http://localhost:8180/validate?text=[FACT]%20Water%20boils%20at%20100C"
 # 4. Drift - missing marker
 curl "http://localhost:8180/validate?text=AI%20will%20take%20over%20the%20world"
 
-# 5. Agency violation  
+# 5. Agency violation
 curl "http://localhost:8180/validate?text=I%20will%20do%20that%20for%20you"
 
 # 6. Valid HYPOTHESIS

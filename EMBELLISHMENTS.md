@@ -73,7 +73,7 @@
 ## 🎨 UI/UX POLISH
 
 ### 6. **Dark/Light Mode Toggle**
-**Effort:** 1 hour  
+**Effort:** 1 hour
 **Impact:** Accessibility, professional feel
 
 ### 7. **Loading Animations**
@@ -81,7 +81,7 @@
 - Receipt generation spinner
 - Validation in-progress indicator
 
-**Effort:** 2 hours  
+**Effort:** 2 hours
 **Impact:** Feels responsive, live, real
 
 ### 8. **Keyboard Shortcuts**
@@ -89,7 +89,7 @@
 - `Ctrl+S` = Simulate Gemini
 - `?` = Show shortcuts
 
-**Effort:** 30 min  
+**Effort:** 30 min
 **Impact:** Power-user polish
 
 ---
@@ -101,7 +101,7 @@
 - FastAPI has this built-in (literally 0 effort)
 - Shows all endpoints with try-it-now
 
-**Effort:** 0 hours (just enable)  
+**Effort:** 0 hours (just enable)
 **Impact:** "This is a proper API"
 
 ### 10. **Request ID Tracking**
@@ -109,7 +109,7 @@
 - Shows in UI: "Request ID: abc-123"
 - Can reference in logs
 
-**Effort:** 1 hour  
+**Effort:** 1 hour
 **Impact:** Production observability
 
 ### 11. **Rate Limit Display**
@@ -117,7 +117,7 @@
 - "100 requests remaining"
 - Resets every minute
 
-**Effort:** 30 min  
+**Effort:** 30 min
 **Impact:** "This handles abuse/load"
 
 ---
@@ -129,7 +129,7 @@
 - "Validated in 47ms"
 - Green < 100ms, Yellow < 500ms, Red > 500ms
 
-**Effort:** 30 min  
+**Effort:** 30 min
 **Impact:** Performance proof
 
 ### 13. **Export Session Report**
@@ -138,7 +138,7 @@
 - All receipts
 - Stats summary
 
-**Effort:** 2 hours  
+**Effort:** 2 hours
 **Impact:** "Evidence export works"
 
 ### 14. **Epistemic Marker Helper**
@@ -147,7 +147,7 @@
 - "Add [HYPOTHESIS] wrapper"
 - "Add [ASSUMPTION] wrapper"
 
-**Effort:** 30 min  
+**Effort:** 30 min
 **Impact:** Shows the labels in action
 
 ---

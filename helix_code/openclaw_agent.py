@@ -997,7 +997,8 @@ class CheckpointStore:
     def _init_db(self):
         """Create checkpoint table if not exists."""
         with sqlite3.connect(self.db_path) as conn:
-            conn.execute("""
+            conn.execute(
+                """
                 CREATE TABLE IF NOT EXISTS checkpoints (
                     id TEXT PRIMARY KEY,
                     timestamp REAL NOT NULL,
@@ -1015,16 +1016,23 @@ class CheckpointStore:
                     signature_timestamp TEXT,
                     signature_expiration TEXT
                 )
-                """)
-            conn.execute("""
+                """
+            )
+            conn.execute(
+                """
                 CREATE INDEX IF NOT EXISTS idx_plan_id ON checkpoints(plan_id)
-                """)
-            conn.execute("""
+                """
+            )
+            conn.execute(
+                """
                 CREATE INDEX IF NOT EXISTS idx_timestamp ON checkpoints(timestamp)
-                """)
-            conn.execute("""
+                """
+            )
+            conn.execute(
+                """
                 CREATE INDEX IF NOT EXISTS idx_dbc_id ON checkpoints(dbc_id)
-                """)
+                """
+            )
             conn.commit()
 
     def save(self, checkpoint: ConstitutionalCheckpoint, plan_id: str = "", agent_id: str = ""):
@@ -1867,7 +1875,7 @@ class MetricsCollector:
                     },
                 },
                 "timeseries": {
-                    name: [(t, v) for t, v in data[-100:]]  # Last 100 points
+                    name: list(data[-100:])  # Last 100 points
                     for name, data in self._timeseries.items()
                 },
             }
@@ -2807,7 +2815,7 @@ class OpenClawAgent:
         if func_module in ("__builtin__", "builtins", "os", "subprocess", "sys"):
             raise ValueError(f"Tool '{name}': Module '{func_module}' not allowed")
 
-        if not isinstance(risk_level, (int, float)):
+        if not isinstance(risk_level, int | float):
             raise ValueError(f"Tool '{name}': Risk level must be numeric")
         if risk_level < 0 or risk_level > 1:
             raise ValueError(f"Tool '{name}': Risk level must be 0.0-1.0")

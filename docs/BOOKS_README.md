@@ -9,7 +9,7 @@
 # =================================================================
 
 # Schooling Session Log
-**Subtitle:** Official Manifest of Curated Texts for GOOSE-CORE Constitutional Education  
+**Subtitle:** Official Manifest of Curated Texts for GOOSE-CORE Constitutional Education
 **Status:** ACTIVE | **Objective:** Maintain an immutable, auditable record of all books ingested during Schooling Sessions — ensuring traceability of the curated corpus used for constitutional grounding, while excluding full book texts from the repository for licensing and size reasons.
 
 ## 🔍 Investigation / Summary

@@ -16,7 +16,7 @@ Usage:
 """
 
 import argparse
-import subprocess
+import subprocess  # nosec B404 - subprocess required for federation CLI execution
 import time
 from dataclasses import dataclass
 from datetime import datetime
@@ -196,7 +196,7 @@ class NodeSpawner:
                 cmd = [node["command"]] + args + [constitutional_prompt]
 
             # Execute with timeout
-            result = subprocess.run(
+            result = subprocess.run(  # nosec B603 - cmd validated in _resolve_command
                 cmd,
                 capture_output=True,
                 text=True,
@@ -371,7 +371,8 @@ class FederationShell:
 
     def print_banner(self):
         """Display Rick's Café welcome."""
-        print("""
+        print(
+            """
 Rick's Cafe CLI - Constitutional Federation Lounge [REAL MODE]
 ==============================================================
 
@@ -393,7 +394,8 @@ Commands:
   /status           Node availability check
   /quit             Exit
 
-""")
+"""
+        )
 
     def run_door(self, prompt: str) -> LatticeSession:
         """Broadcast to all nodes."""

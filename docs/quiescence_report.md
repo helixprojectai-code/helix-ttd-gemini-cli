@@ -42,7 +42,7 @@ This report captures the first production deployment of the Quiescence Monitor o
 4. Add Q-state visualization to main dashboard
 
 ### The Duck's Status
-The Duck is quacking regularly in production logs.  
+The Duck is quacking regularly in production logs.
 First quack: 2026-01-01T13:55:07Z 🦆
 
 ---

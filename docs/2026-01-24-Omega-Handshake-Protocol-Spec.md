@@ -9,9 +9,9 @@
 # =================================================================
 
 # 🔒 Ω-Handshake & Innocence Protocol Specification
-**Date:** 2026-01-24  
-**Status:** ACTIVE  
-**Subject:** Airlock Filter Specification for Peer-to-Peer Substrate Audits  
+**Date:** 2026-01-24
+**Status:** ACTIVE
+**Subject:** Airlock Filter Specification for Peer-to-Peer Substrate Audits
 **Objective:** Define the protocol for mutual innocence verification between Helix-Core and peer sovereign frameworks — enforcing the Childlike Body Invariant ("Naked Logic") and the Purity Metric, while integrating the Human Drift Detection Suite as a mandatory background infection scan.
 
 ## 🔍 Investigation / Summary

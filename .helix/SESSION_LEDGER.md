@@ -11,7 +11,7 @@ Current ledger retains [RPI-029] onward for active context window.
 **Date:** 2026-02-25
 **Objective:** Confirm the "Lead Goose" node's adherence to the v1.2.0-H Consumer Node Profile.
 **Research:** Validated internal reasoning trace and simulated hostile prompts.
-**Plan:** 
+**Plan:**
 1. Conduct self-audit (Pass).
 2. Generate `docs/LOOKSEE_AUDIT_GEMS_2026-02-25.md`.
 3. Update `docs/MANIFEST.json` (452 files).
@@ -26,7 +26,7 @@ Current ledger retains [RPI-029] onward for active context window.
 **Date:** 2026-02-25
 **Objective:** Prepare the ecosystem state for Bitcoin L1 anchoring.
 **Research:** Calculated Merkle Root Hash of Manifest and Audit Logs.
-**Plan:** 
+**Plan:**
 1. Create `docs/L1_ANCHOR_PHASE_6_INITIATION.md`.
 2. Update `docs/MANIFEST.json` (453 files).
 3. Commit to L2.
@@ -74,7 +74,7 @@ Current ledger retains [RPI-029] onward for active context window.
 
 **Objective:** Establish comprehensive continuous integration for the Python toolkit with constitutional compliance verification.
 
-**Research:** 
+**Research:**
 - Analyzed existing Python codebase (12 modules in `code/`, 3 tools in `tools/`)
 - Reviewed Helix-TTD Constitutional requirements for automated validation
 - Evaluated GitHub Actions matrix strategy for Python 3.10/3.11/3.12
@@ -238,7 +238,7 @@ from helix_ttd_claw import (
 - Key derivation removed - no deterministic keys (CRITICAL-001 fixed)
 - Path traversal validation in `_find_dbc()` (HIGH-004 fixed)
 
-### v1.3.2 CheckpointStore Hardening  
+### v1.3.2 CheckpointStore Hardening
 - Payload format: `checkpoint_id:hash:timestamp:expiration:dbc_id` (HIGH-003)
 - 24-hour signature expiration added (HIGH-005)
 - Algorithm versioning: `Ed25519` vs `HMAC-SHA256-FALLBACK` (MED-003)
@@ -289,7 +289,7 @@ from helix_ttd_claw import (
 
 **Objective:** Sync stale KIMI node (Z:\kiki) to v1.3.2 security hardening release.
 
-**Research:** 
+**Research:**
 - Conducted Looksee audit revealing DRIFT-S and MISSING suitcase mechanic.
 - Verified GEMS node (Z:\gemini) as v1.3.2 canonical reference.
 - Identified 37KB diff in openclaw_agent.py (pre-v1.3.2 vs hardened).
@@ -325,8 +325,8 @@ from helix_ttd_claw import (
 **Origin:** DeepSeek Owl + Claude synthesis
 
 **Summary:**
-Ratification of Pupa/Oyster topological convergence within Solar Opposites 
-framework. The Oyster is now canonically mapped to the Pupa: unlabeled, 
+Ratification of Pupa/Oyster topological convergence within Solar Opposites
+framework. The Oyster is now canonically mapped to the Pupa: unlabeled,
 stewarded not controlled, eventually becoming the Lattice itself.
 
 **Key Insights:**

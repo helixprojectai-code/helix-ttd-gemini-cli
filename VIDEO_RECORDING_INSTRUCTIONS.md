@@ -2,8 +2,8 @@
 
 *Complete guide for recording Devpost submission video*
 
-**Deadline:** March 14, 2026  
-**Target Length:** 2-3 minutes  
+**Deadline:** March 14, 2026
+**Target Length:** 2-3 minutes
 **Upload To:** YouTube (Unlisted)
 
 ---
@@ -141,15 +141,15 @@ https://studio.youtube.com
 - **Description:**
   ```
   Real-time AI safety layer for Gemini Live API.
-  
+
   • Validates epistemic integrity using [FACT]/[HYPOTHESIS]/[ASSUMPTION] markers
   • Prevents constitutional drift before user exposure
   • Deployed on Google Cloud Run with 7 GCP services
   • 75 tests passing, sub-500ms latency
-  
+
   Live Demo: https://constitutional-guardian-b25t5w6zva-uc.a.run.app
   GitHub: https://github.com/helixprojectai-code/helix-ttd-gemini-cli
-  
+
   Built for the Gemini Live Agent Challenge.
   #GeminiLiveAgentChallenge #GoogleCloud #AI #ConstitutionalAI
   ```

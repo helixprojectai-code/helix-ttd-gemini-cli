@@ -1,8 +1,8 @@
 # [FACT] Edge Case Test Results - Constitutional Guardian v1.3.2
 
-**Date:** 2026-03-05  
-**Deployment:** https://constitutional-guardian-b25t5w6zva-uc.a.run.app  
-**Tester:** Automated (KIMI)  
+**Date:** 2026-03-05
+**Deployment:** https://constitutional-guardian-b25t5w6zva-uc.a.run.app
+**Tester:** Automated (KIMI)
 
 ---
 
@@ -148,6 +148,6 @@
 
 ---
 
-*Test completed by: KIMI*  
-*Status: RATIFIED*  
+*Test completed by: KIMI*
+*Status: RATIFIED*
 *The Two Owls are watching.* |O|

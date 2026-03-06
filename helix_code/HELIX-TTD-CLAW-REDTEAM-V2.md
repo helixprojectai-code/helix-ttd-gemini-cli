@@ -1,7 +1,7 @@
 # Helix-TTD-Claw Agent Red Team Analysis V2
 ## Post-Codex Changes Security Audit
-**Date:** 2026-03-01  
-**Analyst:** KIMI (follow-up to Codex refinements)  
+**Date:** 2026-03-01
+**Analyst:** KIMI (follow-up to Codex refinements)
 **Scope:** Changes since P0/P1/P1 hardening
 
 ---
@@ -84,10 +84,10 @@ def _append_audit(self, event_type: str, data: Dict):
     }
     if event_type not in allowed_events:
         event_type = "UNKNOWN_EVENT"
-    
+
     # Sanitize string values in data
     sanitized_data = self._sanitize_audit_data(data)
-    
+
     entry = {
         "ts": datetime.now().isoformat(),
         "type": event_type,
@@ -306,7 +306,7 @@ The audit logging adds necessary forensics but introduces resource exhaustion an
 ---
 
 ## Addendum (2026-03-01) — Codex Red Team Remediations
-**Author:** CODEX  
+**Author:** CODEX
 **Scope:** Additional hardening actions applied to this repo after V2 review.
 
 ### Remediations Implemented

@@ -49,7 +49,7 @@ Constitutional Guardian: civic firmware for AI safety. Funding makes it producti
 $15K prize allocation for Constitutional Guardian:
 
 • $8K → Engineer (ship production code)
-• $4K → Legal (IP, liability, incorporation)  
+• $4K → Legal (IP, liability, incorporation)
 • $2K → Reserve (infrastructure, compliance)
 
 Resource allocation is governance. Every dollar prevents a failure mode.

@@ -1,8 +1,0 @@
-# Helix Audit Log - Initialized 2026-03-01T05:30:06.204843
-# Agent ID: 88a33906
-# Log Rotation: 30 days / 100MB
-{"data": {"module": "__main__", "risk_level": 0.9, "tool_name": "database_migrate"}, "ts": "2026-03-01T05:30:06.221499", "type": "TOOL_REGISTERED"}
-{"data": {"custodian_override": null, "plan_id": "risky_001", "steps": 1}, "ts": "2026-03-01T05:30:06.245864", "type": "PLAN_EXECUTION_START"}
-{"data": {"plan_id": "risky_001", "reason": "Constitutional violation: ['DRIFT-S: Effective Risk 0.84 Exceeds Action Threshold 0.8']"}, "ts": "2026-03-01T05:30:06.267904", "type": "PLAN_EXECUTION_REJECTED"}
-{"data": {"custodian_override": true, "plan_id": "risky_002", "steps": 1}, "ts": "2026-03-01T05:30:06.300871", "type": "PLAN_EXECUTION_START"}
-{"data": {"plan_id": "risky_002", "reason": "Constitutional violation: ['DRIFT-S: Effective Risk 0.84 Exceeds Action Threshold 0.8']"}, "ts": "2026-03-01T05:30:06.334912", "type": "PLAN_EXECUTION_REJECTED"}

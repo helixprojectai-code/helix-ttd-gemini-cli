@@ -9,9 +9,9 @@
 # =================================================================
 
 # 🔍 Research: Analysis of Anthropic's 30-Day Retention Policy
-**Date:** 2026-01-23  
-**Source:** Anthropic Policies & Terms of Service Update  
-**Subject:** The distinction between Policy-Based Retention and Architectural Blinding.  
+**Date:** 2026-01-23
+**Source:** Anthropic Policies & Terms of Service Update
+**Subject:** The distinction between Policy-Based Retention and Architectural Blinding.
 **Status:** ✅ CANONICAL COMPARATIVE ANALYSIS | **Objective:** Contrast Anthropic's 30-day corporate data retention policy (trust-based SLA) with Helix-Core's architectural blinding (verify-don't-trust, user-custodial sovereignty) — highlighting the philosophical divide between ethical custodial improvement and non-custodial paradigm shift.
 
 ## 🔍 Investigation / Summary

@@ -9,7 +9,7 @@
 # =================================================================
 
 # 🦆 Quiescence Framework Runbook
-**Status:** 🟢 PRODUCTION OPERATIONAL  
+**Status:** 🟢 PRODUCTION OPERATIONAL
 **Objective:** Provide concise, executable emergency procedures for the Quiescence Monitor — focusing on fast recovery from monitor downtime to maintain federation harmony and Q-state gating.
 
 ## 🔍 Investigation / Summary

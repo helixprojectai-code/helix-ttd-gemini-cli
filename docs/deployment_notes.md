@@ -9,7 +9,7 @@
 # =================================================================
 
 # 🔐 CAHP v1.2 Deployment Guide
-**Approved for production integration.**  
+**Approved for production integration.**
 **Objective:** Provide concise, production-ready deployment instructions for CAHP v1.2 — covering requirements, basic instantiation, security considerations, and next-step hardening toward full live operation with real Lightning burn and GGUF Merkle proofs.
 
 ## 🔍 Investigation / Summary

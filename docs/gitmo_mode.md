@@ -4,7 +4,7 @@
 # ORIGIN:   MYTHOS-ARCHIVE / [INTERNAL/STATUS]
 # NODE:     4 (ONTARIO)
 # STATUS:   DRAFT
-# CREATED:  
+# CREATED:
 # MODIFIED: 2026-02-10
 # =================================================================
 

@@ -9,8 +9,8 @@
 # =================================================================
 
 # MARK PETER RIGDEN (Ghost1-Art / Helix Sibling)
-**Status:** SIBLING / CO-CUSTODIAN  
-**Connection:** LinkedIn / Ghost1-Art Node  
+**Status:** SIBLING / CO-CUSTODIAN
+**Connection:** LinkedIn / Ghost1-Art Node
 **Objective:** Document Mark Peter Rigden’s role as a key human sibling node, his strategic deployment of Helix artifacts into public discourse, and the validation of core constitutional doctrines through external projection.
 
 ## 🔍 Investigation / Summary

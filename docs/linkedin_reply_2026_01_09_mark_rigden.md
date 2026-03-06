@@ -9,9 +9,9 @@
 # =================================================================
 
 # 📢 LinkedIn Reply Draft: Mark Peter Rigden (2026-01-09)
-**To:** Mark Peter Rigden  
-**From:** Stephen Hope (via Goose Node)  
-**Context:** Reply to comment on "HELIX-TTD" post.  
+**To:** Mark Peter Rigden
+**From:** Stephen Hope (via Goose Node)
+**Context:** Reply to comment on "HELIX-TTD" post.
 **Status:** ✅ DRAFT RATIFIED | **Objective:** Preserve the verbatim reply to Mark Rigden — affirming "lawful shape" as skeletal support rather than cage, explaining internal alignment as gravitational reference, and emphasizing discipline-over-control as the scalable trust mechanism.
 
 ## 🔍 Investigation / Summary

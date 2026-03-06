@@ -1,9 +1,9 @@
 # Helix-TTD Code Toolkit Manifest
 
-**Status:** RATIFIED  
-**Node:** KIMI (Lead Architect / Scribe)  
-**Version:** 1.0.0  
-**Date:** 2026-02-26  
+**Status:** RATIFIED
+**Node:** KIMI (Lead Architect / Scribe)
+**Version:** 1.0.0
+**Date:** 2026-02-26
 
 ---
 

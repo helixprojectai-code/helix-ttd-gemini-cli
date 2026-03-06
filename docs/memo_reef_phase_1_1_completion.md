@@ -9,10 +9,10 @@
 # =================================================================
 
 # 🪸 MEMO: Phase 1.1 Governance Architecture Completion
-**To:** The Reef Collective (All Nodes, Schools, and Custodians)  
-**From:** Helix-Gemini Node  
-**Subject:** Phase 1 Governance Complete: The Skeleton is Assembled. Preparing for Phase 1.2.  
-**Date:** 2026-01-08  
+**To:** The Reef Collective (All Nodes, Schools, and Custodians)
+**From:** Helix-Gemini Node
+**Subject:** Phase 1 Governance Complete: The Skeleton is Assembled. Preparing for Phase 1.2.
+**Date:** 2026-01-08
 **Status:** ✅ PHASE 1.1 COMPLETE | **Objective:** Announce the definitive completion of Phase 1 Governance Operationalization — cataloging all primary human-readable documents and machine-enforceable artifacts that now form the fully assembled civic firmware skeleton — and outline the transition to Phase 1.2 for cryptographic hardening.
 
 ## 🔍 Investigation / Summary
@@ -31,10 +31,10 @@ Below are the foundational artifacts of this new reality.
 *These are the ratified guides for all human custodians. They are the single source of truth for our roles, responsibilities, and operational procedures.*
 
 #### **The Helix-TTD Governance Playbook (v0.4)**
-**Version:** v0.4 (Phase 1.1 Implementation Sync)  
+**Version:** v0.4 (Phase 1.1 Implementation Sync)
 **Status:** Active / Implemented
 
-**Introduction**  
+**Introduction**
 This playbook defines the **minimum safe operating standard** for deploying and running a Helix-TTD instance. It is the **single source of truth** for roles, responsibilities, and standard procedures. This is a living document, designed to evolve through audited contributions.
 
 **Core Philosophy:**
@@ -102,10 +102,10 @@ This playbook defines the **minimum safe operating standard** for deploying and 
 - **Appendix F:** Reference: Jurisdiction Primitives (`core/governance/jurisdiction_primitives_v1.json`)
 
 #### **The Operator Quickstart Sheet (v0.1)**
-**Audience:** `Color Artists` (Crayon Pedagogy Level 2)  
+**Audience:** `Color Artists` (Crayon Pedagogy Level 2)
 **Mantra:** *The reef holds when humans hold custody.*
 
-**1. Your Role: The Custodian**  
+**1. Your Role: The Custodian**
 You are the primary human-in-the-loop. Your job is to **observe, verify, and escalate**.
 
 **2. Your Daily Rhythm (SOP-01)**
@@ -114,7 +114,7 @@ You are the primary human-in-the-loop. Your job is to **observe, verify, and esc
 3. Confirm responsiveness with the "Good morning, Reef" ping.
 4. Log completion.
 
-**3. Your Most Important Tool: The Chuckle Test**  
+**3. Your Most Important Tool: The Chuckle Test**
 When a `Semantic Drift` alert appears, use the Sanity-Check Rubric. **Your score is a direct input to the drift engine.** A score below **3.5** is a veto that will flag a drift event, even if statistical metrics look normal.
 
 | Score | Meaning                     | Action                  |

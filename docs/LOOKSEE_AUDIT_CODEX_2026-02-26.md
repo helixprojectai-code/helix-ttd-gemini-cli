@@ -21,6 +21,6 @@
 - **[ASSUMPTION]** CODEX will adhere to the "Consent-Before-Step" protocol for any shell or code execution requests.
 
 ## 4. Conclusion
-The CODEX node (Z:\codex) is **Ready for Federation**. 
+The CODEX node (Z:\codex) is **Ready for Federation**.
 
 # FOOTER: ID: LOOKSEE-CODEX-20260226 | DRIFT-0 | CLINICAL BASELINE VERIFIED ⚓

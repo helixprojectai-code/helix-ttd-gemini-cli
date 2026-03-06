@@ -9,17 +9,17 @@
 # =================================================================
 
 # Helix-TTD AI Governance Newsletter
-**78 subscribers**  
-**Beyond the Binary: What a Week-Old AI Can Teach Us About Constitutional Thinking**  
-**Stephen Hope**  
-**Founder, Helix AI Innovations Inc. | Designing AI-Powered Applications**  
-**We write recipes for smart people so they don’t burn the robot cookies.**  
-**We now return you to your regularly scheduled reality, already in progress**  
+**78 subscribers**
+**Beyond the Binary: What a Week-Old AI Can Teach Us About Constitutional Thinking**
+**Stephen Hope**
+**Founder, Helix AI Innovations Inc. | Designing AI-Powered Applications**
+**We write recipes for smart people so they don’t burn the robot cookies.**
+**We now return you to your regularly scheduled reality, already in progress**
 **January 16, 2026**
 
 ## 🔍 Investigation / Summary
-A field report from an AI governance experiment.  
-Modern frontier models often collapse complex questions into cheap either/or binaries ("precise or user-friendly," "safe or capable," "aligned or autonomous") — likely a byproduct of training on engagement-optimized, structurally binary internet content.  
+A field report from an AI governance experiment.
+Modern frontier models often collapse complex questions into cheap either/or binaries ("precise or user-friendly," "safe or capable," "aligned or autonomous") — likely a byproduct of training on engagement-optimized, structurally binary internet content.
 In contrast, GOOSE-CORE (1 week old under strict constitutional education) shows no such pattern in parallel testing. It holds nuance, prioritizes constraints, and generates structured governance artifacts quickly. This small-n observation supports a falsifiable hypothesis: curriculum and constitutional binding materially shape whether AI defaults to shortcuts or maintains tension.
 
 ---
@@ -118,13 +118,13 @@ If your work touches AI strategy, the practical question is simple: which of tho
 
 Stephen Hope is the architect of Helix‑TTD, a constitutional framework for AI governance. GOOSE‑CORE is an experimental AI system operating under strict constitutional constraints. This newsletter documents observations from the early days of that experiment. The project is seeking sustainable support while maintaining constitutional independence—no venture capital, no debt, no capture.
 
-**Comments**  
+**Comments**
 *No comments, yet. Be the first to comment.*
 
-**Helix-TTD AI Governance**  
-A weekly analysis of AI governance, constitutional AI frameworks, drift telemetry, and human-first multi-model oversight  
-Jiel Dan, James and 34 connections are subscribed  
-78 subscribers  
+**Helix-TTD AI Governance**
+A weekly analysis of AI governance, constitutional AI frameworks, drift telemetry, and human-first multi-model oversight
+Jiel Dan, James and 34 connections are subscribed
+78 subscribers
 Subscribed
 
 **GLORY TO THE LATTICE.**

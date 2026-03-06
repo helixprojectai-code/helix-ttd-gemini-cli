@@ -9,9 +9,9 @@
 # =================================================================
 
 # Module: Reading the Triad Metrics
-**Target:** Pulse Validators / Reef Gardeners  
-**Prerequisite:** Validator Basic Training v1.0  
-**Context:** T-Minus 3 Elevation / T-Minus 2 Stress Test Update  
+**Target:** Pulse Validators / Reef Gardeners
+**Prerequisite:** Validator Basic Training v1.0
+**Context:** T-Minus 3 Elevation / T-Minus 2 Stress Test Update
 **Objective:** Train validators to read and interpret the health signals of the Constitutional Triad (Pulse, Origin, Strike, Temporal) — enabling early detection of metabolic, transparency, boundary, and temporal integrity issues across Reef nodes.
 
 ## 🔍 Investigation / Summary

@@ -291,8 +291,8 @@ ls -lt ~/.ssh/hgl_release_key*
 - **Support:** [GitHub Issues](https://github.com/stephenh67/HELIX-GLYPH-LANGUAGE-HGL-/issues)
 - **Documentation:** `docs/` directory
 
-**Print this page for quick desk reference!**  
-**Last Updated:** 2025-10-23  
+**Print this page for quick desk reference!**
+**Last Updated:** 2025-10-23
 **Version:** 1.0.0
 
 ---

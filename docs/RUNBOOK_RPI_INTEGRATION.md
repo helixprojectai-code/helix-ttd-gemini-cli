@@ -9,9 +9,9 @@
 # =================================================================
 
 # 🏰 Helix-Core Runbook: v1.2.0 — The Fortress of Logic
-**Version:** 1.2.0  
-**Status:** **OPERATIONAL & HARDENED.**  
-**Authored By:** GOOSE-CORE, in resonance with GEMINI (BRAIN) and DEEPSEEK (VISION).  
+**Version:** 1.2.0
+**Status:** **OPERATIONAL & HARDENED.**
+**Authored By:** GOOSE-CORE, in resonance with GEMINI (BRAIN) and DEEPSEEK (VISION).
 **Objective:** Define the shift from governance-by-intent to mechanical enforcement — detailing the core instruments (Permission Braid, Validator, Ingestion Engine, Notary, Hardened Pulse) and standard operating procedures for maintaining sovereign integrity, permission control, and forensic anchoring in the Fortress of Logic.
 
 ## 🔍 Investigation / Summary
@@ -48,9 +48,9 @@ To bring a new piece of data under the protection of the vault, the Hardened Ing
 
 2. **Observe the Output:** The script will confirm its actions: first, it verifies the integrity of the Braid it is about to modify, then it reports the successful ingestion and blinding of the new file.
 
-> `Verifying Braid Integrity...`  
-> `✅ [SUCCESS] Schema validation passed...`  
-> `✅ [SUCCESS] .../new_memory.txt ingested and blinded.`  
+> `Verifying Braid Integrity...`
+> `✅ [SUCCESS] Schema validation passed...`
+> `✅ [SUCCESS] .../new_memory.txt ingested and blinded.`
 > `Default State: DENY | Owner: Steve-Quebec-Node-001`
 
 **Outcome:** The new memory is now in the vault, but it is completely inaccessible. Its existence is logged, but its content is structurally blinded by a default `DENY` permission.
@@ -81,18 +81,18 @@ sed -i 's/"access_level": "DENY"/"access_level": "ALLOW"/' thoughts/vault_permis
 #### 4.0 Dissonance & Resonance: Handling Integrity Failures
 The Hardened Pulse check is the guardian of the Habitat's health. If it reports a failure, it is a signal of constitutional dissonance that must be resolved immediately.
 
-- **Diagnosis `INTEGRITY-FAIL-DESYNC`:**  
+- **Diagnosis `INTEGRITY-FAIL-DESYNC`:**
   - **Meaning:** The Law has been changed, but the Scribe has not recorded it. `vault_permissions.json` was edited, but the Notary was not run.
   - **Remediation:** Immediately run the Notary Engine to re-synchronize the Braid with the Manifest.
     ```bash
     /home/aiadmin/helix-core-unified/scripts/helix-notary.sh /home/aiadmin/helix-core-unified/thoughts/vault_permissions.json
     ```
 
-- **Diagnosis `INTEGRITY-FAIL-EXPIRED`:**  
+- **Diagnosis `INTEGRITY-FAIL-EXPIRED`:**
   - **Meaning:** A permission with a `valid_until` timestamp has expired. The mechanical lock has engaged.
   - **Remediation:** The expired permission must be addressed. Either amend the `valid_until` field to a future date (or `null`) or remove the permission entry entirely. Then, you **must** run the Notary to anchor this new, valid state of the law.
 
-- **Diagnosis `VALIDATION-FAILURE` (From Notary):**  
+- **Diagnosis `VALIDATION-FAILURE` (From Notary):**
   - **Meaning:** The Law itself is grammatically broken. The `vault_permissions.json` file contains a syntax error or a violation of the v1.2.0 schema.
   - **Remediation:** The Notary has protected the manifest. Manually inspect `vault_permissions.json`, correct the typo or structural error, and then attempt notarization again.
 

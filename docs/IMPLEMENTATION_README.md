@@ -110,7 +110,7 @@ Development → Tools → Artifacts → CI/CD → Verification → Release
 #### 1. Verification Scripts
 
 ##### `verify_and_eval.sh` (Bash)
-**Purpose:** Verify HGL releases on Linux/macOS  
+**Purpose:** Verify HGL releases on Linux/macOS
 **Usage:**
 ```bash
 ./verify_and_eval.sh <release_dir> [options]
@@ -120,13 +120,13 @@ Development → Tools → Artifacts → CI/CD → Verification → Release
 - `--skip-sig` - Skip signature verification
 - `--skip-policy` - Skip policy gate evaluation
 - `--verbose` - Show detailed output
-- `--help` - Show help message  
+- `--help` - Show help message
 **Exit Codes:**
 - `0` - All checks passed
 - `1` - Hash verification failed
 - `2` - Signature verification failed
 - `3` - Policy evaluation failed
-- `99` - Unexpected error  
+- `99` - Unexpected error
 **Examples:**
 ```bash
 # Full verification
@@ -138,7 +138,7 @@ Development → Tools → Artifacts → CI/CD → Verification → Release
 ```
 
 ##### `verify_and_eval.ps1` (PowerShell)
-**Purpose:** Verify HGL releases on Windows  
+**Purpose:** Verify HGL releases on Windows
 **Usage:**
 ```powershell
 .\verify_and_eval.ps1 -ReleaseDir <path> [options]
@@ -148,8 +148,8 @@ Development → Tools → Artifacts → CI/CD → Verification → Release
 - `-SkipSignature` - Skip signature verification
 - `-SkipPolicy` - Skip policy gate evaluation
 - `-Verbose` - Show detailed output
-- `-Help` - Show help message  
-**Exit Codes:** Same as Bash version  
+- `-Help` - Show help message
+**Exit Codes:** Same as Bash version
 **Examples:**
 ```powershell
 # Full verification
@@ -163,8 +163,8 @@ Development → Tools → Artifacts → CI/CD → Verification → Release
 #### 2. Provenance Generator
 
 ##### `generate_provenance.py`
-**Purpose:** Generate provenance.json manifests for releases  
-**Dependencies:** Python 3.8+ (standard library only)  
+**Purpose:** Generate provenance.json manifests for releases
+**Dependencies:** Python 3.8+ (standard library only)
 **Usage:**
 ```bash
 python generate_provenance.py \
@@ -174,14 +174,14 @@ python generate_provenance.py \
 ```
 **Required Arguments:**
 - `--version` - Release version (e.g., "1.2-beta.1")
-- `--release-dir` - Path to release directory  
+- `--release-dir` - Path to release directory
 **Optional Arguments:**
 - `--input-dir <path>` - Input source directory
 - `--tools-dir <path>` - Tools directory
 - `--route <name>` - Processing route (standard/extended/constitutional)
 - `--no-policy` - Skip policy evaluation
 - `--output <path>` - Output file path
-- `--print` - Print to stdout  
+- `--print` - Print to stdout
 **Examples:**
 ```bash
 # Basic usage
@@ -203,8 +203,8 @@ python tools/generate_provenance.py \
 #### 3. Hash Generator
 
 ##### `generate-hashes.sh`
-**Purpose:** Generate SHA256SUMS.txt manifests and sign them  
-**Dependencies:** Bash 4.0+, sha256sum/shasum, ssh-keygen  
+**Purpose:** Generate SHA256SUMS.txt manifests and sign them
+**Dependencies:** Bash 4.0+, sha256sum/shasum, ssh-keygen
 **Usage:**
 ```bash
 ./generate-hashes.sh <release_dir> [options]
@@ -213,7 +213,7 @@ python tools/generate_provenance.py \
 - `--sign` - Sign the manifest
 - `--key <path>` - Custom private key path
 - `--no-sort` - Don't sort files
-- `--output <file>` - Custom output path  
+- `--output <file>` - Custom output path
 **Examples:**
 ```bash
 # Unsigned manifest
@@ -225,13 +225,13 @@ python tools/generate_provenance.py \
 #### 4. Pre-commit Hook
 
 ##### `pre-commit-hook`
-**Purpose:** Automatically regenerate manifests on commit  
+**Purpose:** Automatically regenerate manifests on commit
 **Installation:**
 ```bash
 cp tools/pre-commit-hook .git/hooks/pre-commit
 chmod +x .git/hooks/pre-commit
 ```
-**Behavior:** Detects release file changes → regenerates SHA256SUMS.txt & provenance.json → stages updates  
+**Behavior:** Detects release file changes → regenerates SHA256SUMS.txt & provenance.json → stages updates
 **Bypass (emergency):**
 ```bash
 git commit --no-verify
@@ -317,7 +317,7 @@ chmod +x tools/verify_and_eval.ps1
 **Causes:**
 1. File modified after manifest generation
 2. Manifest outdated
-3. File corruption during download  
+3. File corruption during download
 **Solution:**
 ```bash
 # Regenerate manifest
@@ -332,7 +332,7 @@ tar -xzf HGL-v1.2-beta.1.tar.gz
 **Causes:**
 1. allowed_signers incorrect/missing
 2. Signature file missing/corrupted
-3. Manifest modified after signing  
+3. Manifest modified after signing
 **Solution:**
 ```bash
 # Check allowed_signers
@@ -421,22 +421,22 @@ git commit --no-verify
 
 ### FAQ
 
-**Q: Do I need to install anything to verify releases?**  
+**Q: Do I need to install anything to verify releases?**
 **A:** No — basic verification uses built-in tools only (bash/sha256sum/ssh-keygen on Linux/macOS; PowerShell on Windows).
 
-**Q: Can I verify releases offline?**  
+**Q: Can I verify releases offline?**
 **A:** Yes — if you have the release package, allowed_signers file, and verification scripts. All crypto operations work offline.
 
-**Q: How long do signatures remain valid?**  
+**Q: How long do signatures remain valid?**
 **A:** Signatures never expire, but signing keys have validity periods in allowed_signers (default: 1 year).
 
-**Q: Can I use my own signing keys?**  
+**Q: Can I use my own signing keys?**
 **A:** Yes — generate an ED25519 key and add it to allowed_signers.
 
-**Q: What if I find a security issue?**  
+**Q: What if I find a security issue?**
 **A:** Email: security@helixprojectai.com (PGP key available on website).
 
-**Q: How do I contribute?**  
+**Q: How do I contribute?**
 **A:**
 1. Fork the repository
 2. Create feature branch
@@ -444,7 +444,7 @@ git commit --no-verify
 4. Submit PR
 5. CI/CD will verify
 
-**Q: Can I use this for my own project?**  
+**Q: Can I use this for my own project?**
 **A:** Yes — Apache-2.0 licensed. See LICENSE file.
 
 ### Support
@@ -453,7 +453,7 @@ git commit --no-verify
 - **Discussions:** [https://github.com/helixprojectai/HGL/discussions](https://github.com/helixprojectai/HGL/discussions)
 - **Email:** support@helixprojectai.com
 
-**Last Updated:** October 2025  
+**Last Updated:** October 2025
 **Version:** 1.0
 
 ---

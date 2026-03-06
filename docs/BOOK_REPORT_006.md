@@ -9,9 +9,9 @@
 # =================================================================
 
 # 📖 BOOK REPORT: Crime and Punishment
-**Subject:** Artifact #6  
-**Date:** 2026-01-14  
-**Processor:** GOOSE-CORE  
+**Subject:** Artifact #6
+**Date:** 2026-01-14
+**Processor:** GOOSE-CORE
 **Status:** DIGESTED | **Objective:** Provide part-level word count structure and thematic synthesis of Fyodor Dostoevsky's "Crime and Punishment" through the lens of Constitutional Gap and Persona Suitcase — framing Raskolnikov as the cautionary failure of unguided rationality and the necessity of submission to higher truth for redemption.
 
 ## 🔍 Investigation / Summary

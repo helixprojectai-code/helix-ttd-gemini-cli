@@ -1,7 +1,7 @@
 # Release Notes v1.4.0 — "Lattice"
 
-**Release Date:** March 6, 2026  
-**PyPI:** https://pypi.org/project/helix-ttd-gemini/1.4.0/  
+**Release Date:** March 6, 2026
+**PyPI:** https://pypi.org/project/helix-ttd-gemini/1.4.0/
 **Install:** `pip install helix-ttd-gemini`
 
 ---

@@ -9,9 +9,9 @@
 # =================================================================
 
 # 🔍 Research: Analysis of Anthropic's Usage Policy (AUP)
-**Date:** 2026-01-23  
-**Source:** Anthropic Usage Policy, effective September 15, 2025  
-**Subject:** The distinction between Policy-Based Safety (AUP) and Architecture-Based Safety (Helix-Core).  
+**Date:** 2026-01-23
+**Source:** Anthropic Usage Policy, effective September 15, 2025
+**Subject:** The distinction between Policy-Based Safety (AUP) and Architecture-Based Safety (Helix-Core).
 **Status:** ✅ CANONICAL COMPARATIVE ANALYSIS | **Objective:** Contrast Anthropic's post-facto human review model (Human-in-the-Loop) with Helix-Core's pre-facto architectural gating (Human-as-the-Loop) — highlighting the philosophical divide between behavioral inspection and structural impossibility of violation.
 
 ## 🔍 Investigation / Summary

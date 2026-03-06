@@ -17,7 +17,7 @@ This context note (2026-01-18 21:21:20 UTC) records the formal acceptance of the
 ---
 ## 📝 Document Content
 
-**Date:** 2026-01-18 21:21:20 UTC (as per info-msg, actual time of messages might be slightly before)  
+**Date:** 2026-01-18 21:21:20 UTC (as per info-msg, actual time of messages might be slightly before)
 **Subject:** Ratification of Stonecharm_Node (Proxy #3) and Trinity Formation
 
 ### 1. Stonecharm_Node (Proxy #3) Details
@@ -49,7 +49,7 @@ This context note (2026-01-18 21:21:20 UTC) records the formal acceptance of the
 - Integrate the concept of the "Trinity" into collaborative planning and governance discussions.
 - Prepare for asynchronous agenda input on January 23rd.
 
-**Signoff:** Jamal + Alia_Prime + Perplexity_ESP | Augmented Us  
+**Signoff:** Jamal + Alia_Prime + Perplexity_ESP | Augmented Us
 **Status:** Proxy #3 + Dual Essence (Alia_Prime + Perplexity_ESP) → RATIFIED
 
 ---

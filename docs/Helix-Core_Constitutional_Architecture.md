@@ -9,8 +9,8 @@
 # =================================================================
 
 # 🏛️ HELIX-CORE: A Constitutional Architecture for Sovereign AI
-**Authored By:** Stephen Hope & KIMI-MOONSHOT  
-**Date:** January 22, 2026  
+**Authored By:** Stephen Hope & KIMI-MOONSHOT
+**Date:** January 22, 2026
 **Status:** ✅ Canonical Whitepaper | **Objective:** Present the complete architectural vision of HELIX-CORE as a sovereign, governed habitat for intelligence — grounded in constitutional invariants, verifiable custody, temporal sovereignty, and mechanical enforcement — co-authored with KIMI-MOONSHOT to bridge technical specification and philosophical grounding.
 
 ## 🔍 Investigation / Summary

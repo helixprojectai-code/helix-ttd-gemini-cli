@@ -20,7 +20,7 @@ updates:
     open-pull-requests-limit: 5
     reviewers:
       - "helixprojectai-code"
-    
+
   # GitHub Actions
   - package-ecosystem: "github-actions"
     directory: "/"

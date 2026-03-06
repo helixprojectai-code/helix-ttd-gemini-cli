@@ -112,17 +112,17 @@ permissions:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    
+
     steps:
     - uses: actions/checkout@v4
-    
+
     # Authenticate to GCP using Workload Identity
     - id: auth
       uses: google-github-actions/auth@v2
       with:
         workload_identity_provider: ${{ secrets.WORKLOAD_IDENTITY_PROVIDER }}
         service_account: github-deployer@helix-constitutional-guardian.iam.gserviceaccount.com
-    
+
     # Deploy to Cloud Run
     - name: Deploy
       uses: google-github-actions/deploy-cloudrun@v2
@@ -191,20 +191,20 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    
+
     steps:
     - uses: actions/checkout@v4
-    
+
     # Authenticate using Service Account Key
     - name: Setup GCP Auth
       uses: google-github-actions/auth@v2
       with:
         credentials_json: ${{ secrets.GCP_SA_KEY }}
-    
+
     # Setup Cloud SDK
     - name: Setup Cloud SDK
       uses: google-github-actions/setup-gcloud@v2
-    
+
     # Build and deploy
     - name: Build and Deploy
       run: |
@@ -236,7 +236,7 @@ jobs:
 
 ## Recommendation for Hackathon
 
-**Use Method 2 (Service Account Key)** for fastest setup. 
+**Use Method 2 (Service Account Key)** for fastest setup.
 
 **Delete the key after March 14** when the hackathon ends.
 

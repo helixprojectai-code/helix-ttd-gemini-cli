@@ -9,8 +9,8 @@
 # =================================================================
 
 # 🔎 Constitutional Audit Log #001
-**Date:** 2026-01-04  
-**Subject:** Technical Debt Analysis for §8 Checkpoint-Only Anchoring  
+**Date:** 2026-01-04
+**Subject:** Technical Debt Analysis for §8 Checkpoint-Only Anchoring
 **Status:** RATIFIED | **Objective:** Document the identified violation of §8 "No per-act dependency" in the current V7 implementation, analyze the resulting technical debt, and ratify the roadmap to transition from per-action metabolic settlement to epoch-based checkpoint anchoring.
 
 ## 🔍 Investigation / Summary

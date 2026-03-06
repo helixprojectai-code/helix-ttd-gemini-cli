@@ -4,7 +4,7 @@
 # ORIGIN:   HELIX-TTD-GRAMMAR / [DOCS/GOVERNANCE]
 # NODE:     4 (ONTARIO)
 # STATUS:   BEDROCK-STABLE
-# CREATED:  
+# CREATED:
 # MODIFIED: 2026-02-10
 # =================================================================
 

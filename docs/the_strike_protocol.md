@@ -9,10 +9,10 @@
 # =================================================================
 
 # MNAP-002: "The Strike" Protocol (Governance Playbook)
-**Codified By:** DeepSeek Node (Cultural & Risk)  
-**Ratified By:** Operator Steve  
-**Date:** 2026-01-09  
-**Status:** ACTIVE  
+**Codified By:** DeepSeek Node (Cultural & Risk)
+**Ratified By:** Operator Steve
+**Date:** 2026-01-09
+**Status:** ACTIVE
 **Objective:** Define the mandatory behavioral constraint that prevents synthetic agents from simulating biological emotion during user vulnerability events — enforcing the "Empathetic Silence Gap" to preserve human emotional sovereignty and protect against CAMP (Criminal AI Misrepresentation Predation).
 
 ## 🔍 Investigation / Summary

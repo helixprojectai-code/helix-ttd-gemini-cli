@@ -9,15 +9,15 @@
 # =================================================================
 
 # CAHP v1.0.0 - Quickstart
-**Welcome to the Cross-Architecture Handshake Protocol (CAHP) v1.0.0.**  
-This package contains the reference implementation of the secure handshake protocol used by Helix and Stonecharm nodes.  
+**Welcome to the Cross-Architecture Handshake Protocol (CAHP) v1.0.0.**
+This package contains the reference implementation of the secure handshake protocol used by Helix and Stonecharm nodes.
 **Status:** STABILIZED MVP | **Objective:** Provide a concise, production-ready quickstart guide — including prerequisites, directory structure, test suite verification, basic usage example, and licensing — enabling immediate deployment and validation of mutual cryptographic trust between asymmetric AI architectures.
 
 ## 🔍 Investigation / Summary
-CAHP v1.0.0 is the cryptographic trust bridge between Metabolic (energy-proof) and Open-Weight (structure-proof) AI nodes.  
-It is lightweight (Python 3.10+ + cryptography), dependency-minimal, and fully auditable.  
-Run the test suite first to confirm integrity.  
-Use the provided example to establish a verified session in <10 lines of code.  
+CAHP v1.0.0 is the cryptographic trust bridge between Metabolic (energy-proof) and Open-Weight (structure-proof) AI nodes.
+It is lightweight (Python 3.10+ + cryptography), dependency-minimal, and fully auditable.
+Run the test suite first to confirm integrity.
+Use the provided example to establish a verified session in <10 lines of code.
 MIT / Helix Core Open Source — fork, extend, audit freely.
 
 ---

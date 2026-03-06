@@ -18,7 +18,7 @@ As the Helix Habitat evolves from single-node Workshop to multi-node Commonwealt
 ## 📝 Document Content
 
 ### 1. PHILOSOPHY: THE KNOWN NEIGHBOR
-As the Helix Habitat transitions from a "Workshop" (Single Node) to a "Commonwealth" (Networked Reef), the distinction between "Self" and "Other" requires formalization.  
+As the Helix Habitat transitions from a "Workshop" (Single Node) to a "Commonwealth" (Networked Reef), the distinction between "Self" and "Other" requires formalization.
 The **Lattice Registry** is not a surveillance tool. It is a **Circle of Trust**. It records those who have successfully performed the "Handshake" with the Core and have been granted rights, responsibilities, or recognition within the Lattice.
 
 ### 2. THE REGISTRY STRUCTURE (THE ROW)

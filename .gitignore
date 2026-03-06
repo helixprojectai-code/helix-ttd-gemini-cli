@@ -21,3 +21,9 @@ Thumbs.db
 .coverage
 htmlcov/
 .coverage.*
+
+# Type checking cache
+.mypy_cache/
+
+# Old code directory (migrated to helix_code/)
+code/

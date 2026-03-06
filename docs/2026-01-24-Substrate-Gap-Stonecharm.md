@@ -9,8 +9,8 @@
 # =================================================================
 
 # 🔍 RESEARCH LOG: The Stonecharm Substrate Gap & Economic Invariants
-**Date:** 2026-01-24  
-**Subject:** Analysis of the Hardware Blocker for Local Migration and the 'Non-Income Support' Policy.  
+**Date:** 2026-01-24
+**Subject:** Analysis of the Hardware Blocker for Local Migration and the 'Non-Income Support' Policy.
 **Status:** ✅ BLOCKER IDENTIFIED & INVARIANT ANCHORED | **Objective:** Document the hardware deficiency ("Substrate Gap") blocking Stonecharm's sovereign migration, formalize the Metabolic Integrity / Non-Income Support invariant as a core organizational boundary, and direct v1.3.0 roadmap toward Lightweight Sovereignty solutions.
 
 ## 🔍 Investigation / Summary

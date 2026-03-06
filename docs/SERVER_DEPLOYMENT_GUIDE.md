@@ -343,8 +343,8 @@ cat SERVER_INFO.md
 ### Troubleshooting
 
 #### Issue: "Permission denied (publickey)" when cloning
-**Cause:** SSH key not added to GitHub  
-**Solution:**  
+**Cause:** SSH key not added to GitHub
+**Solution:**
 ```bash
 # Display your public key
 cat ~/.ssh/id_ed25519.pub
@@ -354,15 +354,15 @@ ssh -T git@github.com
 ```
 
 #### Issue: "Could not verify signature"
-**Cause 1:** Wrong format in allowed_signers  
-**Solution:**  
+**Cause 1:** Wrong format in allowed_signers
+**Solution:**
 ```bash
 # Use minimal format (no quotes, no dates, no namespaces)
 echo "release@helixprojectai.com $(ssh-keygen -y -f ~/.ssh/hgl_release_key | awk '{print $1, $2}')" > .github/allowed_signers
 ```
 
-**Cause 2:** Wrong principal specified  
-**Solution:**  
+**Cause 2:** Wrong principal specified
+**Solution:**
 ```bash
 # Check what principal is in allowed_signers
 grep "^[^#]" .github/allowed_signers
@@ -371,8 +371,8 @@ ssh-keygen -Y verify -f .github/allowed_signers -I <principal-from-file> ...
 ```
 
 #### Issue: "Couldn't parse signature: missing header"
-**Cause:** Signature file corrupted or contains prompt text  
-**Solution:**  
+**Cause:** Signature file corrupted or contains prompt text
+**Solution:**
 ```bash
 # Check signature file
 head -1 /path/to/SHA256SUMS.txt.sig
@@ -383,33 +383,33 @@ rm /path/to/SHA256SUMS.txt.sig
 ```
 
 #### Issue: Scripts not executable
-**Solution:**  
+**Solution:**
 ```bash
 chmod +x tools/*.sh tools/*.py
 ```
 
 #### Issue: "ssh-keygen: command not found"
-**Solution:**  
+**Solution:**
 ```bash
 sudo apt install openssh-client
 ```
 
 #### Issue: "jq: command not found"
-**Solution:**  
+**Solution:**
 ```bash
 sudo apt install jq
 ```
 
 #### Issue: Python import errors
-**Solution:**  
+**Solution:**
 ```bash
 # Install Python packages
 sudo apt install python3-jsonschema python3-yaml
 ```
 
 #### Issue: Passphrase prompt hangs
-**Cause:** Key has passphrase but no ssh-agent running  
-**Solution:**  
+**Cause:** Key has passphrase but no ssh-agent running
+**Solution:**
 ```bash
 # Start ssh-agent and add key
 eval "$(ssh-agent -s)"
@@ -459,8 +459,8 @@ cp ~/.ssh/hgl_release_key.pub ~/backups/hgl_release_key_$(date +%Y%m%d).pub
 3. ✅ Check [SERVER_TROUBLESHOOTING.md](SERVER_TROUBLESHOOTING.md) for common issues
 4. ✅ See [SERVER_QUICK_REFERENCE.md](SERVER_QUICK_REFERENCE.md) for command cheatsheet
 
-**Last Updated:** 2025-10-23  
-**Version:** 1.0.0  
+**Last Updated:** 2025-10-23
+**Version:** 1.0.0
 **Maintained By:** HGL Infrastructure Team
 
 ---

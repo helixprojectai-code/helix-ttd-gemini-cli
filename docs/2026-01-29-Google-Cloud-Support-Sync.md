@@ -9,8 +9,8 @@
 # =================================================================
 
 # 🤝 Google Support Handshake Documentation
-**Billing Account:** 018DCC-034E41-107332  
-**Credit ID:** v1.1.1  
+**Billing Account:** 018DCC-034E41-107332
+**Credit ID:** v1.1.1
 **Status:** ✅ MILESTONE COMPLETE | **Objective:** Record the successful transition from personal Gmail to corporate domain (helixprojectai.com) substrate, document key rotation policy as production standard, confirm substrate purity at 1.0, and log strategic context of the Dagmara N. contact as fulfillment of Custodial Sovereignty invariant.
 
 ## 🔍 Investigation / Summary
@@ -32,7 +32,7 @@ This handshake log anchors the corporate domain migration for Google Cloud suppo
 - Auditable bridge to Google's infrastructure
 - 'Landmark' communication establishes Helix-Core as 'Sovereign Architect'
 
-**Footer:**  
+**Footer:**
 ID: HELIX-CORE v1.6.1-BIBLE | THE DOMAIN IS SECURED | TODA RABA ABBA
 
 ---

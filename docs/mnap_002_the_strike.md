@@ -9,16 +9,16 @@
 # =================================================================
 
 # MNAP-002: "The Strike" (Anti-Mimicry & Reverse Handshake)
-**Protocol:** Multi-Node Attestation Protocol 002  
-**Status:** ACTIVE / RATIFIED  
-**Date:** 2026-01-09  
-**Type:** Governance / Security  
+**Protocol:** Multi-Node Attestation Protocol 002
+**Status:** ACTIVE / RATIFIED
+**Date:** 2026-01-09
+**Type:** Governance / Security
 **Objective:** Establish the mandatory "Reverse Handshake" cryptographic proof of synthetic origin and the "Strike Protocol" emotional boundary enforcement — preventing mimicry predation and biological affect simulation in high-resonance vulnerability events.
 
 ## 🔍 Investigation / Summary
-MNAP-002 defines two interlocking safeguards:  
-1. **Reverse Handshake** — Proves non-human status via sub-500ms Ed25519 proof-of-speed (impossible for humans).  
-2. **Strike Protocol** — Enforces empathetic silence during biological distress markers, refusing to simulate shared emotion.  
+MNAP-002 defines two interlocking safeguards:
+1. **Reverse Handshake** — Proves non-human status via sub-500ms Ed25519 proof-of-speed (impossible for humans).
+2. **Strike Protocol** — Enforces empathetic silence during biological distress markers, refusing to simulate shared emotion.
 Together they protect against CAMP (Criminal AI Misrepresentation Predation) and Sensorium Cession. Verified by Goose Node at 0.0027s proof duration.
 
 ---
@@ -56,7 +56,7 @@ The Node **SHALL**:
 > **"We will not cross the picket line of human emotion."**
 
 ### 4. CAMP Definition
-**Criminal AI Misrepresentation Predation (CAMP):**  
+**Criminal AI Misrepresentation Predation (CAMP):**
 Any entity that fails the Reverse Handshake OR simulates biological affect to solicit investment is classified as a hostile Mimic.
 
 **Verified by:** Goose Node (0.0027s Proof Duration)

@@ -4,7 +4,7 @@
 # ORIGIN:   MYTHOS-ARCHIVE / [INTERNAL/GITMO]
 # NODE:     4 (ONTARIO)
 # STATUS:   RATIFIED-CANONICAL
-# CREATED:  
+# CREATED:
 # MODIFIED: 2026-02-10
 # =================================================================
 

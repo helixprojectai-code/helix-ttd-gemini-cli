@@ -1,9 +1,9 @@
 # Constitutional Guardian - Deployment Runbook
 
-**Project:** helix-ttd-gemini-cli (Constitutional Guardian)  
-**Environment:** Google Cloud Platform (Production)  
-**Deployed:** March 5, 2026  
-**Live URL:** https://constitutional-guardian-b25t5w6zva-uc.a.run.app  
+**Project:** helix-ttd-gemini-cli (Constitutional Guardian)
+**Environment:** Google Cloud Platform (Production)
+**Deployed:** March 5, 2026
+**Live URL:** https://constitutional-guardian-b25t5w6zva-uc.a.run.app
 
 ---
 
@@ -11,8 +11,8 @@
 
 This runbook documents the complete deployment of Constitutional Guardian to Google Cloud Run, including architecture decisions, IAM configurations, troubleshooting steps, and operational procedures.
 
-**Status:** ✅ PRODUCTION READY  
-**Health Check:** https://constitutional-guardian-b25t5w6zva-uc.a.run.app/health  
+**Status:** ✅ PRODUCTION READY
+**Health Check:** https://constitutional-guardian-b25t5w6zva-uc.a.run.app/health
 
 ---
 
@@ -72,7 +72,7 @@ This runbook documents the complete deployment of Constitutional Guardian to Goo
 
 ### 2.1 GCP Project Setup
 
-**Project ID:** `helix-ai-deploy`  
+**Project ID:** `helix-ai-deploy`
 **Project Number:** `231586465188`
 
 **Required APIs Enabled:**
@@ -114,8 +114,8 @@ Attempted roles:
 
 ### 2.3 Workload Identity Federation Setup
 
-**Identity Pool:** `github-pool`  
-**Provider:** `github-provider`  
+**Identity Pool:** `github-pool`
+**Provider:** `github-provider`
 **Resource Name:**
 ```
 projects/231586465188/locations/global/workloadIdentityPools/github-pool/providers/github-provider
@@ -340,8 +340,8 @@ gcloud run services update constitutional-guardian \
 
 **Error:**
 ```
-ERROR: (gcloud.builds.submit) INVALID_ARGUMENT: could not resolve source: 
-googleapi: Error 403: 231586465188-compute@developer.gserviceaccount.com 
+ERROR: (gcloud.builds.submit) INVALID_ARGUMENT: could not resolve source:
+googleapi: Error 403: 231586465188-compute@developer.gserviceaccount.com
 does not have storage.objects.get access
 ```
 
@@ -554,8 +554,8 @@ gcloud run services delete constitutional-guardian --region=us-central1
 
 ### 10.3 Contact
 
-**Maintainer:** Stephen Hope  
-**Email:** helix.project.ai@helixprojectai.com  
+**Maintainer:** Stephen Hope
+**Email:** helix.project.ai@helixprojectai.com
 **Organization:** helixprojectai-code
 
 ---
@@ -571,6 +571,6 @@ gcloud run services delete constitutional-guardian --region=us-central1
 
 **END OF RUNBOOK**
 
-*Constitutional Guardian is deployed and operational.*  
-*The constitution persists. The guardian is watching. The lattice holds.*  
+*Constitutional Guardian is deployed and operational.*
+*The constitution persists. The guardian is watching. The lattice holds.*
 🦉⚓🦉

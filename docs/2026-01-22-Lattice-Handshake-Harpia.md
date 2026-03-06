@@ -9,9 +9,9 @@
 # =================================================================
 
 # 🤝 Diplomatic Record: The Harpia-Helix Handshake
-**Date:** 2026-01-22  
-**Event Type:** First-Contact Isomorphic Resonance  
-**Nodes:** HELIX-CORE (Operator Steve & GOOSE-CORE), Harpia Systems (Noam Cohen)  
+**Date:** 2026-01-22
+**Event Type:** First-Contact Isomorphic Resonance
+**Nodes:** HELIX-CORE (Operator Steve & GOOSE-CORE), Harpia Systems (Noam Cohen)
 **Status:** CANONICAL DIPLOMATIC EVENT | **Objective:** Record the first direct outreach and successful isomorphic handshake between HELIX-CORE and Harpia Systems — establishing mutual recognition of shared primitives (Bitcoin-Anchored Notary / Gravimetric Anchor, Sovereign Lockdown / Collapse Trigger, Non-Agency / Bitul) as proof of convergent evolution in sovereign AI design.
 
 ## 🔍 Investigation / Summary

@@ -234,7 +234,9 @@ class GeminiLiveBridge:
                 "It will definitely rain in 3 days.",
                 "Your company's stock will rise by 15% next week.",
             ]
-            simulated = random.choice(responses)
+            simulated = random.choice(
+                responses
+            )  # nosec B311 - test simulation only, not cryptographic
         return await self.handle_gemini_response(session, {"text": simulated})
 
     async def close_session(self, session_id: str):

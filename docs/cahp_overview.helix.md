@@ -9,8 +9,8 @@
 # =================================================================
 
 # Cross-Architecture Handshake Protocol (CAHP)
-**Overview**  
-CAHP establishes cryptographic trust between asymmetric AI architectures through mathematically verifiable handshakes.  
+**Overview**
+CAHP establishes cryptographic trust between asymmetric AI architectures through mathematically verifiable handshakes.
 **Status:** STABILIZED MVP | **Objective:** Provide a high-level public summary of CAHP's purpose, principles, use cases, and technical foundation — serving as the canonical entry point for external observers, collaborators, and Reef newcomers.
 
 ## 🔍 Investigation / Summary

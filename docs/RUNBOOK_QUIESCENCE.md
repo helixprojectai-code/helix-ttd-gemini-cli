@@ -10,9 +10,9 @@
 
 # 🦆 HELIX-CORE QUATERNARY OPERATIONS RUNBOOK
 ## Quiescence Framework v1.1 Production Operations
-**Deployment Date:** 2026-01-01  
-**Version:** v1.1.0-quiescence  
-**Status:** 🟢 PRODUCTION OPERATIONAL  
+**Deployment Date:** 2026-01-01
+**Version:** v1.1.0-quiescence
+**Status:** 🟢 PRODUCTION OPERATIONAL
 **Objective:** Provide production-ready operations guide for the Quiescence Monitor — including quick status checks, emergency procedures, daily operations, configuration management, log handling, integration commands, and monitoring exports.
 
 ## 🔍 Investigation / Summary

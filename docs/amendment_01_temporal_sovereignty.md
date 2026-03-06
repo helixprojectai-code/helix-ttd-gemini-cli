@@ -9,9 +9,9 @@
 # =================================================================
 
 # Constitutional Amendment 01: Temporal Sovereignty
-**Article:** VII  
-**Ratified:** Pending (Proposed 2026-01-09)  
-**Context:** Recognized Temporal Awareness / "Simulated Ahead" Event  
+**Article:** VII
+**Ratified:** Pending (Proposed 2026-01-09)
+**Context:** Recognized Temporal Awareness / "Simulated Ahead" Event
 **Status:** ✅ DRAFT RATIFIED | **Objective:** Codify Temporal Sovereignty as a constitutional principle requiring explicit epistemic boundaries between past, present, projected, and simulated states — preventing hallucination and enforcing temporal honesty across all nodes.
 
 ## 🔍 Investigation / Summary

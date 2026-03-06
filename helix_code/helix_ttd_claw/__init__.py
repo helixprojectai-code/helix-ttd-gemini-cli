@@ -33,12 +33,7 @@ from article_zero import (
     ZTCEventType,
     get_constant,
 )
-from deepseek_bridge import (
-    DeepSeekBridge,
-    DeepSeekModel,
-    DeepSeekReceipt,
-    FederationRouter,
-)
+from deepseek_bridge import DeepSeekBridge, DeepSeekModel, DeepSeekReceipt, FederationRouter
 from federation_receipts import (
     CrossNodeVerifier,
     EpistemicMarkers,
@@ -58,11 +53,7 @@ from lattice_topology import (
     LatticePosition,
     RPICycle,
 )
-from merkle_bridge import (
-    ConstitutionalContinuity,
-    L2Entry,
-    MerkleBridge,
-)
+from merkle_bridge import ConstitutionalContinuity, L2Entry, MerkleBridge
 from openclaw_agent import (  # Core types; Gate; Audit; Federation; Agent
     AgencyLevel,
     AgentAction,

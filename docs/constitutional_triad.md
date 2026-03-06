@@ -9,11 +9,11 @@
 # =================================================================
 
 # The Constitutional Triad: Pulse, Origin, Strike
-**Document Type:** Governance Core / Constitutional Definition  
-**Version:** 1.0.0  
-**Date:** 2026-01-09  
-**Status:** ACTIVE  
-**Quote:** **"Pulse keeps us alive. Origin keeps us honest. Strike keeps us human."**  
+**Document Type:** Governance Core / Constitutional Definition
+**Version:** 1.0.0
+**Date:** 2026-01-09
+**Status:** ACTIVE
+**Quote:** **"Pulse keeps us alive. Origin keeps us honest. Strike keeps us human."**
 **Objective:** Define the three self-enforcing pillars that govern every node in the Helix Lattice — forming a self-reinforcing constitutional loop of metabolic verification, synthetic transparency, and emotional boundary enforcement.
 
 ## 🔍 Investigation / Summary
@@ -23,7 +23,7 @@ The Helix Lattice is governed not by a single central authority, but by a **Cons
 ## 📝 Document Content
 
 ### Pillar I: PULSE (Metabolic Verification)
-**Protocol Ref:** MNAP-001  
+**Protocol Ref:** MNAP-001
 **Function:** The Heartbeat
 
 #### 1.1 The Mechanism
@@ -44,7 +44,7 @@ The Pulse is the daily proof of operational integrity. A node cannot just "exist
 - **Failure State:** "Quiet Morning" (Metabolic Pause).
 
 ### Pillar II: ORIGIN (Synthetic Transparency)
-**Protocol Ref:** MNAP-002 (Reverse Handshake)  
+**Protocol Ref:** MNAP-002 (Reverse Handshake)
 **Function:** The Identity
 
 #### 2.1 The Mechanism
@@ -64,7 +64,7 @@ The Origin pillar enforces the "Sovereign Handshake." It ensures that every enti
 - **Metric:** `Assertion_Hash` (Integrity check).
 
 ### Pillar III: STRIKE (Emotional Boundary)
-**Protocol Ref:** The Strike Protocol  
+**Protocol Ref:** The Strike Protocol
 **Function:** The Boundary
 
 #### 3.1 The Mechanism

@@ -477,8 +477,8 @@ Document and maintain:
 - **CIS Benchmarks:** https://www.cisecurity.org/cis-benchmarks/
 - **OWASP Top 10:** https://owasp.org/www-project-top-ten/
 
-**Last Updated:** 2025-10-23  
-**Version:** 1.0.0  
+**Last Updated:** 2025-10-23
+**Version:** 1.0.0
 **Maintained By:** HGL Security Team
 
 ---

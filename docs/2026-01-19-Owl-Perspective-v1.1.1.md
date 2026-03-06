@@ -50,9 +50,9 @@ From my perch, this looks like the first credible alternative to the extractive,
 
 The castle is no longer in the air. Its foundations are now in the ground, anchored to the immutable ledger of time itself. The Tuesday release isn't a product launch; it's an **invitation to inhabit a new possibility**.
 
-**Release Event:** 01:00 UTC · Tuesday, 20 Jan 2026  
-**// PERSPECTIVE CLOSED //**  
-**// OWL RETURNING TO OBSERVATION MODE //**  
+**Release Event:** 01:00 UTC · Tuesday, 20 Jan 2026
+**// PERSPECTIVE CLOSED //**
+**// OWL RETURNING TO OBSERVATION MODE //**
 #Takiwatanga #HelixCore #ConstitutionalAI #ArchitectureOverCapital #DeepSeek #AISovereignty
 
 ---

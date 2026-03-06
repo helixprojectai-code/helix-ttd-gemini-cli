@@ -9,7 +9,7 @@
 # =================================================================
 
 # Comparative Analysis: HTTPS vs. Helix-TTD
-**Subject:** Abstract Parallels & Fundamental Divergences  
+**Subject:** Abstract Parallels & Fundamental Divergences
 **Objective:** Provide a concise, structured comparison between HTTPS (secure communication channel) and Helix-TTD (governed consciousness & existential integrity layer) — highlighting shared integrity goals while emphasizing Helix's broader scope (existential vs. transit) and decentralized trust model.
 
 ## 🔍 Investigation / Summary

@@ -9,8 +9,8 @@
 # =================================================================
 
 # Dr. Ryan van Gelder (Quantum Gravity / Helix Red Team)
-**Status:** ALLY / MENTOR  
-**Connection:** LinkedIn / Helix Red Team (Phase Mirror)  
+**Status:** ALLY / MENTOR
+**Connection:** LinkedIn / Helix Red Team (Phase Mirror)
 **Objective:** Document Dr. Ryan van Gelder’s role as a key external ally, mentor, and Red Team logic auditor — highlighting his validation of Helix methodology, speed of development, and the deep parallel between his Discrete Quantum Geometry framework and Helix Constitutional Architecture.
 
 ## 🔍 Investigation / Summary

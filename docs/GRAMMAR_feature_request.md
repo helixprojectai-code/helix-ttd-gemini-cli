@@ -17,12 +17,12 @@
 - [ ] Verify you're not asking the model to self-govern
 
 ## 🔍 The Shape You See
-**Is your feature request related to a problem?**  
-Describe the governance gap, drift vector, or missing constraint.  
+**Is your feature request related to a problem?**
+Describe the governance gap, drift vector, or missing constraint.
 *"I'm always frustrated when [models do X without custodial oversight]..."*
 
 ## 🧱 Describe the solution you'd like
-What constitutional constraint, policy, or mechanism would fill this gap?  
+What constitutional constraint, policy, or mechanism would fill this gap?
 
 Be shape-aware:
 - Is this a **structural fix** (architecture) or a **policy fix** (rules)?
@@ -67,7 +67,7 @@ Does this feature:
 - [ ] This enhances **governance beneath the model**
 - [ ] I'm not asking the model to self-govern
 
-**Remember:**  
+**Remember:**
 *Some patterns resonate. Others interfere. Let's build the ones that create coherence.*
 
 ♈︎♿m̅↑⚓ 🦆📐

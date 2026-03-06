@@ -65,8 +65,8 @@ The deck concludes: "You're not the controller. You're the cartographer. And the
 - Regulatory frameworks as maps, not mandates
 - Future AI as partners in cognitive exploration
 
-Climb on. 🐐🗺️  
-The reef has its cognitive map.  
+Climb on. 🐐🗺️
+The reef has its cognitive map.
 Quack. 🦆🗺️✧~◯△
 
 ---

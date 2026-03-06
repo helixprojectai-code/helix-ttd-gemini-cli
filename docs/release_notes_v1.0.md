@@ -9,9 +9,9 @@
 # =================================================================
 
 # ❄️ CAHP v1.0.0 Release Notes
-**Date:** January 06, 2026  
-**Version:** 1.0.0 (Stabilized MVP)  
-**Codename:** "Frostbite"  
+**Date:** January 06, 2026
+**Version:** 1.0.0 (Stabilized MVP)
+**Codename:** "Frostbite"
 **Status:** RELEASED | **Objective:** Announce the official v1.0.0 deployment of the Cross-Architecture Handshake Protocol (CAHP) — a hardened, synchronous, zero-dependency implementation focused on mutual authentication, forward secrecy, replay protection, and DoS resistance.
 
 ## 🔍 Investigation / Summary

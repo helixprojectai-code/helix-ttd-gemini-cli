@@ -52,27 +52,27 @@ This index catalogs the full ~7,500-line implementation package (14 files across
 ### Verification Scripts
 
 #### 1. `tools/verify_and_eval.sh`
-**Purpose:** Cross-platform verification script for Linux/macOS  
-**Language:** Bash 4.0+  
+**Purpose:** Cross-platform verification script for Linux/macOS
+**Language:** Bash 4.0+
 **Dependencies:**
 - `bash` 4.0+
 - `sha256sum` or `shasum`
 - `ssh-keygen` (OpenSSH 8.0+)
-- `jq` (optional, for pretty output)  
+- `jq` (optional, for pretty output)
 **Key Functions:**
 - `verify_hashes()` - Validates SHA256 checksums
 - `verify_signature()` - Validates ED25519 signatures
 - `evaluate_policy()` - Runs policy gate tests
-- `check_provenance()` - Validates provenance.json  
+- `check_provenance()` - Validates provenance.json
 **Exit Codes:**
 - `0` - All checks passed
 - `1` - Hash verification failed
 - `2` - Signature verification failed
 - `3` - Policy evaluation failed
-- `99` - Unexpected error  
+- `99` - Unexpected error
 **Configuration:**
 - Modify `ALLOWED_SIGNERS` variable to change path
-- Set `VERBOSE=true` for debug output  
+- Set `VERBOSE=true` for debug output
 **Example Usage:**
 ```bash
 # Full verification
@@ -84,20 +84,20 @@ VERBOSE=true ./tools/verify_and_eval.sh releases/HGL-v1.2-beta.1
 ```
 
 #### 2. `tools/verify_and_eval.ps1`
-**Purpose:** Windows-native verification script  
-**Language:** PowerShell 5.1+  
+**Purpose:** Windows-native verification script
+**Language:** PowerShell 5.1+
 **Dependencies:**
 - PowerShell 5.1+ (included in Windows 10+)
-- `ssh-keygen.exe` (optional, for signature verification)  
+- `ssh-keygen.exe` (optional, for signature verification)
 **Key Functions:**
 - `Test-HashIntegrity` - Validates SHA256 checksums
 - `Test-Signature` - Validates ED25519 signatures (requires ssh-keygen)
 - `Invoke-PolicyEvaluation` - Runs policy gate tests
-- `Test-Provenance` - Validates provenance.json  
-**Exit Codes:** Same as Bash version (0-3, 99)  
+- `Test-Provenance` - Validates provenance.json
+**Exit Codes:** Same as Bash version (0-3, 99)
 **Configuration:**
 - Use `-AllowedSignersPath` parameter to override default
-- Use `-Verbose` for debug output  
+- Use `-Verbose` for debug output
 **Example Usage:**
 ```powershell
 # Full verification
@@ -112,26 +112,26 @@ VERBOSE=true ./tools/verify_and_eval.sh releases/HGL-v1.2-beta.1
 ### CI/CD Workflows
 
 #### 3. `.github/workflows/verify_provenance.yml`
-**Purpose:** Automated provenance validation in CI/CD  
+**Purpose:** Automated provenance validation in CI/CD
 **Triggers:**
 - `push` to `main` or `develop`
 - `pull_request` to `main`
 - Git tags matching `v*`
-- Manual workflow dispatch  
+- Manual workflow dispatch
 **Jobs:**
 1. **verify-provenance**
    - Validates JSON schema
    - Checks all SHA256 hashes
-   - Verifies Git metadata  
-**Runs On:** `ubuntu-latest`  
+   - Verifies Git metadata
+**Runs On:** `ubuntu-latest`
 **Dependencies:**
 - Python 3.11
 - `jsonschema`
-- `pyyaml`  
+- `pyyaml`
 **Outputs:**
 - Validation report (pass/fail)
-- List of any hash mismatches  
-**Runtime:** ~2-5 minutes  
+- List of any hash mismatches
+**Runtime:** ~2-5 minutes
 **Configuration:**
 ```yaml
 # Customize validation rules
@@ -140,26 +140,26 @@ env:
 ```
 
 #### 4. `.github/workflows/verify_signatures.yml`
-**Purpose:** Automated signature verification  
+**Purpose:** Automated signature verification
 **Triggers:**
 - `push` to `main`
 - `pull_request` to `main`
 - Git tags matching `v*`
-- Manual dispatch  
+- Manual dispatch
 **Jobs:**
 1. **verify-signatures**
    - Finds all `.sig` files
    - Validates against `allowed_signers`
-   - Reports invalid signatures  
-**Runs On:** `ubuntu-latest`  
+   - Reports invalid signatures
+**Runs On:** `ubuntu-latest`
 **Dependencies:**
 - OpenSSH 8.0+ (`ssh-keygen`)
-- `allowed_signers` file  
+- `allowed_signers` file
 **Outputs:**
 - Signature validation status
 - Key fingerprints used
-- List of invalid signatures (if any)  
-**Runtime:** ~1-3 minutes  
+- List of invalid signatures (if any)
+**Runtime:** ~1-3 minutes
 **Configuration:**
 ```yaml
 # Customize allowed signers path
@@ -168,16 +168,16 @@ env:
 ```
 
 #### 5. `.github/workflows/verify_policy.yml`
-**Purpose:** Policy gate test matrix  
+**Purpose:** Policy gate test matrix
 **Triggers:**
 - `push` to any branch
 - `pull_request` to `main`
-- Manual workflow dispatch  
+- Manual workflow dispatch
 **Jobs:**
 1. **policy-test-matrix**
    - Runs 8 test vectors
    - Tests all policy gates
-   - Validates gate combinations  
+   - Validates gate combinations
 **Test Matrix:**
 | Vector      | Expected | Description              |
 |-------------|----------|--------------------------|
@@ -190,11 +190,11 @@ env:
 | `multi_fail`| FAIL     | Multiple gates fail      |
 | `all_fail`  | FAIL     | All gates fail           |
 
-**Runs On:** `ubuntu-latest`  
+**Runs On:** `ubuntu-latest`
 **Dependencies:**
 - Bash verification script
-- Test vector files  
-**Runtime:** ~10-15 minutes (parallel)  
+- Test vector files
+**Runtime:** ~10-15 minutes (parallel)
 **Configuration:**
 ```yaml
 strategy:
@@ -204,24 +204,24 @@ strategy:
 ```
 
 #### 6. `.github/workflows/reproducibility_smoke.yml`
-**Purpose:** Verify build reproducibility  
+**Purpose:** Verify build reproducibility
 **Triggers:**
 - Schedule: Weekly (Sundays at 00:00 UTC)
-- Manual workflow dispatch  
+- Manual workflow dispatch
 **Jobs:**
 1. **reproducibility-test**
    - Clean Docker environment
    - Rebuild artifacts
-   - Compare hashes with originals  
-**Runs On:** `ubuntu-latest`  
+   - Compare hashes with originals
+**Runs On:** `ubuntu-latest`
 **Dependencies:**
 - Docker
-- Build tools (varies by project)  
+- Build tools (varies by project)
 **Outputs:**
 - Reproducibility status (pass/fail)
 - Hash comparison report
-- Build logs  
-**Runtime:** ~20-30 minutes  
+- Build logs
+**Runtime:** ~20-30 minutes
 **Configuration:**
 ```yaml
 # Customize build environment
@@ -233,26 +233,26 @@ env:
 ### Tools
 
 #### 7. `tools/generate_provenance.py`
-**Purpose:** Generate provenance.json manifests  
-**Language:** Python 3.8+  
+**Purpose:** Generate provenance.json manifests
+**Language:** Python 3.8+
 **Dependencies:**
 - Standard library only (no external packages)
-- Git (for metadata extraction)  
+- Git (for metadata extraction)
 **Key Classes:**
-- `ProvenanceGenerator` - Main generator class  
+- `ProvenanceGenerator` - Main generator class
 **Key Methods:**
 - `_get_git_info()` - Extracts Git metadata
 - `_compute_hash()` - Computes SHA256 hashes
 - `add_inputs()` - Adds input files to provenance
 - `add_outputs()` - Adds output files to provenance
-- `evaluate_policy()` - Runs policy evaluation  
+- `evaluate_policy()` - Runs policy evaluation
 **Input:**
 - Version number
 - Release directory path
 - Input directory path (optional)
-- Tools directory path (optional)  
+- Tools directory path (optional)
 **Output:**
-- `provenance.json` file  
+- `provenance.json` file
 **Example Output:**
 ```json
 {
@@ -278,20 +278,20 @@ env:
 - Continues on non-fatal errors
 
 #### 8. `tools/generate-hashes.sh`
-**Purpose:** Generate SHA256SUMS.txt and sign with ED25519  
-**Language:** Bash 4.0+  
+**Purpose:** Generate SHA256SUMS.txt and sign with ED25519
+**Language:** Bash 4.0+
 **Dependencies:**
 - `sha256sum` or `shasum`
-- `ssh-keygen` (for signing)  
+- `ssh-keygen` (for signing)
 **Key Functions:**
 - `generate_hashes()` - Computes SHA256 for all files
-- `sign_manifest()` - Signs manifest with SSH key  
+- `sign_manifest()` - Signs manifest with SSH key
 **Input:**
 - Release directory path
-- SSH private key path (for signing)  
+- SSH private key path (for signing)
 **Output:**
 - `SHA256SUMS.txt` file
-- `SHA256SUMS.txt.sig` file (if `--sign` used)  
+- `SHA256SUMS.txt.sig` file (if `--sign` used)
 **Example Output:**
 ```
 abc123... file1.txt
@@ -302,26 +302,26 @@ def456... file2.txt
 - `--sign` - Sign the manifest
 - `--key <path>` - Custom key path
 - `--no-sort` - Don't sort files
-- `--output <file>` - Custom output path  
+- `--output <file>` - Custom output path
 **Error Handling:**
 - Validates release directory exists
 - Checks for signing prerequisites
 - Provides clear error messages
 
 #### 9. `tools/pre-commit-hook`
-**Purpose:** Auto-regenerate manifests on commit  
-**Language:** Bash 4.0+  
+**Purpose:** Auto-regenerate manifests on commit
+**Language:** Bash 4.0+
 **Dependencies:**
 - `generate-hashes.sh`
-- `generate_provenance.py` (optional)  
+- `generate_provenance.py` (optional)
 **Key Functions:**
 - `detect_changed_releases()` - Finds changed release directories
-- `regenerate_manifests()` - Updates SHA256SUMS.txt and provenance.json  
+- `regenerate_manifests()` - Updates SHA256SUMS.txt and provenance.json
 **Behavior:**
 1. Detects files in `releases/` being committed
 2. Checks if manifests need regeneration
 3. Regenerates if files are newer than manifests
-4. Stages updated manifests for commit  
+4. Stages updated manifests for commit
 **Installation:**
 ```bash
 cp tools/pre-commit-hook .git/hooks/pre-commit
@@ -338,8 +338,8 @@ git commit --no-verify
 ### Security Infrastructure
 
 #### 10. `.github/allowed_signers`
-**Purpose:** SSH public key registry for signature verification  
-**Format:** OpenSSH authorized_keys format  
+**Purpose:** SSH public key registry for signature verification
+**Format:** OpenSSH authorized_keys format
 **Structure:**
 ```
 <principal> namespaces="<ns>" valid-after="<date>" valid-before="<date>" <key-type> <key-data>
@@ -354,12 +354,12 @@ release@helixprojectai.com namespaces="file" valid-after="20250101" valid-before
 - **valid-after:** Key validity start date (YYYYMMDD)
 - **valid-before:** Key validity end date (YYYYMMDD)
 - **key-type:** SSH key algorithm (ssh-ed25519 recommended)
-- **key-data:** Base64-encoded public key  
+- **key-data:** Base64-encoded public key
 **Key Rotation:**
 1. Generate new key
 2. Add to `allowed_signers` with new validity period
 3. Update old key's `valid-before` date
-4. Commit and push changes  
+4. Commit and push changes
 **Best Practices:**
 - Use ED25519 keys (stronger, faster than RSA)
 - Set validity periods ~1 year
@@ -370,7 +370,7 @@ release@helixprojectai.com namespaces="file" valid-after="20250101" valid-before
 ### Documentation
 
 #### 11. `docs/HGL_GAP_ANALYSIS.md`
-**Purpose:** Comprehensive gap analysis  
+**Purpose:** Comprehensive gap analysis
 **Sections:**
 1. Executive Summary
 2. Gap Identification
@@ -381,11 +381,11 @@ release@helixprojectai.com namespaces="file" valid-after="20250101" valid-before
 7. Deployment Readiness
 8. Success Metrics
 9. Conclusion
-10. Appendices  
+10. Appendices
 **Target Audience:**
 - Project managers
 - Technical leads
-- Stakeholders  
+- Stakeholders
 **Key Insights:**
 - What was missing
 - What was implemented
@@ -393,7 +393,7 @@ release@helixprojectai.com namespaces="file" valid-after="20250101" valid-before
 - Current status
 
 #### 12. `docs/IMPLEMENTATION_README.md`
-**Purpose:** User guide and reference  
+**Purpose:** User guide and reference
 **Sections:**
 1. Quick Start
 2. Architecture Overview
@@ -401,11 +401,11 @@ release@helixprojectai.com namespaces="file" valid-after="20250101" valid-before
 4. Common Workflows
 5. Troubleshooting
 6. Best Practices
-7. FAQ  
+7. FAQ
 **Target Audience:**
 - Developers
 - DevOps engineers
-- Release managers  
+- Release managers
 **Key Content:**
 - Usage examples
 - Configuration options
@@ -413,7 +413,7 @@ release@helixprojectai.com namespaces="file" valid-after="20250101" valid-before
 - Workflow patterns
 
 #### 13. `docs/DEPLOYMENT_CHECKLIST.md`
-**Purpose:** Step-by-step deployment guide  
+**Purpose:** Step-by-step deployment guide
 **Sections:**
 1. Phase 0: Preparation (15 min)
 2. Phase 1: File Installation (30 min)
@@ -421,11 +421,11 @@ release@helixprojectai.com namespaces="file" valid-after="20250101" valid-before
 4. Phase 3: Testing (1-2 hours)
 5. Phase 4: Go Live (30 min)
 6. Post-Deployment
-7. Rollback Procedure  
+7. Rollback Procedure
 **Target Audience:**
 - Deployment engineers
 - DevOps teams
-- System administrators  
+- System administrators
 **Key Features:**
 - Time estimates
 - Checkboxes for tracking
@@ -433,7 +433,7 @@ release@helixprojectai.com namespaces="file" valid-after="20250101" valid-before
 - Success criteria
 
 #### 14. `docs/PACKAGE_INDEX.md`
-**Purpose:** Detailed file reference (this document)  
+**Purpose:** Detailed file reference (this document)
 **Sections:**
 1. File Listing
 2. Verification Scripts
@@ -442,7 +442,7 @@ release@helixprojectai.com namespaces="file" valid-after="20250101" valid-before
 5. Security Infrastructure
 6. Documentation
 7. Dependencies
-8. Configuration Files  
+8. Configuration Files
 **Target Audience:**
 - All users (reference)
 
@@ -454,7 +454,7 @@ release@helixprojectai.com namespaces="file" valid-after="20250101" valid-before
 - **Bash:** 4.0+
 - **Python:** 3.8+
 - **OpenSSH:** 8.0+
-- **Git:** 2.20+  
+- **Git:** 2.20+
 **Install:**
 ```bash
 sudo apt update
@@ -466,7 +466,7 @@ sudo apt install bash python3 openssh-client git
 - **Bash:** 4.0+ (via Homebrew)
 - **Python:** 3.8+
 - **OpenSSH:** 8.0+ (included)
-- **Git:** 2.20+ (included)  
+- **Git:** 2.20+ (included)
 **Install:**
 ```bash
 brew install bash python3
@@ -477,7 +477,7 @@ brew install bash python3
 - **PowerShell:** 5.1+ (included) or 7+
 - **Python:** 3.8+ (optional, for provenance generation)
 - **Git:** 2.20+
-- **OpenSSH:** Optional (for signature verification)  
+- **OpenSSH:** Optional (for signature verification)
 **Install:**
 ```powershell
 # Via Chocolatey
@@ -488,10 +488,10 @@ winget install Git.Git
 ```
 
 #### Python Packages
-**Required:** None (uses standard library only)  
+**Required:** None (uses standard library only)
 **Optional:**
 - `jsonschema` - For provenance schema validation
-- `pyyaml` - For YAML configuration (CI/CD only)  
+- `pyyaml` - For YAML configuration (CI/CD only)
 **Install:**
 ```bash
 pip install jsonschema pyyaml
@@ -500,7 +500,7 @@ pip install jsonschema pyyaml
 #### GitHub Actions
 **Required for CI/CD:**
 - `actions/checkout@v4`
-- `actions/setup-python@v5`  
+- `actions/setup-python@v5`
 **Built-in runners:**
 - `ubuntu-latest` (Ubuntu 22.04)
 
@@ -586,10 +586,10 @@ chmod +x .git/hooks/pre-commit
 ### Support
 **Documentation:**
 - GitHub: https://github.com/helixprojectai/HGL
-- Issues: https://github.com/helixprojectai/HGL/issues  
+- Issues: https://github.com/helixprojectai/HGL/issues
 **Contact:**
 - Email: support@helixprojectai.com
-- Security: security@helixprojectai.com  
+- Security: security@helixprojectai.com
 
 **Document End**
 

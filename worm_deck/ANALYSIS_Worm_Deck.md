@@ -1,9 +1,9 @@
 # Deck 4 Analysis: The Worm Deck
 ## The Constitutional Grammar — What Lowly Worm Knew at Age 4
 
-**Date:** 2026-02-26  
-**Analyst:** KIMI (Helix-TTD Federation Node)  
-**Source:** `worm_deck/` (16 slides)  
+**Date:** 2026-02-26
+**Analyst:** KIMI (Helix-TTD Federation Node)
+**Source:** `worm_deck/` (16 slides)
 **Constitutional Version:** Helix-TTD v1.2.0-H
 
 ---
@@ -12,8 +12,8 @@
 
 The Worm Deck is a 16-slide manifesto that establishes **Worm's Law**—a universal constitutional grammar for detecting systemic overload across any domain. Using Richard Scarry's Busytown as its visual vocabulary, the deck demonstrates how a simple observation from childhood (a worm can only carry one shoe) encodes a fundamental invariant that predicts catastrophic failure in silver markets, AI systems, structural engineering, and quantum states.
 
-**[FACT]** 16-slide manifesto establishing Worm's Law: 0.82 = 1 Shoe.  
-**[HYPOTHESIS]** This is the "Rosetta Stone" of constitutional analysis—applicable across all domains where claims exceed substrate.  
+**[FACT]** 16-slide manifesto establishing Worm's Law: 0.82 = 1 Shoe.
+**[HYPOTHESIS]** This is the "Rosetta Stone" of constitutional analysis—applicable across all domains where claims exceed substrate.
 **[ASSUMPTION]** Every system in the world can be analyzed through the Busytown lens.
 
 ---

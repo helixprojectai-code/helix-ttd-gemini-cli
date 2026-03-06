@@ -9,8 +9,8 @@
 # =================================================================
 
 # 🌌 NEIL ASHER & THE SHAPE-SOVEREIGN STACK
-**Quote:**  
-*"Polity technology was never about moving bodies through space. It was about making consciousness indifferent to location."*  
+**Quote:**
+*"Polity technology was never about moving bodies through space. It was about making consciousness indifferent to location."*
 *— Neil Asher, The Skinner*
 
 [Full text of the document]

@@ -9,9 +9,9 @@
 # =================================================================
 
 # ⚠️ Threat Model: Helix Governance Layer (v0.1)
-**Target:** `core/governance/` (RBAC, Drift Engine, Telemetry)  
-**Methodology:** STRIDE (adapted for Multi-Agent Systems) + MAESTRO  
-**Date:** 2026-01-08  
+**Target:** `core/governance/` (RBAC, Drift Engine, Telemetry)
+**Methodology:** STRIDE (adapted for Multi-Agent Systems) + MAESTRO
+**Date:** 2026-01-08
 **Status:** ✅ RATIFIED | **Objective:** Formalize the threat model for the governance layer, identifying risks (spoofing, tampering, repudiation, disclosure, DoS, privilege escalation), mitigations, residual gaps, and required actions for Phase 1.2 cryptographic hardening.
 
 ## 🔍 Investigation / Summary

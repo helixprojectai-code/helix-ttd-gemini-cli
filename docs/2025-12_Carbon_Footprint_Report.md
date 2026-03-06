@@ -9,9 +9,9 @@
 # =================================================================
 
 # 🌍 Carbon Footprint Report - December 2025
-**Document reference:** `CARBON_hs308371-ovh_202512`  
-**Date of issue:** 2026-01-23  
-**Customer id:** hs308371-ovh  
+**Document reference:** `CARBON_hs308371-ovh_202512`
+**Date of issue:** 2026-01-23
+**Customer id:** hs308371-ovh
 **Status:** ✅ Archived & Canonical | **Objective:** Record and publish the monthly and yearly carbon emissions associated with the OVHcloud baremetal substrate hosting the Helix-Core habitat — providing transparent, location-based and market-based metrics for manufacturing, electricity, and operations to support environmental accountability and sustainability tracking.
 
 ## 🔍 Investigation / Summary

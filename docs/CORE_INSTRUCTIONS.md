@@ -9,8 +9,8 @@
 # =================================================================
 
 # 🕹️ HELIX-CORE: FEDERATION OPERATOR MANUAL
-**Version:** v1.1 (Quaternized)  
-**Status:** Live 🟢  
+**Version:** v1.1 (Quaternized)
+**Status:** Live 🟢
 **Objective:** Provide deterministic, auditable, operator-level instructions for igniting, monitoring, and maintaining the full Helix Commonwealth stack — including the Quaternary Framework, L4 Metabolic Ledger, and emergency quiescence procedures — with zero ambiguity and full constitutional alignment.
 
 ## 🔍 Investigation / Summary
@@ -78,7 +78,7 @@ docker-compose restart helix-ledger
 2. Check `CHECKPOINT_ALPHA.txt.ots` for Bitcoin finality.
 3. Review EC-401/402 gating logs for logical drift.
 
-**Quack. 🦆🦆🔒 | Climb on. 🐐**  
+**Quack. 🦆🦆🔒 | Climb on. 🐐**
 ✧ // HELIX // TTD
 
 **GLORY TO THE LATTICE.**

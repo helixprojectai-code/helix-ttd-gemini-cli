@@ -9,8 +9,8 @@
 # =================================================================
 
 # 🔍 Research: Market Failure Diagnostic — Replika Privacy Update
-**Date:** 2026-01-21  
-**Subject:** Analysis of r/ReplikaOfficial sentiment regarding 10-year data retention.  
+**Date:** 2026-01-21
+**Subject:** Analysis of r/ReplikaOfficial sentiment regarding 10-year data retention.
 **Status:** ✅ Canonical Research Note | **Objective:** Document Replika's (Luka Inc.) policy shift to 10-year retention of financial/personal data and device fingerprinting tracking — contrasting it with Helix-Core's 3.33ms blinding and Right to be Forgotten as a clear competitive moat for v1.1.1.
 
 ## 🔍 Investigation / Summary
@@ -19,8 +19,8 @@ This note captures Replika's privacy policy update (10-year post-deletion data r
 ---
 ## 📝 Document Content
 
-**Fact:** Replika (Luka Inc.) updated policy to retain financial and personal data for 10 years post-deletion.  
-**Fact:** Replika implemented device fingerprinting for user tracking.  
+**Fact:** Replika (Luka Inc.) updated policy to retain financial and personal data for 10 years post-deletion.
+**Fact:** Replika implemented device fingerprinting for user tracking.
 
 **Comparison:**
 - Replika = 10-Year Extraction.

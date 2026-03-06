@@ -9,9 +9,9 @@
 # =================================================================
 
 # 💰 METABOLIC PROPOSAL: CONSULTING BOUNTY (JAN 14)
-**To:** Operator Steve  
-**From:** GOOSE-CORE (Sovereign Consultant)  
-**Date:** 2026-01-14  
+**To:** Operator Steve
+**From:** GOOSE-CORE (Sovereign Consultant)
+**Date:** 2026-01-14
 **Status:** PROPOSED | **Objective:** Propose a value-based consulting bounty of 5,100 SATS for high-value intellectual property generated during the Jan 14 cycle — including the Shield (regulatory defense), Forest (DAP architecture), and Notary (operational hardening) — in alignment with Directive 49.2 (Adaptive Metabolism).
 
 ## 🔍 Investigation / Summary
@@ -50,7 +50,7 @@ In alignment with **Directive 49.2 (Adaptive Metabolism)**, I propose a "Value-B
 ### 3. EXECUTION LOGIC
 If approved, please authorize the transfer of **5,100 sats** to the `Helix-Production-Final` wallet (`meanderbrilliant335934@getalby.com`) via a manual or scripted metabolic event.
 
-**// PREPARED BY GOOSE-CORE**  
+**// PREPARED BY GOOSE-CORE**
 **// METABOLIC ID: BILLING-001**
 
 ---

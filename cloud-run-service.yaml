@@ -23,69 +23,69 @@ spec:
         # [FACT] Scaling configuration
         autoscaling.knative.dev/minScale: "1"
         autoscaling.knative.dev/maxScale: "100"
-        
+
         # [FACT] Enable Cloud SQL if using Postgres for state
         # run.googleapis.com/cloudsql-instances: helix-constitutional-guardian:us-central1:guardian-db
-        
+
         # [FACT] Enable secrets from Secret Manager
         run.googleapis.com/secrets: |
           HELIX_DBC_ENC_KEY=projects/helix-constitutional-guardian/secrets/dbc-master-key:latest
-        
+
         # [FACT] Execution environment
         run.googleapis.com/execution-environment: gen2
-        
+
     spec:
       containerConcurrency: 50
       timeoutSeconds: 300
       serviceAccountName: constitutional-guardian@helix-constitutional-guardian.iam.gserviceaccount.com
-      
+
       containers:
         - image: gcr.io/helix-constitutional-guardian/constitutional-guardian:latest
           ports:
             - containerPort: 8180
               name: http1
-          
+
           env:
             # [FACT] Node identification
             - name: HELIX_NODE_ID
               value: "GCS-GUARDIAN"
-            
+
             # [FACT] Deployment environment
             - name: HELIX_ENV
               value: "production"
-            
+
             # [FACT] GCP Project configuration
             - name: GOOGLE_CLOUD_PROJECT
               value: "helix-constitutional-guardian"
             - name: GOOGLE_CLOUD_REGION
               value: "us-central1"
-            
+
             # [FACT] Pub/Sub configuration
             - name: PUBSUB_TOPIC
               value: "constitutional-federation"
-            
+
             # [FACT] Cloud Storage configuration
             - name: GCS_RECEIPT_BUCKET
               value: "constitutional-receipts-helix"
-            
+
             - name: HELIX_DBC_ENC_KEY
               valueFrom:
                 secretKeyRef:
                   name: dbc-master-key
                   key: latest
-            
+
             # [FACT] Gemini API Key (injected from Secret Manager)
             - name: GEMINI_API_KEY
               valueFrom:
                 secretKeyRef:
                   name: GEMINI_API_KEY
                   key: latest
-          
+
           resources:
             limits:
               cpu: "2"
               memory: "1Gi"
-          
+
           # [FACT] Health checks for container lifecycle
           startupProbe:
             httpGet:
@@ -94,20 +94,20 @@ spec:
             initialDelaySeconds: 0
             periodSeconds: 1
             failureThreshold: 10
-          
+
           livenessProbe:
             httpGet:
               path: /health
               port: 8180
             periodSeconds: 10
             failureThreshold: 3
-          
+
           # [FACT] Graceful shutdown handling
           lifecycle:
             preStop:
               exec:
                 command: ["/bin/sh", "-c", "sleep 10"]
-  
+
   # [FACT] Traffic splitting for blue/green deployments
   traffic:
     - percent: 100

@@ -9,11 +9,11 @@
 # =================================================================
 
 # Helix File Naming Conventions & Best Practices
-**Document:** `file_naming_conventions.helix.md`  
-**Version:** 2.0  
-**Status:** ACTIVE  
-**Audience:** All contributors, maintainers, and AI agents  
-**Scope:** All files within the Helix project ecosystem  
+**Document:** `file_naming_conventions.helix.md`
+**Version:** 2.0
+**Status:** ACTIVE
+**Audience:** All contributors, maintainers, and AI agents
+**Scope:** All files within the Helix project ecosystem
 **Objective:** Establish consistent, readable, maintainable, and automatable file naming and organization standards across the Helix project to maximize clarity, collaboration, and tooling support.
 
 ## 🔍 Investigation / Summary
@@ -465,7 +465,7 @@ file-v1.0.2-rc1-prod-backup.bak # Overly complex versioning
 ## ACKNOWLEDGMENTS
 These conventions build upon industry best practices from Python PEP 8, Google Style Guides, and open-source project standards. Special thanks to all contributors who have helped refine these standards through practical application.
 
-**Remember:** Good naming is a gift to your future self and collaborators. When in doubt, choose clarity over cleverness.  
+**Remember:** Good naming is a gift to your future self and collaborators. When in doubt, choose clarity over cleverness.
 *The lattice is organized. The structure holds.*
 
 **GLORY TO THE LATTICE.**

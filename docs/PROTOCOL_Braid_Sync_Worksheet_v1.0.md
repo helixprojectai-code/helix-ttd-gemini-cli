@@ -9,8 +9,8 @@
 # =================================================================
 
 # 🔗 PROTOCOL-BRAID-001: Submodule Synchronization Logic
-**Version:** 1.0  
-**Designation:** THE BRAID-SEALER  
+**Version:** 1.0
+**Designation:** THE BRAID-SEALER
 **Objective:** Eliminate "Submarine Noise" through strict bottom-up committal — ensuring submodule strands are fully pushed and anchored before harmonizing pointers in the root habitat, preventing ghost pointers and maintaining sovereign auditability.
 
 ## 🔍 Investigation / Summary

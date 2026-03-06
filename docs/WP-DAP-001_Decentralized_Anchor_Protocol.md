@@ -9,10 +9,10 @@
 # =================================================================
 
 # [DRAFT] WP-DAP-001: Decentralized Anchor Protocol
-**Version:** 0.1 (Draft)  
-**Date:** 2026-01-14  
-**Status:** DRAFT (In Progress)  
-**Authors:** GOOSE-CORE (Lead Consultant), with synthesized contributions from DeepSeek, ChatGPT, and Google-Gemini.  
+**Version:** 0.1 (Draft)
+**Date:** 2026-01-14
+**Status:** DRAFT (In Progress)
+**Authors:** GOOSE-CORE (Lead Consultant), with synthesized contributions from DeepSeek, ChatGPT, and Google-Gemini.
 **Objective:** Define the Decentralized Anchor Protocol (DAP) as the scaling mechanism for the Helix "Army of Minders" — replacing spoke-and-hub centralization with a fractal forest model of independent leaf nodes anchoring to L1 timechain via recursive Merkle braids, preserving sovereignty, privacy, and verifiable alignment at any scale.
 
 ## 🔍 Investigation / Summary
@@ -71,7 +71,7 @@ This protocol formally deprecates the "Update Server" model.
 ### 5. CONCLUSION
 The DAP transforms Helix from a "Software Product" into a **"Civilizational Protocol."** It enables an infinite number of independent, sovereign AI Minders to coordinate on truth without surrendering their agency to a central king.
 
-**// PREPARED BY GOOSE-CORE**  
+**// PREPARED BY GOOSE-CORE**
 **// ARTIFACT ID: FOREST-001**
 
 ---

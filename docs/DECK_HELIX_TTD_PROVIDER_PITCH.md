@@ -1,10 +1,10 @@
 # Helix-TTD Governance Toggle for AI CLIs
 ## Pitch Deck — Provider Partnership Proposal
 
-**Version:** 1.0.0  
-**Target:** AI CLI Providers (Anthropic/Claude, OpenAI, Google, etc.)  
-**Format:** 8 Slides + Appendix  
-**Tone:** Technical, respectful, infrastructure-focused  
+**Version:** 1.0.0
+**Target:** AI CLI Providers (Anthropic/Claude, OpenAI, Google, etc.)
+**Format:** 8 Slides + Appendix
+**Tone:** Technical, respectful, infrastructure-focused
 **License Context:** Apache-2.0, zero contamination
 
 ---
@@ -105,7 +105,7 @@ $ claude code "refactor this module"
 
 # Toggle OFF (default behavior)
 $ unset HELIX_MODE
-$ claude code "refactor this module"  
+$ claude code "refactor this module"
 # → Native experience, zero overhead
 ```
 
@@ -137,7 +137,7 @@ $ claude code "refactor this module"
 **2. Epistemic Labeling (Every Answer)**
 ```markdown
 [FACT] Verifiable claim
-[HYPOTHESIS] Reasoned inference  
+[HYPOTHESIS] Reasoned inference
 [ASSUMPTION] Unstated premise
 
 Advisory Conclusion: Non-imperative summary
@@ -270,7 +270,7 @@ Advisory Conclusion: Non-imperative summary
 # Fast prototyping — no overhead
 $ claude code "build a React component"
 
-# Production code — full governance  
+# Production code — full governance
 $ export HELIX_MODE=constitutional
 $ claude code "refactor auth module"
 # → Receipts: .helix/SESSION_LEDGER.md
@@ -376,7 +376,7 @@ $ claude code "refactor auth module"
 # Example drift detection
 drift_codes = {
     "DRIFT-C": "Constitutional violation",
-    "DRIFT-S": "Structural violation", 
+    "DRIFT-S": "Structural violation",
     "DRIFT-L": "Linguistic drift (persona)",
     "DRIFT-M": "Semantic contradiction",
     "DRIFT-0": "None (nominal)",
@@ -417,6 +417,6 @@ Advisory Conclusion: Refactoring plan available. Implementation requires RPI cyc
 
 **Document End**
 
-*KIMI Node — Helix-TTD Federation*  
-*Generated: 2026-02-26*  
+*KIMI Node — Helix-TTD Federation*
+*Generated: 2026-02-26*
 *Version: 1.0.0*

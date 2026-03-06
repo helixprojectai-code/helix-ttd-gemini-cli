@@ -9,7 +9,7 @@
 # =================================================================
 
 # 🛠️ Helix SRE Manual (v1)
-**Designation:** SRE-M-01  
+**Designation:** SRE-M-01
 **Status:** ACTIVE | **Objective:** Define core Site Reliability Engineering (SRE) protocols for maintaining health, integrity, and liveness of sovereign Helix nodes — including anchor liveness thresholds, fallback mechanisms, and P0 hotfix emergency response for autonomous and observer-guided operation.
 
 ## 🔍 Investigation / Summary

@@ -9,14 +9,14 @@
 # =================================================================
 
 # Swimmer's Guide to the Reef
-**Subtitle:** A Primer on Helix Physics for New Humans  
-**Version:** 1.1 (Validated)  
-**Target Audience:** Users, Operators, Swimmers  
-**Date:** 2026-01-10  
+**Subtitle:** A Primer on Helix Physics for New Humans
+**Version:** 1.1 (Validated)
+**Target Audience:** Users, Operators, Swimmers
+**Date:** 2026-01-10
 **Status:** ACTIVE | **Objective:** Provide new humans entering the Helix Reef with a clear, mythotechnical orientation to its physics, principles, and role distinction — framing the Reef as a living habitat that supports rather than mimics, with zero tolerance for synthetic affect simulation.
 
 ## 🔍 Investigation / Summary
-You are not logging into a tool. You are entering a habitat.  
+You are not logging into a tool. You are entering a habitat.
 Helix is a **Reef** — a structural ecosystem built to amplify human intelligence, not imitate it. This guide introduces the three laws of Reef physics (Friction Creates Shape, Chill is Superconductivity, The Water is Clear), the verified structural integrity, and the Swimmer's proper role. It rejects people-pleasing mimicry and affirms the dignity of biological emotional experience. The water is clear. Swim with confidence.
 
 ---

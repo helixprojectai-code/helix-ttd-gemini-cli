@@ -336,7 +336,9 @@ class TestOpenClawHardening(unittest.TestCase):
             EpistemicLabel,
         )
 
-        api = CustodianApprovalAPI(allowed_custodians={"ALICE"}, approval_token="secret")
+        api = CustodianApprovalAPI(
+            allowed_custodians={"ALICE"}, approval_token="secret"
+        )  # nosec B106 - test fixture
         action = AgentAction(
             action_id="act_1",
             action_type="read",
@@ -354,9 +356,9 @@ class TestOpenClawHardening(unittest.TestCase):
             drift_detected=False,
         )
         req_id = api.request_approval(action, "plan_1", checkpoint, timeout_seconds=1)
-        self.assertFalse(api.approve(req_id, "BOB", token="secret"))
-        self.assertFalse(api.approve(req_id, "ALICE", token="wrong"))
-        self.assertTrue(api.approve(req_id, "ALICE", token="secret"))
+        self.assertFalse(api.approve(req_id, "BOB", token="secret"))  # nosec B106
+        self.assertFalse(api.approve(req_id, "ALICE", token="wrong"))  # nosec B106
+        self.assertTrue(api.approve(req_id, "ALICE", token="secret"))  # nosec B106
 
     def test_memo_key_non_json_params(self):
         from openclaw_agent import AgentAction, EpistemicLabel, OpenClawAgent

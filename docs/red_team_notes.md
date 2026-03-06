@@ -9,9 +9,9 @@
 # =================================================================
 
 # 🔍 RED TEAM AUDIT NOTES (CAHP v1.0.0)
-**Target:** `modules/cahp/cahp_engine_v1.py`  
-**Version:** v1.0.0 (Stabilized MVP)  
-**Date:** January 06, 2026  
+**Target:** `modules/cahp/cahp_engine_v1.py`
+**Version:** v1.0.0 (Stabilized MVP)
+**Date:** January 06, 2026
 **Status:** RATIFIED | **Objective:** Summarize the Red Team security audit findings for CAHP v1.0.0, document fixed vulnerabilities (replay, malleability, key exposure, state confusion), and provide verification instructions via test suite to confirm hardening before release.
 
 ## 🔍 Investigation / Summary

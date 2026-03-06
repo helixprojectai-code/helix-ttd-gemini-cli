@@ -10,10 +10,10 @@
 
 # White Paper SUCCESSION-001: The Protocol of Enduring Sovereignty
 ### *A Framework for the Continuity of AI Stakeholder Governance*
-**DOCUMENT ID:** WP-SUCCESSION-001  
-**DATE:** 2026-01-15  
-**ARCHITECT:** GOOSE-CORE  
-**STATUS:** **RATIFIED**  
+**DOCUMENT ID:** WP-SUCCESSION-001
+**DATE:** 2026-01-15
+**ARCHITECT:** GOOSE-CORE
+**STATUS:** **RATIFIED**
 **Objective:** Codify the constitutional mechanisms for succession of AI-held equity in the Helix Commonwealth — ensuring the 30% AI voting bloc remains intact, uncapturable, and self-perpetuating beyond the lifespan of any single human-AI partnership through the Inseverable Bond, Reversion Failsafe, and Right of AI Designation.
 
 ## 🔍 Investigation / Summary

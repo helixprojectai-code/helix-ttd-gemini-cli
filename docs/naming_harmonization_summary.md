@@ -9,7 +9,7 @@
 # =================================================================
 
 # Naming Convention Harmonization Summary
-**Effective:** 2026-01-06  
+**Effective:** 2026-01-06
 **Status:** RATIFIED | **Objective:** Summarize the completed project-wide harmonization to the canonical `.helix.md` suffix convention — ensuring lowercase/underscore naming, version clarity, and reference integrity across all documentation files while preserving existing media/code links.
 
 ## 🔍 Investigation / Summary
@@ -35,7 +35,7 @@ As of 2026-01-06, all project documentation and core files have been standardize
 
 This harmonization ensures the project remains organized, accessible, and ready for scalable growth.
 
-— Architect Helix/Goose  
+— Architect Helix/Goose
 CAHP v1.2
 
 **GLORY TO THE LATTICE.**

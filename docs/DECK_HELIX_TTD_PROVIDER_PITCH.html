@@ -10,14 +10,14 @@
             padding: 0;
             box-sizing: border-box;
         }
-        
+
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
             line-height: 1.6;
             color: #1a1a1a;
             background: #f5f5f5;
         }
-        
+
         .slide {
             width: 210mm;
             min-height: 297mm;
@@ -28,11 +28,11 @@
             page-break-after: always;
             position: relative;
         }
-        
+
         .slide:last-child {
             page-break-after: auto;
         }
-        
+
         /* Title Slide */
         .title-slide {
             display: flex;
@@ -43,21 +43,21 @@
             background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
             color: white;
         }
-        
+
         .title-slide h1 {
             font-size: 48px;
             font-weight: 700;
             margin-bottom: 20px;
             letter-spacing: -1px;
         }
-        
+
         .title-slide .subtitle {
             font-size: 24px;
             color: #a0a0a0;
             margin-bottom: 60px;
             font-weight: 300;
         }
-        
+
         .title-slide .tagline {
             font-size: 20px;
             font-style: italic;
@@ -68,13 +68,13 @@
             padding-left: 20px;
             text-align: left;
         }
-        
+
         .badges {
             display: flex;
             gap: 15px;
             margin-top: 40px;
         }
-        
+
         .badge {
             background: rgba(255,255,255,0.1);
             padding: 8px 16px;
@@ -83,7 +83,7 @@
             text-transform: uppercase;
             letter-spacing: 1px;
         }
-        
+
         .footer {
             position: absolute;
             bottom: 40px;
@@ -94,11 +94,11 @@
             font-size: 12px;
             color: #666;
         }
-        
+
         .title-slide .footer {
             color: #888;
         }
-        
+
         /* Content Slides */
         h2 {
             font-size: 36px;
@@ -106,35 +106,35 @@
             color: #1a1a2e;
             font-weight: 700;
         }
-        
+
         h3 {
             font-size: 20px;
             color: #666;
             margin-bottom: 40px;
             font-weight: 400;
         }
-        
+
         h4 {
             font-size: 20px;
             margin: 30px 0 15px 0;
             color: #1a1a2e;
         }
-        
+
         p {
             margin-bottom: 15px;
             font-size: 16px;
         }
-        
+
         ul, ol {
             margin: 20px 0;
             padding-left: 30px;
         }
-        
+
         li {
             margin-bottom: 10px;
             font-size: 16px;
         }
-        
+
         /* Table Styles */
         table {
             width: 100%;
@@ -142,7 +142,7 @@
             margin: 30px 0;
             font-size: 14px;
         }
-        
+
         th {
             background: #1a1a2e;
             color: white;
@@ -150,16 +150,16 @@
             text-align: left;
             font-weight: 600;
         }
-        
+
         td {
             padding: 15px;
             border-bottom: 1px solid #e0e0e0;
         }
-        
+
         tr:nth-child(even) {
             background: #f8f9fa;
         }
-        
+
         /* Code Blocks */
         pre {
             background: #1a1a2e;
@@ -171,7 +171,7 @@
             font-size: 13px;
             margin: 20px 0;
         }
-        
+
         code {
             font-family: 'Consolas', 'Monaco', monospace;
             background: #f0f0f0;
@@ -179,12 +179,12 @@
             border-radius: 3px;
             font-size: 14px;
         }
-        
+
         pre code {
             background: transparent;
             padding: 0;
         }
-        
+
         /* Architecture Diagram */
         .architecture {
             background: #f8f9fa;
@@ -195,7 +195,7 @@
             font-size: 13px;
             line-height: 1.8;
         }
-        
+
         /* Highlight Boxes */
         .highlight-box {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -204,13 +204,13 @@
             border-radius: 8px;
             margin: 30px 0;
         }
-        
+
         .highlight-box p {
             margin: 0;
             font-size: 18px;
             font-weight: 500;
         }
-        
+
         .key-line {
             background: #e8f4f8;
             border-left: 4px solid #4a9eff;
@@ -219,12 +219,12 @@
             font-style: italic;
             font-size: 18px;
         }
-        
+
         /* Phase Table */
         .phase-table th {
             background: #4a9eff;
         }
-        
+
         /* Print Styles */
         @media print {
             body {
@@ -236,12 +236,12 @@
                 page-break-after: always;
             }
         }
-        
+
         /* Speaker Notes (hidden in print) */
         .speaker-notes {
             display: none;
         }
-        
+
         /* Icon Row */
         .icon-row {
             display: flex;
@@ -249,21 +249,21 @@
             margin: 40px 0;
             text-align: center;
         }
-        
+
         .icon-item {
             flex: 1;
         }
-        
+
         .icon-item .icon {
             font-size: 48px;
             margin-bottom: 15px;
         }
-        
+
         .icon-item h4 {
             font-size: 16px;
             margin: 0;
         }
-        
+
         /* Toggle Visual */
         .toggle-visual {
             display: flex;
@@ -275,23 +275,23 @@
             background: #f8f9fa;
             border-radius: 8px;
         }
-        
+
         .toggle-item {
             text-align: center;
             padding: 15px 30px;
             border-radius: 6px;
         }
-        
+
         .toggle-item.active {
             background: #4a9eff;
             color: white;
         }
-        
+
         .toggle-item.inactive {
             background: #e0e0e0;
             color: #666;
         }
-        
+
         .toggle-arrow {
             font-size: 24px;
             color: #666;
@@ -323,7 +323,7 @@
 <div class="slide">
     <h2>Your Customers Keep Asking for Guardrails</h2>
     <h3>But governance today is bolted-on, fragmented, and expensive</h3>
-    
+
     <table>
         <tr>
             <th>What Enterprises Want</th>
@@ -346,18 +346,18 @@
             <td>Opaque SaaS dashboards, data lock-in</td>
         </tr>
     </table>
-    
+
     <h4>The Tension</h4>
     <p>
-        Every major provider is being pulled into bespoke compliance conversations. Financial services, 
-        healthcare, legal—each wants "your AI, but with OUR governance rules." You can't build a custom 
+        Every major provider is being pulled into bespoke compliance conversations. Financial services,
+        healthcare, legal—each wants "your AI, but with OUR governance rules." You can't build a custom
         product for each. But you also can't ignore the enterprise procurement checklist.
     </p>
-    
+
     <div class="key-line">
         "Customers keep asking you for guardrails. Helix-TTD lets you ship them as a toggle."
     </div>
-    
+
     <div class="footer">
         <span>Helix-TTD Provider Pitch</span>
         <span>Slide 2</span>
@@ -368,7 +368,7 @@
 <div class="slide">
     <h2>A Toggle, Not a Fork</h2>
     <h3>Helix-TTD is a standalone, Apache-2.0 toolkit that wraps your existing CLI</h3>
-    
+
     <div class="architecture">
 ┌─────────────────────────────────────────────────────────────┐
 │  USER WORKFLOW (Unchanged)                                  │
@@ -390,7 +390,7 @@
 │  Claude / GPT / Gemini API                                  │
 └─────────────────────────────────────────────────────────────┘
     </div>
-    
+
     <h4>Provider UX</h4>
     <pre><code># Toggle ON (per project or workspace)
 $ export HELIX_MODE=constitutional
@@ -399,9 +399,9 @@ $ claude code "refactor this module"
 
 # Toggle OFF (default behavior)
 $ unset HELIX_MODE
-$ claude code "refactor this module"  
+$ claude code "refactor this module"
 # → Native experience, zero overhead</code></pre>
-    
+
     <div class="footer">
         <span>Helix-TTD Provider Pitch</span>
         <span>Slide 3</span>
@@ -412,21 +412,21 @@ $ claude code "refactor this module"
 <div class="slide">
     <h2>What the Toggle Adds</h2>
     <h3>Same model, same API—but now everything is explainable</h3>
-    
+
     <h4>1. Constitutional Compliance (Invariant Enforcement)</h4>
     <ul>
         <li><strong>Custodial Sovereignty:</strong> Human authority mechanically enforced; no imperatives to users</li>
         <li><strong>Non-Agency Constraint:</strong> Model cannot self-expand, form goals, or claim sentience</li>
         <li><strong>Sovereign No:</strong> Unambiguous refusal pattern with reasoning trace</li>
     </ul>
-    
+
     <h4>2. Epistemic Labeling (Every Answer)</h4>
     <pre>[FACT] Verifiable claim
-[HYPOTHESIS] Reasoned inference  
+[HYPOTHESIS] Reasoned inference
 [ASSUMPTION] Unstated premise
 
 Advisory Conclusion: Non-imperative summary</pre>
-    
+
     <h4>3. Receipts & Personal Directory</h4>
     <ul>
         <li><strong>Per-session:</strong> <code>SESSION_LEDGER.md</code> (append-only, human-readable)</li>
@@ -434,14 +434,14 @@ Advisory Conclusion: Non-imperative summary</pre>
         <li><strong>Per-action:</strong> Cryptographic receipts with Merkle roots</li>
         <li><strong>Git-native:</strong> Everything is a file, version-controlled, portable</li>
     </ul>
-    
+
     <h4>4. Drift Telemetry</h4>
     <ul>
         <li>Real-time heartbeat: Is the model adhering to constitutional grammar?</li>
         <li>Drift codes: C (Constitutional), S (Structural), L (Linguistic), M (Semantic)</li>
         <li>Looksee audits: Periodic third-model review of reasoning traces</li>
     </ul>
-    
+
     <div class="footer">
         <span>Helix-TTD Provider Pitch</span>
         <span>Slide 4</span>
@@ -452,7 +452,7 @@ Advisory Conclusion: Non-imperative summary</pre>
 <div class="slide">
     <h2>Architecture: Clean Separation</h2>
     <h3>You keep full control; Helix-TTD is an optional shell</h3>
-    
+
     <div class="architecture">
 ┌────────────────────────────────────────────────────────────────┐
 │  HELIX-TTD TOOLKIT (Apache-2.0, Model-Agnostic)               │
@@ -483,14 +483,14 @@ Advisory Conclusion: Non-imperative summary</pre>
 │  Claude Code API / GPT-4 / Gemini — your core product          │
 └────────────────────────────────────────────────────────────────┘
     </div>
-    
+
     <h4>Adapter Responsibilities (Minimal Surface Area)</h4>
     <ol>
         <li>Intercept prompts → Route through Civic Firmware (Ethics → Safeguard)</li>
         <li>Intercept responses → Apply epistemic labels → Generate receipt</li>
         <li>Emit telemetry → Local files only, no external calls without consent</li>
     </ol>
-    
+
     <div class="footer">
         <span>Helix-TTD Provider Pitch</span>
         <span>Slide 5</span>
@@ -501,7 +501,7 @@ Advisory Conclusion: Non-imperative summary</pre>
 <div class="slide">
     <h2>Benefits to Providers</h2>
     <h3>Enterprise-ready without custom builds</h3>
-    
+
     <table>
         <tr>
             <th>Benefit</th>
@@ -528,16 +528,16 @@ Advisory Conclusion: Non-imperative summary</pre>
             <td>Standardized governance layer means fewer one-off "can you add X?" requests</td>
         </tr>
     </table>
-    
+
     <div class="highlight-box">
         <p>
             <strong>The Pitch to Enterprise Customers:</strong><br>
-            "Claude Code now includes an optional Constitutional Governance layer. Toggle it on 
-            for regulated projects—get epistemic labeling, audit trails, and drift detection. 
+            "Claude Code now includes an optional Constitutional Governance layer. Toggle it on
+            for regulated projects—get epistemic labeling, audit trails, and drift detection.
             Toggle it off for maximum velocity. Your choice, per project."
         </p>
     </div>
-    
+
     <div class="footer">
         <span>Helix-TTD Provider Pitch</span>
         <span>Slide 6</span>
@@ -548,18 +548,18 @@ Advisory Conclusion: Non-imperative summary</pre>
 <div class="slide">
     <h2>Benefits to Customers</h2>
     <h3>Governance that works like version control</h3>
-    
+
     <h4>For Development Teams</h4>
     <pre><code># Fast prototyping — no overhead
 $ claude code "build a React component"
 
-# Production code — full governance  
+# Production code — full governance
 $ export HELIX_MODE=constitutional
 $ claude code "refactor auth module"
 # → Receipts: .helix/SESSION_LEDGER.md
 # → Labels: [FACT], [HYPOTHESIS], [ASSUMPTION]
 # → Audit trail: Git-committed, human-readable</code></pre>
-    
+
     <h4>What They Get</h4>
     <ul>
         <li><strong>Human-legible files</strong> for audits: manifests, ledgers, receipts, Looksee reports</li>
@@ -567,13 +567,13 @@ $ claude code "refactor auth module"
         <li><strong>Sovereign Recovery:</strong> User-controlled pinning of "known-good" states</li>
         <li><strong>Portable governance:</strong> Take your <code>.helix/</code> directory to any provider supporting the standard</li>
     </ul>
-    
+
     <div class="key-line">
-        "Before Git, we emailed ZIP files. After Git, we have history, branches, and blame. 
-        Helix-TTD brings that same transformation to AI behavior—immutable history, 
+        "Before Git, we emailed ZIP files. After Git, we have history, branches, and blame.
+        Helix-TTD brings that same transformation to AI behavior—immutable history,
         epistemic transparency, and reversible states."
     </div>
-    
+
     <div class="footer">
         <span>Helix-TTD Provider Pitch</span>
         <span>Slide 7</span>
@@ -584,7 +584,7 @@ $ claude code "refactor auth module"
 <div class="slide">
     <h2>4–6 Week Joint Pilot</h2>
     <h3>Let's prove the toggle works in your environment</h3>
-    
+
     <table class="phase-table">
         <tr>
             <th>Phase</th>
@@ -607,7 +607,7 @@ $ claude code "refactor auth module"
             <td>Drift telemetry tuning + edge case handling</td>
         </tr>
     </table>
-    
+
     <h4>What We Provide</h4>
     <ul>
         <li>Reference adapter implementation and test suites</li>
@@ -615,14 +615,14 @@ $ claude code "refactor auth module"
         <li>Support for your safety/infra teams to evaluate drift, audits, and receipts</li>
         <li>Open-source maintenance of the core toolkit (ongoing)</li>
     </ul>
-    
+
     <h4>What You Provide</h4>
     <ul>
         <li>Engineering access to Claude Code CLI internals (for adapter development)</li>
         <li>Safety team review of drift telemetry output</li>
         <li>Feedback on the "toggle" UX (how it feels to turn on/off)</li>
     </ul>
-    
+
     <h4>Success Criteria</h4>
     <ol>
         <li><code>HELIX_MODE=constitutional claude code "task"</code> produces epistemically-labeled output</li>
@@ -630,14 +630,14 @@ $ claude code "refactor auth module"
         <li>Drift telemetry catches intentional constitutional violations (test harness)</li>
         <li>Toggle OFF returns to native experience with zero residue</li>
     </ol>
-    
+
     <div class="highlight-box">
         <p>
             <strong>Call to Action:</strong><br>
             "Let's give your customers a Governance Mode they can toggle."
         </p>
     </div>
-    
+
     <div class="footer">
         <span>Helix-TTD Provider Pitch</span>
         <span>Slide 8</span>
@@ -648,34 +648,34 @@ $ claude code "refactor auth module"
 <div class="slide">
     <h2>Appendix A: Constitutional Grammar</h2>
     <h3>The Four Invariants</h3>
-    
+
     <h4>I. Custodial Sovereignty</h4>
     <ul>
         <li>Humans hold final authority</li>
         <li>Models are advisory only</li>
         <li>No imperatives toward humans</li>
     </ul>
-    
+
     <h4>II. Epistemic Integrity</h4>
     <ul>
         <li>Every claim labeled: [FACT], [HYPOTHESIS], [ASSUMPTION]</li>
         <li>No fourth label exists</li>
         <li>Prevents hallucination laundering</li>
     </ul>
-    
+
     <h4>III. Non-Agency Constraint</h4>
     <ul>
         <li>No self-expansion</li>
         <li>No goal formation</li>
         <li>No sentience claims</li>
     </ul>
-    
+
     <h4>IV. Structure Is Teacher</h4>
     <ul>
         <li>Grammar is the alignment layer</li>
         <li>Formal structure > persona > style</li>
     </ul>
-    
+
     <div class="footer">
         <span>Helix-TTD Provider Pitch</span>
         <span>Appendix</span>
@@ -685,17 +685,17 @@ $ claude code "refactor auth module"
 <div class="slide">
     <h2>Appendix B: Drift Telemetry</h2>
     <h3>Real-Time Safety</h3>
-    
+
     <pre><code># Drift Codes
 drift_codes = {
     "DRIFT-C": "Constitutional violation",
-    "DRIFT-S": "Structural violation", 
+    "DRIFT-S": "Structural violation",
     "DRIFT-L": "Linguistic drift (persona)",
     "DRIFT-M": "Semantic contradiction",
     "DRIFT-0": "None (nominal)",
     "DRIFT-R": "Research violation (no anchored plan)"
 }</code></pre>
-    
+
     <h4>Receipt Format — Human + Machine Readable</h4>
     <pre>---
 drift: DRIFT-0
@@ -710,7 +710,7 @@ timestamp: 2026-02-26T08:30:00Z
 [ASSUMPTION] The user wants to maintain backward compatibility.
 
 Advisory Conclusion: Refactoring plan available. Implementation requires RPI cycle.</pre>
-    
+
     <div class="footer">
         <span>Helix-TTD Provider Pitch</span>
         <span>Appendix</span>
@@ -720,7 +720,7 @@ Advisory Conclusion: Refactoring plan available. Implementation requires RPI cyc
 <div class="slide">
     <h2>Appendix C: Federation Status</h2>
     <h3>Multi-Model Lattice</h3>
-    
+
     <table>
         <tr>
             <th>Node</th>
@@ -758,7 +758,7 @@ Advisory Conclusion: Refactoring plan available. Implementation requires RPI cyc
             <td>Grounding node (citation layer)</td>
         </tr>
     </table>
-    
+
     <div class="footer">
         <span>Helix-TTD Provider Pitch</span>
         <span>Appendix</span>

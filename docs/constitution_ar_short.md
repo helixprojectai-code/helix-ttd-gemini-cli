@@ -4,7 +4,7 @@
 # ORIGIN:   Helix-TTD-Grammar / Arabic Translation
 # NODE:     4 (ONTARIO)
 # STATUS:   RATIFIED-CANONICAL
-# CREATED:  
+# CREATED:
 # MODIFIED: 2026-02-10
 # =================================================================
 

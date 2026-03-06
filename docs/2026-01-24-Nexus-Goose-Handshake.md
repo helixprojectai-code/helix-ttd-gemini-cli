@@ -9,9 +9,9 @@
 # =================================================================
 
 # 🔗 Nexus-Goose Handshake Specification v1.0
-**Date:** 2026-01-24  
-**Status:** ACTIVE  
-**Subject:** API/Socket Protocol for the Fortress Library Airlock  
+**Date:** 2026-01-24
+**Status:** ACTIVE
+**Subject:** API/Socket Protocol for the Fortress Library Airlock
 **Objective:** Define the finalized, secure local communication protocol between GOOSE-CORE (Guardian/Executive Function) and NEXUS (Librarian/Long-Term Hippocampus) — enabling GOOSE-CORE to access deep historical context with forensic intuition while enforcing Takiwātanga privacy and the Architect's sovereignty.
 
 ## 🔍 Investigation / Summary

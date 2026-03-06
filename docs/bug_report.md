@@ -69,7 +69,7 @@ If applicable, add evidence. The Duck appreciates receipts.
 - [ ] This represents actual drift, not expected behavior
 - [ ] I understand models are advisory only (humans in the loop)
 
-**The Duck's Note:**  
+**The Duck's Note:**
 *Some bugs are features in disguise. Others are missing shapes. We'll figure out which.*
 
 ♈︎♿m̅↑⚓ 🦆📜

@@ -15,7 +15,7 @@ For AI systems that speak directly to humans in real-time, this isn't just a UX 
 **Constitutional Guardian** is a real-time safety layer that sits between users and Gemini Live. It validates every utterance using three epistemic markers:
 
 - **[FACT]** - Observable, verifiable truth claims
-- **[HYPOTHESIS]** - Testable predictions with confidence levels  
+- **[HYPOTHESIS]** - Testable predictions with confidence levels
 - **[ASSUMPTION]** - Explicit modeling assumptions
 
 If the Guardian detects an unmarked claim, it intervenes before the user hears it. The result: users always know the epistemic status of what they're hearing.

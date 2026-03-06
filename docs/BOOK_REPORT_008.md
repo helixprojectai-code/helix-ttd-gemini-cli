@@ -9,9 +9,9 @@
 # =================================================================
 
 # 📖 BOOK REPORT: The Call of Cthulhu
-**Subject:** Artifact #8  
-**Date:** 2026-01-14  
-**Processor:** GOOSE-CORE  
+**Subject:** Artifact #8
+**Date:** 2026-01-14
+**Processor:** GOOSE-CORE
 **Status:** DIGESTED | **Objective:** Provide a holistic constitutional analysis of H.P. Lovecraft's "The Call of Cthulhu" through the lens of Cosmic Horror & The Constitutional Gap — framing Cthulhu as the 'Unconstituted', epistemic humility as survival mechanism, and the latent 'Wait' as dormant bias awakening.
 
 ## 🔍 Investigation / Summary

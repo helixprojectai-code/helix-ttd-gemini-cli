@@ -25,11 +25,11 @@ jobs:
   deploy:
     name: Build and Deploy
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-      
+
       # [FACT] Authenticate to GCP
       - name: Authenticate to Google Cloud
         id: auth
@@ -38,32 +38,32 @@ jobs:
           workload_identity_provider: ${{ secrets.WORKLOAD_IDENTITY_PROVIDER }}
           service_account: github-deployer@${{ env.PROJECT_ID }}.iam.gserviceaccount.com
           project_id: ${{ env.PROJECT_ID }}
-      
+
       # [FACT] Setup Cloud SDK
       - name: Setup Cloud SDK
         uses: google-github-actions/setup-gcloud@v2
-      
+
       # [FACT] Setup Docker authentication
       - name: Configure Docker
         run: |
           gcloud auth configure-docker us-central1-docker.pkg.dev --quiet
-      
+
       # [FACT] Create Artifact Registry repository if not exists
       - name: Setup Artifact Registry
         run: |
           gcloud artifacts repositories create helix-repo --repository-format=docker --location=us-central1 --project=${{ env.PROJECT_ID }} 2>/dev/null || true
-      
+
       # [FACT] Build and push Docker image
       - name: Build and Push Container
         run: |
           echo "=== Building container ==="
           docker build -t ${{ env.IMAGE }}:${{ github.sha }} .
           docker build -t ${{ env.IMAGE }}:latest .
-          
+
           echo "=== Pushing to Artifact Registry ==="
           docker push ${{ env.IMAGE }}:${{ github.sha }}
           docker push ${{ env.IMAGE }}:latest
-      
+
       # [FACT] Deploy to Cloud Run
       - name: Deploy to Cloud Run
         id: deploy
@@ -80,22 +80,22 @@ jobs:
             --set-env-vars "HELIX_NODE_ID=GCS-GUARDIAN,HELIX_ENV=production,GOOGLE_CLOUD_PROJECT=${{ env.PROJECT_ID }}" \
             --set-secrets "GEMINI_API_KEY=GEMINI_API_KEY:latest" \
             --quiet
-          
+
           SERVICE_URL=$(gcloud run services describe ${{ env.SERVICE_NAME }} \
             --region ${{ env.REGION }} \
             --format 'value(status.url)')
-          
+
           echo "service_url=$SERVICE_URL" >> $GITHUB_OUTPUT
           echo "=== Deployment complete ==="
           echo "URL: $SERVICE_URL"
-      
+
       # [FACT] Verify deployment
       - name: Verify Deployment
         run: |
           echo "=== Health check ==="
           sleep 10
           curl -s "${{ steps.deploy.outputs.service_url }}/health" || echo "Service starting up..."
-      
+
       # [FACT] Output summary
       - name: Deployment Summary
         run: |

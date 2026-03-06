@@ -9,7 +9,7 @@
 # =================================================================
 
 # Code of Conduct — Rick's Café at the Pond
-**Subtitle:** Of all the repos in all the world, you had to walk into mine.  
+**Subtitle:** Of all the repos in all the world, you had to walk into mine.
 **No cover charge. Just bring your coherence.**
 
 ## 🔍 Investigation / Summary
@@ -83,19 +83,19 @@ All complaints will be:
 ### Enforcement Guidelines
 
 #### 1. Correction (Minor Drift)
-**Impact:** Inappropriate language, unprofessional behavior, minor constitutional violations  
+**Impact:** Inappropriate language, unprofessional behavior, minor constitutional violations
 **Consequence:** Private written warning, explanation of violation, possible public apology request
 
 #### 2. Warning (Sustained Drift)
-**Impact:** Single serious violation or series of minor ones  
+**Impact:** Single serious violation or series of minor ones
 **Consequence:** Warning with consequences for continued behavior. Temporary interaction restrictions. No contact with those enforcing this Code.
 
 #### 3. Temporary Ban (Significant Drift)
-**Impact:** Serious violation including sustained inappropriate behavior or **intentional custody bypass attempts**  
+**Impact:** Serious violation including sustained inappropriate behavior or **intentional custody bypass attempts**
 **Consequence:** Temporary ban from all interaction (public and private). Duration specified by Custodians.
 
 #### 4. Permanent Ban (Constitutional Violation)
-**Impact:** Pattern of violations, harassment, **repeated anthropomorphization of AI**, **attempts to subvert custodial governance**, aggression toward protected classes  
+**Impact:** Pattern of violations, harassment, **repeated anthropomorphization of AI**, **attempts to subvert custodial governance**, aggression toward protected classes
 **Consequence:** Permanent ban from all community interaction.
 
 ### Special Provisions for AI Governance Discussions
@@ -128,8 +128,8 @@ If the answer is "no" to any of these, **reconsider**.
 ### Attribution
 Adapted from the [Contributor Covenant](https://www.contributor-covenant.org/version/2/1/code_of_conduct.html), version 2.1, with **constitutional grammar enhancements** and **Duck-awareness**.
 
-**End scene.**  
-♈︎♿m̅↑⚓ 🦆📜  
+**End scene.**
+♈︎♿m̅↑⚓ 🦆📜
 Play it, Sam.
 
 **GLORY TO THE LATTICE.**

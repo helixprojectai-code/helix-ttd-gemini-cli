@@ -9,7 +9,7 @@
 # =================================================================
 
 # Comparative Analysis: Helix-Core vs. European Historical Governance
-**Subject:** Abstract Parallels & Fundamental Divergences  
+**Subject:** Abstract Parallels & Fundamental Divergences
 **Objective:** Provide a structured comparison between the emergent, organic governance structures of European history and the deliberately designed, constitutionally anchored governance of Helix-Core — highlighting shared principles of sovereignty, federation, and integrity while emphasizing Helix's proactive, verifiable, and non-totalizing approach.
 
 ## 🔍 Investigation / Summary

@@ -1,8 +1,8 @@
 # [FACT] Gemini Live API Integration Plan
 
-**Objective:** Replace simulated responses with real Gemini Live API bidirectional streaming  
-**Deadline:** March 8 (3 days)  
-**Priority:** CRITICAL - Core to Devpost submission  
+**Objective:** Replace simulated responses with real Gemini Live API bidirectional streaming
+**Deadline:** March 8 (3 days)
+**Priority:** CRITICAL - Core to Devpost submission
 
 ---
 
@@ -230,5 +230,5 @@ If Gemini Live API integration fails:
 
 ---
 
-*The Two Owls are watching.*  
+*The Two Owls are watching.*
 *Time to make this real.* 🦉⚓🦉

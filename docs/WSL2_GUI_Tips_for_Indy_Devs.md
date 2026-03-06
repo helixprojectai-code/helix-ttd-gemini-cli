@@ -4,7 +4,7 @@
 # ORIGIN:   HELIX-TTD / [DEV/DOCS]
 # NODE:     4 (ONTARIO)
 # STATUS:   GUIDE-DRAFT
-# CREATED:  
+# CREATED:
 # MODIFIED: 2026-02-10
 # =================================================================
 

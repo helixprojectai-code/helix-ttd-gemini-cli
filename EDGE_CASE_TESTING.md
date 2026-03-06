@@ -1,8 +1,8 @@
 # [FACT] Edge Case Testing Protocol
 
-**Date:** 2026-03-05  
-**System:** Constitutional Guardian v1.3.2  
-**Tester:** KIMI  
+**Date:** 2026-03-05
+**System:** Constitutional Guardian v1.3.2
+**Tester:** KIMI
 
 ---
 
@@ -118,5 +118,5 @@ From code review:
 
 ---
 
-*Test protocol initiated. Awaiting manual verification.*  
+*Test protocol initiated. Awaiting manual verification.*
 *The Two Owls are watching.* |O|

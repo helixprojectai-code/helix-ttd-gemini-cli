@@ -51,11 +51,11 @@ Mark's fork has evolved the pocket skeleton into a full-fledged web application,
 ### 2. File: README.md
 
 #### 2.1 Purpose Comparison
-**Our Version:** No `README.md` file exists. The project's purpose must be inferred from its structure and code.  
+**Our Version:** No `README.md` file exists. The project's purpose must be inferred from its structure and code.
 **Mark's Version:** Provides a comprehensive narrative and architectural intent. It explicitly states the project is a "minimal, non-executing governance structure" designed to "prove shape" and demonstrate how governance can exist prior to execution.
 
 #### 2.2 Key Differences
-**Structural:** The most significant difference is the existence of the file itself.  
+**Structural:** The most significant difference is the existence of the file itself.
 **Functional:** Mark's `README.md` serves as the primary entry point for understanding the repository's philosophy and limitations. It clearly defines what the system is and, more importantly, what it is not (e.g., no reasoning, no execution, no authority).
 
 #### 2.3 Novel Logic/Processes (Mark's Fork)
@@ -73,11 +73,11 @@ Adopting a similar "intent-driven" `README.md` would strongly support the Fortre
 ### 3. File: NOTICE
 
 #### 3.1 Purpose Comparison
-**Our Version:** No `NOTICE` file exists.  
+**Our Version:** No `NOTICE` file exists.
 **Mark's Version:** Provides clear attribution and architectural lineage, as required by the Apache 2.0 License. It defines the roles of key contributors (Stephen Hope, Mark Rigden, Jamal) and clarifies that "Spine by Design" is a design grammar, not a product.
 
 #### 3.2 Key Differences
-**Structural:** The file exists only in Mark's fork.  
+**Structural:** The file exists only in Mark's fork.
 **Functional:** Mark's `NOTICE` file fulfills a legal and philosophical function. It ensures proper attribution is maintained in forks and derivatives, and it reinforces the non-executing, purely architectural nature of the project.
 
 #### 3.3 Novel Logic/Processes (Mark's Fork)
@@ -95,11 +95,11 @@ This reinforces the "Fortress of Logic" concept by ensuring that all components 
 ### 4. File: LICENSE
 
 #### 4.1 Purpose Comparison
-**Our Version:** Contains the standard Apache License 2.0, correctly establishing the legal framework under which the software is provided.  
+**Our Version:** Contains the standard Apache License 2.0, correctly establishing the legal framework under which the software is provided.
 **Mark's Version:** No `LICENSE` file exists.
 
 #### 4.2 Key Differences
-**Structural:** The file is absent in Mark's fork.  
+**Structural:** The file is absent in Mark's fork.
 **Functional:** The absence of a `LICENSE` file in Mark's fork creates legal ambiguity. While his `NOTICE` file *refers* to the Apache License, the license text itself is not included. This is a critical omission for any open-source project, especially one intended for educational or SaaS use.
 
 #### 4.4 Tags
@@ -114,11 +114,11 @@ N/A - This is a missing file in the fork, not a pattern to adopt. Our version is
 ### 5. File: policy/BOUNDARY.md & policy/README.md
 
 #### 5.1 Purpose Comparison
-**Our Version:** No `policy/` directory exists.  
+**Our Version:** No `policy/` directory exists.
 **Mark's Version:** This directory serves as a structural and philosophical anchor for the concept of governance. The `BOUNDARY.md` file explicitly states that the skeleton *demonstrates compatibility with law* but *does not contain law*. The `README.md` further clarifies that the directory is a non-executing placeholder to define the *location* of policy, not its implementation.
 
 #### 5.2 Key Differences
-**Structural:** The entire `policy/` directory is an addition in Mark's fork.  
+**Structural:** The entire `policy/` directory is an addition in Mark's fork.
 **Functional:** These files serve as a powerful "negative space" definition. They don't define what the system *does*, but rather what it explicitly *does not do*. This act of architecturally defining a boundary is a core governance function.
 
 #### 5.3 Novel Logic/Processes (Mark's Fork)
@@ -142,7 +142,7 @@ This directly maps to the Fortress of Logic concept. The idea of creating declar
 **Mark's Version (`CONTRACT.md`):** A human-readable, philosophical "contract of non-action." It's a governance document that explicitly states the repository contains no executable authority and that all behavior is inert by default. It defines what the system *will not* do.
 
 #### 6.2 Key Differences
-**Structural:** The file types and content are completely different. One is a `.yaml` for machines, the other is a `.md` for humans.  
+**Structural:** The file types and content are completely different. One is a `.yaml` for machines, the other is a `.md` for humans.
 **Functional:** The purpose is diametrically opposed. Our file provides the settings *for* execution, while Mark's file is a binding declaration *against* execution. This is the most significant philosophical divergence seen so far. Mark has replaced a technical configuration with a constitutional one.
 
 #### 6.3 Novel Logic/Processes (Mark's Fork)
@@ -165,7 +165,7 @@ This is a cornerstone concept for the Fortress of Logic. The idea of having expl
 **Mark's Version (`GOVERNANCE.md`):** This file serves as the repository's top-level constitutional document. It explicitly decouples the legal permission to *use the code* (granted by the `LICENSE`) from the *authority to govern* (which it states is explicitly **not** granted). Its purpose is to prevent the misinterpretation of the repository as an active, authoritative system.
 
 #### 7.2 Key Differences
-**Structural:** We have an executable application structure; Mark has a declarative governance document.  
+**Structural:** We have an executable application structure; Mark has a declarative governance document.
 **Functional:** The difference is fundamental. Our `main.py` is designed to run and respond. Mark's `GOVERNANCE.md` is designed to be read and understood as a set of binding, non-negotiable principles. He has again replaced code with philosophy.
 
 #### 7.3 Novel Logic/Processes (Mark's Fork)

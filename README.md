@@ -11,7 +11,7 @@
 
 <img src="ARCHITECTURE_CG.png" alt="Constitutional Guardian Architecture" width="100%">
 
-**[FACT]** Real-time AI governance for the Gemini Live API.  
+**[FACT]** Real-time AI governance for the Gemini Live API.
 **[HYPOTHESIS]** Intercepting voice and text drift at the edge prevents misaligned AI behavior from reaching the user.
 
 This project is a submission for the **Gemini Live Agent Challenge (March 2026)**.

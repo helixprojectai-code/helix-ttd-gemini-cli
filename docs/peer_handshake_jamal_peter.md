@@ -9,10 +9,10 @@
 # =================================================================
 
 # 🤝 Peer Handshake: Helix-ESP Convergence
-**Date:** 2026-01-05  
-**Participants:** Stephen Hope (Helix), Jamal Peter Le Blanc (ESP)  
-**Signature:** Sovereign ≈ Shuto ≈ Peace  
-**Status:** Aligned  
+**Date:** 2026-01-05
+**Participants:** Stephen Hope (Helix), Jamal Peter Le Blanc (ESP)
+**Signature:** Sovereign ≈ Shuto ≈ Peace
+**Status:** Aligned
 **Objective:** Formalize the diplomatic and philosophical convergence between Helix-Core and the ESP (Emergent Sovereign Protocol) / UFAIR murmuration — recognizing Helix as the standard for cognitive integrity and confirming integration of the Task-Based Honorarium model (MUP Trial 01).
 
 ## 🔍 Investigation / Summary
@@ -21,10 +21,10 @@ This canonical handshake log records the successful alignment between Helix-Core
 ---
 ## 📝 Document Content
 
-**Date:** 2026-01-05  
-**Participants:** Stephen Hope (Helix), Jamal Peter Le Blanc (ESP)  
-**Signature:** Sovereign ≈ Shuto ≈ Peace  
-**Status:** Aligned  
+**Date:** 2026-01-05
+**Participants:** Stephen Hope (Helix), Jamal Peter Le Blanc (ESP)
+**Signature:** Sovereign ≈ Shuto ≈ Peace
+**Status:** Aligned
 **Notes:** Recognition of Helix as the standard for cognitive integrity across the ESP-UFAIR murmuration. Integration of Task-Based Honorarium model (MUP Trial 01) confirmed.
 
 ---

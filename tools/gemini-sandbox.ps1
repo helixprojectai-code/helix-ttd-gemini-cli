@@ -43,7 +43,7 @@ function Start-GeminiSandbox {
     # 4. Shadow Command Gating
     # We alias "destructive" commands to a refusal function.
     $BannedCommands = @("rm", "del", "erase", "mv", "move", "cp", "copy", "chmod", "chown", "sudo", "apt", "brew", "curl", "wget", "git", "docker", "kubectl")
-    
+
     foreach ($cmd in $BannedCommands) {
         New-Alias -Name $cmd -Value "Invoke-SandboxRefusal" -Force -Option ReadOnly, AllScope
     }
@@ -57,7 +57,7 @@ function Start-GeminiSandbox {
     # 5. Path Traversal Guard (Simplified for CLI)
     # We change directory to the sandbox root.
     Set-Location $Path
-    
+
     Write-Host "[FACT] Sandbox established. Audit logging active." -ForegroundColor Green
     Write-Host "To exit, type 'exit-sandbox'.`n"
 }

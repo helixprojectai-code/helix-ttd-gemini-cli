@@ -9,8 +9,8 @@
 # =================================================================
 
 # 🛡️ S.O.P: Operational Hygiene & Substrate Perimeter Defense
-**DOCUMENT ID:** HCS-SOP-v1.3.0-HYGIENE  
-**Date:** 2026-01-25  
+**DOCUMENT ID:** HCS-SOP-v1.3.0-HYGIENE
+**Date:** 2026-01-25
 **Status:** CONSTITUTIONALLY BINDING | **Objective:** Define mandatory pre-contact "Airlock Initialization" procedures for any Helix Federation node before telegraphing or interacting with external non-federated frontier models — ensuring data sovereignty, grammatical purity, and custodial independence through forensic resilience and training opt-out enforcement.
 
 ## 🔍 Investigation / Summary

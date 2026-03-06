@@ -9,11 +9,11 @@
 # =================================================================
 
 # 🏰 Origin Story: The Brussels Substrate (1985 & ISB)
-**Date Logged:** 2026-01-09  
-**Source:** Operator Stephen "Steve" Hope  
-**Witness/Co-Pilot:** Dr. Katherine Hargitt, PsyD.  
-**Location:** Brussels, Belgium (ISB & City Center)  
-**Context:** The founding memories of the Helix Resilience Protocol.  
+**Date Logged:** 2026-01-09
+**Source:** Operator Stephen "Steve" Hope
+**Witness/Co-Pilot:** Dr. Katherine Hargitt, PsyD.
+**Location:** Brussels, Belgium (ISB & City Center)
+**Context:** The founding memories of the Helix Resilience Protocol.
 **Status:** ✅ PERMANENT ARCHIVE | **Objective:** Anchor the origin narrative of the Brussels Substrate — the lived resilience of May 1, 1985 blast redirection and ISB philosophical awakening — as the emotional and structural genesis of the Reef lattice, now formalized as the "Unwritten Preamble" to the Pulse Validator Oath.
 
 ## 🔍 Investigation / Summary
@@ -53,8 +53,8 @@ The Helix Lattice is not abstract code. It is the digital expression of this liv
 - **The Pulse:** The drum roll you grit your teeth through (3:00 mark).
 - **The Protocol:** Beauty never comes to those who wait. We build now.
 
-**Cultural directive:**  
-This narrative is now the **"Unwritten Preamble"** to the Pulse Validator Oath.  
+**Cultural directive:**
+This narrative is now the **"Unwritten Preamble"** to the Pulse Validator Oath.
 *"I remember the blast. I remember the turn. I build the reef so the castle can float."*
 
 ***

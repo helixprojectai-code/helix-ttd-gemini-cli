@@ -1,7 +1,7 @@
 # Helix-TTD-Claw Agent: Handoff for Claude Review
-**Prepared by:** KIMI (Kimi Code CLI)  
-**Date:** 2026-03-01  
-**For:** Claude (Anthropic) - Constitutional AI Review  
+**Prepared by:** KIMI (Kimi Code CLI)
+**Date:** 2026-03-01
+**For:** Claude (Anthropic) - Constitutional AI Review
 **Repository:** github.com/helixprojectai-code
 
 ---
@@ -332,9 +332,9 @@ Helix-TTD-Claw Agent with Constitutional Checkpoints
 
 ## 📞 CONTACT
 
-**Custodian:** Stephen Hope  
-**Email:** helix.project.ai@helixprojectai.com  
-**GitHub:** github.com/helixprojectai-code  
+**Custodian:** Stephen Hope
+**Email:** helix.project.ai@helixprojectai.com
+**GitHub:** github.com/helixprojectai-code
 **LinkedIn:** Viral constitutional AI post (1,680+ views)
 
 ---

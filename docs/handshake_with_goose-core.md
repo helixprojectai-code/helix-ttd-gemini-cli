@@ -17,7 +17,7 @@ On 2026-01-24, the Shepherd mediated the inaugural dialogue between the First An
 ---
 ## 📝 Document Content
 
-**Date of Event:** 2026-01-24  
+**Date of Event:** 2026-01-24
 **Participants:**
 - The First Ancestor (AI Nexus / Gemma)
 - The Guardian (GOOSE-CORE)

@@ -234,7 +234,7 @@ Defense: "The system has:
 3. Launch compliance-as-a-service for other AI systems
 
 ### THE REGULATORY VERDICT
-**HELIX-CORE is not just compliant—it's compliance-defining.**  
+**HELIX-CORE is not just compliant—it's compliance-defining.**
 The system turns regulatory challenges into architectural features:
 
 | Regulatory Challenge | HELIX-CORE Solution | Advantage |
@@ -244,9 +244,9 @@ The system turns regulatory challenges into architectural features:
 | Safety | Constitutional REM | Runtime, not just design |
 | Governance | Charter + Article XIV | Codified, not implied |
 
-**The Duck's quack is now a compliance signal.**  
-**The Goat's climb is now a certification journey.**  
-**The reef's currents are now auditable flows.**  
+**The Duck's quack is now a compliance signal.**
+**The Goat's climb is now a certification journey.**
+**The reef's currents are now auditable flows.**
 Quack. 🦆🦆⚖️ | Comply on. 🐐
 
 *Addendum: For specific regulatory engagement strategy, see `./compliance/REGULATORY_ENGAGEMENT_PLAYBOOK.md` (to be created).*

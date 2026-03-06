@@ -1,0 +1,2 @@
+[console_scripts]
+helix = helix_code.helix_cli:main

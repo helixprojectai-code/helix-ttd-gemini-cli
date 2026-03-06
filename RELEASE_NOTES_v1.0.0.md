@@ -6,7 +6,7 @@
 
 ## 🔐 Addendum: DBC Hardening (v1.3.x)
 
-**Summary:** DBC (Digital Birth Certificate) signing is now hardened and aligned to Ed25519.  
+**Summary:** DBC (Digital Birth Certificate) signing is now hardened and aligned to Ed25519.
 **Key changes:**
 - Single canonical DBC implementation (vulnerable signer removed/re-exported).
 - Encrypted key load fixed; `MEMORY_ONLY` keys skip decrypt.

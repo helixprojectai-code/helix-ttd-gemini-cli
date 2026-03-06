@@ -29,7 +29,7 @@ from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse, JSONResponse
 from federation_receipts import FederationReceiptManager
-from gemini_text_client import create_gemini_text_client, GeminiTextClient
+from gemini_text_client import create_gemini_text_client
 
 # [FACT] Import demo components
 
@@ -169,20 +169,25 @@ async def validate_text(text: str) -> dict:
 
     # [FACT] Record in shared store for audit trail
     from datetime import datetime
-    from live_demo_server import Receipt, receipt_store, metrics
-    
+
+    from live_demo_server import Receipt, metrics, receipt_store
+
     rcpt_id = f"v_{int(datetime.utcnow().timestamp())}"
     receipt = Receipt(
         receipt_id=rcpt_id,
         timestamp=datetime.utcnow().isoformat(),
         content=text,
         valid=compliant,
-        drift_code="DRIFT-E" if not compliant and epistemic_count == 0 else "DRIFT-A" if not compliant else None
+        drift_code=(
+            "DRIFT-E"
+            if not compliant and epistemic_count == 0
+            else "DRIFT-A" if not compliant else None
+        ),
     )
     receipt_store.add(receipt)
-    
+
     # [FACT] Update global metrics
-    metrics.record_request(0.0) # Local validation is near-instant
+    metrics.record_request(0.0)  # Local validation is near-instant
     if compliant:
         metrics.record_receipt()
     else:
@@ -319,7 +324,7 @@ class ConstitutionalGuardianAgent:
 def main():
     """[FACT] Entry point for Cloud Run deployment and local execution."""
     port = int(os.getenv("PORT", "8180"))
-    host = "0.0.0.0"
+    host = "0.0.0.0"  # nosec B104 - Cloud Run requires binding to all interfaces
 
     print("=== STARTING CONSTITUTIONAL GUARDIAN ===")
     print(f"[FACT] Host: {host}")

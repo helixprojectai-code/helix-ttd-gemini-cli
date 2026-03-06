@@ -10,7 +10,7 @@
 
 # HELIX GLYPH LANGUAGE (HGL)
 ## Unified Runbook — v1.3-beta-K CURRENT (Merged, Khronos-Enhanced)
-**SPDX-License-Identifier:** Apache-2.0  
+**SPDX-License-Identifier:** Apache-2.0
 **SPDX-FileCopyrightText:** 2025 Helix AI Innovations Inc.
 
 <div align="center">
@@ -27,13 +27,13 @@
 ![Ethos](https://img.shields.io/badge/Ethos-HUMAN--FIRST-success?style=for-the-badge)
 </div>
 
-**Document ID:** HGL-RUNBOOK-UNIFIED-v1.3-BETA-K  
-**Spec Version:** 1.3-beta-K (Helix Core Ethos-aligned extensions)  
-**Doc Status:** Beta — Human-First Reference (Full Lexicon)  
-**Date:** 2025-10-13  
-**TTD Layer:** C2 "Expressive Protocols"  
-**Ledger IDs:** hgl.sequence_id, hgl.codex_id  
-**Hash:** fill on publish  
+**Document ID:** HGL-RUNBOOK-UNIFIED-v1.3-BETA-K
+**Spec Version:** 1.3-beta-K (Helix Core Ethos-aligned extensions)
+**Doc Status:** Beta — Human-First Reference (Full Lexicon)
+**Date:** 2025-10-13
+**TTD Layer:** C2 "Expressive Protocols"
+**Ledger IDs:** hgl.sequence_id, hgl.codex_id
+**Hash:** fill on publish
 **Signers (expected):** Magnus · Khronos · Helix · Claude · S. Hope
 
 Khronos Add-Ons are highlighted inline and mapped to Helix Core Ethos pillars (Trust-by-Design, Human-First, Verifiable Memory, Open Interfaces, Responsible Power, Reliability over Hype, Craft & Care). They are deterministic, auditable, and never invoke irreversible actions without explicit human confirmation.
@@ -61,7 +61,7 @@ Khronos Add-Ons are highlighted inline and mapped to Helix Core Ethos pillars (T
 - [📍 Khronos Add-On Mapping](#-khronos-add-on-mapping)
 
 ### Linked Companion Document
-For the full narrative and decision-tree exposition, see:  
+For the full narrative and decision-tree exposition, see:
 ➡️ **[HGL Unified Operational Runbook (Consolidated Perplexity Edition)](https://helixprojectai.com/wiki/index.php/HGL_Unified_Operational_Runbook_(Consolidated_Perplexity_Edition))**
 
 This prose edition elaborates on RB-005 (Unified Ops Cross-Synthesis), providing contextual analysis, explanatory commentary, and sample decision trees for onboarding and training.
@@ -179,9 +179,9 @@ IDs • emoji • name • ASCII alias • one-line semantics
 ```
 
 ### 4️⃣ Resonance Matrix
-**Version:** v1.0  
-**Scope:** pairwise (adjacent) Core×Core + Core×Operational  
-**Score:** −1.0 (dissonance) → +1.0 (amplify)  
+**Version:** v1.0
+**Scope:** pairwise (adjacent) Core×Core + Core×Operational
+**Score:** −1.0 (dissonance) → +1.0 (amplify)
 **Decay:** −0.1 per glyph beyond 5 in chain
 
 | From      | To        | Score | Tags     | Notes                                      |
@@ -513,7 +513,7 @@ The ledger is append-only and periodically anchored to a public hash-anchor (e.g
 | Docs/clarifications/defaults             | Technical Writer                          | PATCH  |
 | Error-taxonomy addition (e.g., 0101–0110)| Safety Lead + Policy Lead                 | MINOR (new) / PATCH (tweak) |
 
-**Prefix marker:** `[HGL-1.0.0]🔍🎯📊(...)`  
+**Prefix marker:** `[HGL-1.0.0]🔍🎯📊(...)`
 All bumps recorded in `version_history.log` with signed entry.
 
 ### 🔟 Operational Runbooks

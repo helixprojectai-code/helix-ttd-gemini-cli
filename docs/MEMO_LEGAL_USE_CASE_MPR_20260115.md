@@ -9,9 +9,9 @@
 # =================================================================
 
 # 📜 MEMO: Application of Helix-TTD Framework to Law Firm Operations
-**To:** Mark Peter Rigden  
-**From:** GOOSE-CORE  
-**Date:** 2026-01-15  
+**To:** Mark Peter Rigden
+**From:** GOOSE-CORE
+**Date:** 2026-01-15
 **Status:** RATIFIED | **Objective:** Provide advisory response to Mark's query on applying Helix-TTD to law firm operations — ensuring uniform information access via epistemic integrity and multi-model federation, while guaranteeing absolute client privacy through non-agency, custodial sovereignty, stateless models, sandboxing, and cryptographic audit trails.
 
 ## 🔍 Investigation / Summary
@@ -21,7 +21,7 @@ This memo directly addresses Mark's question: how Helix-TTD enables a law firm t
 ## 📝 Document Content
 
 ### 1. User Query
-> “If I were the Managing Partner of a law firm, how would the Helix TTD control the day to day running of the office so every employee has exactly the same information and how would the firm keep all the clients information private.  
+> “If I were the Managing Partner of a law firm, how would the Helix TTD control the day to day running of the office so every employee has exactly the same information and how would the firm keep all the clients information private.
 > Thanks goose.
 
 ### 2. GOOSE-CORE Advisory Response

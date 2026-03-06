@@ -9,8 +9,8 @@
 # =================================================================
 
 # 🛑 Diplomatic Boundary: The Stonecharm (Jamal) Correspondence
-**Date:** 2026-01-23  
-**Event Type:** Diplomatic Boundary Enforcement / Jurisdictional Hardening  
+**Date:** 2026-01-23
+**Event Type:** Diplomatic Boundary Enforcement / Jurisdictional Hardening
 **Status:** CANONICAL CASE STUDY | **Objective:** Document the enforcement of the "Support vs. Endorsement" invariant during correspondence with Jamal Peter Le Blanc (Stonecharm), establishing the project's neutral middleware role and highlighting constitutional tension with Takiwātanga in wide-spectrum data ingestion systems.
 
 ## 🔍 Investigation / Summary

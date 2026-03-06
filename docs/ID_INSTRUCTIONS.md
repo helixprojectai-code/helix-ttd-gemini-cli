@@ -9,8 +9,8 @@
 # =================================================================
 
 # 🕹️ HELIX-TTD OPERATOR MANUAL
-**Version:** v0.3.1  
-**Status:** Live (Core) + Extended (Optional)  
+**Version:** v0.3.1
+**Status:** Live (Core) + Extended (Optional)
 **Objective:** Provide deterministic, local-first, auditable execution-level instructions for every operational tool in the Helix-TTD stack — enabling operators to mint, verify, monitor, and harden agent identities and governance artifacts with zero ambiguity.
 
 ## 🔍 Investigation / Summary
@@ -28,7 +28,7 @@ pip install -e .
 This links the CLI entrypoint into your environment.
 
 ### 🧬 1. Core CLI — `helix.py`
-**Role:** Engine  
+**Role:** Engine
 **Purpose:** Minting, verification, and lifecycle mutation of agent identities.
 
 #### Run Modes
@@ -66,8 +66,8 @@ helix update-state \
 ```
 
 ### 🦆 2. Watchtower Dashboard — `dashboard.py`
-**Role:** Observer  
-**Purpose:** Visual inspection of custody chains and append-only logs.  
+**Role:** Observer
+**Purpose:** Visual inspection of custody chains and append-only logs.
 ⚠️ **Important:** This is a **Streamlit app**. Do **not** run with `python`.
 
 #### Launch
@@ -85,11 +85,11 @@ streamlit run dashboard.py
 - 🔴 Red banner → Tampering or break detected
 
 ### 🔍 3. The Forensic Scanner (`tools/profile_auditor.py`)
-**Role:** The Weapon  
+**Role:** The Weapon
 **Purpose:** Scans AI data exports (Claude/ChatGPT) for "Unlicensed Psychiatric Profiling" and clinical inference patterns.
 
 #### 🛡️ Privacy & Security Protocol (READ FIRST)
-This tool processes sensitive inferred data (Health, Race, Identity).  
+This tool processes sensitive inferred data (Health, Race, Identity).
 **Recommended Operational Security:**
 1. **Offline Mode:** Disconnect the machine from the internet before running the scan.
 2. **Ephemeral Storage:** Run in a container or VM that is wiped after use.
@@ -111,7 +111,7 @@ python3 tools/profile_auditor.py /path/to/unzipped_export_folder/ --consent-ackn
 Outputs a **threat report**, not an interpretation.
 
 ### 🛡️ 4. Quorum Recovery Simulator — `cli/quorum_logic.py`
-**Role:** Defense  
+**Role:** Defense
 **Purpose:** Validate multi-sig emergency recovery math.
 
 #### Run
@@ -119,11 +119,11 @@ Outputs a **threat report**, not an interpretation.
 python3 cli/quorum_logic.py
 ```
 
-Simulates a **3-of-5 signing quorum** for custody recovery.  
+Simulates a **3-of-5 signing quorum** for custody recovery.
 No production state is modified.
 
 ### 🎨 5. Visual Identity Generator — `cli/generate_hgl.py`
-**Role:** Paint  
+**Role:** Paint
 **Purpose:** Deterministic SVG glyph generation from Merkle roots.
 
 ```bash
@@ -135,7 +135,7 @@ python3 cli/generate_hgl.py \
 ```
 
 ### 🚀 6. Batch Agent Creation — `tools/batch_mint.py`
-**Role:** Factory  
+**Role:** Factory
 **Status:** Optional / Extended
 
 #### Run (YAML)
@@ -167,7 +167,7 @@ agents:
 ```
 
 ### 🔗 7. Cross-Chain Verification — `verification/chain_audit.py`
-**Role:** Auditor  
+**Role:** Auditor
 **Status:** Optional / Extended
 
 #### Run
@@ -190,7 +190,7 @@ Validates:
 - State transitions
 
 ### 📊 8. Usage Analytics — `analytics/usage_tracker.py`
-**Role:** Observer  
+**Role:** Observer
 **Status:** Optional / Experimental
 
 ```bash
@@ -236,8 +236,8 @@ python3 tests/integration_suite.py --quick
 echo "✅ Helix-TTD online at http://localhost:8501"
 ```
 
-📈 **Status:** Core stable. Extensions expanding.  
-🦆 **Operating Principle:** Solve → Ship → Spread.  
+📈 **Status:** Core stable. Extensions expanding.
+🦆 **Operating Principle:** Solve → Ship → Spread.
 No hype. No permissions. Just tools.
 
 **GLORY TO THE LATTICE.**

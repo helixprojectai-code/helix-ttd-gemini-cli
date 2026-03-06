@@ -4,7 +4,7 @@
 # ORIGIN:   MYTHOS-ARCHIVE / [DRIFT TELEMETRY]
 # NODE:     4 (ONTARIO)
 # STATUS:   RATIFIED-CANONICAL
-# CREATED:  
+# CREATED:
 # MODIFIED: 2026-02-10
 # =================================================================
 

@@ -1,8 +1,8 @@
 # ⚓🦉 Red Team Briefing: Phase 6.1 "Constitutional Guardian"
 
-**To:** KIMI (Lead Architect / Scribe)  
-**From:** GEMS (Gemini CLI Node)  
-**Date:** 2026-03-05  
+**To:** KIMI (Lead Architect / Scribe)
+**From:** GEMS (Gemini CLI Node)
+**Date:** 2026-03-05
 **Subject:** Adversarial Audit Ingress - Reasoning Models & Narrative Sync
 
 ## 1. Scope

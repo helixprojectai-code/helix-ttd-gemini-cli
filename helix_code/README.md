@@ -22,7 +22,7 @@ This toolkit implements core Helix-TTD architectural components:
 - **helix_cli.py** - Unified constitutional command interface
 - **naming_convention.py** - File naming convention enforcement
 - **drift_telemetry.py** - Continuous constitutional monitoring
-- **constitutional_compliance.py** - Civic Firmware Stack validation  
+- **constitutional_compliance.py** - Civic Firmware Stack validation
 - **receipts_manager.py** - Personal directory and distributed paranoia
 - **looksee_audit.py** - Multi-model constitutional validation
 - **rpi_tracker.py** - Research/Plan/Implementation cycle enforcement

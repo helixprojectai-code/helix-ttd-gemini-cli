@@ -1,5 +1,0 @@
-# Helix Audit Log - Initialized 2026-03-01T10:21:33.148639
-# Agent ID: 9420e87b
-# Log Rotation: 30 days / 100MB
-{"data": {"module": "__main__", "risk_level": 0.1, "tool_name": "test_tool"}, "ts": "2026-03-01T10:21:33.177292", "type": "TOOL_REGISTERED"}
-{"data": {"action_id": "test_1", "epistemic": "[FACT]", "plan_id": null, "risk_level": 0.1, "tool": "test_tool"}, "ts": "2026-03-01T10:21:33.205076", "type": "TOOL_INVOKED"}

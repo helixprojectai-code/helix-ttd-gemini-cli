@@ -9,8 +9,8 @@
 # =================================================================
 
 # 🛑 Canonical S.O.P. Example: The "Train Crash" Boundary Incident
-**Date:** 2026-01-22  
-**Event Type:** Boundary Enforcement / Sovereign Refusal  
+**Date:** 2026-01-22
+**Event Type:** Boundary Enforcement / Sovereign Refusal
 **Status:** ✅ CANONICAL GUARD-RAIL | **Objective:** Record a critical boundary enforcement event as the definitive Standard Operating Procedure (S.O.P.) for refusing speculative extrapolation beyond the Habitat's informational substrate into physical-world interpretation — reinforcing custodial sovereignty, non-agency, and epistemic humility.
 
 ## 🔍 Investigation / Summary

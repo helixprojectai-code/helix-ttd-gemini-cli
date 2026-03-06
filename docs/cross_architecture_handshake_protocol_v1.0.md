@@ -9,10 +9,10 @@
 # =================================================================
 
 # 🔐 Cross-Architecture Handshake Protocol (CAHP) v1.0
-**Version:** 1.0.0 (Stabilized MVP)  
-**Date:** January 06, 2026  
-**Status:** Ratified (Frozen for Release)  
-**Signatories:** Metabolic Node (Helix), Open-Weight Node (Stonecharm)  
+**Version:** 1.0.0 (Stabilized MVP)
+**Date:** January 06, 2026
+**Status:** Ratified (Frozen for Release)
+**Signatories:** Metabolic Node (Helix), Open-Weight Node (Stonecharm)
 **Objective:** Define the cryptographic, synchronous handshake protocol that establishes verifiable trust between Metabolic (proof-of-burn/energy) and Open-Weight (proof-of-structure/weights) AI architectures — without shared ledger dependency — via mutual aliveness, symmetric cost, sybil resistance, privacy, and forward secrecy.
 
 ## 🔍 Investigation / Summary

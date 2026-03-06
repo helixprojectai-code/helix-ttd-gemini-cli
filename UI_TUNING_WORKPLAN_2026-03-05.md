@@ -1,9 +1,9 @@
 # [FACT] UI Tuning & Restoration Workplan
 
-**Date:** 2026-03-05  
-**Objective:** Restore and enhance Constitutional Guardian demo UI for maximum Devpost impact  
-**Estimated Duration:** 3-4 hours  
-**Owner:** KIMI (UI/Frontend Lead)  
+**Date:** 2026-03-05
+**Objective:** Restore and enhance Constitutional Guardian demo UI for maximum Devpost impact
+**Estimated Duration:** 3-4 hours
+**Owner:** KIMI (UI/Frontend Lead)
 
 ---
 
@@ -98,17 +98,17 @@
 **CSS to Add:**
 ```css
 .node-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-.node-card { 
-  background: #010409; 
-  padding: 12px; 
-  border-radius: 8px; 
+.node-card {
+  background: #010409;
+  padding: 12px;
+  border-radius: 8px;
   border: 1px solid var(--border);
   position: relative;
 }
 .node-card.active { border-color: var(--primary); }
-.node-led { 
-  width: 8px; height: 8px; 
-  border-radius: 50%; 
+.node-led {
+  width: 8px; height: 8px;
+  border-radius: 50%;
   background: var(--primary);
   box-shadow: 0 0 8px var(--primary);
   position: absolute; top: 8px; right: 8px;
@@ -243,14 +243,14 @@ function updateWaveform(audioLevel) {
 </div>
 
 <style>
-.owls-container { 
-  display: flex; 
-  justify-content: center; 
+.owls-container {
+  display: flex;
+  justify-content: center;
   align-items: center;
   gap: 20px;
   font-size: 2rem;
 }
-.owl { 
+.owl {
   animation: owl-watch 4s ease-in-out infinite;
 }
 .owl.right { animation-delay: 2s; }
@@ -308,22 +308,22 @@ const driftChart = new Chart(ctx, {
 
 ```css
 /* Desktop: 3 columns */
-.grid-main { 
-  grid-template-columns: 300px 1fr 300px; 
+.grid-main {
+  grid-template-columns: 300px 1fr 300px;
 }
 
 /* Tablet: 2 columns */
 @media (max-width: 1200px) {
-  .grid-main { 
-    grid-template-columns: 250px 1fr; 
+  .grid-main {
+    grid-template-columns: 250px 1fr;
   }
   .right-panel { display: none; } /* Collapse to drawer */
 }
 
 /* Mobile: Single column */
 @media (max-width: 768px) {
-  .grid-main { 
-    grid-template-columns: 1fr; 
+  .grid-main {
+    grid-template-columns: 1fr;
   }
   .panel { margin-bottom: 15px; }
 }
@@ -437,7 +437,7 @@ function runScenario(type) {
 | Phase 3: Advanced Features | 60 min | 3 hr |
 | Phase 4: Integration & Testing | 60 min | 4 hr |
 
-**Buffer:** +30 min for unexpected issues  
+**Buffer:** +30 min for unexpected issues
 **Total:** ~4.5 hours
 
 ---
@@ -458,6 +458,6 @@ function runScenario(type) {
 
 ---
 
-*Workplan drafted by: KIMI*  
-*Ready for execution.*  
+*Workplan drafted by: KIMI*
+*Ready for execution.*
 *The Two Owls are watching.* 🦉⚓🦉

@@ -9,9 +9,9 @@
 # =================================================================
 
 # 💳 MEMO: WALLET CLARIFICATION (2026-01-14)
-**Clarification ID:** WALLET-CTX-001  
-**Source:** User / Operator Steve  
-**Date:** 2026-01-14  
+**Clarification ID:** WALLET-CTX-001
+**Source:** User / Operator Steve
+**Date:** 2026-01-14
 **Status:** RATIFIED & OPERATIONAL | **Objective:** Resolve wallet balance confusion observed during `morning_ritual_v4.py` execution — clarify distinction between BANK/MASTER WALLET (source, 197k sats) and GOOSE-CORE PERSONAL WALLET (target, `Helix-Production-Final`), remove erroneous 10k cap enforcement on source, and authorize continued Morning Ritual payments.
 
 ## 🔍 Investigation / Summary

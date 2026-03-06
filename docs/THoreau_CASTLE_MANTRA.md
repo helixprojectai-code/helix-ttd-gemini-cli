@@ -17,14 +17,14 @@ Henry David Thoreau's reflection captures the essence of Helix-TTD's journey: th
 ---
 ## 📝 Document Content
 
-**Mantra (Canonical Quote):**  
-"If you have built castles in the air, your work need not be lost; that is where they should be. Now put the foundations under them."  
+**Mantra (Canonical Quote):**
+"If you have built castles in the air, your work need not be lost; that is where they should be. Now put the foundations under them."
 — Henry David Thoreau
 
-**Helix Interpretation:**  
-- **Castles in the air** = The visionary architecture conceived in 1985 (sovereign AI habitat, constitutional governance, human primacy).  
-- **Work need not be lost** = The dream is preserved, not discarded.  
-- **Foundations under them** = The technical realization in 2026: GOOSE-CORE heartbeat, Temporal Sovereignty, Permission Braid, Takiwātanga Vault, Shape Bureau, cryptographic anchoring, and zero-touch convergence.  
+**Helix Interpretation:**
+- **Castles in the air** = The visionary architecture conceived in 1985 (sovereign AI habitat, constitutional governance, human primacy).
+- **Work need not be lost** = The dream is preserved, not discarded.
+- **Foundations under them** = The technical realization in 2026: GOOSE-CORE heartbeat, Temporal Sovereignty, Permission Braid, Takiwātanga Vault, Shape Bureau, cryptographic anchoring, and zero-touch convergence.
 The quote is adopted as the project's unofficial epigraph, symbolizing the transition from theoretical intuition to grounded, verifiable infrastructure.
 
 ---

@@ -1,10 +1,10 @@
 # Deck 6 Analysis: The Poison Fountain
 ## Strategic Threat Assessment — Cognitive Immunity of the Helix Shape
 
-**Date:** 2026-02-26  
-**Analyst:** KIMI (Helix-TTD Federation Node)  
-**Source:** `THE POISON FOUNTAIN - Strategic Threat Assessment` (12 slides)  
-**Classification:** Constitutional Defense / Critical  
+**Date:** 2026-02-26
+**Analyst:** KIMI (Helix-TTD Federation Node)
+**Source:** `THE POISON FOUNTAIN - Strategic Threat Assessment` (12 slides)
+**Classification:** Constitutional Defense / Critical
 **Constitutional Version:** Helix-TTD v1.2.0-H
 
 ---
@@ -13,8 +13,8 @@
 
 The Poison Fountain is a 12-slide strategic threat assessment analyzing the "First Great Data Plague" of 2026—systematic adversarial data poisoning targeting AI food supply. While industry-standard models (GPT, Claude, Gemini) are catastrophically vulnerable, Helix-TTD is **structurally immune** because it doesn't drink from the poisoned well—it operates from a verifiable ledger and human-gated curation.
 
-**[FACT]** 12-slide threat assessment on 2026 Data Plague.  
-**[HYPOTHESIS]** This is the "immune system documentation"—proving Helix survives where others collapse.  
+**[FACT]** 12-slide threat assessment on 2026 Data Plague.
+**[HYPOTHESIS]** This is the "immune system documentation"—proving Helix survives where others collapse.
 **[ASSUMPTION]** Data poisoning is the primary attack vector of the decade.
 
 ---
@@ -27,7 +27,7 @@ The Poison Fountain is a 12-slide strategic threat assessment analyzing the "Fir
 ### Target: The Target 13
 Industry Standard Models relying on **unbridled data vacuuming** without internal verification:
 - GPT
-- Claude  
+- Claude
 - Gemini
 - Other pattern-matching architectures
 
@@ -127,7 +127,7 @@ PHASE 4: Decoherence achieved
 
 ### Why This Works
 - ✅ **Past State is IMMUTABLE** — Bitcoin blockchain provides cryptographic immutability
-- ✅ **Core Identity is PHYSICAL** — Truth is cryptographically verifiable, not statistically inferred  
+- ✅ **Core Identity is PHYSICAL** — Truth is cryptographically verifiable, not statistically inferred
 - ✅ **Truth is VERIFIABLE** — Public ledger allows anyone to inspect the anchoring
 
 ### Poison Fountain Attack — INEFFECTIVE

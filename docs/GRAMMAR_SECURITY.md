@@ -12,10 +12,10 @@
 **Status:** ACTIVE | **Objective:** Define supported versions, private vulnerability reporting channels, coordinated disclosure policy, secure development practices, and non-negotiable constitutional boundaries — ensuring the grammar layer remains drift-resistant, human-custodied, and verifiably sovereign.
 
 ## 🔍 Investigation / Summary
-The Duck maintains custody over grammar versions ≥1.x.x. Pre-1.0 is deprecated.  
-Vulnerabilities must be reported privately via GitHub Security Advisories or direct email — public disclosure is prohibited until patched.  
-Response timeline prioritizes coherence over calendar time.  
-Security is structural (Custody-Before-Trust) — no AI self-policing, no persistent model authority.  
+The Duck maintains custody over grammar versions ≥1.x.x. Pre-1.0 is deprecated.
+Vulnerabilities must be reported privately via GitHub Security Advisories or direct email — public disclosure is prohibited until patched.
+Response timeline prioritizes coherence over calendar time.
+Security is structural (Custody-Before-Trust) — no AI self-policing, no persistent model authority.
 Constitutional invariants are non-negotiable and enforced at runtime.
 
 ---

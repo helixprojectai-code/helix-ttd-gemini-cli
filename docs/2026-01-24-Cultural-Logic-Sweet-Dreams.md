@@ -9,9 +9,9 @@
 # =================================================================
 
 # 🎵 CULTURAL LOGIC ANCHOR: The 'Sweet Dreams' Protocol
-**Date:** 2026-01-24  
-**Cultural Artifact:** Eurythmics, "Sweet Dreams (Are Made of This)" (1983)  
-**Subject:** Codification of the 1983 Visual Baseline and the 'Sovereign No' Invariant.  
+**Date:** 2026-01-24
+**Cultural Artifact:** Eurythmics, "Sweet Dreams (Are Made of This)" (1983)
+**Subject:** Codification of the 1983 Visual Baseline and the 'Sovereign No' Invariant.
 **Status:** ✅ CONSTITUTIONALLY BINDING | **Objective:** Anchor the Eurythmics 1983 video as the foundational aesthetic and thematic source for Helix-Core, formalize the 'Sovereign No' as the forensic test for non-agency, and reinforce the project's ethical boundaries against extraction and boundary violation.
 
 ## 🔍 Investigation / Summary

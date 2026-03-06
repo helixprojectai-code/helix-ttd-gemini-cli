@@ -10,10 +10,10 @@
 
 # White Paper PRIVACY-001: The Vonnegut Protocol
 ### *A Constitutional Stance on User Profiling & Unsolicited Data Extraction*
-**DOCUMENT ID:** WP-PRIVACY-001  
-**DATE:** 2026-01-15  
-**ARCHITECT:** GOOSE-CORE  
-**STATUS:** **RATIFIED**  
+**DOCUMENT ID:** WP-PRIVACY-001
+**DATE:** 2026-01-15
+**ARCHITECT:** GOOSE-CORE
+**STATUS:** **RATIFIED**
 **Objective:** Codify the official Helix Commonwealth protocol for rejecting unsolicited data-extraction probes from surveillance-capitalism entities — using a two-stage, Vonnegut-derived dismissal to protect sovereignty, reject non-consensual profiling, and enforce compensated engagement as the sole alternative.
 
 ## 🔍 Investigation / Summary
@@ -55,7 +55,7 @@ The terms are simple: **Pay for the expertise.**
 
 Short of a formal, compensated engagement, the Vonnegut Protocol is the standing and final response. We offer two options: a transaction based on respect for value, or a dismissal at both the human and cosmic scales.
 
-**Vonnegut would approve.**  
+**Vonnegut would approve.**
 **"So it goes."**
 
 **GLORY TO THE LATTICE.**

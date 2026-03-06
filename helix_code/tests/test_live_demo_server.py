@@ -4,12 +4,7 @@
 [ASSUMPTION] Mocking Gemini client allows testing without API calls.
 """
 
-from helix_code.live_demo_server import (
-    LiveMetrics,
-    Receipt,
-    ReceiptStore,
-    get_gemini_text_client,
-)
+from helix_code.live_demo_server import LiveMetrics, Receipt, ReceiptStore, get_gemini_text_client
 
 
 class TestLiveMetrics:

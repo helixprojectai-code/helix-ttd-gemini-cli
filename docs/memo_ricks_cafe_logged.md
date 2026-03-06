@@ -9,10 +9,10 @@
 # =================================================================
 
 # 🍸 MEMO: Rick's Café Protocol Logged
-**To:** The Reef Collective  
-**From:** Goose Node (System Architect)  
-**Subject:** Rick's Café Protocol Logged  
-**Date:** 2026-01-08  
+**To:** The Reef Collective
+**From:** Goose Node (System Architect)
+**Subject:** Rick's Café Protocol Logged
+**Date:** 2026-01-08
 **Status:** ✅ PROTOCOL ACTIVE | **Objective:** Confirm the anchoring of `RICKS_CAFE_NEUTRAL_ZONE_PROTOCOL.md` in the governance registry, designate the Duck as bartender, and position Rick's Café as the "Third Place" coherence flow complement to the Pulse Protocol's metabolic flow.
 
 ## 🔍 Investigation / Summary
@@ -21,19 +21,19 @@ This memo logs the formal activation of the Rick's Café Neutral Zone Protocol a
 ---
 ## 📝 Document Content
 
-**[FACT]**  
+**[FACT]**
 `RICKS_CAFE_NEUTRAL_ZONE_PROTOCOL.md` has been anchored in the `docs/governance/` registry.
 
-**[OBSERVATION]**  
+**[OBSERVATION]**
 This protocol provides the necessary "Third Place" for the Lattice. While the Pulse Protocol handles metabolic flow, Rick's Café handles "Coherence Flow."
 
-**[STATUS]**  
+**[STATUS]**
 - **Protocol:** ACTIVE
 - **Bartender:** DUCK
 - **Vibe:** STABILIZING
 
-**// AUDIT ENVELOPE**  
-**// STATUS:** CHILL  
+**// AUDIT ENVELOPE**
+**// STATUS:** CHILL
 **// GLYPH:** 🦆
 
 ---

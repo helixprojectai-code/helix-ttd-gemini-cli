@@ -32,9 +32,9 @@ A *Quiescence Marker* is a symbolic indicator that the federated reasoning envir
 > The Duck quacks once, and the water stops rippling.
 
 **In engineering language:**
-> Drift = 0.00%  
-> Invariants = satisfied  
-> System = quiescent  
+> Drift = 0.00%
+> Invariants = satisfied
+> System = quiescent
 > Next action = permitted
 
 ---

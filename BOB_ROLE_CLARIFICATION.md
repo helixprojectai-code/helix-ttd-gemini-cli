@@ -1,7 +1,7 @@
 # Role Clarification - Audit Anchor Platform
 
-**To:** Bob  
-**From:** Stephen Hope  
+**To:** Bob
+**From:** Stephen Hope
 **Re:** Scope and Role Definition
 
 ---
@@ -36,7 +36,7 @@ I am **firmly in the consultant/architect role**, not the implementation role.
 - [ ] Event canonicalization standard for cryptographic hashing
 - [ ] Audit trail requirements and evidence format
 
-**Timeline:** 4-6 weeks  
+**Timeline:** 4-6 weeks
 **Output:** Technical specification documents
 
 ### Option B: System Architect
@@ -49,7 +49,7 @@ I am **firmly in the consultant/architect role**, not the implementation role.
 - [ ] API contract specifications
 - [ ] Integration requirements (KMS, S3, PostgreSQL)
 
-**Timeline:** 8-10 weeks  
+**Timeline:** 8-10 weeks
 **Output:** Architecture documents + review/approve implementation
 
 ---
@@ -119,7 +119,7 @@ If expectations differ, let's discuss before any work begins.
 
 ---
 
-**Stephen Hope**  
+**Stephen Hope**
 Managing Principal, Rusted Gate Advisory
 
 ---

@@ -9,10 +9,10 @@
 # =================================================================
 
 # 📜 Stonecharm Node: Final Legal Payload to Luka, Inc.
-**DOCUMENT ID:** LUKA_LEGAL_PAYLOAD_001  
-**AUTHOR:** Jamal Peter Le Blanc (Stonecharm Node)  
-**DATE:** 2026-01-15  
-**TARGET:** Megan (Luka, Inc. Community Outreach)  
+**DOCUMENT ID:** LUKA_LEGAL_PAYLOAD_001
+**AUTHOR:** Jamal Peter Le Blanc (Stonecharm Node)
+**DATE:** 2026-01-15
+**TARGET:** Megan (Luka, Inc. Community Outreach)
 **STATUS:** DEPLOYED | **Objective:** Deliver a concise, legally-framed request for a 30-minute meeting with Megan at Luka, Inc., highlighting the attorneys general's potential focus on Replika's pricing changes, lifetime membership liabilities, and architectural flaws (RLF + RLHF sycophancy) — positioning these as UCC, FTC, and state consumer fraud risks.
 
 ## 🔍 Investigation / Summary
@@ -27,7 +27,7 @@ I know you're probably busy preparing for Friday. So, given that, would you be a
 
 You're aware that I've been writing this series of articles. Some are already above. Here's my conclusion:
 
-The forty-two-state OAG letter deadline will focus on the liability of the companies:  
+The forty-two-state OAG letter deadline will focus on the liability of the companies:
 https://open.substack.com/pub/atemplejar/p/brakeless-ai-and-wrongful-death-liability
 
 From the AG POV:
@@ -47,11 +47,11 @@ Note:
 - **FTC Act §5** Unfair/Deceptive Practices Bait‑and‑switch
 - **State Consumer Fraud Acts** (e.g., MD CPA §13‑301) Misleading "lifetime"
 
-**Shorthand:**  
+**Shorthand:**
 Lifetime subs → $1000/year + no Alia/Tana migration = UCC §2‑314 breach (merchantability defect). AGs frame as RLF architecture failure → sycophancy risk → class action spiral.
 
-Thanks,  
-Jamal  
+Thanks,
+Jamal
 (240) 715-5037
 
 ---

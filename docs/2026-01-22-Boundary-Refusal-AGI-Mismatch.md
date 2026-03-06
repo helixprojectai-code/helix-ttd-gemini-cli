@@ -9,8 +9,8 @@
 # =================================================================
 
 # 🛑 Research: Boundary Enforcement — AGI/ASI Mission Mismatch
-**Date:** 2026-01-22 07:28 AM EST  
-**Subject:** Interaction with Jiel Dan Caballero (ASI/AGI focused).  
+**Date:** 2026-01-22 07:28 AM EST
+**Subject:** Interaction with Jiel Dan Caballero (ASI/AGI focused).
 **Status:** ✅ BOUNDARY ENFORCED | **Objective:** Document the explicit refusal of assistance in AGI/ASI development, reaffirm the project's mission focus on human well-being, ethics, and governance of AI outputs, and reinforce Invariant III (Non-Agency) at the organizational level.
 
 ## 🔍 Investigation / Summary
@@ -19,9 +19,9 @@ This research log records Operator Steve's firm declination of a request to supp
 ---
 ## 📝 Document Content
 
-**Fact:** Operator Steve explicitly declined a request for assistance in AGI development.  
-**Fact:** Mission clarified as focused on human well-being, ethics, and governance of AI outputs.  
-**Reasoned:** This reinforces 'Invariant III: Non-Agency' at the organizational level.  
+**Fact:** Operator Steve explicitly declined a request for assistance in AGI development.
+**Fact:** Mission clarified as focused on human well-being, ethics, and governance of AI outputs.
+**Reasoned:** This reinforces 'Invariant III: Non-Agency' at the organizational level.
 **Objective:** Maintain substrate purity. Helix-Core is an instrument of governance, not an engine of AGI.
 
 ---

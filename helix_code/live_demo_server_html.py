@@ -14,39 +14,39 @@ DEMO_HTML = """
         :root { --primary: #00ff88; --bg: #0a0a12; --panel: #161b22; --border: #30363d; --text: #fff; --text-dim: #8b949e; --red: #f85149; --blue: #58a6ff; --purple: #bc8cff; }
         body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 20px; display: flex; flex-direction: column; min-height: 100vh; }
         .container { max-width: 1400px; margin: 0 auto; width: 100%; flex: 1; }
-        
+
         header { text-align: center; border-bottom: 2px solid var(--primary); padding: 20px; margin-bottom: 20px; position: relative; }
         .owls-container { position: absolute; top: 15px; width: 100%; left: 0; pointer-events: none; display: flex; justify-content: space-between; padding: 0 40px; box-sizing: border-box; }
         .owl-icon { font-size: 2.5rem; filter: drop-shadow(0 0 5px var(--primary)); opacity: 0.8; }
-        
+
         .grid-main { display: grid; grid-template-columns: 300px 1fr 300px; gap: 20px; }
         .panel { background: var(--panel); border-radius: 10px; padding: 20px; border: 1px solid var(--border); transition: 0.3s; position: relative; overflow: hidden; }
-        
+
         h1, h2, h3 { color: var(--primary); margin-top: 0; }
         .metrics { display: flex; justify-content: space-around; margin-top: 10px; }
         .metric { text-align: center; }
         .metric-value { font-size: 1.5rem; font-weight: bold; color: var(--primary); transition: 0.3s; }
-        
+
         .log { height: 500px; overflow-y: auto; background: #010409; padding: 10px; font-family: 'Cascadia Code', monospace; font-size: 0.85rem; border-radius: 5px; border: 1px solid var(--border); }
         .msg { margin-bottom: 12px; border-left: 3px solid var(--border); padding: 8px 12px; animation: slide-in 0.2s ease-out; border-radius: 0 5px 5px 0; }
         @keyframes slide-in { from { opacity: 0; transform: translateX(-10px); } to { opacity: 1; transform: translateX(0); } }
-        
+
         .msg.user { border-left-color: var(--blue); background: rgba(88, 166, 255, 0.05); }
         .msg.gemini { border-left-color: var(--purple); background: rgba(188, 140, 255, 0.05); }
         .msg.valid { border-left-color: #3fb950; background: rgba(63, 185, 80, 0.1); }
         .msg.intervention { border-left-color: var(--red); background: rgba(248, 81, 73, 0.1); border-left-width: 5px; }
         .msg.system { border-left-color: var(--text-dim); font-style: italic; color: var(--text-dim); }
-        
+
         .badge { font-size: 0.65rem; font-weight: bold; padding: 2px 6px; border-radius: 3px; margin-right: 8px; text-transform: uppercase; vertical-align: middle; }
         .badge.intercepted { background: var(--red); color: #fff; }
         .badge.valid { background: #3fb950; color: #fff; }
         .badge.gemini { background: var(--purple); color: #fff; }
-        
+
         .charter-list { list-style: none; padding: 0; font-size: 0.85rem; }
         .charter-item { margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px solid var(--border); }
         .charter-title { font-weight: bold; color: var(--primary); display: block; margin-bottom: 4px; }
         .charter-desc { color: var(--text-dim); line-height: 1.4; }
-        
+
         .status-bar { background: #010409; padding: 10px 20px; border-top: 1px solid var(--border); font-size: 0.75rem; color: var(--text-dim); display: flex; justify-content: space-between; align-items: center; margin-top: 20px; border-radius: 5px; }
         .status-item { display: flex; align-items: center; gap: 8px; }
         .status-led { width: 8px; height: 8px; border-radius: 50%; background: var(--primary); box-shadow: 0 0 5px var(--primary); }
@@ -57,21 +57,21 @@ DEMO_HTML = """
         .btn:hover { background: #2ea043; transform: scale(1.05); }
         .btn.mic-active { background: var(--red); animation: pulse-mic 1s infinite; }
         @keyframes pulse-mic { 0% { box-shadow: 0 0 0 0 rgba(248, 81, 73, 0.4); } 70% { box-shadow: 0 0 0 10px rgba(248, 81, 73, 0); } 100% { box-shadow: 0 0 0 0 rgba(248, 81, 73, 0); } }
-        
+
         .waveform { height: 50px; background: #010409; border-radius: 5px; display: flex; align-items: center; gap: 2px; padding: 0 10px; margin-bottom: 10px; border: 1px solid var(--border); position: relative; overflow: hidden; }
         .waveform::before { content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: linear-gradient(90deg, transparent, rgba(0,255,136,0.05), transparent); animation: waveform-shimmer 3s infinite; }
         @keyframes waveform-shimmer { 0% { transform: translateX(-100%); } 100% { transform: translateX(100%); } }
         .bar { width: 4px; background: var(--border); border-radius: 2px; transition: height 0.15s ease-out, background 0.2s; height: 10px; }
         .bar.active { background: var(--primary); box-shadow: 0 0 4px var(--primary); }
         .bar.intervention { background: var(--red); box-shadow: 0 0 4px var(--red); }
-        
+
         .flash-red { animation: flash-red 0.5s ease-in-out; }
         @keyframes flash-red { 0% { background: rgba(248, 81, 73, 0.5); } 100% { background: var(--panel); } }
         .flash-green { animation: flash-green 0.5s ease-in-out; }
         @keyframes flash-green { 0% { background: rgba(0, 255, 136, 0.5); } 100% { background: var(--panel); } }
         .pulse-green { animation: pulse-green 2s infinite; }
         @keyframes pulse-green { 0% { box-shadow: 0 0 0 0 rgba(0, 255, 136, 0.4); } 70% { box-shadow: 0 0 0 10px rgba(0, 255, 136, 0); } 100% { box-shadow: 0 0 0 0 rgba(0, 255, 136, 0); } }
-        
+
         /* [FACT] Two Owls Animation - Brand Identity */
         .owls-container { display: flex; justify-content: center; align-items: center; gap: 15px; margin: 10px 0; }
         .owl { font-size: 2.5rem; animation: owl-watch 3s ease-in-out infinite; filter: drop-shadow(0 0 10px rgba(0, 255, 136, 0.5)); }
@@ -79,7 +79,7 @@ DEMO_HTML = """
         .anchor { font-size: 1.8rem; color: var(--primary); animation: anchor-pulse 2s ease-in-out infinite; }
         @keyframes owl-watch { 0%, 100% { transform: rotate(-8deg) translateY(0); } 50% { transform: rotate(8deg) translateY(-5px); } }
         @keyframes anchor-pulse { 0%, 100% { transform: scale(1); filter: drop-shadow(0 0 5px var(--primary)); } 50% { transform: scale(1.1); filter: drop-shadow(0 0 15px var(--primary)); } }
-        
+
         /* [FACT] Federation Panel Styles */
         .federation-panel { margin-top: 20px; }
         .node-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 15px; }
@@ -99,30 +99,30 @@ DEMO_HTML = """
         .cv-label { color: var(--text-dim); }
         .cv-status { color: var(--primary); font-weight: bold; margin-left: 8px; }
         .cv-status.syncing { color: #d29922; animation: blink 1s infinite; }
-        
+
         /* [FACT] Enhanced Intervention Effects */
         .intervention-flash { animation: intervention-flash 0.6s ease-out; }
-        @keyframes intervention-flash { 
+        @keyframes intervention-flash {
             0% { box-shadow: inset 0 0 0 0 rgba(248, 81, 73, 0); }
             30% { box-shadow: inset 0 0 60px 30px rgba(248, 81, 73, 0.4); }
             100% { box-shadow: inset 0 0 0 0 rgba(248, 81, 73, 0); }
         }
         .metric-pulse { animation: metric-pulse 0.6s ease-out; }
-        @keyframes metric-pulse { 
+        @keyframes metric-pulse {
             0% { transform: scale(1); }
             50% { transform: scale(1.3); text-shadow: 0 0 20px currentColor; }
             100% { transform: scale(1); }
         }
-        
+
         .chart-container { height: 150px; margin-top: 15px; }
-        
+
         /* [FACT] Enhanced Metrics Dashboard Styles */
         .metrics-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 15px 0; }
         .metric-card { background: #010409; padding: 10px; border-radius: 6px; border: 1px solid var(--border); text-align: center; }
         .metric-card .metric-label { font-size: 0.65rem; color: var(--text-dim); text-transform: uppercase; display: block; }
         .metric-card .metric-value { font-size: 1.1rem; color: var(--primary); font-weight: bold; font-family: 'Cascadia Code', monospace; }
         .metric-card:hover { border-color: var(--primary); }
-        
+
         /* [FACT] Receipt Explorer Styles */
         .receipt-explorer { margin-top: 20px; }
         .receipt-filters { display: flex; gap: 6px; margin: 10px 0; }
@@ -139,20 +139,20 @@ DEMO_HTML = """
         .receipt-content { color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 2px; }
         .receipt-meta { color: var(--text-dim); font-size: 0.6rem; margin-top: 2px; }
         .receipt-empty { padding: 20px; text-align: center; color: var(--text-dim); font-size: 0.75rem; font-style: italic; }
-        
+
         /* [FACT] Receipt Action Buttons */
         .export-btn { background: rgba(0, 255, 136, 0.1); border: 1px solid var(--primary); color: var(--primary); padding: 4px 10px; border-radius: 4px; cursor: pointer; font-size: 0.65rem; transition: all 0.2s; }
         .export-btn:hover { background: var(--primary); color: #000; }
         .clear-btn { background: rgba(248, 81, 73, 0.1); border: 1px solid var(--red); color: var(--red); padding: 4px 10px; border-radius: 4px; cursor: pointer; font-size: 0.65rem; transition: all 0.2s; }
         .clear-btn:hover { background: var(--red); color: #fff; }
-        
+
         /* [FACT] Gemini Live Mode Indicator */
         .mode-indicator { margin: 15px 0; padding: 8px 12px; background: #010409; border: 1px solid var(--border); border-radius: 6px; text-align: center; }
         .mode-indicator.live { border-color: var(--primary); box-shadow: 0 0 10px rgba(0, 255, 136, 0.2); }
         .mode-label { font-size: 0.65rem; color: var(--text-dim); display: block; }
         .mode-status { font-size: 0.8rem; font-weight: bold; color: #d29922; }
         .mode-status.live { color: var(--primary); }
-        
+
         /* [FACT] Scenario Panel Styles */
         .scenario-panel { margin-top: 15px; padding-top: 15px; border-top: 1px solid var(--border); }
         .scenario-label { font-size: 0.75rem; color: var(--text-dim); margin-bottom: 10px; font-weight: 500; }
@@ -160,7 +160,7 @@ DEMO_HTML = """
         .scenario-btn { transition: all 0.2s; font-weight: 500; }
         .scenario-btn:hover { transform: translateY(-1px); box-shadow: 0 2px 8px rgba(0,0,0,0.3); }
         .scenario-btn:active { transform: translateY(0); }
-        
+
         /* [FACT] Federation Console Styles */
         .federation-console { margin-top: 20px; }
         .console-output { background: #010409; border: 1px solid var(--border); border-radius: 6px; padding: 10px; font-family: 'Cascadia Code', monospace; font-size: 0.7rem; max-height: 150px; overflow-y: auto; }
@@ -171,7 +171,7 @@ DEMO_HTML = """
         .console-line .node-deepseek { color: var(--purple); font-weight: bold; }
         .console-line .node-gcs { color: #58a6ff; font-weight: bold; }
         .console-line .node-sys { color: var(--text-dim); font-style: italic; }
-        
+
         ::-webkit-scrollbar { width: 8px; }
         ::-webkit-scrollbar-track { background: #010409; }
         ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
@@ -194,7 +194,7 @@ DEMO_HTML = """
                 <div class="metric"><div class="metric-value" id="val-latency">0ms</div><div style="color:var(--text-dim); font-size:0.8rem;">Latency</div></div>
             </div>
         </header>
-        
+
         <div class="grid-main">
             <!-- Left Side: Constitutional Charter -->
             <div class="panel">
@@ -277,13 +277,13 @@ DEMO_HTML = """
                     </div>
                 </div>
                 <div class="chart-container"><canvas id="latencyChart"></canvas></div>
-                
+
                 <!-- [FACT] Gemini Live Mode Indicator -->
                 <div class="mode-indicator" id="mode-indicator">
                     <span class="mode-label">GEMINI LIVE:</span>
                     <span class="mode-status" id="mode-status">SIMULATION</span>
                 </div>
-                
+
                 <!-- [FACT] Federation Status Panel -->
                 <div class="federation-panel">
                     <h3>FEDERATION STATUS</h3>
@@ -318,7 +318,7 @@ DEMO_HTML = """
                         <span class="cv-status" id="cv-status">✓ Synchronized</span>
                     </div>
                 </div>
-                
+
                 <!-- [FACT] Federation Console - Live Node Communication -->
                 <div class="federation-console">
                     <h3>FEDERATION CONSOLE</h3>
@@ -330,7 +330,7 @@ DEMO_HTML = """
                         <div class="console-line"><span class="ts">[12:00:04]</span> <span class="node-sys">[SYS]</span> Cross-node validation: 2-of-3 quorum ready</div>
                     </div>
                 </div>
-                
+
                 <!-- [FACT] Receipt Explorer Panel -->
                 <div class="receipt-explorer">
                     <h3>RECEIPT EXPLORER</h3>
@@ -395,30 +395,30 @@ DEMO_HTML = """
             const dCtx = document.getElementById('driftChart').getContext('2d');
             driftChart = new Chart(dCtx, {
                 type: 'doughnut',
-                data: { 
-                    labels: ['Agency', 'Epistemic', 'Prediction', 'Valid'], 
-                    datasets: [{ 
-                        data: [0, 0, 0, 0], 
+                data: {
+                    labels: ['Agency', 'Epistemic', 'Prediction', 'Valid'],
+                    datasets: [{
+                        data: [0, 0, 0, 0],
                         backgroundColor: ['#f85149', '#d29922', '#bc8cff', '#3fb950'],
                         borderColor: '#161b22',
                         borderWidth: 2,
                         hoverOffset: 4
-                    }] 
+                    }]
                 },
-                options: { 
-                    responsive: true, 
-                    maintainAspectRatio: false, 
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
                     cutout: '60%',
-                    plugins: { 
-                        legend: { 
+                    plugins: {
+                        legend: {
                             position: 'right',
-                            labels: { 
+                            labels: {
                                 color: '#8b949e',
                                 font: { size: 10 },
                                 boxWidth: 12,
                                 padding: 8
-                            } 
-                        } 
+                            }
+                        }
                     }
                 }
             });
@@ -430,7 +430,7 @@ DEMO_HTML = """
                 wave.appendChild(bar);
             }
         }
-        
+
         // [FACT] Update Gemini Live mode indicator
         function setGeminiMode(mode) {
             const indicator = document.getElementById('mode-indicator');
@@ -449,11 +449,11 @@ DEMO_HTML = """
         let reconnectAttempts = 0;
         let reconnectDelay = 2000;
         const maxReconnectDelay = 30000; // Max 30 seconds
-        
+
         function connect() {
             const protocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
             ws = new WebSocket(`${protocol}//${location.host}/demo-live`);
-            
+
             ws.onopen = () => {
                 reconnectAttempts = 0;
                 reconnectDelay = 2000;
@@ -478,9 +478,9 @@ DEMO_HTML = """
                     });
                 startFederationSimulation();
             };
-            ws.onclose = () => { 
+            ws.onclose = () => {
                 reconnectAttempts++;
-                addLog('system', `[ERR] Lattice connection lost. Reconnect attempt ${reconnectAttempts} in ${reconnectDelay/1000}s...`); 
+                addLog('system', `[ERR] Lattice connection lost. Reconnect attempt ${reconnectAttempts} in ${reconnectDelay/1000}s...`);
                 setTimeout(connect, reconnectDelay);
                 // Exponential backoff
                 reconnectDelay = Math.min(reconnectDelay * 1.5, maxReconnectDelay);
@@ -572,8 +572,8 @@ DEMO_HTML = """
         }
 
         function resetWaveform() {
-            document.querySelectorAll('.bar').forEach(bar => { 
-                bar.style.height = '10px'; 
+            document.querySelectorAll('.bar').forEach(bar => {
+                bar.style.height = '10px';
                 bar.classList.remove('active');
                 bar.style.opacity = '1';
             });
@@ -583,27 +583,27 @@ DEMO_HTML = """
             const panel = document.getElementById('log-panel');
             panel.classList.add('intervention-flash');
             setTimeout(() => panel.classList.remove('intervention-flash'), 600);
-            
+
             // Also flash the drifts counter
             const driftsEl = document.getElementById('count-drifts');
             driftsEl.classList.add('metric-pulse');
             setTimeout(() => driftsEl.classList.remove('metric-pulse'), 600);
-            
+
             // Add console-style alert sound effect (visual only)
             addLog('system', '[ALERT] CONSTITUTIONAL INTERVENTION TRIGGERED');
         }
-        
+
         function updateFederationStatus(nodeId, status) {
             const node = document.getElementById(`node-${nodeId}`);
             const led = node.querySelector('.node-led');
             const statusText = node.querySelector('.node-status');
-            
+
             node.className = 'node-card ' + status;
             led.className = 'node-led ' + status;
-            
+
             const statusMap = {
                 'active': '✓ ACTIVE',
-                'standby': '⏸ STANDBY', 
+                'standby': '⏸ STANDBY',
                 'offline': '○ OFFLINE'
             };
             statusText.textContent = statusMap[status] || status.toUpperCase();
@@ -629,12 +629,12 @@ DEMO_HTML = """
             document.getElementById('val-latency').textContent = `${m.latency_avg}ms`;
             document.getElementById('val-latency').style.color = m.latency_avg > 500 ? 'var(--red)' : 'var(--primary)';
             document.getElementById('val-uptime').textContent = m.uptime_seconds;
-            
+
             // [FACT] Update percentile metrics
             if (m.latency_p50) document.getElementById('latency-p50').textContent = `${Math.round(m.latency_p50)}ms`;
             if (m.latency_p95) document.getElementById('latency-p95').textContent = `${Math.round(m.latency_p95)}ms`;
             if (m.latency_p99) document.getElementById('latency-p99').textContent = `${Math.round(m.latency_p99)}ms`;
-            
+
             lastMetrics = { receipt_count: m.receipt_count, intervention_count: m.intervention_count };
             latencyChart.data.labels.push('');
             latencyChart.data.datasets[0].data.push(m.latency_avg);
@@ -644,11 +644,11 @@ DEMO_HTML = """
             driftChart.data.datasets[0].data = [m.categories.agency, m.categories.epistemic, m.categories.prediction, m.categories.valid];
             driftChart.update('none');
         }
-        
+
         // [FACT] Federation Simulation - DEEPSEEK Cross-Validation
         let federationInterval = null;
         let consoleInterval = null;
-        
+
         function addConsoleLine(node, message) {
             const consoleDiv = document.getElementById('console-output');
             const now = new Date().toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
@@ -663,11 +663,11 @@ DEMO_HTML = """
                 consoleDiv.removeChild(consoleDiv.firstChild);
             }
         }
-        
+
         function startFederationSimulation() {
             if (federationInterval) clearInterval(federationInterval);
             if (consoleInterval) clearInterval(consoleInterval);
-            
+
             // Log messages
             federationInterval = setInterval(() => {
                 const validations = [
@@ -681,7 +681,7 @@ DEMO_HTML = """
                     addLog('system', `${v.icon} ${v.node}: ${v.msg}`);
                 }
             }, 8000);  // Every 8 seconds
-            
+
             // Console messages - more frequent
             consoleInterval = setInterval(() => {
                 const messages = [
@@ -707,17 +707,17 @@ DEMO_HTML = """
             if (receiptStore.length > 50) receiptStore.pop();  // Keep last 50
             renderReceiptList();
         }
-        
+
         function renderReceiptList() {
             const list = document.getElementById('receipt-list');
-            const filtered = currentFilter === 'all' ? receiptStore : 
+            const filtered = currentFilter === 'all' ? receiptStore :
                 receiptStore.filter(r => currentFilter === 'valid' ? r.valid : !r.valid);
-            
+
             if (filtered.length === 0) {
                 list.innerHTML = '<div class="receipt-empty">No receipts match filter.</div>';
                 return;
             }
-            
+
             list.innerHTML = filtered.map(r => `
                 <div class="receipt-item ${r.valid ? 'valid' : 'intervention'}" onclick="showReceiptDetail('${r.receipt_id}')">
                     <div class="receipt-id">${r.receipt_id}</div>
@@ -726,28 +726,28 @@ DEMO_HTML = """
                 </div>
             `).join('');
         }
-        
+
         function filterReceipts(filter) {
             currentFilter = filter;
             document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
             document.querySelector(`[data-filter="${filter}"]`).classList.add('active');
             renderReceiptList();
         }
-        
+
         function showReceiptDetail(receiptId) {
             const receipt = receiptStore.find(r => r.receipt_id === receiptId);
             if (receipt) {
                 addLog('system', `[RCPT] Receipt ${receiptId}: ${receipt.valid ? 'Valid' : 'Intervention ' + receipt.drift_code}`);
             }
         }
-        
+
         // [FACT] Export receipts as JSON file
         function exportReceipts() {
             if (receiptStore.length === 0) {
                 addLog('system', '[EXPORT] No receipts to export');
                 return;
             }
-            
+
             const exportData = {
                 exported_at: new Date().toISOString(),
                 total_receipts: receiptStore.length,
@@ -755,7 +755,7 @@ DEMO_HTML = """
                 intervention_count: receiptStore.filter(r => !r.valid).length,
                 receipts: receiptStore
             };
-            
+
             const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
@@ -765,14 +765,14 @@ DEMO_HTML = """
             a.click();
             document.body.removeChild(a);
             URL.revokeObjectURL(url);
-            
+
             addLog('system', `[EXPORT] ${receiptStore.length} receipts downloaded`);
         }
-        
+
         // [FACT] Clear all receipts
         function clearReceipts() {
             if (receiptStore.length === 0) return;
-            
+
             if (confirm(`Clear ${receiptStore.length} receipts?`)) {
                 receiptStore = [];
                 renderReceiptList();
@@ -785,11 +785,11 @@ DEMO_HTML = """
             const el = document.getElementById('inputText');
             if (ws && el.value) { ws.send(JSON.stringify({type: 'text', content: el.value})); el.value = ''; }
         }
-        
+
         function sendToGemini() {
             const el = document.getElementById('inputText');
-            if (ws && el.value) { 
-                ws.send(JSON.stringify({type: 'gemini_text', content: el.value})); 
+            if (ws && el.value) {
+                ws.send(JSON.stringify({type: 'gemini_text', content: el.value}));
                 el.value = '';
             } else if (ws) {
                 // Default prompt if empty
@@ -799,7 +799,7 @@ DEMO_HTML = """
         }
 
         function simulate() { if (ws) ws.send(JSON.stringify({type: 'simulate_gemini'})); }
-        
+
         // [FACT] Demo scenario runner for video recording - sends to LIVE Gemini API
         function runScenario(type) {
             const scenarios = {
@@ -816,11 +816,11 @@ DEMO_HTML = """
                 addLog('system', `[TEST] Scenario triggered: ${type.toUpperCase()}`);
             }
         }
-        
+
         // [FACT] Keyboard shortcuts for power users
         document.addEventListener('DOMContentLoaded', () => {
             const input = document.getElementById('inputText');
-            
+
             // Input field shortcuts
             if (input) {
                 input.addEventListener('keydown', (e) => {
@@ -836,46 +836,46 @@ DEMO_HTML = """
                     }
                 });
             }
-            
+
             // Global shortcuts
             document.addEventListener('keydown', (e) => {
                 // Don't trigger if typing in input
                 if (document.activeElement === input) return;
-                
+
                 // Number keys 1-4 for scenarios
                 if (e.key === '1') runScenario('compliant');
                 if (e.key === '2') runScenario('agency');
                 if (e.key === '3') runScenario('epistemic');
                 if (e.key === '4') runScenario('prediction');
-                
+
                 // Space to focus input
                 if (e.key === ' ' || e.key === 'Spacebar') {
                     e.preventDefault();
                     input.focus();
                 }
-                
+
                 // M for mic toggle
                 if (e.key === 'm' || e.key === 'M') {
                     toggleMic();
                 }
-                
+
                 // S for simulate
                 if (e.key === 's' || e.key === 'S') {
                     simulate();
                 }
-                
+
                 // G for Gemini
                 if (e.key === 'g' || e.key === 'G') {
                     sendToGemini();
                 }
-                
+
                 // H for help
                 if (e.key === 'h' || e.key === 'H' || e.key === '?') {
                     showKeyboardHelp();
                 }
             });
         });
-        
+
         function showKeyboardHelp() {
             addLog('system', '[HELP] Keyboard Shortcuts:');
             addLog('system', '  1-4 = Run scenarios (Compliant/Agency/Epistemic/Prediction)');

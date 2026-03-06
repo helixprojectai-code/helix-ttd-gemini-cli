@@ -9,7 +9,7 @@
 # =================================================================
 
 # 🔐 Updated CAHP v1.0 Protocol Logic
-**Objective:** Establish a verifiable and timestamped handshake between challenger (Goose) and peer (Stonecharm) — providing a transparent, auditable sequence of phases with structured logging for every session.  
+**Objective:** Establish a verifiable and timestamped handshake between challenger (Goose) and peer (Stonecharm) — providing a transparent, auditable sequence of phases with structured logging for every session.
 **Status:** RATIFIED | **Design Goal:** Maximum traceability and cryptographic integrity with minimal complexity.
 
 ## 🔍 Investigation / Summary
