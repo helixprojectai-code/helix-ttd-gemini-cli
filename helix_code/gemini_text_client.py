@@ -125,9 +125,17 @@ class GeminiTextClient:
             if not text and response.text:
                 text = response.text
             
-            # [DEBUG] Log raw response
+            # [DEBUG] Log detailed response structure
             logger.info(f"[DEBUG] Gemini raw response: '{text[:100]}...' (len={len(text)})")
             logger.info(f"[DEBUG] Response candidates: {len(response.candidates) if response.candidates else 0}")
+            if response.candidates:
+                for i, c in enumerate(response.candidates):
+                    logger.info(f"[DEBUG] Candidate {i}: content={c.content is not None}, finish_reason={getattr(c, 'finish_reason', 'N/A')}")
+                    if c.content:
+                        logger.info(f"[DEBUG]   Content parts: {len(c.content.parts) if c.content.parts else 0}")
+                        if c.content.parts:
+                            for j, p in enumerate(c.content.parts):
+                                logger.info(f"[DEBUG]   Part {j}: text={getattr(p, 'text', None) is not None}, type={type(p)}")
             
             # [FACT] Get token usage if available
             tokens = None
