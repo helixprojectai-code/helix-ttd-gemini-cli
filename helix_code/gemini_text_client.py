@@ -61,7 +61,9 @@ class GeminiTextClient:
                 "tokens": None,
             }
 
-        url = f"{self.base_url}/models/{self.model}:generateContent?key={self.api_key}"
+        # [FACT] Keep API key out of request URLs to prevent accidental log leakage.
+        url = f"{self.base_url}/models/{self.model}:generateContent"
+        headers = {"x-goog-api-key": self.api_key}
 
         # Build payload
         contents = [{"parts": [{"text": prompt}]}]
@@ -86,7 +88,7 @@ class GeminiTextClient:
         try:
             logger.info(f"[DEBUG] Calling Gemini REST API: {self.model}")
             async with httpx.AsyncClient() as client:
-                response = await client.post(url, json=payload, timeout=60.0)
+                response = await client.post(url, headers=headers, json=payload, timeout=60.0)
 
             if response.status_code != 200:
                 return {

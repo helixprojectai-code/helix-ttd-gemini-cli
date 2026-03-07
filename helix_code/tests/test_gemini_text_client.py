@@ -85,6 +85,13 @@ class TestGeminiTextClient:
             mock_post.return_value = mock_response
             result = await client.generate_response("What color is sky?")
 
+            # [FACT] API key must not appear in URL; pass via header instead.
+            call_args = mock_post.call_args
+            request_url = call_args[0][0]
+            request_headers = call_args[1]["headers"]
+            assert "?key=" not in request_url
+            assert request_headers.get("x-goog-api-key") == "test_key"
+
         assert result["success"]
         assert result["text"] == "[FACT] The sky is blue."
         assert result["tokens"] == 25
