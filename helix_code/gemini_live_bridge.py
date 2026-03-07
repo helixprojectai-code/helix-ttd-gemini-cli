@@ -96,8 +96,11 @@ class GeminiLiveBridge:
         self.connect_retry_cooldown_s = float(os.getenv("HELIX_GEMINI_CONNECT_COOLDOWN_S", "8.0"))
 
         if GENAI_AVAILABLE and self.api_key:
+            self.api_version = os.getenv("GEMINI_API_VERSION", "v1beta")
+            self.live_model = os.getenv("GEMINI_LIVE_MODEL", "models/gemini-2.0-flash-exp")
             self.client = genai.Client(
-                api_key=self.api_key, http_options={"api_version": "v1alpha"}
+                api_key=self.api_key,
+                http_options={"api_version": self.api_version},
             )
         elif not self.api_key:
             print("[WARNING] GEMINI_API_KEY not set. Gemini Live integration disabled.")
@@ -133,21 +136,22 @@ class GeminiLiveBridge:
     async def start_gemini_live(
         self,
         session: LiveSession,
-        model_id: str = "gemini-3.1-pro-preview",
+        model_id: str | None = None,
         reasoning_mode: bool = False,
     ) -> None:
         if not self.client:
             return
 
+        selected_model = model_id or self.live_model
         config: dict[str, Any] = {"response_modalities": ["TEXT"]}
-        if reasoning_mode and model_id == "gemini-3.1-pro-preview":
+        if reasoning_mode and selected_model in {"gemini-3.1-pro-preview", "models/gemini-3.1-pro-preview"}:
             config["reasoning_mode"] = True
 
         last_error: str | None = None
         for attempt in range(1, self.connect_max_retries + 1):
             try:
                 async with self.client.aio.live.connect(
-                    model=model_id,
+                    model=selected_model,
                     config=config,
                 ) as gemini_session:
                     session.gemini_session = gemini_session
@@ -158,7 +162,7 @@ class GeminiLiveBridge:
                             await session.client_ws.send_json(
                                 {
                                     "type": "system_event",
-                                    "message": "Gemini Live connected for audio transcription.",
+                                    "message": f"Gemini Live connected for audio transcription ({selected_model}, {self.api_version}).",
                                 }
                             )
 
@@ -178,7 +182,7 @@ class GeminiLiveBridge:
                                 "type": "system_event",
                                 "message": (
                                     "Gemini Live connect/stream error "
-                                    f"(attempt {attempt}/{self.connect_max_retries}): {last_error}"
+                                    f"(attempt {attempt}/{self.connect_max_retries}, model={selected_model}, api={self.api_version}): {last_error}"
                                 ),
                             }
                         )
@@ -195,7 +199,7 @@ class GeminiLiveBridge:
                         "type": "system_event",
                         "message": (
                             "Gemini Live unavailable after retries; using offline mode "
-                            f"(last error: {last_error or 'unknown'})."
+                            f"(model={selected_model}, api={self.api_version}, last error: {last_error or 'unknown'})."
                         ),
                     }
                 )
