@@ -105,6 +105,7 @@ python helix_code/live_demo_server.py
 - Visual intervention alerts for drift detection
 - Optional auth hardening: `AUDIO_AUDIT_TOKEN` and `AUDIO_AUDIT_ALLOWED_ORIGINS`
 - Abuse controls: `HELIX_MAX_AUDIO_CHUNK_BYTES`, `HELIX_MAX_AUDIO_B64_CHARS`, `HELIX_AUDIO_RATE_WINDOW_SECONDS`, `HELIX_AUDIO_MAX_CHUNKS_PER_WINDOW`
+- Runtime verification endpoint: `GET /api/runtime-config`
 
 **How to Use:**
 1. Click "Connect" to establish WebSocket connection
@@ -119,6 +120,11 @@ The project is optimized for **Google Cloud Run**.
 
 ```bash
 gcloud run deploy constitutional-guardian --source . --region us-central1 --allow-unauthenticated --port 8180
+```
+
+```bash
+# Verify effective runtime model/auth/limits (non-secret)
+curl http://localhost:8180/api/runtime-config
 ```
 
 ## 🎥 Recording Sprint (March 12th)

@@ -1,0 +1,11 @@
+﻿# Helix-TTD ownership map for high-risk surfaces
+
+# Default owner
+* @helixprojectai-code/cli
+
+# Audio/live runtime code
+/helix_code/audio_*.py @helixprojectai-code/cli
+/helix_code/live_*.py @helixprojectai-code/cli
+
+# CI/CD and deployment
+/.github/workflows/* @helixprojectai-code/cli

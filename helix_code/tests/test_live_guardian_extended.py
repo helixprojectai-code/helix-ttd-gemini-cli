@@ -125,3 +125,38 @@ class TestApiInfoEndpoint:
             assert data["node"] == "GCS-GUARDIAN"
             assert data["status"] == "RATIFIED"
             assert "endpoints" in data
+
+
+class TestRuntimeConfigEndpoint:
+    """[FACT] Test runtime config verification endpoint."""
+
+    def test_runtime_config_defaults(self) -> None:
+        """[FACT] Runtime config returns expected default model values."""
+        with TestClient(app) as client:
+            response = client.get("/api/runtime-config")
+            assert response.status_code == 200
+            data = response.json()
+            assert data["models"]["gemini_live_model"] == "gemini-3.1-pro-preview"
+            assert data["models"]["gemini_text_model"] == "gemini-3.1-pro-preview"
+            assert "auth" in data
+            assert "limits" in data
+            assert "secrets" in data
+
+    def test_runtime_config_reflects_env(self, monkeypatch) -> None:
+        """[FACT] Runtime config reflects safe env overrides."""
+        monkeypatch.setenv("GEMINI_LIVE_MODEL", "gemini-3.1-pro-preview")
+        monkeypatch.setenv("GEMINI_TEXT_MODEL", "gemini-3.1-pro-preview")
+        monkeypatch.setenv("AUDIO_AUDIT_TOKEN", "set")
+        monkeypatch.setenv(
+            "AUDIO_AUDIT_ALLOWED_ORIGINS",
+            "https://helixprojectai.com,https://app.helixprojectai.com",
+        )
+        monkeypatch.setenv("HELIX_MAX_AUDIO_CHUNK_BYTES", "262144")
+
+        with TestClient(app) as client:
+            response = client.get("/api/runtime-config")
+            assert response.status_code == 200
+            data = response.json()
+            assert data["auth"]["audio_audit_token_required"] is True
+            assert len(data["auth"]["audio_audit_allowed_origins"]) == 2
+            assert data["limits"]["max_audio_chunk_bytes"] == 262144

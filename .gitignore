@@ -27,3 +27,5 @@ htmlcov/
 
 # Old code directory (migrated to helix_code/)
 code/
+# Local generated test receipts (tracked fixtures remain tracked)
+docs/receipts/deepseek/deepseek_test_session_*.json

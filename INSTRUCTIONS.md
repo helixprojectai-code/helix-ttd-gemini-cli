@@ -25,7 +25,7 @@
    ```
 
 4. **Launch Browser:**
-   *Open `http://localhost:8180/`.*
+   *Open `http://localhost:8180/` and verify `http://localhost:8180/api/runtime-config`.*
 
 ## 🎬 Recording Sequence
 
