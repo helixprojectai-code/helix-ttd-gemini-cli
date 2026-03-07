@@ -602,11 +602,14 @@ async def audio_audit_websocket(websocket: WebSocket) -> None:
     logger.info(f"[AUDIO-AUDIT] Session started: {session_id}")
 
     try:
+        # [FACT] Send connection status including Gemini availability
         await websocket.send_json(
             {
                 "type": "connected",
                 "session_id": session_id,
                 "message": "Live Multimodal Auditing active. Send 16kHz PCM audio chunks.",
+                "gemini_connected": session.gemini_connected,
+                "mode": "live" if session.gemini_connected else "simulation",
             }
         )
 
@@ -626,6 +629,7 @@ async def audio_audit_websocket(websocket: WebSocket) -> None:
                         "type": "audio_ack",
                         "chunk_num": result.get("chunk_num"),
                         "buffer_size": result.get("buffer_size"),
+                        "gemini_connected": result.get("gemini_connected", False),
                     }
                 )
 
