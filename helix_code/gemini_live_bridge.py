@@ -298,10 +298,14 @@ class GeminiLiveBridge:
                         if processed and session.client_ws:
                             await session.client_ws.send_json(processed)
 
+                    if session.gemini_session is gemini_session:
+                        session.gemini_session = None
+                    session.gemini_task = None
                     return
             except Exception as exc:
                 last_error = str(exc)
                 session.connect_failures += 1
+                session.gemini_session = None
                 if session.client_ws:
                     with contextlib.suppress(Exception):
                         await session.client_ws.send_json(
@@ -332,6 +336,7 @@ class GeminiLiveBridge:
                         ),
                     }
                 )
+        session.gemini_task = None
 
     async def validate_gemini_response(
         self,

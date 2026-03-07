@@ -345,3 +345,49 @@ def test_bridge_normalizes_spoken_epistemic_lead() -> None:
     normalized = bridge._normalize_epistemic_lead("FACT the sky is blue")
 
     assert normalized == "[FACT] the sky is blue"
+
+
+class _EmptyReceiveSession:
+    async def receive(self):
+        if False:
+            yield None
+
+
+class _FakeConnectContext:
+    def __init__(self, live_session):
+        self.live_session = live_session
+
+    async def __aenter__(self):
+        return self.live_session
+
+    async def __aexit__(self, exc_type, exc, tb):
+        return False
+
+
+class _FakeLiveClient:
+    def __init__(self, live_session):
+        self.live_session = live_session
+        self.aio = self
+        self.live = self
+
+    def connect(self, **kwargs):
+        return _FakeConnectContext(self.live_session)
+
+
+@pytest.mark.anyio
+async def test_bridge_clears_live_session_after_stream_end() -> None:
+    """[FACT] Closed Live stream should clear bridge session state for next mic turn."""
+    bridge = GeminiLiveBridge(api_key="test_key")
+    live_session = _EmptyReceiveSession()
+    fake_client = _FakeLiveClient(live_session)
+
+    bridge.client = fake_client
+    bridge.api_version = "v1beta"
+    bridge.live_model = "gemini-2.5-flash-native-audio-preview-12-2025"
+    bridge._resolve_live_client = lambda _api_version: fake_client  # type: ignore[method-assign]
+
+    session = await bridge.create_session("test_session")
+    await bridge.start_gemini_live(session)
+
+    assert session.gemini_session is None
+    assert session.gemini_task is None
