@@ -89,6 +89,7 @@ class GeminiLiveBridge:
         self.sessions: dict[str, LiveSession] = {}
         self.on_intervention: Callable | None = None
         self.client: Any = None
+        self._alt_clients: dict[str, Any] = {}
 
         self.enable_simulation_fallback = os.getenv(
             "HELIX_AUDIO_SIMULATION", ""
@@ -153,6 +154,44 @@ class GeminiLiveBridge:
             config["input_audio_transcription"] = {}
         return config
 
+    def _live_config_variants(
+        self, model_name: str, reasoning_mode: bool
+    ) -> list[tuple[str, dict[str, Any]]]:
+        """[FACT] Provide ordered setup variants for resilient Live connection."""
+        selected_model = self._normalize_live_model_name(model_name)
+        if not self._is_native_audio_model(selected_model):
+            return [("text_default", self._build_live_config(selected_model, reasoning_mode))]
+        return [
+            ("text_input_tx", {"response_modalities": ["TEXT"], "input_audio_transcription": {}}),
+            (
+                "audio_output_tx",
+                {"response_modalities": ["AUDIO"], "output_audio_transcription": {}},
+            ),
+            (
+                "text_audio_tx",
+                {
+                    "response_modalities": ["TEXT", "AUDIO"],
+                    "input_audio_transcription": {},
+                    "output_audio_transcription": {},
+                },
+            ),
+        ]
+
+    def _resolve_live_client(self, api_version: str) -> Any:
+        if api_version == self.api_version:
+            return self.client
+        cached = self._alt_clients.get(api_version)
+        if cached is not None:
+            return cached
+        if not (GENAI_AVAILABLE and self.api_key):
+            return None
+        created = genai.Client(
+            api_key=self.api_key,
+            http_options={"api_version": api_version},
+        )
+        self._alt_clients[api_version] = created
+        return created
+
     async def ensure_gemini_live(self, session: LiveSession) -> None:
         """[FACT] Lazy-start Gemini Live when audio starts and reconnect if needed."""
         if not self.client:
@@ -178,12 +217,31 @@ class GeminiLiveBridge:
             return
 
         selected_model = self._normalize_live_model_name(model_id or self.live_model)
-        config = self._build_live_config(selected_model, reasoning_mode=reasoning_mode)
+        config_variants = self._live_config_variants(selected_model, reasoning_mode)
+
+        api_versions = [self.api_version]
+        if self.api_version == "v1beta":
+            api_versions.append("v1alpha")
+
+        attempts: list[tuple[str, str, dict[str, Any]]] = []
+        for variant_name, config in config_variants:
+            for api_version in api_versions:
+                attempts.append((api_version, variant_name, config))
+        attempts = attempts[: max(1, self.connect_max_retries)]
 
         last_error: str | None = None
-        for attempt in range(1, self.connect_max_retries + 1):
+        total_attempts = len(attempts)
+
+        for attempt_index, (attempt_api_version, variant_name, config) in enumerate(
+            attempts, start=1
+        ):
+            connect_client = self._resolve_live_client(attempt_api_version)
+            if not connect_client:
+                last_error = f"No client available for API version {attempt_api_version}"
+                continue
+
             try:
-                async with self.client.aio.live.connect(
+                async with connect_client.aio.live.connect(
                     model=selected_model,
                     config=config,
                 ) as gemini_session:
@@ -195,7 +253,10 @@ class GeminiLiveBridge:
                             await session.client_ws.send_json(
                                 {
                                     "type": "system_event",
-                                    "message": f"Gemini Live connected for audio transcription ({selected_model}, {self.api_version}).",
+                                    "message": (
+                                        "Gemini Live connected for audio transcription "
+                                        f"({selected_model}, {attempt_api_version}, cfg={variant_name})."
+                                    ),
                                 }
                             )
 
@@ -215,14 +276,16 @@ class GeminiLiveBridge:
                                 "type": "system_event",
                                 "message": (
                                     "Gemini Live connect/stream error "
-                                    f"(attempt {attempt}/{self.connect_max_retries}, model={selected_model}, api={self.api_version}): {last_error}"
+                                    f"(attempt {attempt_index}/{total_attempts}, "
+                                    f"model={selected_model}, api={attempt_api_version}, cfg={variant_name}): {last_error}"
                                 ),
                             }
                         )
 
-                if attempt < self.connect_max_retries:
-                    delay = self.connect_retry_base_delay_s * (2 ** (attempt - 1))
+                if attempt_index < total_attempts:
+                    delay = self.connect_retry_base_delay_s * (2 ** (attempt_index - 1))
                     await asyncio.sleep(delay)
+
         session.gemini_session = None
         session.next_connect_attempt_ts = time.time() + self.connect_retry_cooldown_s
         if session.client_ws:
@@ -232,7 +295,7 @@ class GeminiLiveBridge:
                         "type": "system_event",
                         "message": (
                             "Gemini Live unavailable after retries; using offline mode "
-                            f"(model={selected_model}, api={self.api_version}, last error: {last_error or 'unknown'})."
+                            f"(model={selected_model}, last error: {last_error or 'unknown'})."
                         ),
                     }
                 )
@@ -305,6 +368,10 @@ class GeminiLiveBridge:
             tx_text = getattr(input_tx, "text", None)
             if isinstance(tx_text, str) and tx_text.strip():
                 return tx_text.strip()
+            output_tx = getattr(server_content, "output_transcription", None)
+            out_text = getattr(output_tx, "text", None)
+            if isinstance(out_text, str) and out_text.strip():
+                return out_text.strip()
 
         message_text = getattr(gemini_message, "text", None)
         if isinstance(message_text, str) and message_text.strip():
@@ -318,6 +385,11 @@ class GeminiLiveBridge:
                     tx_text = input_tx.get("text")
                     if isinstance(tx_text, str) and tx_text.strip():
                         return tx_text.strip()
+                output_tx = server_dict.get("output_transcription", {})
+                if isinstance(output_tx, dict):
+                    out_text = output_tx.get("text")
+                    if isinstance(out_text, str) and out_text.strip():
+                        return out_text.strip()
             text_value = gemini_message.get("text")
             if isinstance(text_value, str) and text_value.strip():
                 return text_value.strip()
