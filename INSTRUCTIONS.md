@@ -11,11 +11,11 @@
    *Ensure the full suite passes (currently 164 tests).*
 
 2. **Set GEMINI_API_KEY + model defaults:**
-   *Use Gemini 3.1 Pro Preview as default for both live/audio and text paths.*
+   *Use Gemini native-audio for live voice and Gemini 3.1 Pro Preview for text paths.*
 
    ```bash
    $env:GEMINI_API_KEY="<your-key>"
-   $env:GEMINI_LIVE_MODEL="gemini-3.1-pro-preview"
+   $env:GEMINI_LIVE_MODEL="gemini-2.5-flash-native-audio-preview-12-2025"
    $env:GEMINI_TEXT_MODEL="gemini-3.1-pro-preview"
    ```
 
@@ -31,7 +31,7 @@
 
 ### 1. Introduction (The UI)
 -   Show the dashboard with **0 Receipts / 0 Drifts**.
--   Highlight the **"LIVE v1.4.3"** branding and the **Pulse-Green** header.
+-   Highlight the **"LIVE v1.4.4"** branding and the **Pulse-Green** header.
 
 ### 2. Live Audio Demo (The Waveform)
 -   Click **"Start Live Mic"**.

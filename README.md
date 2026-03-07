@@ -16,7 +16,7 @@
 
 This project is a submission for the **Gemini Live Agent Challenge (March 2026)**.
 
-**Current Release:** `v1.4.3`
+**Current Release:** `v1.4.4`
 
 ## 🚀 Key Features
 
@@ -75,7 +75,7 @@ pip install -e .
 2. **Set API Key + Model Defaults:**
    ```bash
    $env:GEMINI_API_KEY = "your-api-key"
-   $env:GEMINI_LIVE_MODEL = "gemini-3.1-pro-preview"
+   $env:GEMINI_LIVE_MODEL = "gemini-2.5-flash-native-audio-preview-12-2025"
    $env:GEMINI_TEXT_MODEL = "gemini-3.1-pro-preview"
    ```
 
@@ -102,7 +102,7 @@ python helix_code/live_demo_server.py
 
 **Features:**
 - 16kHz PCM mono audio capture from browser
-- Real-time streaming to Gemini Live API (`gemini-3.1-pro-preview` default)
+- Real-time streaming to Gemini Live API (`gemini-2.5-flash-native-audio-preview-12-2025` default)
 - Instant transcription with constitutional validation
 - Visual intervention alerts for drift detection
 - Optional auth hardening: `AUDIO_AUDIT_TOKEN` and `AUDIO_AUDIT_ALLOWED_ORIGINS`
