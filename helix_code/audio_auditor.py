@@ -151,8 +151,10 @@ class AudioAuditor:
         """[FACT] Extract text only from known Gemini response shapes."""
         if hasattr(response, "text") and isinstance(response.text, str):
             return response.text
-        if isinstance(response, dict) and isinstance(response.get("text"), str):
-            return response["text"]
+        if isinstance(response, dict):
+            text_value = response.get("text")
+            if isinstance(text_value, str):
+                return text_value
         return ""
 
     def _is_rate_limited(self, session: AudioAuditSession, now_ts: float) -> bool:

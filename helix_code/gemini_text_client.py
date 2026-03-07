@@ -26,7 +26,11 @@ class GeminiTextClient:
     [HYPOTHESIS] REST calls are more stable for v1beta models like gemini-3.1-pro-preview.
     """
 
-    def __init__(self, api_key: str | None = None, model: str = os.getenv("GEMINI_TEXT_MODEL", "gemini-3.1-pro-preview")):
+    def __init__(
+        self,
+        api_key: str | None = None,
+        model: str = os.getenv("GEMINI_TEXT_MODEL", "gemini-3.1-pro-preview"),
+    ):
         """[FACT] Initialize Gemini client with REST configuration."""
         self.api_key = api_key or os.getenv("GEMINI_API_KEY")
         self.model = model
