@@ -29,10 +29,12 @@ if TYPE_CHECKING:
 # [FACT] Gemini Live API imports
 try:
     from google import genai
+    from google.genai import types as genai_types
 
     GENAI_AVAILABLE = True
 except ImportError:
     GENAI_AVAILABLE = False
+    genai_types = None
 
 logger = logging.getLogger(__name__)
 
@@ -149,7 +151,8 @@ class AudioAuditor:
         if self._gemini_available:
             try:
                 self._gemini_client = genai.Client(
-                    api_key=self.api_key, http_options={"api_version": "v1alpha"}
+                    api_key=self.api_key,
+                    http_options={"api_version": os.getenv("GEMINI_API_VERSION", "v1beta")},
                 )
                 print("[FACT] Gemini Live client initialized")
             except Exception as e:
@@ -163,12 +166,29 @@ class AudioAuditor:
 
     def _extract_gemini_text(self, response: Any) -> str:
         """[FACT] Extract text only from known Gemini response shapes."""
-        if hasattr(response, "text") and isinstance(response.text, str):
-            return response.text
+        server_content = getattr(response, "server_content", None)
+        if server_content is not None:
+            input_tx = getattr(server_content, "input_transcription", None)
+            tx_text = getattr(input_tx, "text", None)
+            if isinstance(tx_text, str) and tx_text.strip():
+                return tx_text.strip()
+
+        if hasattr(response, "text") and isinstance(response.text, str) and response.text.strip():
+            return response.text.strip()
+
         if isinstance(response, dict):
+            server_dict = response.get("server_content", {})
+            if isinstance(server_dict, dict):
+                input_tx = server_dict.get("input_transcription", {})
+                if isinstance(input_tx, dict):
+                    tx_text = input_tx.get("text")
+                    if isinstance(tx_text, str) and tx_text.strip():
+                        return tx_text.strip()
+
             text_value = response.get("text")
-            if isinstance(text_value, str):
-                return text_value
+            if isinstance(text_value, str) and text_value.strip():
+                return text_value.strip()
+
         return ""
 
     def _is_rate_limited(self, session: AudioAuditSession, now_ts: float) -> bool:
@@ -262,10 +282,14 @@ class AudioAuditor:
                 # [HYPOTHESIS] Use BidiGenerateContent for audio input + text output
                 config: dict[str, Any] = {
                     "response_modalities": ["TEXT"],
+                    "input_audio_transcription": {},
                 }
 
                 async with self._gemini_client.aio.live.connect(
-                    model=os.getenv("GEMINI_LIVE_MODEL", "gemini-3.1-pro-preview"), config=config
+                    model=os.getenv(
+                        "GEMINI_LIVE_MODEL", "gemini-2.5-flash-native-audio-preview-12-2025"
+                    ).removeprefix("models/"),
+                    config=config,
                 ) as gemini_session:
                     session.gemini_session = gemini_session
                     session.gemini_connected = True
@@ -273,7 +297,7 @@ class AudioAuditor:
                     print(f"[FACT] ✅ Gemini Live CONNECTED for session: {session.session_id}")
 
                     # [FACT] Listen for transcription responses
-                    async for response in gemini_session:
+                    async for response in gemini_session.receive():
                         await self._handle_gemini_response(session, response)
 
                     session.gemini_disconnects += 1
@@ -471,7 +495,13 @@ class AudioAuditor:
 
         try:
             # [FACT] Send raw PCM audio bytes directly
-            await session.gemini_session.send(input={"mime_type": "audio/pcm", "data": pcm_data})
+            mime_type = "audio/pcm;rate=16000"
+            if genai_types and hasattr(session.gemini_session, "send_realtime_input"):
+                await session.gemini_session.send_realtime_input(
+                    audio=genai_types.Blob(data=pcm_data, mime_type=mime_type)
+                )
+            else:
+                await session.gemini_session.send(input={"mime_type": mime_type, "data": pcm_data})
         except Exception as e:
             logger.exception("[ERROR] Failed to send audio to Gemini: %s", e)
             raise

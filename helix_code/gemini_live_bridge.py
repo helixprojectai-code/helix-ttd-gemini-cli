@@ -25,10 +25,12 @@ from typing import Any
 # [FACT] Google GenAI imports for Gemini Live
 try:
     from google import genai
+    from google.genai import types as genai_types
 
     GENAI_AVAILABLE = True
 except ImportError:
     GENAI_AVAILABLE = False
+    genai_types = None
 
 from constitutional_compliance import ConstitutionalCompliance
 
@@ -71,11 +73,16 @@ class GeminiLiveBridge:
             "reasoning": False,
             "description": "Gemini Live native audio model (preview)",
         },
+        "gemini-2.5-flash-native-audio-latest": {
+            "reasoning": False,
+            "description": "Gemini Live native audio model (latest alias)",
+        },
         "gemini-3.1-pro-preview": {
             "reasoning": True,
             "description": "Text reasoning model (not for Live bidi audio)",
         },
     }
+    AUDIO_LIVE_MODEL_PREFIXES = ("gemini-2.5-flash-native-audio",)
 
     def __init__(self, api_key: str | None = None):
         self.api_key = api_key or os.getenv("GEMINI_API_KEY")
@@ -131,6 +138,21 @@ class GeminiLiveBridge:
             normalized = normalized[len("models/") :]
         return normalized
 
+    def _is_native_audio_model(self, model_name: str) -> bool:
+        normalized = self._normalize_live_model_name(model_name)
+        return normalized.startswith(self.AUDIO_LIVE_MODEL_PREFIXES)
+
+    def _build_live_config(self, model_name: str, reasoning_mode: bool) -> dict[str, Any]:
+        """[FACT] Build model-specific Live API config."""
+        selected_model = self._normalize_live_model_name(model_name)
+        config: dict[str, Any] = {"response_modalities": ["TEXT"]}
+        if reasoning_mode and selected_model in {"gemini-3.1-pro-preview"}:
+            config["reasoning_mode"] = True
+        if self._is_native_audio_model(selected_model):
+            # [FACT] Native-audio Live expects realtime audio with transcription enabled.
+            config["input_audio_transcription"] = {}
+        return config
+
     async def ensure_gemini_live(self, session: LiveSession) -> None:
         """[FACT] Lazy-start Gemini Live when audio starts and reconnect if needed."""
         if not self.client:
@@ -156,9 +178,7 @@ class GeminiLiveBridge:
             return
 
         selected_model = self._normalize_live_model_name(model_id or self.live_model)
-        config: dict[str, Any] = {"response_modalities": ["TEXT"]}
-        if reasoning_mode and selected_model in {"gemini-3.1-pro-preview"}:
-            config["reasoning_mode"] = True
+        config = self._build_live_config(selected_model, reasoning_mode=reasoning_mode)
 
         last_error: str | None = None
         for attempt in range(1, self.connect_max_retries + 1):
@@ -179,7 +199,7 @@ class GeminiLiveBridge:
                                 }
                             )
 
-                    async for message in gemini_session:
+                    async for message in gemini_session.receive():
                         processed = await self.handle_gemini_response(session, message)
                         if session.client_ws:
                             await session.client_ws.send_json(processed)
@@ -260,11 +280,7 @@ class GeminiLiveBridge:
         session: LiveSession,
         gemini_message: Any,
     ) -> dict[str, Any]:
-        text = ""
-        if hasattr(gemini_message, "text"):
-            text = gemini_message.text
-        elif isinstance(gemini_message, dict) and "text" in gemini_message:
-            text = gemini_message["text"]
+        text = self._extract_live_text(gemini_message)
 
         if not text:
             return {"type": "raw", "data": str(gemini_message)}
@@ -280,6 +296,32 @@ class GeminiLiveBridge:
             "drift_code": validation.get("drift_code"),
             "timestamp": datetime.utcnow().isoformat(),
         }
+
+    def _extract_live_text(self, gemini_message: Any) -> str:
+        """[FACT] Extract transcript/model text from Live server message variants."""
+        server_content = getattr(gemini_message, "server_content", None)
+        if server_content is not None:
+            input_tx = getattr(server_content, "input_transcription", None)
+            tx_text = getattr(input_tx, "text", None)
+            if isinstance(tx_text, str) and tx_text.strip():
+                return tx_text.strip()
+
+        message_text = getattr(gemini_message, "text", None)
+        if isinstance(message_text, str) and message_text.strip():
+            return message_text.strip()
+
+        if isinstance(gemini_message, dict):
+            server_dict = gemini_message.get("server_content", {})
+            if isinstance(server_dict, dict):
+                input_tx = server_dict.get("input_transcription", {})
+                if isinstance(input_tx, dict):
+                    tx_text = input_tx.get("text")
+                    if isinstance(tx_text, str) and tx_text.strip():
+                        return tx_text.strip()
+            text_value = gemini_message.get("text")
+            if isinstance(text_value, str) and text_value.strip():
+                return text_value.strip()
+        return ""
 
     async def stream_audio_to_gemini(
         self,
@@ -321,12 +363,21 @@ class GeminiLiveBridge:
 
         if session.gemini_session:
             with contextlib.suppress(Exception):
-                await session.gemini_session.send(
-                    input={
-                        "mime_type": "audio/pcm",
-                        "data": pcm_data,
-                    }
-                )
+                mime_type = "audio/pcm;rate=16000"
+                if genai_types:
+                    await session.gemini_session.send_realtime_input(
+                        audio=genai_types.Blob(
+                            data=pcm_data,
+                            mime_type=mime_type,
+                        )
+                    )
+                else:
+                    await session.gemini_session.send(
+                        input={
+                            "mime_type": mime_type,
+                            "data": pcm_data,
+                        }
+                    )
             if should_finalize:
                 await self.finalize_audio_turn(session, reason=turn_reason or "heuristic")
             return
@@ -365,7 +416,10 @@ class GeminiLiveBridge:
 
         if session.gemini_session:
             with contextlib.suppress(Exception):
-                await session.gemini_session.send("", end_of_turn=True)
+                if hasattr(session.gemini_session, "send_realtime_input"):
+                    await session.gemini_session.send_realtime_input(audio_stream_end=True)
+                else:
+                    await session.gemini_session.send("", end_of_turn=True)
             self._reset_turn_state(session)
             return
 

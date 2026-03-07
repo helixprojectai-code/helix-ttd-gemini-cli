@@ -176,6 +176,21 @@ class TestAudioAuditor:
         assert len(session.segments) == 0
 
     @pytest.mark.anyio
+    async def test_handle_gemini_response_uses_input_transcription(
+        self, auditor: AudioAuditor
+    ) -> None:
+        """[FACT] Input transcription events are converted into validated segments."""
+        session = await auditor.create_session("test_input_tx")
+
+        await auditor._handle_gemini_response(
+            session,
+            {"server_content": {"input_transcription": {"text": "hello audio world"}}},
+        )
+
+        assert len(session.segments) == 1
+        assert session.segments[0].text == "hello audio world"
+
+    @pytest.mark.anyio
     async def test_process_turn_empty_buffer(self, auditor: AudioAuditor) -> None:
         """[FACT] Handles empty buffer gracefully."""
         await auditor.create_session("test_123")

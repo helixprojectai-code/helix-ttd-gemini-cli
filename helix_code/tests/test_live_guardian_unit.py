@@ -214,3 +214,70 @@ def test_bridge_normalize_live_model_name() -> None:
     assert bridge._normalize_live_model_name("gemini-2.5-flash-native-audio-preview-12-2025") == (
         "gemini-2.5-flash-native-audio-preview-12-2025"
     )
+
+
+def test_bridge_build_live_config_for_native_audio_model() -> None:
+    """[FACT] Native-audio models enable input transcription in Live config."""
+    bridge = GeminiLiveBridge(api_key="test_key")
+
+    config = bridge._build_live_config("gemini-2.5-flash-native-audio-latest", reasoning_mode=False)
+
+    assert config["response_modalities"] == ["TEXT"]
+    assert config["input_audio_transcription"] == {}
+
+
+def test_bridge_extracts_input_transcription_text() -> None:
+    """[FACT] Live message parser prefers input transcription text when available."""
+    bridge = GeminiLiveBridge(api_key="test_key")
+
+    extracted = bridge._extract_live_text(
+        {
+            "server_content": {
+                "input_transcription": {
+                    "text": "hello from mic",
+                }
+            }
+        }
+    )
+
+    assert extracted == "hello from mic"
+
+
+class _DummyGeminiSession:
+    def __init__(self) -> None:
+        self.audio_payloads: list[object] = []
+        self.audio_stream_end_count = 0
+
+    async def send_realtime_input(self, *, audio=None, audio_stream_end=None):
+        if audio is not None:
+            self.audio_payloads.append(audio)
+        if audio_stream_end is not None:
+            self.audio_stream_end_count += 1
+
+
+@pytest.mark.anyio
+async def test_bridge_stream_audio_uses_realtime_input() -> None:
+    """[FACT] Audio chunks are sent via Live realtime input API."""
+    bridge = GeminiLiveBridge(api_key="test_key")
+    bridge.client = None
+
+    session = await bridge.create_session("test_session")
+    session.gemini_session = _DummyGeminiSession()
+
+    await bridge.stream_audio_to_gemini(session, _pcm_chunk_base64(samples=320, amplitude=800))
+
+    assert len(session.gemini_session.audio_payloads) == 1
+
+
+@pytest.mark.anyio
+async def test_bridge_finalize_audio_turn_uses_audio_stream_end() -> None:
+    """[FACT] Explicit turn finalization signals stream-end for realtime audio."""
+    bridge = GeminiLiveBridge(api_key="test_key")
+    bridge.client = None
+
+    session = await bridge.create_session("test_session")
+    session.gemini_session = _DummyGeminiSession()
+
+    await bridge.finalize_audio_turn(session, reason="mic_stop")
+
+    assert session.gemini_session.audio_stream_end_count == 1
