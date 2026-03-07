@@ -13,7 +13,7 @@ from collections import deque
 from dataclasses import dataclass, field
 from datetime import datetime
 
-# [FACT] Import our Gemini Live Bridge
+# [FACT] Import our Helix modules
 from audio_auditor import TranscriptionSegment, create_audio_auditor
 
 # [FACT] FastAPI and WebSocket imports
