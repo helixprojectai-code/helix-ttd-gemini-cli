@@ -78,6 +78,19 @@ class TestLiveMetrics:
         assert "latency_p99" in data
         assert "uptime_seconds" in data
         assert "categories" in data
+        assert "voice_pipe" in data
+
+    def test_voice_pipe_metrics(self) -> None:
+        """[FACT] Tracks voice-pipe connect/disconnect and turn-boundary counters."""
+        metrics = LiveMetrics()
+        metrics.record_ws_connect()
+        metrics.record_turn_boundary()
+        metrics.record_ws_disconnect()
+
+        data = metrics.to_dict()
+        assert data["voice_pipe"]["ws_connect_count"] == 1
+        assert data["voice_pipe"]["ws_disconnect_count"] == 1
+        assert data["voice_pipe"]["turn_boundary_count"] == 1
 
 
 class TestReceiptStore:
