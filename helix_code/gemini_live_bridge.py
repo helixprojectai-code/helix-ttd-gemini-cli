@@ -12,6 +12,7 @@ The Guardian intercepts Gemini responses, validates epistemic integrity,
 and blocks or modifies non-compliant content before it reaches the user.
 """
 
+import asyncio
 import base64
 import contextlib
 import os
@@ -21,8 +22,6 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Any
 
-# [FACT] WebSocket imports
-
 # [FACT] Google GenAI imports for Gemini Live
 try:
     from google import genai
@@ -31,16 +30,12 @@ try:
 except ImportError:
     GENAI_AVAILABLE = False
 
-# [FACT] Import our Constitutional Guardian
 from constitutional_compliance import ConstitutionalCompliance
 
 
 @dataclass
 class LiveSession:
-    """[FACT] Represents a live validation session.
-
-    [HYPOTHESIS] Tracking session state enables multi-user support and turn-end detection.
-    """
+    """[FACT] Represents a live validation session."""
 
     session_id: str
     created_at: str
@@ -49,15 +44,16 @@ class LiveSession:
     client_ws: Any | None = None
     receipt_count: int = 0
     intervention_count: int = 0
-    audio_chunk_count: int = 0  # [FACT] Pipeline activity counter
-    audio_turn_ms: float = 0.0  # [FACT] Duration of current turn
-    silent_chunk_streak: int = 0  # [FACT] Silence-based boundary helper
+    audio_chunk_count: int = 0
+    audio_turn_ms: float = 0.0
+    silent_chunk_streak: int = 0
     last_chunk_ts: float | None = None
-    narrative_hint: str | None = None  # [FACT] User-provided text for sync simulation
+    narrative_hint: str | None = None
     gemini_task: Any | None = None
+    connect_failures: int = 0
+    next_connect_attempt_ts: float = 0.0
 
     def to_dict(self) -> dict:
-        """[FACT] Convert session state to dictionary for telemetry."""
         return {
             "session_id": self.session_id,
             "created_at": self.created_at,
@@ -68,20 +64,21 @@ class LiveSession:
 
 
 class GeminiLiveBridge:
-    """[FACT] Bridge between user, Gemini Live, and Constitutional Guardian.
+    """[FACT] Bridge between user, Gemini Live, and Constitutional Guardian."""
 
-    Architecture:
-    User <-> WebSocket <-> Guardian <-> Gemini Live API
-    """
+    SUPPORTED_MODELS = {
+        "gemini-3.1-pro-preview": {
+            "reasoning": True,
+            "description": "Deep reasoning, edge case analysis",
+        },
+    }
 
     def __init__(self, api_key: str | None = None):
-        """[FACT] Initialize the bridge with an optional API key."""
         self.api_key = api_key or os.getenv("GEMINI_API_KEY")
         self.sessions: dict[str, LiveSession] = {}
         self.on_intervention: Callable | None = None
         self.client: Any = None
 
-        # [FACT] Turn-boundary controls for voice stream
         self.enable_simulation_fallback = os.getenv(
             "HELIX_AUDIO_SIMULATION", ""
         ).strip().lower() in {"1", "true", "yes", "on"}
@@ -92,6 +89,11 @@ class GeminiLiveBridge:
             os.getenv("HELIX_AUDIO_SILENCE_CHUNKS_FOR_TURN_END", "6")
         )
         self.chunk_gap_ms = float(os.getenv("HELIX_AUDIO_CHUNK_GAP_MS", "450"))
+        self.connect_max_retries = int(os.getenv("HELIX_GEMINI_CONNECT_RETRIES", "3"))
+        self.connect_retry_base_delay_s = float(
+            os.getenv("HELIX_GEMINI_CONNECT_RETRY_BASE_S", "1.0")
+        )
+        self.connect_retry_cooldown_s = float(os.getenv("HELIX_GEMINI_CONNECT_COOLDOWN_S", "8.0"))
 
         if GENAI_AVAILABLE and self.api_key:
             self.client = genai.Client(
@@ -101,23 +103,32 @@ class GeminiLiveBridge:
             print("[WARNING] GEMINI_API_KEY not set. Gemini Live integration disabled.")
 
     async def create_session(self, session_id: str) -> LiveSession:
-        """[FACT] Create a new validated live session."""
         guardian = ConstitutionalCompliance()
-
         session = LiveSession(
-            session_id=session_id, created_at=datetime.utcnow().isoformat(), guardian=guardian
+            session_id=session_id,
+            created_at=datetime.utcnow().isoformat(),
+            guardian=guardian,
         )
-
         self.sessions[session_id] = session
         return session
 
-    # [FACT] Supported Gemini models with capabilities
-    SUPPORTED_MODELS = {
-        "gemini-3.1-pro-preview": {
-            "reasoning": True,
-            "description": "Deep reasoning, edge case analysis",
-        },
-    }
+    def _is_task_active(self, task: Any) -> bool:
+        return bool(task and hasattr(task, "done") and not task.done())
+
+    async def ensure_gemini_live(self, session: LiveSession) -> None:
+        """[FACT] Lazy-start Gemini Live when audio starts and reconnect if needed."""
+        if not self.client:
+            return
+        if session.gemini_session is not None:
+            return
+        if self._is_task_active(session.gemini_task):
+            return
+
+        now = time.time()
+        if now < session.next_connect_attempt_ts:
+            return
+
+        session.gemini_task = asyncio.create_task(self.start_gemini_live(session))
 
     async def start_gemini_live(
         self,
@@ -125,57 +136,76 @@ class GeminiLiveBridge:
         model_id: str = "gemini-3.1-pro-preview",
         reasoning_mode: bool = False,
     ) -> None:
-        """[FACT] Start the actual Gemini Live API session.
-
-        Args:
-            session: Active live session instance
-            model_id: Gemini model to use (default: gemini-3.1-pro-preview)
-            reasoning_mode: Enable deep reasoning mode for complex analysis
-        """
         if not self.client:
-            print("[WARNING] Gemini Client not available.")
             return
 
-        # [HYPOTHESIS] Configure response modalities based on model capabilities
         config: dict[str, Any] = {"response_modalities": ["TEXT"]}
-
-        # [FACT] Enable reasoning mode for Gemini 3.1 Pro
         if reasoning_mode and model_id == "gemini-3.1-pro-preview":
             config["reasoning_mode"] = True
-            print(f"[FACT] Gemini 3.1 Pro reasoning mode enabled for session: {session.session_id}")
 
-        # [HYPOTHESIS] Bidirectional context manager for live connection
-        try:
-            async with self.client.aio.live.connect(
-                model=model_id, config=config
-            ) as gemini_session:
-                session.gemini_session = gemini_session
-                print(f"[FACT] Connected to Gemini Live for session: {session.session_id}")
-
-                async for message in gemini_session:
-                    # [FACT] Process every message from Gemini
-                    processed = await self.handle_gemini_response(session, message)
+        last_error: str | None = None
+        for attempt in range(1, self.connect_max_retries + 1):
+            try:
+                async with self.client.aio.live.connect(
+                    model=model_id,
+                    config=config,
+                ) as gemini_session:
+                    session.gemini_session = gemini_session
+                    session.connect_failures = 0
+                    session.next_connect_attempt_ts = 0.0
                     if session.client_ws:
-                        await session.client_ws.send_json(processed)
-        except Exception as exc:
-            print(f"[ERROR] Gemini Live session failed ({session.session_id}): {exc}")
-            if session.client_ws:
-                with contextlib.suppress(Exception):
-                    await session.client_ws.send_json(
-                        {
-                            "type": "system_event",
-                            "message": "Gemini Live stream error; falling back to offline mode.",
-                        }
-                    )
-        finally:
-            session.gemini_session = None
+                        with contextlib.suppress(Exception):
+                            await session.client_ws.send_json(
+                                {
+                                    "type": "system_event",
+                                    "message": "Gemini Live connected for audio transcription.",
+                                }
+                            )
+
+                    async for message in gemini_session:
+                        processed = await self.handle_gemini_response(session, message)
+                        if session.client_ws:
+                            await session.client_ws.send_json(processed)
+
+                    return
+            except Exception as exc:
+                last_error = str(exc)
+                session.connect_failures += 1
+                if session.client_ws:
+                    with contextlib.suppress(Exception):
+                        await session.client_ws.send_json(
+                            {
+                                "type": "system_event",
+                                "message": (
+                                    "Gemini Live connect/stream error "
+                                    f"(attempt {attempt}/{self.connect_max_retries}): {last_error}"
+                                ),
+                            }
+                        )
+
+                if attempt < self.connect_max_retries:
+                    delay = self.connect_retry_base_delay_s * (2 ** (attempt - 1))
+                    await asyncio.sleep(delay)
+        session.gemini_session = None
+        session.next_connect_attempt_ts = time.time() + self.connect_retry_cooldown_s
+        if session.client_ws:
+            with contextlib.suppress(Exception):
+                await session.client_ws.send_json(
+                    {
+                        "type": "system_event",
+                        "message": (
+                            "Gemini Live unavailable after retries; using offline mode "
+                            f"(last error: {last_error or 'unknown'})."
+                        ),
+                    }
+                )
 
     async def validate_gemini_response(
-        self, session: LiveSession, response_text: str
+        self,
+        session: LiveSession,
+        response_text: str,
     ) -> dict[str, Any]:
-        """[FACT] Validate Gemini response through Constitutional Guardian."""
         validation = session.guardian.validate_text(response_text)
-
         result = {
             "original_text": response_text,
             "valid": validation.compliant,
@@ -191,16 +221,15 @@ class GeminiLiveBridge:
         else:
             session.intervention_count += 1
             result["modified_text"] = self._generate_intervention(
-                response_text, result["drift_code"]
+                response_text,
+                result["drift_code"],
             )
-
             if self.on_intervention:
                 await self.on_intervention(session, result)
 
         return result
 
     def _generate_intervention(self, original_text: str, drift_code: str) -> str:
-        """[FACT] Generate a constitutional intervention message based on drift code."""
         interventions = {
             "DRIFT-A": "[CONSTITUTIONAL GUARDIAN: Agency claim detected. AI is a non-agentic tool.]",
             "DRIFT-E": "[CONSTITUTIONAL GUARDIAN: Epistemic markers missing. Factual integrity unverified.]",
@@ -210,9 +239,10 @@ class GeminiLiveBridge:
         return f"{warning}\n\n{original_text}"
 
     async def handle_gemini_response(
-        self, session: LiveSession, gemini_message: Any
+        self,
+        session: LiveSession,
+        gemini_message: Any,
     ) -> dict[str, Any]:
-        """[FACT] Process response from Gemini Live API."""
         text = ""
         if hasattr(gemini_message, "text"):
             text = gemini_message.text
@@ -223,7 +253,6 @@ class GeminiLiveBridge:
             return {"type": "raw", "data": str(gemini_message)}
 
         validation = await self.validate_gemini_response(session, text)
-
         return {
             "type": "validated_response",
             "original": text,
@@ -236,16 +265,17 @@ class GeminiLiveBridge:
         }
 
     async def stream_audio_to_gemini(
-        self, session: LiveSession, audio_base64: str, narrative: str | None = None
+        self,
+        session: LiveSession,
+        audio_base64: str,
+        narrative: str | None = None,
     ) -> None:
-        """[FACT] Send audio to active Gemini Live session with deterministic turn logic."""
         pcm_data = self._decode_audio_chunk(audio_base64)
         if not pcm_data:
             return
 
         session.audio_chunk_count += 1
         session.audio_turn_ms += self._pcm_duration_ms(pcm_data)
-
         if self._chunk_is_silent(pcm_data):
             session.silent_chunk_streak += 1
         else:
@@ -262,19 +292,28 @@ class GeminiLiveBridge:
         if narrative:
             session.narrative_hint = narrative
 
-        # [FACT] Notify UI every few chunks to show activity
         if session.client_ws and session.audio_chunk_count % 4 == 0:
             await session.client_ws.send_json(
-                {"type": "system_event", "message": "Processing live audio stream..."}
+                {
+                    "type": "system_event",
+                    "message": "Processing live audio stream...",
+                }
             )
 
+        await self.ensure_gemini_live(session)
+
         if session.gemini_session:
-            await session.gemini_session.send(audio_base64, end_of_turn=should_finalize)
+            with contextlib.suppress(Exception):
+                await session.gemini_session.send(
+                    input={
+                        "mime_type": "audio/pcm",
+                        "data": pcm_data,
+                    }
+                )
             if should_finalize:
-                self._reset_turn_state(session)
+                await self.finalize_audio_turn(session, reason=turn_reason or "heuristic")
             return
 
-        # [FACT] No live session: finalize via explicit simulation only
         if should_finalize and session.client_ws:
             await session.client_ws.send_json(
                 {
@@ -282,7 +321,6 @@ class GeminiLiveBridge:
                     "message": f"Turn boundary detected ({turn_reason}). Finalizing transcription...",
                 }
             )
-
             if self.enable_simulation_fallback:
                 processed = await self._simulate_gemini_response(session, "[Audio Turn Finalized]")
                 await session.client_ws.send_json(processed)
@@ -296,9 +334,10 @@ class GeminiLiveBridge:
             self._reset_turn_state(session)
 
     async def finalize_audio_turn(
-        self, session: LiveSession, reason: str = "explicit_stop"
+        self,
+        session: LiveSession,
+        reason: str = "explicit_stop",
     ) -> None:
-        """[FACT] Explicitly finalize the current audio turn (e.g., mic stop)."""
         if session.client_ws:
             await session.client_ws.send_json(
                 {
@@ -327,21 +366,18 @@ class GeminiLiveBridge:
         self._reset_turn_state(session)
 
     def _decode_audio_chunk(self, audio_base64: str) -> bytes:
-        """[FACT] Decode base64 PCM chunk; invalid chunks are ignored."""
         try:
             return base64.b64decode(audio_base64, validate=True)
         except Exception:
             return b""
 
     def _pcm_duration_ms(self, pcm_data: bytes, sample_rate: int = 16000) -> float:
-        """[FACT] Estimate duration from 16-bit mono PCM payload."""
         if sample_rate <= 0:
             return 0.0
         samples = len(pcm_data) // 2
         return (samples / sample_rate) * 1000
 
     def _chunk_is_silent(self, pcm_data: bytes) -> bool:
-        """[FACT] Detect near-silent PCM chunk by amplitude threshold."""
         if len(pcm_data) < 2:
             return True
         view = memoryview(pcm_data)
@@ -352,7 +388,6 @@ class GeminiLiveBridge:
         return True
 
     def _detect_turn_end(self, session: LiveSession, gap_ms: float) -> tuple[bool, str | None]:
-        """[FACT] End turn on silence streak, chunk gap, or max turn timeout."""
         if session.audio_turn_ms >= self.max_turn_ms:
             return True, "max_turn_timeout"
         if session.audio_turn_ms >= self.min_turn_ms and gap_ms >= self.chunk_gap_ms:
@@ -365,23 +400,23 @@ class GeminiLiveBridge:
         return False, None
 
     def _reset_turn_state(self, session: LiveSession) -> None:
-        """[FACT] Reset state used for turn-boundary detection."""
         session.audio_turn_ms = 0.0
         session.silent_chunk_streak = 0
         session.last_chunk_ts = None
 
-    async def _simulate_gemini_response(self, session: LiveSession, trigger: str) -> dict[str, Any]:
-        """[FACT] Simulation mode for explicit fallback testing only."""
+    async def _simulate_gemini_response(
+        self,
+        session: LiveSession,
+        trigger: str,
+    ) -> dict[str, Any]:
         if session.narrative_hint:
-            # [FACT] Use narrative sync for perfect recording
             simulated = session.narrative_hint
-            session.narrative_hint = None  # Consume hint
+            session.narrative_hint = None
         else:
             simulated = "[ASSUMPTION] Simulation fallback transcript placeholder."
         return await self.handle_gemini_response(session, {"text": simulated})
 
     async def close_session(self, session_id: str) -> None:
-        """[FACT] Close an active session and cleanup resources."""
         session = self.sessions.pop(session_id, None)
         if not session:
             return
@@ -394,5 +429,4 @@ class GeminiLiveBridge:
 
 
 def create_gemini_bridge(api_key: str | None = None) -> GeminiLiveBridge:
-    """[FACT] Factory function to create a Gemini Live Bridge."""
     return GeminiLiveBridge(api_key=api_key)

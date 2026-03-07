@@ -227,12 +227,6 @@ async def demo_websocket_handler(websocket: WebSocket) -> None:
     session = await bridge.create_session(session_id)
     session.client_ws = websocket  # [FACT] Link WebSocket for real-time bridge events
 
-    # [FACT] Start Gemini Live stream reader for this WebSocket session.
-    if bridge.client:
-        session.gemini_task = asyncio.create_task(bridge.start_gemini_live(session))
-    else:
-        logger.warning("[WARN] Gemini Live client unavailable; audio will not transcribe live")
-
     logger.info(f"[FACT] New demo session: {session_id}")
 
     try:

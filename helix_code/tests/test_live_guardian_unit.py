@@ -85,6 +85,7 @@ async def test_bridge_turn_end_by_silence(monkeypatch: pytest.MonkeyPatch) -> No
     """[FACT] Silence streak should finalize a turn once minimum duration is met."""
     monkeypatch.setenv("HELIX_AUDIO_SIMULATION", "1")
     bridge = GeminiLiveBridge(api_key="test_key")
+    bridge.client = None
     bridge.min_turn_ms = 60
     bridge.max_turn_ms = 5000
     bridge.silence_chunks_for_turn_end = 2
@@ -105,6 +106,7 @@ async def test_bridge_turn_end_by_gap(monkeypatch: pytest.MonkeyPatch) -> None:
     """[FACT] A large inter-chunk gap should finalize a turn when long enough."""
     monkeypatch.setenv("HELIX_AUDIO_SIMULATION", "1")
     bridge = GeminiLiveBridge(api_key="test_key")
+    bridge.client = None
     bridge.min_turn_ms = 20
     bridge.chunk_gap_ms = 1
 
@@ -126,6 +128,7 @@ async def test_bridge_turn_end_by_timeout(monkeypatch: pytest.MonkeyPatch) -> No
     """[FACT] Max-turn timeout should finalize regardless of silence."""
     monkeypatch.setenv("HELIX_AUDIO_SIMULATION", "1")
     bridge = GeminiLiveBridge(api_key="test_key")
+    bridge.client = None
     bridge.min_turn_ms = 1000
     bridge.max_turn_ms = 40
 
@@ -145,6 +148,7 @@ async def test_bridge_simulation_fallback_is_deterministic(monkeypatch: pytest.M
     """[FACT] Simulation fallback should not emit random agency text."""
     monkeypatch.setenv("HELIX_AUDIO_SIMULATION", "1")
     bridge = GeminiLiveBridge(api_key="test_key")
+    bridge.client = None
     bridge.min_turn_ms = 20
     bridge.silence_chunks_for_turn_end = 1
 
@@ -166,6 +170,7 @@ async def test_bridge_explicit_audio_end(monkeypatch: pytest.MonkeyPatch) -> Non
     """[FACT] Explicit mic-stop signal should deterministically finalize the turn."""
     monkeypatch.setenv("HELIX_AUDIO_SIMULATION", "1")
     bridge = GeminiLiveBridge(api_key="test_key")
+    bridge.client = None
 
     ws = DummyWS()
     session = await bridge.create_session("test_session")
