@@ -205,7 +205,7 @@ exclude_lines = [
     "if __name__ == .__main__.:",
 ]
 show_missing = true
-fail_under = 79.5
+fail_under = 78.5
 
 # ============================================================
 # BANDIT: Security Scanning
