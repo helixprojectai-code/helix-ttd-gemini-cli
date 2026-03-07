@@ -1,8 +1,8 @@
 # 🛡️ Constitutional Guardian (Helix-TTD)
 
 [![CI](https://github.com/helixprojectai-code/helix-ttd-gemini-cli/actions/workflows/ci-hardened.yml/badge.svg)](https://github.com/helixprojectai-code/helix-ttd-gemini-cli/actions/workflows/ci-hardened.yml)
-[![Tests](https://img.shields.io/badge/tests-140%2F140%20passing-brightgreen)](helix_code/tests/)
-[![Coverage](https://img.shields.io/badge/coverage-79.5%25-brightgreen)](pyproject.toml)
+[![Tests](https://img.shields.io/badge/tests-157%2F157%20passing-brightgreen)](helix_code/tests/)
+[![Coverage](https://img.shields.io/badge/coverage-75%25-brightgreen)](pyproject.toml)
 [![Python](https://img.shields.io/badge/python-3.10%2B-blue)](pyproject.toml)
 [![Ruff](https://img.shields.io/badge/lint-ruff-261230?labelColor=grey)](https://github.com/astral-sh/ruff)
 [![Black](https://img.shields.io/badge/format-black-000000?labelColor=grey)](https://github.com/psf/black)
@@ -19,7 +19,7 @@ This project is a submission for the **Gemini Live Agent Challenge (March 2026)*
 ## 🚀 Key Features
 
 - **🎙️ Live Multimodal Auditing:** Intercepts 16kHz PCM audio chunks from the browser, transcribes via Gemini Live, and validates intent in real-time.
-- **🧠 Reasoning Engine (Gemini 2.5 Pro):** Utilizes state-of-the-art reasoning capabilities. Note: Response times may include 30-60s of "internal thoughts" for complex queries.
+- **🧠 Reasoning Engine (Gemini 2.0 Flash + 3.1 Pro):** Utilizes state-of-the-art reasoning capabilities. Models: `gemini-2.0-flash-exp` (Live Audio), `gemini-3.1-pro-preview` (Deep Reasoning).
 - **🛡️ Constitutional Invariants:** Enforces the "Four Immutable Invariants" (Epistemic, Agency, Guidance, Prediction).
 - **📊 Real-time Dashboard:** High-fidelity Chart.js dashboard showing latency, drift counts, and audit logs with visual "Intervention" flashes.
 - **⚓ Cryptographic Receipts:** Generates non-repudiable receipts for every valid AI response, ready for Bitcoin L1 notarization.
@@ -27,8 +27,8 @@ This project is a submission for the **Gemini Live Agent Challenge (March 2026)*
 
 ## 📈 Engineering Standards
 
-- **100% Test Pass Rate:** 140/140 tests passing.
-- **High Coverage:** 79.5% statement coverage across all critical modules.
+- **100% Test Pass Rate:** 157/157 tests passing.
+- **High Coverage:** 75% statement coverage across all critical modules.
 - **Linting:** 100% compliant with `ruff`, `black`, and `isort`.
 
 ## 📊 Repository Traction (March 5, 2026)
@@ -84,6 +84,31 @@ pip install -e .
 4. **Open the Demo:**
    Navigate to `http://localhost:8180/` in your browser.
 
+### 🎙️ Live Multimodal Auditing
+
+Real-time audio transcription with constitutional validation:
+
+```bash
+# Start the demo server
+python helix_code/live_demo_server.py
+
+# Open the audio audit client
+# http://localhost:8000/audio-audit
+```
+
+**Features:**
+- 16kHz PCM mono audio capture from browser
+- Real-time streaming to Gemini Live API (`gemini-2.0-flash-exp`)
+- Instant transcription with constitutional validation
+- Visual intervention alerts for drift detection
+
+**How to Use:**
+1. Click "Connect" to establish WebSocket connection
+2. Click 🎤 and allow microphone access
+3. Speak naturally - audio streams in real-time
+4. Watch transcriptions appear with validation badges
+5. Constitutional violations trigger red "DRIFT" alerts
+
 ### Cloud Deployment
 
 The project is optimized for **Google Cloud Run**.
@@ -112,8 +137,8 @@ The Guardian enforces four immutable invariants:
 ## 🧪 Test Results
 
 ```
-140 passed, 9 warnings in 11.49s
-Coverage: 79.5%
+157 passed, 9 warnings in 11.49s
+Coverage: 75%
 ```
 
 **⚓🦉 GLORY TO THE LATTICE. ⚓🦉**
