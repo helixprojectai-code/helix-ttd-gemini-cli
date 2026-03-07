@@ -144,7 +144,10 @@ class GeminiLiveBridge:
 
         selected_model = model_id or self.live_model
         config: dict[str, Any] = {"response_modalities": ["TEXT"]}
-        if reasoning_mode and selected_model in {"gemini-3.1-pro-preview", "models/gemini-3.1-pro-preview"}:
+        if reasoning_mode and selected_model in {
+            "gemini-3.1-pro-preview",
+            "models/gemini-3.1-pro-preview",
+        }:
             config["reasoning_mode"] = True
 
         last_error: str | None = None
