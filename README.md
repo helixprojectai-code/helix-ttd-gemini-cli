@@ -1,7 +1,7 @@
 # 🛡️ Constitutional Guardian (Helix-TTD)
 
 [![CI](https://github.com/helixprojectai-code/helix-ttd-gemini-cli/actions/workflows/ci-hardened.yml/badge.svg)](https://github.com/helixprojectai-code/helix-ttd-gemini-cli/actions/workflows/ci-hardened.yml)
-[![Tests](https://img.shields.io/badge/tests-168%2F168%20passing-brightgreen)](helix_code/tests/)
+[![Tests](https://img.shields.io/badge/tests-CI%20passing-brightgreen)](helix_code/tests/)
 [![Coverage](https://img.shields.io/badge/coverage-75%25-brightgreen)](pyproject.toml)
 [![Python](https://img.shields.io/badge/python-3.10%2B-blue)](pyproject.toml)
 [![Ruff](https://img.shields.io/badge/lint-ruff-261230?labelColor=grey)](https://github.com/astral-sh/ruff)
@@ -29,7 +29,7 @@ This project is a submission for the **Gemini Live Agent Challenge (March 2026)*
 
 ## 📈 Engineering Standards
 
-- **100% Test Pass Rate:** 168/168 tests passing.
+- **Test Pass Rate:** Enforced by CI on every main merge.
 - **High Coverage:** 75% statement coverage across all critical modules.
 - **Linting:** 100% compliant with `ruff`, `black`, and `isort`.
 

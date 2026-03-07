@@ -143,6 +143,7 @@ class TestRuntimeConfigEndpoint:
             assert data["models"]["gemini_text_model"] == "gemini-3.1-pro-preview"
             assert "auth" in data
             assert "limits" in data
+            assert "federation" in data
             assert "secrets" in data
 
     def test_runtime_config_reflects_env(self, monkeypatch) -> None:
@@ -163,3 +164,21 @@ class TestRuntimeConfigEndpoint:
             assert data["auth"]["audio_audit_token_required"] is True
             assert len(data["auth"]["audio_audit_allowed_origins"]) == 2
             assert data["limits"]["max_audio_chunk_bytes"] == 262144
+
+
+class TestSecurityTransparencyEndpoint:
+    """[FACT] Test security transparency env wiring."""
+
+    def test_security_transparency_reflects_env(self, monkeypatch) -> None:
+        """[FACT] API reflects scan metadata when provided by deployment pipeline."""
+        monkeypatch.setenv("SECURITY_SCAN_TIMESTAMP", "2026-03-07T18:15:00Z")
+        monkeypatch.setenv("SECURITY_TEST_STATUS", "186/186 passing")
+        monkeypatch.setenv("SECURITY_CHECK_BANDIT", "passing")
+
+        with TestClient(app) as client:
+            response = client.get("/api/security-transparency")
+            assert response.status_code == 200
+            data = response.json()
+            assert data["latest_scan_timestamp"] == "2026-03-07T18:15:00Z"
+            assert data["test_status"] == "186/186 passing"
+            assert data["checks"]["bandit"] == "passing"

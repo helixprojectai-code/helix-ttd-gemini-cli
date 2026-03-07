@@ -8,7 +8,7 @@
    ```bash
    $env:PYTHONPATH='helix_code'; python -m pytest helix_code/tests/
    ```
-   *Ensure the full suite passes (currently 164 tests).*
+   *Ensure the full suite passes (count is CI-derived and may change).*
 
 2. **Set GEMINI_API_KEY + model defaults:**
    *Use Gemini native-audio for live voice and Gemini 3.1 Pro Preview for text paths.*

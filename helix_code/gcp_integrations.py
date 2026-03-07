@@ -53,13 +53,21 @@ class CloudPubSubFederation:
 
     def __init__(self, project_id: str | None = None):
         self.project_id = project_id or os.getenv("GOOGLE_CLOUD_PROJECT")
-        self.topic_name = "constitutional-federation"
-        self.subscription_name = "guardian-subscription"
+        self.subscription_name = os.getenv("PUBSUB_SUBSCRIPTION", "guardian-subscription")
+
+        topic_raw = os.getenv("PUBSUB_TOPIC", "helix-events").strip()
+        if topic_raw.startswith("projects/"):
+            self.topic_path = topic_raw
+            self.topic_name = topic_raw.rsplit("/", 1)[-1]
+        else:
+            self.topic_name = topic_raw
+            self.topic_path = ""
 
         if GCP_AVAILABLE and self.project_id:
             self.publisher = pubsub_v1.PublisherClient()
             self.subscriber = pubsub_v1.SubscriberClient()
-            self.topic_path = self.publisher.topic_path(self.project_id, self.topic_name)
+            if not self.topic_path:
+                self.topic_path = self.publisher.topic_path(self.project_id, self.topic_name)
             self.subscription_path = self.subscriber.subscription_path(
                 self.project_id, self.subscription_name
             )

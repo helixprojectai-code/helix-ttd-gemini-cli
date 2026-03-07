@@ -12,6 +12,7 @@ import time
 from collections import deque
 from dataclasses import dataclass, field
 from datetime import datetime
+from uuid import uuid4
 
 # [FACT] Import our Helix modules
 from audio_auditor import TranscriptionSegment, create_audio_auditor
@@ -217,13 +218,18 @@ def _is_audio_audit_authorized(websocket: WebSocket) -> bool:
     return True
 
 
+def _generate_session_id(prefix: str) -> str:
+    """[FACT] Generate collision-resistant session identifiers for live WebSocket flows."""
+    return f"{prefix}_{uuid4().hex}"
+
+
 # [FACT] Unified WebSocket Handler
 async def demo_websocket_handler(websocket: WebSocket) -> None:
     """[FACT] Central WebSocket handler for demo validation.
 
     Used by both standalone server and integrated live_guardian.py.
     """
-    session_id = f"demo_{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}"
+    session_id = _generate_session_id("demo")
     session = await bridge.create_session(session_id)
     session.client_ws = websocket  # [FACT] Link WebSocket for real-time bridge events
 
@@ -620,7 +626,7 @@ async def audio_audit_websocket(websocket: WebSocket) -> None:
         return
 
     await websocket.accept()
-    session_id = f"audio_{datetime.utcnow().timestamp()}"
+    session_id = _generate_session_id("audio")
     metrics.record_ws_connect()
 
     def on_transcription(segment: TranscriptionSegment) -> None:

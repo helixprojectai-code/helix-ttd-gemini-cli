@@ -1,14 +1,11 @@
 # [FACT] GitHub Actions workflow for Cloud Run deployment
-# [HYPOTHESIS] Docker build + Artifact Registry is more reliable than Cloud Build
+# [HYPOTHESIS] Manual fallback workflow for emergency deploys when Cloud Build is unavailable.
 #
-# This workflow builds the container directly in GitHub Actions,
-# pushes to Google Artifact Registry, and deploys to Cloud Run.
+# Primary production path is Cloud Build trigger on main.
 
 name: Deploy to Google Cloud Run
 
 on:
-  push:
-    branches: [ main ]
   workflow_dispatch:
 
 permissions:

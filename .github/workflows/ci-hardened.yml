@@ -81,7 +81,6 @@ jobs:
   type-check:
     name: 🏷️ Type Check (mypy strict)
     runs-on: ubuntu-latest
-    continue-on-error: true  # Allow failures while adding types
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -98,16 +97,19 @@ jobs:
           pip install -e .
 
       - name: Run mypy (strict mode)
+        shell: bash
         run: |
-          mypy helix_code/ \
-            --ignore-missing-imports \
-            --strict \
-            --show-error-codes \
-            --warn-unused-ignores \
-            --warn-redundant-casts \
-            --exclude 'helix_code/tests/' \
-            --exclude 'helix_code/.*/tests/' \
-            || echo "⚠️ Type checking warnings (non-blocking on dev)"
+          set -euo pipefail
+          STRICT_MAIN="false"
+          if [[ "${GITHUB_REF}" == "refs/heads/main" || "${GITHUB_BASE_REF:-}" == "main" ]]; then
+            STRICT_MAIN="true"
+          fi
+
+          if [[ "${STRICT_MAIN}" == "true" ]]; then
+            mypy helix_code/               --ignore-missing-imports               --strict               --show-error-codes               --warn-unused-ignores               --warn-redundant-casts               --exclude 'helix_code/tests/'               --exclude 'helix_code/.*/tests/'
+          else
+            mypy helix_code/               --ignore-missing-imports               --strict               --show-error-codes               --warn-unused-ignores               --warn-redundant-casts               --exclude 'helix_code/tests/'               --exclude 'helix_code/.*/tests/'               || echo "WARN: Type checking warnings (non-blocking outside main)"
+          fi
 
   # ============================================================
   # STAGE 4: Comprehensive Lint
@@ -233,13 +235,21 @@ jobs:
         run: pip install bandit[toml]
 
       - name: Run bandit security scan
+        shell: bash
         run: |
-          bandit -r helix_code/ \
-            -c pyproject.toml \
-            -f json \
-            -o bandit-report.json \
-            || true
-          bandit -r helix_code/ -c pyproject.toml || true
+          set -euo pipefail
+          STRICT_MAIN="false"
+          if [[ "${GITHUB_REF}" == "refs/heads/main" || "${GITHUB_BASE_REF:-}" == "main" ]]; then
+            STRICT_MAIN="true"
+          fi
+
+          if [[ "${STRICT_MAIN}" == "true" ]]; then
+            bandit -r helix_code/               -c pyproject.toml               -f json               -o bandit-report.json
+            bandit -r helix_code/ -c pyproject.toml
+          else
+            bandit -r helix_code/               -c pyproject.toml               -f json               -o bandit-report.json               || true
+            bandit -r helix_code/ -c pyproject.toml || true
+          fi
 
       - name: Upload security report
         uses: actions/upload-artifact@v4
@@ -255,7 +265,7 @@ jobs:
   summary:
     name: 📊 CI Summary
     runs-on: ubuntu-latest
-    needs: [test, security]
+    needs: [pre-commit, import-check, type-check, lint, test, security]
     if: always()
     steps:
       - name: Checkout repository

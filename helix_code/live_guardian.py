@@ -71,19 +71,21 @@ def _security_transparency_snapshot() -> dict[str, Any]:
         latest_scan_timestamp = "unavailable"
         timestamp_source = "not_configured"
 
+    checks = {
+        "bandit": os.getenv("SECURITY_CHECK_BANDIT", "unknown"),
+        "ruff": os.getenv("SECURITY_CHECK_RUFF", "unknown"),
+        "mypy": os.getenv("SECURITY_CHECK_MYPY", "unknown"),
+        "black": os.getenv("SECURITY_CHECK_BLACK", "unknown"),
+        "isort": os.getenv("SECURITY_CHECK_ISORT", "unknown"),
+        "pre_commit": os.getenv("SECURITY_CHECK_PRE_COMMIT", "unknown"),
+    }
+
     return {
         "latest_scan_timestamp": latest_scan_timestamp,
         "timestamp_source": timestamp_source,
-        "security_posture_score": os.getenv("SECURITY_POSTURE_SCORE", "90+"),
-        "checks": {
-            "bandit": "passing",
-            "ruff": "passing",
-            "mypy": "passing",
-            "black": "passing",
-            "isort": "passing",
-            "pre_commit": "passing",
-        },
-        "test_status": os.getenv("SECURITY_TEST_STATUS", "172/172 passing"),
+        "security_posture_score": os.getenv("SECURITY_POSTURE_SCORE", "unscored"),
+        "checks": checks,
+        "test_status": os.getenv("SECURITY_TEST_STATUS", "unknown"),
     }
 
 
@@ -91,6 +93,9 @@ def _runtime_config_snapshot() -> dict[str, Any]:
     """[FACT] Return non-secret runtime config to verify deploy state."""
     allowed_origins_raw = os.getenv("AUDIO_AUDIT_ALLOWED_ORIGINS", "").strip()
     allowed_origins = [o.strip() for o in allowed_origins_raw.split(",") if o.strip()]
+
+    project_id = os.getenv("GOOGLE_CLOUD_PROJECT", "").strip()
+    default_topic = f"projects/{project_id}/topics/helix-events" if project_id else "helix-events"
 
     return {
         "models": {
@@ -110,6 +115,9 @@ def _runtime_config_snapshot() -> dict[str, Any]:
             "audio_max_chunks_per_window": int(
                 os.getenv("HELIX_AUDIO_MAX_CHUNKS_PER_WINDOW", "100")
             ),
+        },
+        "federation": {
+            "pubsub_topic": os.getenv("PUBSUB_TOPIC", default_topic),
         },
         "secrets": {
             "gemini_api_key_configured": bool(os.getenv("GEMINI_API_KEY", "").strip()),

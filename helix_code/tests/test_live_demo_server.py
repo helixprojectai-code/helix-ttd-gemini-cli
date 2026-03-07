@@ -10,6 +10,7 @@ from helix_code.live_demo_server import (
     LiveMetrics,
     Receipt,
     ReceiptStore,
+    _generate_session_id,
     _is_audio_audit_authorized,
     get_gemini_text_client,
 )
@@ -267,3 +268,10 @@ class TestAudioAuditAuthorization:
             headers = {"origin": "https://helixprojectai.com"}
 
         assert _is_audio_audit_authorized(StubWebSocket()) is True
+
+
+def test_generate_session_id_is_collision_resistant() -> None:
+    """[FACT] Session ID generation uses UUIDs and should not collide in normal runs."""
+    values = {_generate_session_id("demo") for _ in range(200)}
+    assert len(values) == 200
+    assert all(v.startswith("demo_") for v in values)
