@@ -18,7 +18,9 @@ import time
 from collections import deque
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, cast
+
+genai_types: Any
 
 # [FACT] Constitutional compliance for intent validation
 from constitutional_compliance import ConstitutionalCompliance
@@ -29,8 +31,9 @@ if TYPE_CHECKING:
 # [FACT] Gemini Live API imports
 try:
     from google import genai
-    from google.genai import types as genai_types
+    from google.genai import types as genai_types_module
 
+    genai_types = cast(Any, genai_types_module)
     GENAI_AVAILABLE = True
 except ImportError:
     GENAI_AVAILABLE = False

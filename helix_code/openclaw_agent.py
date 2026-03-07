@@ -366,7 +366,7 @@ class DBCIdentity:
         """
         self.dbc_path = dbc_path or self._find_dbc()
         self.dbc_data: dict = {}
-        self._private_key: Ed25519PrivateKey | bytes | None = (
+        self._private_key: Ed25519PrivateKey | bytes | str | None = (
             None  # v1.3.2: Proper Ed25519 key or bytes for HMAC
         )
         self._loaded = False
@@ -2834,13 +2834,12 @@ class OpenClawAgent:
         """
         if not callable(function):
             raise ValueError(f"Tool '{name}' must be callable")
+        if inspect.isbuiltin(function):
+            raise ValueError(f"Tool '{name}': Builtin functions not allowed (pickle safety)")
         if not (inspect.isfunction(function) or inspect.ismethod(function)):
             raise ValueError(f"Tool '{name}': Only functions or methods allowed")
         if inspect.isfunction(function) and function.__name__ == "<lambda>":
             raise ValueError(f"Tool '{name}': Lambda functions not allowed")
-
-        if inspect.isbuiltin(function):
-            raise ValueError(f"Tool '{name}': Builtin functions not allowed (pickle safety)")
 
         func_module = getattr(function, "__module__", None)
         if func_module in ("__builtin__", "builtins", "os", "subprocess", "sys"):

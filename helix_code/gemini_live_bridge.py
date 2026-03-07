@@ -21,13 +21,16 @@ import time
 from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Any
+from typing import Any, cast
+
+genai_types: Any
 
 # [FACT] Google GenAI imports for Gemini Live
 try:
     from google import genai
-    from google.genai import types as genai_types
+    from google.genai import types as genai_types_module
 
+    genai_types = cast(Any, genai_types_module)
     GENAI_AVAILABLE = True
 except ImportError:
     GENAI_AVAILABLE = False

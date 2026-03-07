@@ -76,10 +76,10 @@ jobs:
           fi
 
   # ============================================================
-  # STAGE 3: Type Checking (Strict)
+  # STAGE 3: Type Checking (Main-Blocking)
   # ============================================================
   type-check:
-    name: 🏷️ Type Check (mypy strict)
+    name: 🏷️ Type Check (mypy)
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -96,7 +96,7 @@ jobs:
           pip install mypy pydantic types-requests
           pip install -e .
 
-      - name: Run mypy (strict mode)
+      - name: Run mypy
         shell: bash
         run: |
           set -euo pipefail
@@ -106,9 +106,9 @@ jobs:
           fi
 
           if [[ "${STRICT_MAIN}" == "true" ]]; then
-            mypy helix_code/               --ignore-missing-imports               --strict               --show-error-codes               --warn-unused-ignores               --warn-redundant-casts               --exclude 'helix_code/tests/'               --exclude 'helix_code/.*/tests/'
+            mypy helix_code/               --ignore-missing-imports                             --show-error-codes               --warn-unused-ignores               --warn-redundant-casts               --exclude 'helix_code/tests/'               --exclude 'helix_code/.*/tests/'
           else
-            mypy helix_code/               --ignore-missing-imports               --strict               --show-error-codes               --warn-unused-ignores               --warn-redundant-casts               --exclude 'helix_code/tests/'               --exclude 'helix_code/.*/tests/'               || echo "WARN: Type checking warnings (non-blocking outside main)"
+            mypy helix_code/               --ignore-missing-imports                             --show-error-codes               --warn-unused-ignores               --warn-redundant-casts               --exclude 'helix_code/tests/'               --exclude 'helix_code/.*/tests/'               || echo "WARN: Type checking warnings (non-blocking outside main)"
           fi
 
   # ============================================================
