@@ -16,6 +16,7 @@ import asyncio
 import base64
 import contextlib
 import os
+import re
 import time
 from collections.abc import Callable
 from dataclasses import dataclass, field
@@ -91,6 +92,14 @@ class GeminiLiveBridge:
         self.on_intervention: Callable | None = None
         self.client: Any = None
         self._alt_clients: dict[str, Any] = {}
+        self.live_system_instruction = os.getenv(
+            "HELIX_LIVE_SYSTEM_INSTRUCTION",
+            (
+                "You are a constitutional audio assistant. For every substantive claim, "
+                "use epistemic markers [FACT], [HYPOTHESIS], or [ASSUMPTION]. "
+                "Do not claim agency. Keep responses concise."
+            ),
+        )
 
         self.enable_simulation_fallback = os.getenv(
             "HELIX_AUDIO_SIMULATION", ""
@@ -155,27 +164,46 @@ class GeminiLiveBridge:
             config["input_audio_transcription"] = {}
         return config
 
+    def _with_live_policy(self, config: dict[str, Any]) -> dict[str, Any]:
+        cfg = dict(config)
+        cfg["system_instruction"] = self.live_system_instruction
+        return cfg
+
     def _live_config_variants(
         self, model_name: str, reasoning_mode: bool
     ) -> list[tuple[str, dict[str, Any]]]:
         """[FACT] Provide ordered setup variants for resilient Live connection."""
         selected_model = self._normalize_live_model_name(model_name)
         if not self._is_native_audio_model(selected_model):
-            return [("text_default", self._build_live_config(selected_model, reasoning_mode))]
+            return [
+                (
+                    "text_default",
+                    self._with_live_policy(self._build_live_config(selected_model, reasoning_mode)),
+                )
+            ]
         return [
             (
                 "audio_output_tx",
-                {"response_modalities": ["AUDIO"], "output_audio_transcription": {}},
+                self._with_live_policy(
+                    {"response_modalities": ["AUDIO"], "output_audio_transcription": {}}
+                ),
             ),
             (
                 "text_audio_tx",
-                {
-                    "response_modalities": ["TEXT", "AUDIO"],
-                    "input_audio_transcription": {},
-                    "output_audio_transcription": {},
-                },
+                self._with_live_policy(
+                    {
+                        "response_modalities": ["TEXT", "AUDIO"],
+                        "input_audio_transcription": {},
+                        "output_audio_transcription": {},
+                    }
+                ),
             ),
-            ("text_input_tx", {"response_modalities": ["TEXT"], "input_audio_transcription": {}}),
+            (
+                "text_input_tx",
+                self._with_live_policy(
+                    {"response_modalities": ["TEXT"], "input_audio_transcription": {}}
+                ),
+            ),
         ]
 
     def _resolve_live_client(self, api_version: str) -> Any:
@@ -355,7 +383,7 @@ class GeminiLiveBridge:
         if not self._is_turn_complete(gemini_message):
             return None
 
-        full_text = self._compose_transcript(session)
+        full_text = self._normalize_epistemic_lead(self._compose_transcript(session))
         session.transcript_parts.clear()
         if not full_text:
             return None
@@ -383,9 +411,7 @@ class GeminiLiveBridge:
             if bool(getattr(input_tx, "finished", False)):
                 return True
             output_tx = getattr(server_content, "output_transcription", None)
-            if bool(getattr(output_tx, "finished", False)):
-                return True
-            return False
+            return bool(getattr(output_tx, "finished", False))
 
         if isinstance(gemini_message, dict) and "server_content" in gemini_message:
             server_dict = gemini_message.get("server_content", {})
@@ -435,6 +461,23 @@ class GeminiLiveBridge:
             session.transcript_parts = [token]
             return
         session.transcript_parts.append(token)
+
+    def _normalize_epistemic_lead(self, text: str) -> str:
+        candidate = text.strip()
+        if not candidate:
+            return candidate
+        match = re.match(
+            r"^(?:\[\s*)?(fact|hypothesis|assumption)(?:\s*\])?\s*[:\-]?\s*(.+)?$",
+            candidate,
+            flags=re.IGNORECASE,
+        )
+        if not match:
+            return candidate
+        label = match.group(1).upper()
+        remainder = (match.group(2) or "").strip()
+        if not remainder:
+            return f"[{label}]"
+        return f"[{label}] {remainder}"
 
     def _extract_live_text(self, gemini_message: Any) -> str:
         """[FACT] Extract transcript/model text from Live server message variants."""

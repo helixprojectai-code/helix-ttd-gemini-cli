@@ -336,3 +336,12 @@ async def test_bridge_uses_cumulative_partial_without_duplication() -> None:
 
     assert result is not None
     assert result["original"] == "[FACT] A clear blue sky"
+
+
+def test_bridge_normalizes_spoken_epistemic_lead() -> None:
+    """[FACT] Spoken epistemic marker prefixes are normalized to bracket form."""
+    bridge = GeminiLiveBridge(api_key="test_key")
+
+    normalized = bridge._normalize_epistemic_lead("FACT the sky is blue")
+
+    assert normalized == "[FACT] the sky is blue"
