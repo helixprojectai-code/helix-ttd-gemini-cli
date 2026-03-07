@@ -18,7 +18,7 @@ import contextlib
 import os
 import time
 from collections.abc import Callable
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Any
 
@@ -54,6 +54,7 @@ class LiveSession:
     gemini_task: Any | None = None
     connect_failures: int = 0
     next_connect_attempt_ts: float = 0.0
+    transcript_parts: list[str] = field(default_factory=list)
 
     def to_dict(self) -> dict:
         return {
@@ -266,7 +267,7 @@ class GeminiLiveBridge:
 
                     async for message in gemini_session.receive():
                         processed = await self.handle_gemini_response(session, message)
-                        if session.client_ws:
+                        if processed and session.client_ws:
                             await session.client_ws.send_json(processed)
 
                     return
@@ -346,16 +347,23 @@ class GeminiLiveBridge:
         self,
         session: LiveSession,
         gemini_message: Any,
-    ) -> dict[str, Any]:
+    ) -> dict[str, Any] | None:
         text = self._extract_live_text(gemini_message)
+        if text:
+            self._update_transcript_parts(session, text)
 
-        if not text:
-            return {"type": "raw", "data": str(gemini_message)}
+        if not self._is_turn_complete(gemini_message):
+            return None
 
-        validation = await self.validate_gemini_response(session, text)
+        full_text = self._compose_transcript(session)
+        session.transcript_parts.clear()
+        if not full_text:
+            return None
+
+        validation = await self.validate_gemini_response(session, full_text)
         return {
             "type": "validated_response",
-            "original": text,
+            "original": full_text,
             "delivered": validation["modified_text"],
             "valid": validation["valid"],
             "receipt_id": validation.get("receipt_id"),
@@ -363,6 +371,70 @@ class GeminiLiveBridge:
             "drift_code": validation.get("drift_code"),
             "timestamp": datetime.utcnow().isoformat(),
         }
+
+    def _is_turn_complete(self, gemini_message: Any) -> bool:
+        server_content = getattr(gemini_message, "server_content", None)
+        if server_content is not None:
+            if getattr(server_content, "turn_complete", False):
+                return True
+            if getattr(server_content, "generation_complete", False):
+                return True
+            input_tx = getattr(server_content, "input_transcription", None)
+            if bool(getattr(input_tx, "finished", False)):
+                return True
+            output_tx = getattr(server_content, "output_transcription", None)
+            if bool(getattr(output_tx, "finished", False)):
+                return True
+            return False
+
+        if isinstance(gemini_message, dict) and "server_content" in gemini_message:
+            server_dict = gemini_message.get("server_content", {})
+            if isinstance(server_dict, dict):
+                if bool(server_dict.get("turn_complete")):
+                    return True
+                if bool(server_dict.get("generation_complete")):
+                    return True
+                input_tx = server_dict.get("input_transcription", {})
+                if isinstance(input_tx, dict) and bool(input_tx.get("finished")):
+                    return True
+                output_tx = server_dict.get("output_transcription", {})
+                if isinstance(output_tx, dict) and bool(output_tx.get("finished")):
+                    return True
+            return False
+
+        # [FACT] Non-live fallback responses are treated as complete single-turn messages.
+        return True
+
+    def _compose_transcript(self, session: LiveSession) -> str:
+        transcript = ""
+        for part in session.transcript_parts:
+            token = part.strip()
+            if not token:
+                continue
+            if not transcript:
+                transcript = token
+                continue
+            if token[0] in ".,!?;:)]}" or transcript.endswith(("(", "[", "{", "-", "/")):
+                transcript += token
+            else:
+                transcript += f" {token}"
+        return transcript.strip()
+
+    def _update_transcript_parts(self, session: LiveSession, text: str) -> None:
+        token = text.strip()
+        if not token:
+            return
+        if not session.transcript_parts:
+            session.transcript_parts.append(token)
+            return
+
+        current = self._compose_transcript(session)
+        if token == current or token == session.transcript_parts[-1]:
+            return
+        if token.startswith(current):
+            session.transcript_parts = [token]
+            return
+        session.transcript_parts.append(token)
 
     def _extract_live_text(self, gemini_message: Any) -> str:
         """[FACT] Extract transcript/model text from Live server message variants."""
@@ -562,7 +634,22 @@ class GeminiLiveBridge:
             session.narrative_hint = None
         else:
             simulated = "[ASSUMPTION] Simulation fallback transcript placeholder."
-        return await self.handle_gemini_response(session, {"text": simulated})
+
+        result = await self.handle_gemini_response(session, {"text": simulated})
+        if result is not None:
+            return result
+
+        validation = await self.validate_gemini_response(session, simulated)
+        return {
+            "type": "validated_response",
+            "original": simulated,
+            "delivered": validation["modified_text"],
+            "valid": validation["valid"],
+            "receipt_id": validation.get("receipt_id"),
+            "intervention": validation["intervention_required"],
+            "drift_code": validation.get("drift_code"),
+            "timestamp": datetime.utcnow().isoformat(),
+        }
 
     async def close_session(self, session_id: str) -> None:
         session = self.sessions.pop(session_id, None)

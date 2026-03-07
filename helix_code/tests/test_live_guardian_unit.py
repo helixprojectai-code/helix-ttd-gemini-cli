@@ -281,3 +281,58 @@ async def test_bridge_finalize_audio_turn_uses_audio_stream_end() -> None:
     await bridge.finalize_audio_turn(session, reason="mic_stop")
 
     assert session.gemini_session.audio_stream_end_count == 1
+
+
+@pytest.mark.anyio
+async def test_bridge_merges_partial_transcripts_until_turn_complete() -> None:
+    """[FACT] Partial transcript chunks are buffered and emitted once per completed turn."""
+    bridge = GeminiLiveBridge(api_key="test_key")
+    session = await bridge.create_session("test_session")
+
+    partial = {
+        "server_content": {
+            "output_transcription": {"text": "[FACT] It sure"},
+            "turn_complete": False,
+        }
+    }
+    final = {
+        "server_content": {
+            "output_transcription": {"text": "is!", "finished": True},
+            "turn_complete": True,
+        }
+    }
+
+    first = await bridge.handle_gemini_response(session, partial)
+    second = await bridge.handle_gemini_response(session, final)
+
+    assert first is None
+    assert second is not None
+    assert second["type"] == "validated_response"
+    assert second["original"] == "[FACT] It sure is!"
+    assert session.transcript_parts == []
+
+
+@pytest.mark.anyio
+async def test_bridge_uses_cumulative_partial_without_duplication() -> None:
+    """[FACT] Cumulative partial updates should not duplicate previously buffered text."""
+    bridge = GeminiLiveBridge(api_key="test_key")
+    session = await bridge.create_session("test_session")
+
+    partial = {
+        "server_content": {
+            "output_transcription": {"text": "[FACT] A clear"},
+            "turn_complete": False,
+        }
+    }
+    cumulative_final = {
+        "server_content": {
+            "output_transcription": {"text": "[FACT] A clear blue sky", "finished": True},
+            "turn_complete": True,
+        }
+    }
+
+    await bridge.handle_gemini_response(session, partial)
+    result = await bridge.handle_gemini_response(session, cumulative_final)
+
+    assert result is not None
+    assert result["original"] == "[FACT] A clear blue sky"
