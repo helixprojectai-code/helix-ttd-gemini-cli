@@ -1,4 +1,4 @@
-# [FACT] Google Cloud Build configuration for Constitutional Guardian
+﻿# [FACT] Google Cloud Build configuration for Constitutional Guardian
 # [HYPOTHESIS] Automated CI/CD improves deployment reliability
 # [ASSUMPTION] Cloud Build triggers on push to main branch
 
@@ -14,27 +14,31 @@ steps:
         date -u +"%Y-%m-%dT%H:%M:%SZ" > /workspace/security_scan_timestamp.txt
         echo "CI gated on main" > /workspace/security_test_status.txt
 
-  # [FACT] Build container image
+  # [FACT] Build container image with a tag that works for trigger and manual builds.
   - name: 'gcr.io/cloud-builders/docker'
+    id: 'build-image'
+    entrypoint: 'bash'
     args:
-      - 'build'
-      - '-t'
-      - 'gcr.io/$PROJECT_ID/constitutional-guardian:$COMMIT_SHA'
-      - '-t'
-      - 'gcr.io/$PROJECT_ID/constitutional-guardian:latest'
-      - '.'
+      - '-c'
+      - |
+        set -euo pipefail
+        IMAGE_TAG="${COMMIT_SHA:-$BUILD_ID}"
+        docker build \
+          -t "gcr.io/$PROJECT_ID/constitutional-guardian:${IMAGE_TAG}" \
+          -t "gcr.io/$PROJECT_ID/constitutional-guardian:latest" \
+          .
 
-  # [FACT] Push to Container Registry
+  # [FACT] Push both immutable and latest tags.
   - name: 'gcr.io/cloud-builders/docker'
+    id: 'push-image'
+    entrypoint: 'bash'
     args:
-      - 'push'
-      - 'gcr.io/$PROJECT_ID/constitutional-guardian:$COMMIT_SHA'
-
-  # [FACT] Push latest tag
-  - name: 'gcr.io/cloud-builders/docker'
-    args:
-      - 'push'
-      - 'gcr.io/$PROJECT_ID/constitutional-guardian:latest'
+      - '-c'
+      - |
+        set -euo pipefail
+        IMAGE_TAG="${COMMIT_SHA:-$BUILD_ID}"
+        docker push "gcr.io/$PROJECT_ID/constitutional-guardian:${IMAGE_TAG}"
+        docker push "gcr.io/$PROJECT_ID/constitutional-guardian:latest"
 
   # [FACT] Deploy to Cloud Run with explicit runtime + transparency env.
   - name: 'gcr.io/cloud-builders/gcloud'
@@ -44,11 +48,12 @@ steps:
       - '-c'
       - |
         set -euo pipefail
+        IMAGE_TAG="${COMMIT_SHA:-$BUILD_ID}"
         TEST_STATUS="$(cat /workspace/security_test_status.txt)"
         SCAN_TS="$(cat /workspace/security_scan_timestamp.txt)"
 
         gcloud run deploy constitutional-guardian \
-          --image gcr.io/$PROJECT_ID/constitutional-guardian:$COMMIT_SHA \
+          --image "gcr.io/$PROJECT_ID/constitutional-guardian:${IMAGE_TAG}" \
           --region us-central1 \
           --platform managed \
           --allow-unauthenticated \
@@ -59,11 +64,6 @@ steps:
           --max-instances 10 \
           --set-env-vars "^~^HELIX_NODE_ID=GCS-GUARDIAN~HELIX_ENV=production~GOOGLE_CLOUD_PROJECT=$PROJECT_ID~PUBSUB_TOPIC=projects/$PROJECT_ID/topics/helix-events~GEMINI_LIVE_MODEL=gemini-2.5-flash-native-audio-preview-12-2025~GEMINI_TEXT_MODEL=gemini-3.1-pro-preview~GEMINI_API_VERSION=v1beta~SECURITY_SCAN_TIMESTAMP=$$SCAN_TS~SECURITY_TEST_STATUS=$$TEST_STATUS~SECURITY_POSTURE_SCORE=90+~SECURITY_CHECK_BANDIT=passing~SECURITY_CHECK_RUFF=passing~SECURITY_CHECK_MYPY=passing~SECURITY_CHECK_BLACK=passing~SECURITY_CHECK_ISORT=passing~SECURITY_CHECK_PRE_COMMIT=passing" \
           --set-secrets GEMINI_API_KEY=GEMINI_API_KEY:latest
-
-# [FACT] Store images in Container Registry
-images:
-  - 'gcr.io/$PROJECT_ID/constitutional-guardian:$COMMIT_SHA'
-  - 'gcr.io/$PROJECT_ID/constitutional-guardian:latest'
 
 # [FACT] Cloud Build options
 options:
