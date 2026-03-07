@@ -6,7 +6,13 @@
 
 from typing import Any
 
-from helix_code.live_demo_server import LiveMetrics, Receipt, ReceiptStore, get_gemini_text_client
+from helix_code.live_demo_server import (
+    LiveMetrics,
+    Receipt,
+    ReceiptStore,
+    _is_audio_audit_authorized,
+    get_gemini_text_client,
+)
 
 
 class TestLiveMetrics:
@@ -201,3 +207,50 @@ class TestReceiptDataclass:
         assert r.valid is False
         assert r.drift_code == "DRIFT-A"
         assert r.session_id == "s1"
+
+
+class TestAudioAuditAuthorization:
+    """[FACT] Test suite for audio audit authorization gates."""
+
+    def test_authorization_passes_without_policy(self, monkeypatch: Any) -> None:
+        """[FACT] If no policy is set, connection is allowed."""
+        monkeypatch.delenv("AUDIO_AUDIT_TOKEN", raising=False)
+        monkeypatch.delenv("AUDIO_AUDIT_ALLOWED_ORIGINS", raising=False)
+
+        class StubWebSocket:
+            query_params: dict[str, str] = {}
+            headers: dict[str, str] = {}
+
+        assert _is_audio_audit_authorized(StubWebSocket()) is True
+
+    def test_authorization_rejects_bad_token(self, monkeypatch: Any) -> None:
+        """[FACT] Wrong token is denied."""
+        monkeypatch.setenv("AUDIO_AUDIT_TOKEN", "s3cr3t")
+
+        class StubWebSocket:
+            query_params = {"token": "wrong"}
+            headers: dict[str, str] = {}
+
+        assert _is_audio_audit_authorized(StubWebSocket()) is False
+
+    def test_authorization_rejects_bad_origin(self, monkeypatch: Any) -> None:
+        """[FACT] Origin not in allowlist is denied."""
+        monkeypatch.delenv("AUDIO_AUDIT_TOKEN", raising=False)
+        monkeypatch.setenv("AUDIO_AUDIT_ALLOWED_ORIGINS", "https://helixprojectai.com")
+
+        class StubWebSocket:
+            query_params: dict[str, str] = {}
+            headers = {"origin": "https://evil.example"}
+
+        assert _is_audio_audit_authorized(StubWebSocket()) is False
+
+    def test_authorization_accepts_token_and_origin(self, monkeypatch: Any) -> None:
+        """[FACT] Valid token + origin passes."""
+        monkeypatch.setenv("AUDIO_AUDIT_TOKEN", "s3cr3t")
+        monkeypatch.setenv("AUDIO_AUDIT_ALLOWED_ORIGINS", "https://helixprojectai.com")
+
+        class StubWebSocket:
+            query_params = {"token": "s3cr3t"}
+            headers = {"origin": "https://helixprojectai.com"}
+
+        assert _is_audio_audit_authorized(StubWebSocket()) is True

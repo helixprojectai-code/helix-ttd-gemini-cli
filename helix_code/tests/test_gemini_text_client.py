@@ -27,7 +27,7 @@ class TestGeminiTextClient:
         client = GeminiTextClient(api_key="test_key_12345")
         assert client.is_available()
         assert client.api_key == "test_key_12345"
-        assert client.model == "gemini-2.5-pro"
+        assert client.model == "gemini-3.1-pro-preview"
 
     def test_init_uses_env_var(self, monkeypatch: Any) -> None:
         """[FACT] Client reads API key from environment."""
@@ -46,7 +46,7 @@ class TestGeminiTextClient:
         assert not result["success"]
         assert result["text"] is None
         assert "GEMINI_API_KEY not configured" in result["error"]
-        assert result["model"] == "gemini-2.5-pro"
+        assert result["model"] == "gemini-3.1-pro-preview"
 
     @pytest.mark.anyio
     async def test_generate_response_api_error(self) -> None:

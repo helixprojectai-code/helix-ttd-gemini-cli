@@ -8,10 +8,16 @@
    ```bash
    $env:PYTHONPATH='helix_code'; python -m pytest helix_code/tests/
    ```
-   *Ensure all 92 tests pass.*
+   *Ensure the full suite passes (currently 164 tests).*
 
-2. **Set GEMINI_API_KEY:**
-   *Even if using simulation, the bridge requires the key to initialize the GenAI client.*
+2. **Set GEMINI_API_KEY + model defaults:**
+   *Use Gemini 3.1 Pro Preview as default for both live/audio and text paths.*
+
+   ```bash
+   $env:GEMINI_API_KEY="<your-key>"
+   $env:GEMINI_LIVE_MODEL="gemini-3.1-pro-preview"
+   $env:GEMINI_TEXT_MODEL="gemini-3.1-pro-preview"
+   ```
 
 3. **Start the Server:**
    ```bash
@@ -19,7 +25,7 @@
    ```
 
 4. **Launch Browser:**
-   *Open `http://localhost:8180/`.*
+   *Open `http://localhost:8180/` and verify `http://localhost:8180/api/runtime-config`.*
 
 ## 🎬 Recording Sequence
 

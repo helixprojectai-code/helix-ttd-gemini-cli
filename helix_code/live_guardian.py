@@ -58,6 +58,34 @@ receipts: FederationReceiptManager | None = None
 telemetry: DriftTelemetry | None = None
 
 
+def _runtime_config_snapshot() -> dict[str, Any]:
+    """[FACT] Return non-secret runtime config to verify deploy state."""
+    allowed_origins_raw = os.getenv("AUDIO_AUDIT_ALLOWED_ORIGINS", "").strip()
+    allowed_origins = [o.strip() for o in allowed_origins_raw.split(",") if o.strip()]
+
+    return {
+        "models": {
+            "gemini_live_model": os.getenv("GEMINI_LIVE_MODEL", "gemini-3.1-pro-preview"),
+            "gemini_text_model": os.getenv("GEMINI_TEXT_MODEL", "gemini-3.1-pro-preview"),
+        },
+        "auth": {
+            "audio_audit_token_required": bool(os.getenv("AUDIO_AUDIT_TOKEN", "").strip()),
+            "audio_audit_allowed_origins": allowed_origins,
+        },
+        "limits": {
+            "max_audio_chunk_bytes": int(os.getenv("HELIX_MAX_AUDIO_CHUNK_BYTES", "131072")),
+            "max_audio_b64_chars": int(os.getenv("HELIX_MAX_AUDIO_B64_CHARS", "174764")),
+            "audio_rate_window_seconds": float(os.getenv("HELIX_AUDIO_RATE_WINDOW_SECONDS", "5.0")),
+            "audio_max_chunks_per_window": int(
+                os.getenv("HELIX_AUDIO_MAX_CHUNKS_PER_WINDOW", "100")
+            ),
+        },
+        "secrets": {
+            "gemini_api_key_configured": bool(os.getenv("GEMINI_API_KEY", "").strip()),
+        },
+    }
+
+
 @app.on_event("startup")
 async def startup_event() -> None:
     """[FACT] Initialize constitutional guardian components.
@@ -115,6 +143,7 @@ async def api_info() -> JSONResponse:
                 "validate": "/validate (POST)",
                 "live": "/live (WebSocket)",
                 "demo": "/ (Interactive Demo)",
+                "runtime_config": "/api/runtime-config",
             },
         },
     )
@@ -133,6 +162,12 @@ async def gemini_status() -> JSONResponse:
     if client.is_available():
         response_content["model"] = client.model
     return JSONResponse(status_code=200, content=response_content)
+
+
+@app.get("/api/runtime-config")
+async def runtime_config() -> JSONResponse:
+    """[FACT] Expose effective runtime config (non-secret) for deploy verification."""
+    return JSONResponse(status_code=200, content=_runtime_config_snapshot())
 
 
 @app.post("/validate")

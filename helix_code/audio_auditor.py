@@ -12,6 +12,7 @@ from __future__ import annotations
 import asyncio
 import base64
 import contextlib
+import logging
 import os
 import time
 from collections import deque
@@ -32,6 +33,8 @@ try:
     GENAI_AVAILABLE = True
 except ImportError:
     GENAI_AVAILABLE = False
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -92,6 +95,8 @@ class AudioAuditSession:
     gemini_session: Any | None = None
     gemini_task: asyncio.Task | None = None
     gemini_connected: bool = False
+    ingest_timestamps: deque[float] = field(default_factory=lambda: deque(maxlen=512))
+    rejected_chunks: int = 0
 
     def __post_init__(self) -> None:
         """[FACT] Initialize guardian if not provided."""
@@ -112,6 +117,16 @@ class AudioAuditor:
         """[FACT] Initialize the audio auditor."""
         self.api_key = api_key or os.getenv("GEMINI_API_KEY")
         self.sessions: dict[str, AudioAuditSession] = {}
+        self.debug_logging = os.getenv("HELIX_AUDIO_AUDITOR_DEBUG", "").strip().lower() in {
+            "1",
+            "true",
+            "yes",
+            "on",
+        }
+        self.max_audio_chunk_bytes = int(os.getenv("HELIX_MAX_AUDIO_CHUNK_BYTES", "131072"))
+        self.max_base64_chars = int(os.getenv("HELIX_MAX_AUDIO_B64_CHARS", "174764"))
+        self.rate_window_seconds = float(os.getenv("HELIX_AUDIO_RATE_WINDOW_SECONDS", "5.0"))
+        self.max_chunks_per_window = int(os.getenv("HELIX_AUDIO_MAX_CHUNKS_PER_WINDOW", "100"))
 
         # [FACT] Gemini Live client (lazy init)
         self._gemini_client: Any = None
@@ -124,8 +139,34 @@ class AudioAuditor:
                 )
                 print("[FACT] Gemini Live client initialized")
             except Exception as e:
-                print(f"[ERROR] Failed to initialize Gemini client: {e}")
+                logger.exception("[ERROR] Failed to initialize Gemini client: %s", e)
                 self._gemini_available = False
+
+    def _debug(self, message: str, *args: Any) -> None:
+        """[FACT] Emit debug logs only when explicitly enabled."""
+        if self.debug_logging:
+            logger.debug(message, *args)
+
+    def _extract_gemini_text(self, response: Any) -> str:
+        """[FACT] Extract text only from known Gemini response shapes."""
+        if hasattr(response, "text") and isinstance(response.text, str):
+            return response.text
+        if isinstance(response, dict):
+            text_value = response.get("text")
+            if isinstance(text_value, str):
+                return text_value
+        return ""
+
+    def _is_rate_limited(self, session: AudioAuditSession, now_ts: float) -> bool:
+        """[FACT] Enforce per-session ingest rate limits to reduce abuse."""
+        window_start = now_ts - self.rate_window_seconds
+        while session.ingest_timestamps and session.ingest_timestamps[0] < window_start:
+            session.ingest_timestamps.popleft()
+        if len(session.ingest_timestamps) >= self.max_chunks_per_window:
+            session.rejected_chunks += 1
+            return True
+        session.ingest_timestamps.append(now_ts)
+        return False
 
     async def create_session(
         self,
@@ -170,7 +211,7 @@ class AudioAuditor:
                 }
 
                 async with self._gemini_client.aio.live.connect(
-                    model="gemini-2.0-flash-exp", config=config
+                    model=os.getenv("GEMINI_LIVE_MODEL", "gemini-3.1-pro-preview"), config=config
                 ) as gemini_session:
                     session.gemini_session = gemini_session
                     session.gemini_connected = True
@@ -181,10 +222,7 @@ class AudioAuditor:
                         await self._handle_gemini_response(session, response)
 
             except Exception as e:
-                print(f"[ERROR] Gemini Live stream error: {e}")
-                import traceback
-
-                traceback.print_exc()
+                logger.exception("[ERROR] Gemini Live stream error: %s", e)
                 session.gemini_connected = False
                 session.gemini_session = None
 
@@ -203,30 +241,15 @@ class AudioAuditor:
     async def _handle_gemini_response(self, session: AudioAuditSession, response: Any) -> None:
         """[FACT] Process transcription response from Gemini Live."""
         try:
-            print(f"[DEBUG] Raw Gemini response type: {type(response)}")
-            print(f"[DEBUG] Raw Gemini response: {response}")
-
             # [FACT] Extract text from Gemini response
-            text = ""
-            if hasattr(response, "text"):
-                text = response.text
-                print(f"[DEBUG] Response has text attribute: {text[:50]}...")
-            elif isinstance(response, dict):
-                text = response.get("text", "")
-                print(f"[DEBUG] Response is dict, text: {text[:50]}...")
-            elif hasattr(response, "data"):
-                data = response.data if hasattr(response, "data") else str(response)
-                text = str(data)
-                print(f"[DEBUG] Response has data attribute: {text[:50]}...")
-            else:
-                text = str(response)
-                print(f"[DEBUG] Response as string: {text[:50]}...")
-
+            text = self._extract_gemini_text(response)
             if not text or not text.strip():
-                print("[DEBUG] Empty text, skipping")
+                self._debug(
+                    "[DEBUG] Dropped non-text Gemini response of type: %s", type(response).__name__
+                )
                 return
 
-            print(f"[FACT] Gemini transcription received: {text[:50]}...")
+            self._debug("[DEBUG] Gemini transcription received (%d chars)", len(text))
 
             # [FACT] Validate transcription through Constitutional Guardian
             if session.guardian:
@@ -278,7 +301,7 @@ class AudioAuditor:
                 )
 
         except Exception as e:
-            print(f"[ERROR] Failed to handle Gemini response: {e}")
+            logger.exception("[ERROR] Failed to handle Gemini response: %s", e)
 
     async def ingest_audio_chunk(
         self,
@@ -292,15 +315,38 @@ class AudioAuditor:
             return {"error": "Session not found", "status": "error"}
 
         try:
+            if len(base64_pcm) > self.max_base64_chars:
+                session.rejected_chunks += 1
+                return {
+                    "error": "Audio payload too large",
+                    "status": "error",
+                    "error_code": "PAYLOAD_TOO_LARGE",
+                }
+
+            now_ts = timestamp or time.time()
+            if self._is_rate_limited(session, now_ts):
+                return {
+                    "error": "Audio ingest rate limit exceeded",
+                    "status": "error",
+                    "error_code": "RATE_LIMITED",
+                }
+
             # [FACT] Decode base64 PCM data
-            pcm_data = base64.b64decode(base64_pcm)
+            pcm_data = base64.b64decode(base64_pcm, validate=True)
+            if len(pcm_data) > self.max_audio_chunk_bytes:
+                session.rejected_chunks += 1
+                return {
+                    "error": "Decoded audio chunk too large",
+                    "status": "error",
+                    "error_code": "PCM_TOO_LARGE",
+                }
 
             # [FACT] Calculate duration (16kHz, 16-bit = 2 bytes/sample)
             samples = len(pcm_data) // 2
             duration_ms = (samples / session.sample_rate) * 1000
 
             chunk = AudioChunk(
-                timestamp=timestamp or time.time(),
+                timestamp=now_ts,
                 pcm_data=pcm_data,
                 sequence_num=session.total_chunks,
                 duration_ms=duration_ms,
@@ -344,7 +390,7 @@ class AudioAuditor:
             # [FACT] Send raw PCM audio bytes directly
             await session.gemini_session.send(input={"mime_type": "audio/pcm", "data": pcm_data})
         except Exception as e:
-            print(f"[ERROR] Failed to send audio to Gemini: {e}")
+            logger.exception("[ERROR] Failed to send audio to Gemini: %s", e)
             raise
 
     def _detect_turn_end(self, session: AudioAuditSession) -> bool:

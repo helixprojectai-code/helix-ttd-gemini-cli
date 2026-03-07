@@ -1,7 +1,7 @@
 # 🛡️ Constitutional Guardian (Helix-TTD)
 
 [![CI](https://github.com/helixprojectai-code/helix-ttd-gemini-cli/actions/workflows/ci-hardened.yml/badge.svg)](https://github.com/helixprojectai-code/helix-ttd-gemini-cli/actions/workflows/ci-hardened.yml)
-[![Tests](https://img.shields.io/badge/tests-157%2F157%20passing-brightgreen)](helix_code/tests/)
+[![Tests](https://img.shields.io/badge/tests-164%2F164%20passing-brightgreen)](helix_code/tests/)
 [![Coverage](https://img.shields.io/badge/coverage-75%25-brightgreen)](pyproject.toml)
 [![Python](https://img.shields.io/badge/python-3.10%2B-blue)](pyproject.toml)
 [![Ruff](https://img.shields.io/badge/lint-ruff-261230?labelColor=grey)](https://github.com/astral-sh/ruff)
@@ -19,7 +19,7 @@ This project is a submission for the **Gemini Live Agent Challenge (March 2026)*
 ## 🚀 Key Features
 
 - **🎙️ Live Multimodal Auditing:** Intercepts 16kHz PCM audio chunks from the browser, transcribes via Gemini Live, and validates intent in real-time.
-- **🧠 Reasoning Engine (Gemini 2.0 Flash + 3.1 Pro):** Utilizes state-of-the-art reasoning capabilities. Models: `gemini-2.0-flash-exp` (Live Audio), `gemini-3.1-pro-preview` (Deep Reasoning).
+- **🧠 Reasoning Engine (Gemini 3.1 Pro Preview):** Utilizes state-of-the-art reasoning capabilities. Model default: `gemini-3.1-pro-preview` for Live Audio and Text paths.
 - **🛡️ Constitutional Invariants:** Enforces the "Four Immutable Invariants" (Epistemic, Agency, Guidance, Prediction).
 - **📊 Real-time Dashboard:** High-fidelity Chart.js dashboard showing latency, drift counts, and audit logs with visual "Intervention" flashes.
 - **⚓ Cryptographic Receipts:** Generates non-repudiable receipts for every valid AI response, ready for Bitcoin L1 notarization.
@@ -27,7 +27,7 @@ This project is a submission for the **Gemini Live Agent Challenge (March 2026)*
 
 ## 📈 Engineering Standards
 
-- **100% Test Pass Rate:** 157/157 tests passing.
+- **100% Test Pass Rate:** 164/164 tests passing.
 - **High Coverage:** 75% statement coverage across all critical modules.
 - **Linting:** 100% compliant with `ruff`, `black`, and `isort`.
 
@@ -70,9 +70,11 @@ pip install -e .
    pip install -r helix_code/requirements.txt
    ```
 
-2. **Set API Key:**
+2. **Set API Key + Model Defaults:**
    ```bash
    $env:GEMINI_API_KEY = "your-api-key"
+   $env:GEMINI_LIVE_MODEL = "gemini-3.1-pro-preview"
+   $env:GEMINI_TEXT_MODEL = "gemini-3.1-pro-preview"
    ```
 
 3. **Start the Guardian:**
@@ -98,9 +100,12 @@ python helix_code/live_demo_server.py
 
 **Features:**
 - 16kHz PCM mono audio capture from browser
-- Real-time streaming to Gemini Live API (`gemini-2.0-flash-exp`)
+- Real-time streaming to Gemini Live API (`gemini-3.1-pro-preview` default)
 - Instant transcription with constitutional validation
 - Visual intervention alerts for drift detection
+- Optional auth hardening: `AUDIO_AUDIT_TOKEN` and `AUDIO_AUDIT_ALLOWED_ORIGINS`
+- Abuse controls: `HELIX_MAX_AUDIO_CHUNK_BYTES`, `HELIX_MAX_AUDIO_B64_CHARS`, `HELIX_AUDIO_RATE_WINDOW_SECONDS`, `HELIX_AUDIO_MAX_CHUNKS_PER_WINDOW`
+- Runtime verification endpoint: `GET /api/runtime-config`
 
 **How to Use:**
 1. Click "Connect" to establish WebSocket connection
@@ -115,6 +120,11 @@ The project is optimized for **Google Cloud Run**.
 
 ```bash
 gcloud run deploy constitutional-guardian --source . --region us-central1 --allow-unauthenticated --port 8180
+```
+
+```bash
+# Verify effective runtime model/auth/limits (non-secret)
+curl http://localhost:8180/api/runtime-config
 ```
 
 ## 🎥 Recording Sprint (March 12th)
@@ -137,7 +147,7 @@ The Guardian enforces four immutable invariants:
 ## 🧪 Test Results
 
 ```
-157 passed, 9 warnings in 11.49s
+164 passed, 9 warnings
 Coverage: 75%
 ```
 
