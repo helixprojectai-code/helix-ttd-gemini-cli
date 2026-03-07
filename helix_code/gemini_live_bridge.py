@@ -365,8 +365,9 @@ class GeminiLiveBridge:
             with contextlib.suppress(Exception):
                 mime_type = "audio/pcm;rate=16000"
                 if genai_types:
+                    # [FACT] mldev Live expects streamed audio as realtime media chunks.
                     await session.gemini_session.send_realtime_input(
-                        audio=genai_types.Blob(
+                        media=genai_types.Blob(
                             data=pcm_data,
                             mime_type=mime_type,
                         )

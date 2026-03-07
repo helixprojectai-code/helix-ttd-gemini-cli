@@ -498,7 +498,7 @@ class AudioAuditor:
             mime_type = "audio/pcm;rate=16000"
             if genai_types and hasattr(session.gemini_session, "send_realtime_input"):
                 await session.gemini_session.send_realtime_input(
-                    audio=genai_types.Blob(data=pcm_data, mime_type=mime_type)
+                    media=genai_types.Blob(data=pcm_data, mime_type=mime_type)
                 )
             else:
                 await session.gemini_session.send(input={"mime_type": mime_type, "data": pcm_data})

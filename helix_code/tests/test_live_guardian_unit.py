@@ -248,9 +248,9 @@ class _DummyGeminiSession:
         self.audio_payloads: list[object] = []
         self.audio_stream_end_count = 0
 
-    async def send_realtime_input(self, *, audio=None, audio_stream_end=None):
-        if audio is not None:
-            self.audio_payloads.append(audio)
+    async def send_realtime_input(self, *, media=None, audio_stream_end=None):
+        if media is not None:
+            self.audio_payloads.append(media)
         if audio_stream_end is not None:
             self.audio_stream_end_count += 1
 
