@@ -17,6 +17,7 @@ steps:
         pip install -e .
         pip install pytest bandit
 
+        export PYTHONPATH=helix_code
         pytest helix_code/tests/ --maxfail=1 --disable-warnings --junitxml=/workspace/pytest.xml
         bandit -r helix_code/ -c pyproject.toml -f json -o /workspace/bandit-report.json
 
