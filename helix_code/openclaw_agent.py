@@ -512,8 +512,9 @@ class DBCIdentity:
         if self._crypto_available:
             # v1.3.2: Generate true Ed25519 keypair using CSPRNG
             private_key_bytes = secrets.token_bytes(32)
-            self._private_key = Ed25519PrivateKey.from_private_bytes(private_key_bytes)
-            public_key = self._private_key.public_key()
+            private_key = Ed25519PrivateKey.from_private_bytes(private_key_bytes)
+            self._private_key = private_key
+            public_key = private_key.public_key()
 
             # Serialize public key for storage
             public_key_bytes = public_key.public_bytes(
