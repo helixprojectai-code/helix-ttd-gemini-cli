@@ -1,7 +1,7 @@
 # 🛡️ Constitutional Guardian (Helix-TTD)
 
 [![CI](https://github.com/helixprojectai-code/helix-ttd-gemini-cli/actions/workflows/ci-hardened.yml/badge.svg)](https://github.com/helixprojectai-code/helix-ttd-gemini-cli/actions/workflows/ci-hardened.yml)
-[![Tests](https://img.shields.io/badge/tests-164%2F164%20passing-brightgreen)](helix_code/tests/)
+[![Tests](https://img.shields.io/badge/tests-168%2F168%20passing-brightgreen)](helix_code/tests/)
 [![Coverage](https://img.shields.io/badge/coverage-75%25-brightgreen)](pyproject.toml)
 [![Python](https://img.shields.io/badge/python-3.10%2B-blue)](pyproject.toml)
 [![Ruff](https://img.shields.io/badge/lint-ruff-261230?labelColor=grey)](https://github.com/astral-sh/ruff)
@@ -16,6 +16,8 @@
 
 This project is a submission for the **Gemini Live Agent Challenge (March 2026)**.
 
+**Current Release:** `v1.4.3`
+
 ## 🚀 Key Features
 
 - **🎙️ Live Multimodal Auditing:** Intercepts 16kHz PCM audio chunks from the browser, transcribes via Gemini Live, and validates intent in real-time.
@@ -27,7 +29,7 @@ This project is a submission for the **Gemini Live Agent Challenge (March 2026)*
 
 ## 📈 Engineering Standards
 
-- **100% Test Pass Rate:** 164/164 tests passing.
+- **100% Test Pass Rate:** 168/168 tests passing.
 - **High Coverage:** 75% statement coverage across all critical modules.
 - **Linting:** 100% compliant with `ruff`, `black`, and `isort`.
 
@@ -147,7 +149,7 @@ The Guardian enforces four immutable invariants:
 ## 🧪 Test Results
 
 ```
-164 passed, 9 warnings
+168 passed, 9 warnings
 Coverage: 75%
 ```
 
