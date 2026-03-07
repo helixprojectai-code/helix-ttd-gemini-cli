@@ -136,7 +136,10 @@ class TestRuntimeConfigEndpoint:
             response = client.get("/api/runtime-config")
             assert response.status_code == 200
             data = response.json()
-            assert data["models"]["gemini_live_model"] == "gemini-3.1-pro-preview"
+            assert (
+                data["models"]["gemini_live_model"]
+                == "gemini-2.5-flash-native-audio-preview-12-2025"
+            )
             assert data["models"]["gemini_text_model"] == "gemini-3.1-pro-preview"
             assert "auth" in data
             assert "limits" in data
