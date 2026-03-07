@@ -1,8 +1,25 @@
+import base64
+
 import pytest
 from fastapi.testclient import TestClient
 
 from helix_code.gemini_live_bridge import GeminiLiveBridge
 from helix_code.live_guardian import app
+
+
+def _pcm_chunk_base64(samples: int = 320, amplitude: int = 0) -> str:
+    """Create a 16-bit PCM mono chunk encoded as base64."""
+    sample = int(amplitude).to_bytes(2, byteorder="little", signed=True)
+    pcm = sample * samples
+    return base64.b64encode(pcm).decode("ascii")
+
+
+class DummyWS:
+    def __init__(self) -> None:
+        self.messages: list[dict] = []
+
+    async def send_json(self, payload: dict) -> None:
+        self.messages.append(payload)
 
 
 def test_health_endpoint() -> None:
@@ -64,13 +81,81 @@ async def test_bridge_validation_logic() -> None:
 
 
 @pytest.mark.anyio
-async def test_bridge_simulation_audio() -> None:
-    """[FACT] Verify turn-end detection in simulated audio stream."""
+async def test_bridge_turn_end_by_silence(monkeypatch: pytest.MonkeyPatch) -> None:
+    """[FACT] Silence streak should finalize a turn once minimum duration is met."""
+    monkeypatch.setenv("HELIX_AUDIO_SIMULATION", "1")
     bridge = GeminiLiveBridge(api_key="test_key")
+    bridge.min_turn_ms = 60
+    bridge.max_turn_ms = 5000
+    bridge.silence_chunks_for_turn_end = 2
+
+    ws = DummyWS()
     session = await bridge.create_session("test_session")
+    session.client_ws = ws
 
-    # Send 8 chunks to trigger simulation
-    for _ in range(8):
-        await bridge.stream_audio_to_gemini(session, "YXVkaW8=")  # base64 'audio'
+    silent_chunk = _pcm_chunk_base64(samples=320, amplitude=0)  # 20ms
+    for _ in range(4):
+        await bridge.stream_audio_to_gemini(session, silent_chunk)
 
-    assert session.audio_chunk_count == 0  # Should have reset after 8
+    assert any("Turn boundary detected" in m.get("message", "") for m in ws.messages)
+
+
+@pytest.mark.anyio
+async def test_bridge_turn_end_by_gap(monkeypatch: pytest.MonkeyPatch) -> None:
+    """[FACT] A large inter-chunk gap should finalize a turn when long enough."""
+    monkeypatch.setenv("HELIX_AUDIO_SIMULATION", "1")
+    bridge = GeminiLiveBridge(api_key="test_key")
+    bridge.min_turn_ms = 20
+    bridge.chunk_gap_ms = 1
+
+    ws = DummyWS()
+    session = await bridge.create_session("test_session")
+    session.client_ws = ws
+
+    speech_chunk = _pcm_chunk_base64(samples=320, amplitude=1200)
+    await bridge.stream_audio_to_gemini(session, speech_chunk)
+    # Force an artificial gap
+    session.last_chunk_ts = 0.0
+    await bridge.stream_audio_to_gemini(session, speech_chunk)
+
+    assert any("chunk_gap" in m.get("message", "") for m in ws.messages)
+
+
+@pytest.mark.anyio
+async def test_bridge_turn_end_by_timeout(monkeypatch: pytest.MonkeyPatch) -> None:
+    """[FACT] Max-turn timeout should finalize regardless of silence."""
+    monkeypatch.setenv("HELIX_AUDIO_SIMULATION", "1")
+    bridge = GeminiLiveBridge(api_key="test_key")
+    bridge.min_turn_ms = 1000
+    bridge.max_turn_ms = 40
+
+    ws = DummyWS()
+    session = await bridge.create_session("test_session")
+    session.client_ws = ws
+
+    speech_chunk = _pcm_chunk_base64(samples=320, amplitude=1000)
+    for _ in range(3):
+        await bridge.stream_audio_to_gemini(session, speech_chunk)
+
+    assert any("max_turn_timeout" in m.get("message", "") for m in ws.messages)
+
+
+@pytest.mark.anyio
+async def test_bridge_simulation_fallback_is_deterministic(monkeypatch: pytest.MonkeyPatch) -> None:
+    """[FACT] Simulation fallback should not emit random agency text."""
+    monkeypatch.setenv("HELIX_AUDIO_SIMULATION", "1")
+    bridge = GeminiLiveBridge(api_key="test_key")
+    bridge.min_turn_ms = 20
+    bridge.silence_chunks_for_turn_end = 1
+
+    ws = DummyWS()
+    session = await bridge.create_session("test_session")
+    session.client_ws = ws
+
+    await bridge.stream_audio_to_gemini(session, _pcm_chunk_base64(samples=320, amplitude=0))
+
+    delivered = [
+        m.get("delivered", "") for m in ws.messages if m.get("type") == "validated_response"
+    ]
+    assert delivered
+    assert delivered[0] == "[ASSUMPTION] Simulation fallback transcript placeholder."
