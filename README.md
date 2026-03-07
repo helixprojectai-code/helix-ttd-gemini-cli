@@ -9,7 +9,7 @@
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue)](LICENSE)
 [![PyPI](https://img.shields.io/pypi/v/helix-ttd-gemini)](https://pypi.org/project/helix-ttd-gemini/)
 
-<img src="https://raw.githubusercontent.com/helixprojectai-code/helix-ttd-gemini-cli/main/ARCHITECTURE_CG.png" alt="Constitutional Guardian Architecture" width="100%">
+<img src="https://raw.githubusercontent.com/helixprojectai-code/helix-ttd-gemini-cli/main/helix-ttd-gemini.png" alt="Constitutional Guardian Overview" width="100%">
 
 **[FACT]** Real-time AI governance for the Gemini Live API.
 **[HYPOTHESIS]** Intercepting voice and text drift at the edge prevents misaligned AI behavior from reaching the user.
