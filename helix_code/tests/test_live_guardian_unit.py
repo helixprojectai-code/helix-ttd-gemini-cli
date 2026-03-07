@@ -38,6 +38,25 @@ def test_api_info_endpoint() -> None:
         assert "Constitutional Guardian" in response.json()["service"]
 
 
+def test_security_transparency_page() -> None:
+    """[FACT] Verify security transparency HTML page is served."""
+    with TestClient(app) as client:
+        response = client.get("/security-transparency")
+        assert response.status_code == 200
+        assert "Security Transparency" in response.text
+        assert "Latest Scan Timestamp" in response.text
+
+
+def test_security_transparency_api() -> None:
+    """[FACT] Verify machine-readable transparency endpoint."""
+    with TestClient(app) as client:
+        response = client.get("/api/security-transparency")
+        assert response.status_code == 200
+        payload = response.json()
+        assert "latest_scan_timestamp" in payload
+        assert "checks" in payload
+
+
 def test_validate_endpoint_compliant() -> None:
     """[FACT] Verify POST /validate with compliant text."""
     with TestClient(app) as client:
