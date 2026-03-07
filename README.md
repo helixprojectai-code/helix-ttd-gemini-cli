@@ -7,7 +7,7 @@
 [![Ruff](https://img.shields.io/badge/lint-ruff-261230?labelColor=grey)](https://github.com/astral-sh/ruff)
 [![Black](https://img.shields.io/badge/format-black-000000?labelColor=grey)](https://github.com/psf/black)
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue)](LICENSE)
-[![PyPI](https://img.shields.io/pypi/v/helix-ttd-gemini)](https://pypi.org/project/helix-ttd-gemini/)
+[![PyPI](https://img.shields.io/badge/PyPI-1.4.5-blue)](https://pypi.org/project/helix-ttd-gemini/)
 
 <img src="https://raw.githubusercontent.com/helixprojectai-code/helix-ttd-gemini-cli/main/helix-ttd-gemini.png" alt="Constitutional Guardian Overview" width="100%">
 
@@ -16,7 +16,7 @@
 
 This project is a submission for the **Gemini Live Agent Challenge (March 2026)**.
 
-**Current Release:** `v1.4.4`
+**Current Release:** `v1.4.5`
 
 ## 🚀 Key Features
 
