@@ -325,10 +325,7 @@ class AudioAuditor:
             return True
 
         # [FACT] Or if buffer has ~3 seconds of audio
-        if session.total_duration_ms >= 3000:
-            return True
-
-        return False
+        return session.total_duration_ms >= 3000
 
     async def process_turn(self, session_id: str) -> dict[str, Any]:
         """[FACT] Process buffered audio: transcribe + validate.
