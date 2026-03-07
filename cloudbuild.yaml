@@ -22,9 +22,12 @@ steps:
       - '-c'
       - |
         set -euo pipefail
-        IMAGE_TAG="${COMMIT_SHA:-$BUILD_ID}"
+        IMAGE_TAG="$$COMMIT_SHA"
+        if [[ -z "$$IMAGE_TAG" ]]; then
+          IMAGE_TAG="$$BUILD_ID"
+        fi
         docker build \
-          -t "gcr.io/$PROJECT_ID/constitutional-guardian:${IMAGE_TAG}" \
+          -t "gcr.io/$PROJECT_ID/constitutional-guardian:$$IMAGE_TAG" \
           -t "gcr.io/$PROJECT_ID/constitutional-guardian:latest" \
           .
 
@@ -36,8 +39,11 @@ steps:
       - '-c'
       - |
         set -euo pipefail
-        IMAGE_TAG="${COMMIT_SHA:-$BUILD_ID}"
-        docker push "gcr.io/$PROJECT_ID/constitutional-guardian:${IMAGE_TAG}"
+        IMAGE_TAG="$$COMMIT_SHA"
+        if [[ -z "$$IMAGE_TAG" ]]; then
+          IMAGE_TAG="$$BUILD_ID"
+        fi
+        docker push "gcr.io/$PROJECT_ID/constitutional-guardian:$$IMAGE_TAG"
         docker push "gcr.io/$PROJECT_ID/constitutional-guardian:latest"
 
   # [FACT] Deploy to Cloud Run with explicit runtime + transparency env.
@@ -48,12 +54,15 @@ steps:
       - '-c'
       - |
         set -euo pipefail
-        IMAGE_TAG="${COMMIT_SHA:-$BUILD_ID}"
+        IMAGE_TAG="$$COMMIT_SHA"
+        if [[ -z "$$IMAGE_TAG" ]]; then
+          IMAGE_TAG="$$BUILD_ID"
+        fi
         TEST_STATUS="$(cat /workspace/security_test_status.txt)"
         SCAN_TS="$(cat /workspace/security_scan_timestamp.txt)"
 
         gcloud run deploy constitutional-guardian \
-          --image "gcr.io/$PROJECT_ID/constitutional-guardian:${IMAGE_TAG}" \
+          --image "gcr.io/$PROJECT_ID/constitutional-guardian:$$IMAGE_TAG" \
           --region us-central1 \
           --platform managed \
           --allow-unauthenticated \
