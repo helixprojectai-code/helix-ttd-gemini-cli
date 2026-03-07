@@ -135,6 +135,45 @@ class TestAudioAuditor:
         assert result["status"] == "error"
 
     @pytest.mark.anyio
+    async def test_ingest_rejects_oversized_payload(self, auditor: AudioAuditor) -> None:
+        """[FACT] Oversized base64 payload is rejected before decode."""
+        await auditor.create_session("test_oversize")
+        auditor.max_base64_chars = 12
+
+        result = await auditor.ingest_audio_chunk("test_oversize", "A" * 20)
+
+        assert result["status"] == "error"
+        assert result["error_code"] == "PAYLOAD_TOO_LARGE"
+
+    @pytest.mark.anyio
+    async def test_ingest_rate_limited(self, auditor: AudioAuditor) -> None:
+        """[FACT] Session ingest is rate-limited to protect service budget."""
+        await auditor.create_session("test_rate")
+        auditor.rate_window_seconds = 60.0
+        auditor.max_chunks_per_window = 2
+
+        pcm_data = b"\x00\x00" * 10
+        base64_pcm = base64.b64encode(pcm_data).decode()
+
+        ok1 = await auditor.ingest_audio_chunk("test_rate", base64_pcm)
+        ok2 = await auditor.ingest_audio_chunk("test_rate", base64_pcm)
+        blocked = await auditor.ingest_audio_chunk("test_rate", base64_pcm)
+
+        assert ok1["status"] == "accepted"
+        assert ok2["status"] == "accepted"
+        assert blocked["status"] == "error"
+        assert blocked["error_code"] == "RATE_LIMITED"
+
+    @pytest.mark.anyio
+    async def test_handle_gemini_response_ignores_non_text(self, auditor: AudioAuditor) -> None:
+        """[FACT] Non-text Gemini events are ignored, not stringified into transcripts."""
+        session = await auditor.create_session("test_non_text")
+
+        await auditor._handle_gemini_response(session, {"event": "metadata_only"})
+
+        assert len(session.segments) == 0
+
+    @pytest.mark.anyio
     async def test_process_turn_empty_buffer(self, auditor: AudioAuditor) -> None:
         """[FACT] Handles empty buffer gracefully."""
         await auditor.create_session("test_123")

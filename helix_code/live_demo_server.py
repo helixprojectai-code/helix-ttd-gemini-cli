@@ -17,7 +17,7 @@ from datetime import datetime
 from audio_auditor import TranscriptionSegment, create_audio_auditor
 
 # [FACT] FastAPI and WebSocket imports
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect, status
 from fastapi.responses import HTMLResponse
 from gemini_live_bridge import create_gemini_bridge
 from gemini_text_client import GeminiTextClient, create_gemini_text_client
@@ -171,6 +171,30 @@ class ReceiptStore:
 
 
 receipt_store = ReceiptStore()
+
+
+def _is_audio_audit_authorized(websocket: WebSocket) -> bool:
+    """[FACT] Enforce optional token + origin checks for audio audit WebSocket."""
+    required_token = os.getenv("AUDIO_AUDIT_TOKEN", "").strip()
+    if required_token:
+        provided_token = (
+            websocket.query_params.get("token")
+            or websocket.headers.get("x-audio-audit-token")
+            or ""
+        ).strip()
+        if provided_token != required_token:
+            return False
+
+    allowed_origins_raw = os.getenv("AUDIO_AUDIT_ALLOWED_ORIGINS", "").strip()
+    if allowed_origins_raw:
+        allowed_origins = {
+            origin.strip() for origin in allowed_origins_raw.split(",") if origin.strip()
+        }
+        origin = (websocket.headers.get("origin") or "").strip()
+        if origin not in allowed_origins:
+            return False
+
+    return True
 
 
 # [FACT] Unified WebSocket Handler
@@ -562,6 +586,11 @@ async def audio_audit_websocket(websocket: WebSocket) -> None:
     Server -> Client: {"type": "transcription", "text": "...", "valid": true}
     Server -> Client: {"type": "intervention", "drift_code": "E", "original": "..."}
     """
+    if not _is_audio_audit_authorized(websocket):
+        logger.warning("[AUDIO-AUDIT] Unauthorized WebSocket connection attempt rejected")
+        await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
+        return
+
     await websocket.accept()
     session_id = f"audio_{datetime.utcnow().timestamp()}"
 
@@ -602,11 +631,14 @@ async def audio_audit_websocket(websocket: WebSocket) -> None:
     logger.info(f"[AUDIO-AUDIT] Session started: {session_id}")
 
     try:
+        # [FACT] Send connection status including Gemini availability
         await websocket.send_json(
             {
                 "type": "connected",
                 "session_id": session_id,
                 "message": "Live Multimodal Auditing active. Send 16kHz PCM audio chunks.",
+                "gemini_connected": session.gemini_connected,
+                "mode": "live" if session.gemini_connected else "simulation",
             }
         )
 
@@ -620,12 +652,24 @@ async def audio_audit_websocket(websocket: WebSocket) -> None:
                 base64_pcm = data.get("data", "")
                 result = await audio_auditor.ingest_audio_chunk(session_id, base64_pcm)
 
+                if result.get("status") == "error":
+                    await websocket.send_json(
+                        {
+                            "type": "error",
+                            "status": result.get("status"),
+                            "error": result.get("error", "Audio ingest failed"),
+                            "error_code": result.get("error_code"),
+                        }
+                    )
+                    continue
+
                 # [FACT] Acknowledge receipt
                 await websocket.send_json(
                     {
                         "type": "audio_ack",
                         "chunk_num": result.get("chunk_num"),
                         "buffer_size": result.get("buffer_size"),
+                        "gemini_connected": result.get("gemini_connected", False),
                     }
                 )
 

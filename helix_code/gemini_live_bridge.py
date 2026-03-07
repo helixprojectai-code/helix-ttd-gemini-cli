@@ -95,7 +95,6 @@ class GeminiLiveBridge:
 
     # [FACT] Supported Gemini models with capabilities
     SUPPORTED_MODELS = {
-        "gemini-2.5-flash": {"reasoning": False, "description": "Fast, efficient responses"},
         "gemini-3.1-pro-preview": {
             "reasoning": True,
             "description": "Deep reasoning, edge case analysis",
@@ -105,14 +104,14 @@ class GeminiLiveBridge:
     async def start_gemini_live(
         self,
         session: LiveSession,
-        model_id: str = "gemini-2.5-flash",
+        model_id: str = "gemini-3.1-pro-preview",
         reasoning_mode: bool = False,
     ) -> None:
         """[FACT] Start the actual Gemini Live API session.
 
         Args:
             session: Active live session instance
-            model_id: Gemini model to use (default: gemini-2.5-flash)
+            model_id: Gemini model to use (default: gemini-3.1-pro-preview)
             reasoning_mode: Enable deep reasoning mode for complex analysis
         """
         if not self.client:
