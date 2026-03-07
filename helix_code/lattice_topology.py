@@ -102,7 +102,7 @@ class CustodialHierarchy:
     [HYPOTHESIS] Partial order enables command flow without upward leakage.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         # [FACT] Vertical stack defined in CONSTITUTION.md §4
         self.order: dict[str, int] = {
             "custodian": 3,
@@ -183,6 +183,11 @@ class RPICycle:
         if not all([self.research, self.plan, self.implementation]):
             return None
 
+        # All positions are non-None here
+        assert (
+            self.research is not None and self.plan is not None and self.implementation is not None
+        )
+
         # Join Research and Plan
         intermediate = self.research.join(self.plan)
         # Join result with Implementation
@@ -196,7 +201,7 @@ class DriftDetector:
     [HYPOTHESIS] Topological verification detects constitutional violations.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.violations: list[dict[str, Any]] = []
 
     def check_epistemic_labeling(

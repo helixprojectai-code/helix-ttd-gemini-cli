@@ -111,7 +111,7 @@ class DriftTelemetry:
         # Track recent snapshots for gradual drift detection
         self.recent_snapshots.append(snapshot)
         if len(self.recent_snapshots) > self.thresholds["gradual_window"]:
-            self.recent_snapshots = self.recent_snapshots[-self.thresholds["gradual_window"] :]
+            self.recent_snapshots = self.recent_snapshots[-int(self.thresholds["gradual_window"]) :]
 
         if intent_tokens:
             self.last_intent_tokens[node_id] = intent_tokens

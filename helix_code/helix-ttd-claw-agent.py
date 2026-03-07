@@ -5,6 +5,8 @@ Imports all classes from openclaw_agent (canonical importable module)
 and runs usage examples. Run directly with: python helix-ttd-claw-agent.py
 """
 
+from typing import Any, cast
+
 from openclaw_agent import (
     AgencyLevel,
     AgentAction,
@@ -19,11 +21,11 @@ from openclaw_agent import (
 # ============================================================
 
 
-def example_bounded_agent_workflow():
+def example_bounded_agent_workflow() -> dict[str, Any]:
     """Example: A bounded agent that analyzes code with full constitutional checkpoints."""
     agent = OpenClawAgent(agency_tier=AgencyLevel.BOUNDED_TOOLS)
 
-    def noop(x):
+    def noop(x: Any) -> Any:
         return x
 
     agent.register_tool("file_search", noop, risk_level=0.2)
@@ -51,17 +53,17 @@ def example_bounded_agent_workflow():
 
     print(f"  Merkle Root: {results['final_anchor']}")
 
-    return results
+    return cast(dict[str, Any], results)
 
 
-def example_high_risk_gate():
+def example_high_risk_gate() -> None:
     """Example: High-risk action requiring custodian approval.
 
     Demonstrates the CUSTODIAN_GATE tier.
     """
     agent = OpenClawAgent(agency_tier=AgencyLevel.CUSTODIAN_GATE)
 
-    def noop(x):
+    def noop(x: Any) -> Any:
         return x
 
     agent.register_tool("database_migrate", noop, risk_level=0.9)
@@ -114,7 +116,7 @@ def example_high_risk_gate():
         print(f"[WITH APPROVAL] {results_approved['status']}")
 
 
-def example_drift_detection():
+def example_drift_detection() -> None:
     """Example: Agent attempts self-modification (constitutional violation)."""
     agent = OpenClawAgent(agency_tier=AgencyLevel.BOUNDED_TOOLS)
 
@@ -141,7 +143,7 @@ def example_drift_detection():
     print(f"  Violations: {results.get('reason', 'N/A')}")
 
 
-def example_granular_risk_tuning():
+def example_granular_risk_tuning() -> None:
     """Example: Demonstrating incremental risk levers.
 
     Same high-risk action, different configurations.
@@ -183,7 +185,7 @@ def example_granular_risk_tuning():
     for name, risk_config in configs:
         agent = OpenClawAgent(agency_tier=AgencyLevel.CUSTODIAN_GATE, risk_config=risk_config)
 
-        def noop(x):
+        def noop(x: Any) -> Any:
             return x
 
         agent.register_tool("database_migrate", noop, risk_level=0.8)

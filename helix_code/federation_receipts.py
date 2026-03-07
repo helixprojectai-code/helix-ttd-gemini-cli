@@ -13,7 +13,7 @@ from __future__ import annotations
 import hashlib
 import json
 import time
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, field
 from datetime import datetime
 from enum import Enum
 from pathlib import Path
@@ -74,12 +74,8 @@ class FederationReceipt:
     algorithm: str = "SHA256"  # v1.2.0: Ed25519 vs HMAC-SHA256-FALLBACK
 
     # Federation attestation
-    attesting_nodes: list[str] = None  # Nodes that verified this receipt
+    attesting_nodes: list[str] = field(default_factory=list)  # Nodes that verified this receipt
     quorum_reached: bool = False
-
-    def __post_init__(self):
-        if self.attesting_nodes is None:
-            self.attesting_nodes = []
 
     def compute_hash_proof(self) -> str:
         """[FACT] Compute composite hash of receipt content."""
@@ -121,7 +117,8 @@ class ReceiptMigrator:
             return None
 
         with open(receipt_path, encoding="utf-8") as f:
-            return json.load(f)
+            result: dict[str, Any] = json.load(f)
+            return result
 
     def migrate_v1_0_0_to_v1_1_0(self, legacy: dict[str, Any]) -> FederationReceipt:
         """[FACT] Migrate legacy receipt to v1.1.0 schema.
@@ -239,7 +236,7 @@ class QuorumAttestation:
 
     QUORUM_THRESHOLD = 2  # 2-of-3 nodes required
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.attestations: dict[str, list[str]] = {}  # receipt_id -> attesting_nodes
         self.quorum_results: dict[str, bool] = {}
 
@@ -289,7 +286,7 @@ class CrossNodeVerifier:
     [HYPOTHESIS] Ed25519 signatures provide non-repudiable attestation.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.verification_results: dict[str, dict[str, Any]] = {}
 
     def verify_cross_node(self, receipt: FederationReceipt, expected_node: NodeType) -> bool:

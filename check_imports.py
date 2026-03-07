@@ -29,7 +29,12 @@ for mod in sorted(imports.keys()):
 
 
 # Check for cycles
-def find_cycle(imports, start, path=None, visited=None):
+def find_cycle(
+    imports: dict[str, list[str]],
+    start: str,
+    path: list[str] | None = None,
+    visited: set[str] | None = None,
+) -> list[str] | None:
     if path is None:
         path = []
     if visited is None:

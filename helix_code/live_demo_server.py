@@ -70,17 +70,17 @@ class LiveMetrics:
     prediction_count: int = 0
     valid_count: int = 0
 
-    def record_request(self, latency_ms: float):
+    def record_request(self, latency_ms: float) -> None:
         """[FACT] Record a single request and its latency."""
         self.request_count += 1
         self.latency_history.append(latency_ms)
 
-    def record_receipt(self):
+    def record_receipt(self) -> None:
         """[FACT] Record a successful constitutional receipt."""
         self.receipt_count += 1
         self.valid_count += 1
 
-    def record_intervention(self, category: str = "Epistemic"):
+    def record_intervention(self, category: str = "Epistemic") -> None:
         """[FACT] Record a constitutional intervention by category."""
         self.intervention_count += 1
         if category == "Agency":
@@ -96,7 +96,7 @@ class LiveMetrics:
             return 0.0
         sorted_latencies = sorted(self.latency_history)
         index = int(len(sorted_latencies) * percentile / 100)
-        return sorted_latencies[min(index, len(sorted_latencies) - 1)]
+        return float(sorted_latencies[min(index, len(sorted_latencies) - 1)])
 
     def to_dict(self) -> dict:
         """[FACT] Convert metrics to dictionary for UI telemetry."""
@@ -134,7 +134,7 @@ class Receipt:
     timestamp: str
     content: str
     valid: bool
-    drift_code: str = None
+    drift_code: str | None = None
     session_id: str = ""
 
 
@@ -146,9 +146,9 @@ class ReceiptStore:
         self.receipts: deque = deque(maxlen=max_receipts)
         self.receipts_by_id: dict[str, Receipt] = {}
 
-    def add(self, receipt: Receipt):
+    def add(self, receipt: Receipt) -> None:
         """[FACT] Add a receipt to the store and prune if overflowing."""
-        if len(self.receipts) >= self.receipts.maxlen:
+        if self.receipts.maxlen is not None and len(self.receipts) >= self.receipts.maxlen:
             # Remove oldest from mapping
             oldest = self.receipts[0]
             self.receipts_by_id.pop(oldest.receipt_id, None)
@@ -160,7 +160,7 @@ class ReceiptStore:
         """[FACT] Retrieve all stored receipts."""
         return list(self.receipts)
 
-    def get_by_id(self, receipt_id: str) -> Receipt:
+    def get_by_id(self, receipt_id: str) -> Receipt | None:
         """[FACT] Retrieve a specific receipt by ID."""
         return self.receipts_by_id.get(receipt_id)
 
@@ -173,7 +173,7 @@ receipt_store = ReceiptStore()
 
 
 # [FACT] Unified WebSocket Handler
-async def demo_websocket_handler(websocket: WebSocket):
+async def demo_websocket_handler(websocket: WebSocket) -> None:
     """[FACT] Central WebSocket handler for demo validation.
 
     Used by both standalone server and integrated live_guardian.py.
@@ -220,7 +220,7 @@ async def demo_websocket_handler(websocket: WebSocket):
                     client = get_gemini_text_client()
 
                     if client and client.is_available():
-                        # [FACT] Call REAL Gemini API
+                        # [FACT] Call REAL Gemini API with retry logic for 503 errors
                         await websocket.send_json(
                             {"type": "system_event", "message": "[GEMINI] Sending to Live API..."}
                         )
@@ -230,13 +230,42 @@ async def demo_websocket_handler(websocket: WebSocket):
                             f"[DEBUG] Sending to Gemini - prompt length: {len(prompt)}, content: '{prompt[:50]}...'"
                         )
 
-                        gemini_result = await client.generate_response(
-                            prompt=prompt,
-                            system_instruction="You are a helpful AI assistant. Use epistemic markers [FACT], [HYPOTHESIS], [ASSUMPTION] for substantive claims. Never claim agency - you are a tool, not an agent.",
-                            temperature=0.7,
-                        )
+                        # [FACT] Retry loop with exponential backoff for 503 errors
+                        max_retries = 3
+                        base_delay = 1.0  # seconds
+                        gemini_result = None
+
+                        for attempt in range(max_retries):
+                            gemini_result = await client.generate_response(
+                                prompt=prompt,
+                                system_instruction="You are a helpful AI assistant. Use epistemic markers [FACT], [HYPOTHESIS], [ASSUMPTION] for substantive claims. Never claim agency - you are a tool, not an agent.",
+                                temperature=0.7,
+                            )
+
+                            # Check if we got a 503 error
+                            error_msg = gemini_result.get("error", "")
+                            if gemini_result["success"] or "503" not in str(error_msg):
+                                # Success or non-retryable error - break immediately
+                                break
+
+                            # 503 error - retry with exponential backoff
+                            if attempt < max_retries - 1:
+                                delay = base_delay * (2**attempt)  # 1s, 2s, 4s
+                                logger.warning(
+                                    f"[GEMINI] 503 error on attempt {attempt + 1}/{max_retries}. "
+                                    f"Retrying in {delay:.1f}s..."
+                                )
+                                await websocket.send_json(
+                                    {
+                                        "type": "system_event",
+                                        "message": f"[GEMINI] API busy (503). Retrying in {delay:.1f}s...",
+                                    }
+                                )
+                                await asyncio.sleep(delay)
 
                         # [DEBUG] Log what came back
+                        if gemini_result is None:
+                            gemini_result = {"success": False, "error": "No result"}
                         logger.info(
                             f"[DEBUG] Gemini result - success: {gemini_result['success']}, text length: {len(gemini_result.get('text') or '')}, error: {gemini_result.get('error')}"
                         )
@@ -489,7 +518,7 @@ app = FastAPI()
 
 
 @app.get("/", response_class=HTMLResponse)
-async def get_demo():
+async def get_demo() -> HTMLResponse:
     """[FACT] Serve the interactive demo HTML page."""
     from live_demo_server_html import (
         DEMO_HTML,  # Assuming we extract HTML to its own file for clarity
@@ -499,7 +528,7 @@ async def get_demo():
 
 
 @app.websocket("/demo-live")
-async def standalone_websocket(websocket: WebSocket):
+async def standalone_websocket(websocket: WebSocket) -> None:
     """[FACT] Standalone WebSocket endpoint for local testing."""
     await websocket.accept()
     await demo_websocket_handler(websocket)

@@ -16,6 +16,7 @@ from __future__ import annotations
 import os
 import sys
 from pathlib import Path
+from typing import Any
 
 # [FACT] Add parent directory to path for imports
 sys.path.insert(0, str(Path(__file__).parent))
@@ -58,7 +59,7 @@ telemetry: DriftTelemetry | None = None
 
 
 @app.on_event("startup")
-async def startup_event():
+async def startup_event() -> None:
     """[FACT] Initialize constitutional guardian components.
 
     [HYPOTHESIS] Early initialization ensures all dependent services are ready for the demo.
@@ -78,7 +79,7 @@ async def startup_event():
 
 
 @app.get("/health")
-async def health_check():
+async def health_check() -> JSONResponse:
     """[FACT] Cloud Run health check endpoint for node status."""
     return JSONResponse(
         status_code=200,
@@ -92,7 +93,7 @@ async def health_check():
 
 
 @app.get("/", response_class=HTMLResponse)
-async def root():
+async def root() -> HTMLResponse:
     """[FACT] Root endpoint serves the interactive demo dashboard."""
     # Import demo HTML from live_demo_server_html
     from live_demo_server_html import DEMO_HTML
@@ -101,7 +102,7 @@ async def root():
 
 
 @app.get("/api")
-async def api_info():
+async def api_info() -> JSONResponse:
     """[FACT] API info endpoint for architectural discovery."""
     return JSONResponse(
         status_code=200,
@@ -120,7 +121,7 @@ async def api_info():
 
 
 @app.get("/api/gemini-status")
-async def gemini_status():
+async def gemini_status() -> JSONResponse:
     """[FACT] Check if Gemini Text API is available."""
     client = create_gemini_text_client()
     response_content = {
@@ -208,7 +209,7 @@ async def validate_text(text: str) -> dict:
 
 
 @app.websocket("/live")
-async def live_websocket(websocket: WebSocket):
+async def live_websocket(websocket: WebSocket) -> None:
     """[FACT] WebSocket endpoint for real-time constitutional guarding.
 
     Receives audio/text stream, validates constitution, returns safe response.
@@ -243,12 +244,13 @@ async def live_websocket(websocket: WebSocket):
 
 
 @app.websocket("/demo-live")
-async def demo_websocket(websocket: WebSocket):
+async def demo_websocket(websocket: WebSocket) -> None:
     """[FACT] Interactive demo WebSocket with Constitutional Guardian validation."""
-    print(f"[FACT] WebSocket connection attempt from: {websocket.client.host}")
+    client_host = websocket.client.host if websocket.client else "unknown"
+    print(f"[FACT] WebSocket connection attempt from: {client_host}")
     try:
         await websocket.accept()
-        print(f"[FACT] WebSocket connection ACCEPTED for: {websocket.client.host}")
+        print(f"[FACT] WebSocket connection ACCEPTED for: {client_host}")
         # Import here to avoid circular dependency
         from live_demo_server import demo_websocket_handler
 
@@ -256,11 +258,12 @@ async def demo_websocket(websocket: WebSocket):
     except Exception as e:
         print(f"[ERROR] WebSocket connection failed: {e}")
     finally:
-        print(f"[FACT] WebSocket connection CLOSED for: {websocket.client.host}")
+        client_host = websocket.client.host if websocket.client else "unknown"
+        print(f"[FACT] WebSocket connection CLOSED for: {client_host}")
 
 
 @app.get("/api/receipts")
-async def get_receipts(limit: int = 50):
+async def get_receipts(limit: int = 50) -> dict[str, Any]:
     """[FACT] API endpoint for demo receipt explorer retrieval."""
     from live_demo_server import receipt_store
 
@@ -282,7 +285,7 @@ async def get_receipts(limit: int = 50):
 
 
 @app.get("/api/receipts/{receipt_id}")
-async def get_receipt(receipt_id: str):
+async def get_receipt(receipt_id: str) -> dict[str, Any]:
     """[FACT] API endpoint for specific receipt detail and verification."""
     from live_demo_server import receipt_store
 
@@ -307,7 +310,7 @@ class ConstitutionalGuardianAgent:
     [HYPOTHESIS] ADK integration enables seamless deployment to Vertex AI.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.compliance = ConstitutionalCompliance()
         self.receipts = FederationReceiptManager()
 
@@ -321,7 +324,7 @@ class ConstitutionalGuardianAgent:
         }
 
 
-def main():
+def main() -> None:
     """[FACT] Entry point for Cloud Run deployment and local execution."""
     port = int(os.getenv("PORT", "8180"))
     host = "0.0.0.0"  # nosec B104 - Cloud Run requires binding to all interfaces

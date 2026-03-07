@@ -158,7 +158,7 @@ class GeminiTextClient:
     def validate_constitutional_response(
         self,
         gemini_response: str,
-        guardian,
+        guardian: Any,
     ) -> dict[str, Any]:
         """[FACT] Validate Gemini response through Constitutional Guardian."""
         validation = guardian.validate_text(gemini_response)

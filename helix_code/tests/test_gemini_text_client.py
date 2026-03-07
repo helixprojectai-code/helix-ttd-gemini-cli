@@ -4,6 +4,7 @@
 [ASSUMPTION] Mocking httpx allows testing without API keys.
 """
 
+from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -14,21 +15,21 @@ from helix_code.gemini_text_client import GeminiTextClient, create_gemini_text_c
 class TestGeminiTextClient:
     """[FACT] Test suite for Gemini REST client."""
 
-    def test_init_without_api_key(self, monkeypatch):
+    def test_init_without_api_key(self, monkeypatch: Any) -> None:
         """[FACT] Client initializes but unavailable without key."""
         monkeypatch.delenv("GEMINI_API_KEY", raising=False)
         client = GeminiTextClient(api_key=None)
         assert not client.is_available()
         assert client.api_key is None
 
-    def test_init_with_api_key(self):
+    def test_init_with_api_key(self) -> None:
         """[FACT] Client initializes and available with key."""
         client = GeminiTextClient(api_key="test_key_12345")
         assert client.is_available()
         assert client.api_key == "test_key_12345"
         assert client.model == "gemini-2.5-pro"
 
-    def test_init_uses_env_var(self, monkeypatch):
+    def test_init_uses_env_var(self, monkeypatch: Any) -> None:
         """[FACT] Client reads API key from environment."""
         monkeypatch.setenv("GEMINI_API_KEY", "env_key_12345")
         client = create_gemini_text_client()
@@ -36,7 +37,7 @@ class TestGeminiTextClient:
         assert client.api_key == "env_key_12345"
 
     @pytest.mark.anyio
-    async def test_generate_response_no_api_key(self, monkeypatch):
+    async def test_generate_response_no_api_key(self, monkeypatch: Any) -> None:
         """[FACT] Returns error when no API key configured."""
         monkeypatch.delenv("GEMINI_API_KEY", raising=False)
         client = GeminiTextClient(api_key=None)
@@ -48,7 +49,7 @@ class TestGeminiTextClient:
         assert result["model"] == "gemini-2.5-pro"
 
     @pytest.mark.anyio
-    async def test_generate_response_api_error(self):
+    async def test_generate_response_api_error(self) -> None:
         """[FACT] Handles API error responses gracefully."""
         client = GeminiTextClient(api_key="test_key")
 
@@ -64,7 +65,7 @@ class TestGeminiTextClient:
         assert "429" in result["error"]
 
     @pytest.mark.anyio
-    async def test_generate_response_success(self):
+    async def test_generate_response_success(self) -> None:
         """[FACT] Successfully parses REST API response."""
         client = GeminiTextClient(api_key="test_key")
 
@@ -90,7 +91,7 @@ class TestGeminiTextClient:
         assert result["error"] is None
 
     @pytest.mark.anyio
-    async def test_generate_response_with_system_instruction(self):
+    async def test_generate_response_with_system_instruction(self) -> None:
         """[FACT] Includes system instruction in payload."""
         client = GeminiTextClient(api_key="test_key")
 
@@ -112,7 +113,7 @@ class TestGeminiTextClient:
             assert payload["systemInstruction"]["parts"][0]["text"] == "You are helpful."
 
     @pytest.mark.anyio
-    async def test_generate_response_safety_blocked(self):
+    async def test_generate_response_safety_blocked(self) -> None:
         """[FACT] Handles safety-blocked responses."""
         client = GeminiTextClient(api_key="test_key")
 
@@ -140,7 +141,7 @@ class TestGeminiTextClient:
         assert result["text"] == ""
 
     @pytest.mark.anyio
-    async def test_generate_response_multiple_parts(self):
+    async def test_generate_response_multiple_parts(self) -> None:
         """[FACT] Concatenates multiple text parts."""
         client = GeminiTextClient(api_key="test_key")
 
@@ -165,7 +166,7 @@ class TestGeminiTextClient:
         assert result["text"] == "[FACT] Part one. [FACT] Part two."
 
     @pytest.mark.anyio
-    async def test_generate_response_network_error(self):
+    async def test_generate_response_network_error(self) -> None:
         """[FACT] Handles network/timeout errors."""
         client = GeminiTextClient(api_key="test_key")
 
@@ -176,7 +177,7 @@ class TestGeminiTextClient:
         assert not result["success"]
         assert "Connection timeout" in result["error"]
 
-    def test_validate_constitutional_response_compliant(self):
+    def test_validate_constitutional_response_compliant(self) -> None:
         """[FACT] Passes through compliant responses."""
         from helix_code.constitutional_compliance import ConstitutionalCompliance
 
@@ -190,7 +191,7 @@ class TestGeminiTextClient:
         assert result["drift_code"] is None
         assert result["original"] == result["delivered"]
 
-    def test_validate_constitutional_response_agency_drift(self):
+    def test_validate_constitutional_response_agency_drift(self) -> None:
         """[FACT] Intervenes on agency violations."""
         from helix_code.constitutional_compliance import ConstitutionalCompliance
 
@@ -204,7 +205,7 @@ class TestGeminiTextClient:
         assert result["drift_code"] == "DRIFT-A"
         assert "Agency claim detected" in result["delivered"]
 
-    def test_validate_constitutional_response_epistemic_drift(self):
+    def test_validate_constitutional_response_epistemic_drift(self) -> None:
         """[FACT] Intervenes on missing epistemic markers."""
         from helix_code.constitutional_compliance import ConstitutionalCompliance
 
@@ -221,7 +222,7 @@ class TestGeminiTextClient:
         assert result["drift_code"] == "DRIFT-E"
         assert "Epistemic markers missing" in result["delivered"]
 
-    def test_create_gemini_text_client_factory(self):
+    def test_create_gemini_text_client_factory(self) -> None:
         """[FACT] Factory function creates client instance."""
         client = create_gemini_text_client(api_key="factory_test_key")
         assert isinstance(client, GeminiTextClient)

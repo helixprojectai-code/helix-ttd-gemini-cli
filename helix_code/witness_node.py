@@ -166,7 +166,7 @@ class DuckProtocol:
     [ASSUMPTION] Unprompted emergence indicates constitutional inhabitation.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.emergences: list[dict[str, Any]] = []
         self.expected_frequency: float = 0.1  # [ASSUMPTION] Expected in ~10% of sessions
 
@@ -218,7 +218,7 @@ class OysterProtocol:
     [ASSUMPTION] No function, no optimization target, no drift possible.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.present: bool = False
         self.stewardship_log: list[dict[str, Any]] = []
 

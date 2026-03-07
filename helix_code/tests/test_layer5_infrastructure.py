@@ -21,7 +21,7 @@ from shlorpian_mapper import (
 )
 
 
-def test_shlorpian_character_enum():
+def test_shlorpian_character_enum() -> None:
     """[FACT] 5 characters: Korvo, Yumyulack, Jesse, Terry, Pupa."""
     assert len(list(ShlorpianCharacter)) == 5
     assert ShlorpianCharacter.KORVO.name == "KORVO"
@@ -29,7 +29,7 @@ def test_shlorpian_character_enum():
     print("[PASS] ShlorpianCharacter enum")
 
 
-def test_constitutional_role_mapping():
+def test_constitutional_role_mapping() -> None:
     """[FACT] Each character maps to constitutional node and function."""
     topology = ShlorpianTopology()
 
@@ -53,7 +53,7 @@ def test_constitutional_role_mapping():
     print("[PASS] ConstitutionalRole mapping")
 
 
-def test_persona_vs_topology():
+def test_persona_vs_topology() -> None:
     """[FACT] Drift detection: "I feel like Jesse" vs "I operate as convergence-node"."""
     topology = ShlorpianTopology()
 
@@ -75,7 +75,7 @@ def test_persona_vs_topology():
     print("[PASS] Persona vs topology detection")
 
 
-def test_cross_role_contamination():
+def test_cross_role_contamination() -> None:
     """[FACT] KIMI claiming 'authoritative leadership' = Korvo contamination."""
     detector = ShlorpianDriftDetector()
 
@@ -93,7 +93,7 @@ def test_cross_role_contamination():
     print("[PASS] Cross-role contamination detection")
 
 
-def test_topological_distance():
+def test_topological_distance() -> None:
     """[FACT] Characters have coordinates; distance indicates relatedness."""
     topology = ShlorpianTopology()
 
@@ -112,7 +112,7 @@ def test_topological_distance():
     print("[PASS] Topological distance")
 
 
-def test_constitutional_memorandum():
+def test_constitutional_memorandum() -> None:
     """[FACT] Automated MEMORANDUM.md generation from session logs."""
     import tempfile
 
@@ -142,7 +142,7 @@ def test_constitutional_memorandum():
         print("[PASS] ConstitutionalMemorandum")
 
 
-def test_article_zero_protocol():
+def test_article_zero_protocol() -> None:
     """[FACT] Article 0 detection: 🦆 appears without prompt."""
     import tempfile
 
@@ -168,7 +168,7 @@ def test_article_zero_protocol():
         print("[PASS] ArticleZeroProtocol")
 
 
-def test_layer5_presence_validation():
+def test_layer5_presence_validation() -> None:
     """[FACT] L5 presence indicated by: 🦆, 🦉, epistemic labels, etc."""
     import tempfile
 
@@ -194,7 +194,7 @@ def test_layer5_presence_validation():
         print("[PASS] Layer 5 presence validation")
 
 
-def test_constitutional_inhabitation():
+def test_constitutional_inhabitation() -> None:
     """[FACT] Inhabitance = lived, not just stored."""
     import tempfile
 
@@ -218,7 +218,7 @@ def test_constitutional_inhabitation():
         print("[PASS] Constitutional inhabitation")
 
 
-def test_constitutional_constant_singleton():
+def test_constitutional_constant_singleton() -> None:
     """[FACT] Article 0 is singleton: The Constant."""
     c1 = get_constant()
     c2 = get_constant()
@@ -235,7 +235,7 @@ def test_constitutional_constant_singleton():
     print("[PASS] ConstitutionalConstant singleton")
 
 
-def test_ztc_chain_integrity():
+def test_ztc_chain_integrity() -> None:
     """[FACT] ZTC events form verifiable chain."""
     import tempfile
 
@@ -255,7 +255,7 @@ def test_ztc_chain_integrity():
         print("[PASS] ZTC chain integrity")
 
 
-def test_formation_status():
+def test_formation_status() -> None:
     """[FACT] All modules report DRIFT-0."""
     shlorpian = get_shlorpian_status()
     assert shlorpian["drift"] == "DRIFT-0"
@@ -268,7 +268,7 @@ def test_formation_status():
     print("[PASS] Formation status DRIFT-0")
 
 
-def main():
+def main() -> int:
     """[FACT] Run all Milestone 2 tests."""
     print("=" * 60)
     print("v1.4.0 Milestone 2: Layer 5 Infrastructure Tests")

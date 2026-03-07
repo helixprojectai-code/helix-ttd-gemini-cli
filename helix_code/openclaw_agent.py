@@ -37,7 +37,7 @@ from dataclasses import dataclass, field
 from datetime import date, datetime, timedelta, timezone
 from enum import Enum, auto
 from pathlib import Path
-from typing import Any
+from typing import Any, TypedDict
 
 # v1.3.2: Ed25519 asymmetric cryptography
 try:
@@ -51,6 +51,16 @@ try:
     CRYPTO_AVAILABLE = True
 except ImportError:
     CRYPTO_AVAILABLE = False  # Fallback to HMAC with warnings
+
+
+class ToolEntry(TypedDict):
+    """Type definition for registered tool entries."""
+
+    function: Callable[..., Any]
+    risk_level: float
+    registered_at: float
+    module: str | None
+    name: str
 
 
 class AgencyLevel(Enum):
@@ -84,6 +94,10 @@ class ConstitutionalCheckpoint:
     merkle_hash: str = ""
     prev_checkpoint_hash: str = ""
     risk_metrics: dict[str, Any] = field(default_factory=dict)
+    # DBC signature fields
+    dbc_id: str | None = None
+    dbc_signature: str | None = None
+    signature_timestamp: str | None = None
 
     def compute_hash(self) -> str:
         """Compute cryptographically secure checkpoint hash (P0 Fix)"""
@@ -114,6 +128,7 @@ class AgentAction:
     epistemic_basis: EpistemicLabel
     estimated_risk: float  # 0.0 - 1.0
     requires_approval: bool = False
+    effective_risk: float = 0.0  # Calculated effective risk after multipliers
 
 
 @dataclass
@@ -127,6 +142,7 @@ class AgentPlan:
     estimated_completion: float
     constitutional_clearance: bool = False
     plan_checkpoint: ConstitutionalCheckpoint | None = None
+    total_effective_risk: float = 0.0  # Calculated total risk after validation
 
 
 @dataclass
@@ -167,7 +183,7 @@ class RiskConfiguration:
     daily_risk_budget: float = 10.0  # Max cumulative risk per day
     current_risk_spend: float = 0.0  # Tracked runtime
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         """BUG-3 Fix: Initialize lock in __post_init__ to prevent race condition.
 
         _get_lock() lazy initialization was not thread-safe — two threads could
@@ -238,7 +254,7 @@ class RiskConfiguration:
     # ENHANCEMENT #4: Dynamic Risk Calibration
     def record_execution_outcome(
         self, tool_name: str, planned_risk: float, actual_risk: float, drift_detected: bool
-    ):
+    ) -> None:
         """Record execution outcome for dynamic calibration.
 
         Adjusts tool multipliers based on observed vs predicted risk.
@@ -269,7 +285,7 @@ class RiskConfiguration:
             if len(self._calibration_history[tool_name]) >= 5:
                 self._calibrate_tool_multiplier(tool_name)
 
-    def _calibrate_tool_multiplier(self, tool_name: str):
+    def _calibrate_tool_multiplier(self, tool_name: str) -> None:
         """Adjust tool multiplier based on historical accuracy."""
         history = self._calibration_history.get(tool_name, [])
         if len(history) < 5:
@@ -306,7 +322,7 @@ class RiskConfiguration:
         if not hasattr(self, "_calibration_history"):
             return {"status": "insufficient_data", "tools": {}}
 
-        report = {"status": "active", "tools": {}}
+        report: dict[str, Any] = {"status": "active", "tools": {}}
         for tool_name, history in self._calibration_history.items():
             if len(history) >= 5:
                 recent = history[-20:]
@@ -350,7 +366,9 @@ class DBCIdentity:
         """
         self.dbc_path = dbc_path or self._find_dbc()
         self.dbc_data: dict = {}
-        self._private_key: Ed25519PrivateKey | None = None  # v1.3.2: Proper Ed25519 key
+        self._private_key: Ed25519PrivateKey | bytes | None = (
+            None  # v1.3.2: Proper Ed25519 key or bytes for HMAC
+        )
         self._loaded = False
         self._crypto_available = CRYPTO_AVAILABLE
 
@@ -509,8 +527,8 @@ class DBCIdentity:
                 fernet_key = base64.urlsafe_b64encode(
                     hashlib.sha256(enc_key.encode()).digest()[:32]
                 )
-                f = Fernet(fernet_key)
-                encrypted_private = f.encrypt(private_key_bytes)
+                fernet = Fernet(fernet_key)
+                encrypted_private = fernet.encrypt(private_key_bytes)
                 encrypted_private_str = encrypted_private.decode()
             else:
                 # Warning: private key will be in memory only
@@ -559,17 +577,17 @@ class DBCIdentity:
     @property
     def dbc_id(self) -> str:
         """[FACT] Return DBC identifier."""
-        return self.dbc_data.get("dbc_id", "UNKNOWN")
+        return str(self.dbc_data.get("dbc_id", "UNKNOWN"))
 
     @property
     def agent_name(self) -> str:
         """[FACT] Return agent name from DBC."""
-        return self.dbc_data.get("agent_name", "Unknown")
+        return str(self.dbc_data.get("agent_name", "Unknown"))
 
     @property
     def public_key(self) -> str:
         """[FACT] Return public key for signature verification."""
-        return self.dbc_data.get("public_key", "UNKNOWN")
+        return str(self.dbc_data.get("public_key", "UNKNOWN"))
 
     def sign(self, data: bytes) -> str:
         """[FACT] v1.3.2: Sign data using Ed25519 private key.
@@ -586,7 +604,7 @@ class DBCIdentity:
         if self._crypto_available and isinstance(self._private_key, Ed25519PrivateKey):
             # v1.3.2: True Ed25519 signature
             signature = self._private_key.sign(data)
-            return signature.hex()
+            return str(signature.hex())
         else:
             # Fallback: HMAC (NOT FOR PRODUCTION)
             if isinstance(self._private_key, bytes):
@@ -597,7 +615,9 @@ class DBCIdentity:
 
     def _get_legacy_key(self) -> str:
         """[FACT] Legacy key derivation for backward compatibility (DEPRECATED)."""
-        if self._private_key:
+        if isinstance(self._private_key, bytes):
+            return self._private_key.decode()
+        if isinstance(self._private_key, str):
             return self._private_key
         # This should never happen in v1.3.2+
         raise RuntimeError("[CRITICAL] Legacy key derivation disabled in v1.3.2+")
@@ -862,7 +882,7 @@ class FederatedCheckpointValidator:
         Returns:
             Validation result dictionary.
         """
-        result = {
+        result: dict[str, Any] = {
             "valid": False,
             "origin_node": origin_node_id,
             "checks": {},
@@ -959,7 +979,7 @@ class FederatedCheckpointValidator:
         """
         # Create signature over checkpoint ID and merkle hash
         data = f"{checkpoint.checkpoint_id}:{checkpoint.merkle_hash}".encode()
-        signature = self.local_dbc.sign(data.decode())
+        signature = self.local_dbc.sign(data)
 
         checkpoint.dbc_id = self.local_dbc.dbc_id
         checkpoint.dbc_signature = signature
@@ -994,7 +1014,7 @@ class CheckpointStore:
         self._dbc = dbc_identity
         self._init_db()
 
-    def _init_db(self):
+    def _init_db(self) -> None:
         """Create checkpoint table if not exists."""
         with sqlite3.connect(self.db_path) as conn:
             conn.execute(
@@ -1035,7 +1055,9 @@ class CheckpointStore:
             )
             conn.commit()
 
-    def save(self, checkpoint: ConstitutionalCheckpoint, plan_id: str = "", agent_id: str = ""):
+    def save(
+        self, checkpoint: ConstitutionalCheckpoint, plan_id: str = "", agent_id: str = ""
+    ) -> None:
         """Persist a checkpoint to the database with optional DBC signature.
 
         v1.3.0: If DBC identity is configured, signs the checkpoint hash
@@ -1103,6 +1125,8 @@ class CheckpointStore:
         Returns:
             Signature bundle with metadata for verification.
         """
+        assert self._dbc is not None, "DBC identity required for signing"
+
         timestamp = datetime.now(timezone.utc)
         timestamp_str = timestamp.isoformat()
 
@@ -1436,8 +1460,8 @@ class SIEMExporter:
         }
 
     def export_event(
-        self, event_type: str, checkpoint: ConstitutionalCheckpoint | None = None, **kwargs
-    ):
+        self, event_type: str, checkpoint: ConstitutionalCheckpoint | None = None, **kwargs: Any
+    ) -> dict[str, Any]:
         """Export a constitutional event in OTel-compatible format.
 
         Args:
@@ -1445,7 +1469,7 @@ class SIEMExporter:
             checkpoint: Optional checkpoint associated with event
             **kwargs: Additional event attributes
         """
-        event = {
+        event: dict[str, Any] = {
             "timestamp": datetime.now().isoformat(),
             "severity": self._map_severity(event_type, checkpoint),
             "event_type": f"helix.ttd.{event_type}",
@@ -1516,7 +1540,9 @@ class SIEMExporter:
                 "endpoint": self.endpoint,
             }
 
-    def export_drift_alert(self, checkpoint: ConstitutionalCheckpoint, context: dict | None = None):
+    def export_drift_alert(
+        self, checkpoint: ConstitutionalCheckpoint, context: dict[str, Any] | None = None
+    ) -> dict[str, Any]:
         """Export a drift detection alert (high priority)."""
         return self.export_event(
             "drift_detected",
@@ -1566,7 +1592,7 @@ class PluginRegistry:
     Manages custom layers that extend the 4-layer pipeline.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         self._plugins: dict[str, ConstitutionalLayer] = {}
         self._lock = threading.Lock()
 
@@ -1755,19 +1781,19 @@ class MetricsCollector:
             "drift_rate": [],
         }
 
-    def increment(self, metric_name: str, value: int = 1):
+    def increment(self, metric_name: str, value: int = 1) -> None:
         """Increment a counter metric."""
         with self._metrics_lock:
             if metric_name in self._counters:
                 self._counters[metric_name] += value
 
-    def set_gauge(self, metric_name: str, value: float):
+    def set_gauge(self, metric_name: str, value: float) -> None:
         """Set a gauge metric to a specific value."""
         with self._metrics_lock:
             if metric_name in self._gauges:
                 self._gauges[metric_name] = value
 
-    def record_latency(self, metric_type: str, seconds: float):
+    def record_latency(self, metric_type: str, seconds: float) -> None:
         """Record execution latency."""
         with self._metrics_lock:
             if metric_type == "plan":
@@ -1780,7 +1806,7 @@ class MetricsCollector:
                 if len(self._action_execution_times) > 1000:
                     self._action_execution_times = self._action_execution_times[-1000:]
 
-    def record_timeseries(self, metric_name: str, value: float):
+    def record_timeseries(self, metric_name: str, value: float) -> None:
         """Record a time-series data point."""
         with self._metrics_lock:
             if metric_name in self._timeseries:
@@ -1817,9 +1843,9 @@ class MetricsCollector:
                 lines.append(f"{name}{{{labels}}} {value}")
 
             # Gauges
-            for name, value in self._gauges.items():
-                lines.append(f"# TYPE {name} gauge")
-                lines.append(f"{name}{{{labels}}} {value}")
+            for g_name, g_value in self._gauges.items():
+                lines.append(f"# TYPE {g_name} gauge")
+                lines.append(f"{g_name}{{{labels}}} {g_value}")
 
             # Histograms
             for hist_name, samples in [
@@ -1890,7 +1916,9 @@ class MetricsCollector:
         c = f + 1 if f + 1 < len(sorted_samples) else f
         return sorted_samples[f] + (k - f) * (sorted_samples[c] - sorted_samples[f])
 
-    def record_plan_execution(self, plan: AgentPlan, duration_seconds: float, success: bool):
+    def record_plan_execution(
+        self, plan: AgentPlan, duration_seconds: float, success: bool
+    ) -> None:
         """Record metrics for a completed plan execution."""
         self.increment("plans_executed_total" if success else "plans_rejected_total")
         self.record_latency("plan", duration_seconds)
@@ -2073,7 +2101,7 @@ class HelixConstitutionalGate:
         for step in plan.steps:
             # P0 Fix: Type check first
             if not isinstance(step.epistemic_basis, EpistemicLabel):
-                return False, f"Invalid epistemic basis type: {type(step.epistemic_basis)}"
+                return False, f"Invalid epistemic basis type: {type(step.epistemic_basis)}"  # type: ignore[unreachable]
 
             if step.epistemic_basis == EpistemicLabel.UNVERIFIED:
                 return False, "Unverified epistemic basis for action"
@@ -2397,7 +2425,8 @@ class CustodianApprovalAPI:
         with self._lock:
             if request_id not in self._pending:
                 # Already decided
-                for resp in list(self._responses.queue):
+                pending_responses: list[dict] = list(self._responses.queue)
+                for resp in pending_responses:
                     if resp["request_id"] == request_id:
                         return resp
                 return None
@@ -2479,7 +2508,7 @@ class CustodianApprovalAPI:
 
         return None
 
-    def _record_history(self, request: dict):
+    def _record_history(self, request: dict) -> None:
         """Record request to history for audit trail."""
         self._history.append(request.copy())
         if len(self._history) > self._max_history:
@@ -2542,7 +2571,7 @@ class OpenClawAgent:
         self.gate = HelixConstitutionalGate(agency_tier, risk_config)
         self.plan_history: list[AgentPlan] = []
         self.execution_log: list[dict] = []
-        self.available_tools: dict[str, Callable] = {}
+        self.available_tools: dict[str, ToolEntry] = {}
 
         # P1: Thread safety
         self._tool_lock = threading.Lock()
@@ -2591,7 +2620,7 @@ class OpenClawAgent:
 
         Remove newlines, control chars, and null bytes from strings.
         """
-        result = {}
+        result: dict[str, Any] = {}
         for k, v in data.items():
             if isinstance(v, str):
                 sanitized = v.replace("\n", " ").replace("\r", " ").replace("\x00", "")
@@ -2600,7 +2629,7 @@ class OpenClawAgent:
             elif isinstance(v, dict):
                 result[k] = self._sanitize_audit_data(v)
             elif isinstance(v, list):
-                sanitized_list = []
+                sanitized_list: list[Any] = []
                 for item in v:
                     if isinstance(item, str):
                         s = item.replace("\n", " ").replace("\r", " ").replace("\x00", "")
@@ -2640,7 +2669,7 @@ class OpenClawAgent:
                     del self._memo_cache[cache_key]
             return None
 
-    def _cache_result(self, action: AgentAction, result: Any):
+    def _cache_result(self, action: AgentAction, result: Any) -> None:
         """Store result in cache with current timestamp."""
         with self._memo_lock:
             cache_key = self._get_memo_key(action)
@@ -2652,7 +2681,7 @@ class OpenClawAgent:
                 for key, _ in sorted_items[:100]:
                     del self._memo_cache[key]
 
-    def clear_memo_cache(self):
+    def clear_memo_cache(self) -> None:
         """Clear all cached results."""
         with self._memo_lock:
             self._memo_cache.clear()
@@ -2694,7 +2723,7 @@ class OpenClawAgent:
             return "UNKNOWN_EVENT"
         return event_type
 
-    def _rotate_logs_if_needed(self):
+    def _rotate_logs_if_needed(self) -> None:
         """P2: Rotate logs based on size and age (30-day retention)."""
         try:
             log_dir = os.path.dirname(self.audit_log_path)
@@ -2729,7 +2758,7 @@ class OpenClawAgent:
             # FIX #3: Log the error instead of silently failing
             print(f"[WARN] Log rotation check failed: {e}", file=sys.stderr)
 
-    def _rotate_current_log(self):
+    def _rotate_current_log(self) -> None:
         """Rotate the current log file (timestamp-based)."""
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         rotated_path = f"{self.audit_log_path}.{timestamp}"
@@ -2743,7 +2772,7 @@ class OpenClawAgent:
         except Exception as e:
             print(f"[WARN] Unexpected error during log rotation: {e}", file=sys.stderr)
 
-    def _init_audit_log(self):
+    def _init_audit_log(self) -> None:
         """P2: Initialize append-only audit log"""
         try:
             log_dir = os.path.dirname(self.audit_log_path)
@@ -2769,7 +2798,7 @@ class OpenClawAgent:
                 error_msg = error_msg.replace(home_dir, "~")
             print(f"WARN: Could not init audit log: {error_msg}", file=sys.stderr)
 
-    def _append_audit(self, event_type: str, data: dict):
+    def _append_audit(self, event_type: str, data: dict) -> None:
         """P2: Append event to audit log (fsync for durability, sanitized)"""
         try:
             self._rotate_logs_if_needed()
@@ -2796,7 +2825,9 @@ class OpenClawAgent:
                 error_msg = error_msg.replace(home_dir, "~")
             print(f"WARN: Audit log write failed: {error_msg}", file=sys.stderr)
 
-    def register_tool(self, name: str, function: Callable, risk_level: float = 0.5):
+    def register_tool(
+        self, name: str, function: Callable[..., Any], risk_level: float = 0.5
+    ) -> None:
         """Register a tool with the agent - requires constitutional approval.
 
         P1/P2 Hardened: Type validation, thread-safe, no lambdas/builtins.
@@ -2949,7 +2980,7 @@ class OpenClawAgent:
 
             start_time = time.time()
 
-            results = {
+            results: dict[str, Any] = {
                 "plan_id": plan.plan_id,
                 "checkpoints": [],
                 "executions": [],
@@ -3193,7 +3224,7 @@ class OpenClawAgent:
                 if isinstance(action.parameters, dict):
                     result = tool_func(**action.parameters)
                 else:
-                    result = tool_func(action.parameters)
+                    result = tool_func(action.parameters)  # type: ignore[unreachable]
 
             # ENHANCEMENT #5: Cache the result for future use
             self._cache_result(action, result)
@@ -3260,7 +3291,7 @@ class OpenClawAgent:
                 }
 
             start_time = time.time()
-            results = {
+            results: dict[str, Any] = {
                 "plan_id": plan.plan_id,
                 "checkpoints": [],
                 "executions": [],
@@ -3374,7 +3405,7 @@ class OpenClawAgent:
                     if isinstance(action.parameters, dict):
                         result = await tool_func(**action.parameters)
                     else:
-                        result = await tool_func(action.parameters)
+                        result = await tool_func(action.parameters)  # type: ignore[unreachable]
                 return {"status": "success", "result": result}
             except Exception as e:
                 return {"status": "execution_failed", "error": str(e)}
@@ -3467,7 +3498,7 @@ class OpenClawAgent:
             plan_checkpoint=plan_checkpoint,
         )
 
-    def save_plan_state(self, plan: AgentPlan, filepath: str):
+    def save_plan_state(self, plan: AgentPlan, filepath: str) -> None:
         """Save plan state to file for later resumption."""
         with open(filepath, "w") as f:
             f.write(self.plan_to_json(plan))

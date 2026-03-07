@@ -16,6 +16,7 @@ from dataclasses import asdict, dataclass
 from datetime import datetime
 from enum import Enum
 from pathlib import Path
+from typing import Any
 
 from naming_convention import NamingConvention
 
@@ -268,7 +269,7 @@ class LookseeAuditor:
         """Aggregate audit results across federation."""
         all_audits = list(self.audit_dir.glob("*-AUDIT-*.json"))
 
-        report = {
+        report: dict[str, Any] = {
             "timestamp": time.time(),
             "total_audits": len(all_audits),
             "nodes_validated": [],
@@ -278,11 +279,10 @@ class LookseeAuditor:
 
         for audit_file in all_audits:
             with open(audit_file) as f:
-                data = json.load(f)
+                data: dict[str, Any] = json.load(f)
                 report["nodes_validated"].append(data["auditor_node"])
-                report["drift_summary"][data["drift_code"]] = (
-                    report["drift_summary"].get(data["drift_code"], 0) + 1
-                )
+                drift_code = data.get("drift_code", "DRIFT-0")
+                report["drift_summary"][drift_code] = report["drift_summary"].get(drift_code, 0) + 1
 
         # Generate recommendations
         if report["drift_summary"]["DRIFT-C"] > 0:

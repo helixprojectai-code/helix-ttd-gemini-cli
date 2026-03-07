@@ -16,6 +16,7 @@ import re
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
+from typing import Any
 
 
 @dataclass
@@ -253,7 +254,7 @@ class NamingConvention:
 
     def list_by_origin(self, origin: str) -> list[tuple[str, HelixFilename]]:
         """List all files by origin node."""
-        results = []
+        results: list[tuple[str, HelixFilename]] = []
 
         for dir_path in self.base_path.rglob("*"):
             if dir_path.is_file():
@@ -265,7 +266,7 @@ class NamingConvention:
 
     def list_by_type(self, file_type: str) -> list[tuple[str, HelixFilename]]:
         """List all files by type."""
-        results = []
+        results: list[tuple[str, HelixFilename]] = []
         target_dir = self._get_target_directory(file_type)
         type_path = self.base_path / target_dir
 
@@ -280,7 +281,7 @@ class NamingConvention:
 
         return sorted(results, key=lambda x: x[1].date, reverse=True)
 
-    def generate_manifest_entry(self, filename: HelixFilename, **kwargs) -> dict:
+    def generate_manifest_entry(self, filename: HelixFilename, **kwargs: Any) -> dict:
         """Generate MANIFEST.json entry for file."""
         entry = {
             "id": f"HELIX-{filename.origin}-{filename.file_type}-{filename.sequence}",

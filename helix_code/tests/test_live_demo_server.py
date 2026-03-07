@@ -4,13 +4,15 @@
 [ASSUMPTION] Mocking Gemini client allows testing without API calls.
 """
 
+from typing import Any
+
 from helix_code.live_demo_server import LiveMetrics, Receipt, ReceiptStore, get_gemini_text_client
 
 
 class TestLiveMetrics:
     """[FACT] Test suite for LiveMetrics telemetry."""
 
-    def test_record_request(self):
+    def test_record_request(self) -> None:
         """[FACT] Records request and latency."""
         metrics = LiveMetrics()
         metrics.record_request(150.5)
@@ -19,7 +21,7 @@ class TestLiveMetrics:
         assert len(metrics.latency_history) == 1
         assert metrics.latency_history[0] == 150.5
 
-    def test_record_receipt(self):
+    def test_record_receipt(self) -> None:
         """[FACT] Records valid receipt."""
         metrics = LiveMetrics()
         metrics.record_receipt()
@@ -27,7 +29,7 @@ class TestLiveMetrics:
         assert metrics.receipt_count == 1
         assert metrics.valid_count == 1
 
-    def test_record_intervention_agency(self):
+    def test_record_intervention_agency(self) -> None:
         """[FACT] Records agency intervention."""
         metrics = LiveMetrics()
         metrics.record_intervention(category="Agency")
@@ -35,7 +37,7 @@ class TestLiveMetrics:
         assert metrics.intervention_count == 1
         assert metrics.agency_count == 1
 
-    def test_record_intervention_epistemic(self):
+    def test_record_intervention_epistemic(self) -> None:
         """[FACT] Records epistemic intervention."""
         metrics = LiveMetrics()
         metrics.record_intervention(category="Epistemic")
@@ -43,7 +45,7 @@ class TestLiveMetrics:
         assert metrics.intervention_count == 1
         assert metrics.epistemic_count == 1
 
-    def test_calculate_percentile(self):
+    def test_calculate_percentile(self) -> None:
         """[FACT] Calculates latency percentiles."""
         metrics = LiveMetrics()
 
@@ -54,7 +56,7 @@ class TestLiveMetrics:
         p50 = metrics._calculate_percentile(50)
         assert p50 == 30  # Middle value
 
-    def test_to_dict(self):
+    def test_to_dict(self) -> None:
         """[FACT] Converts metrics to dictionary."""
         metrics = LiveMetrics()
         metrics.record_request(100)
@@ -75,7 +77,7 @@ class TestLiveMetrics:
 class TestReceiptStore:
     """[FACT] Test suite for ReceiptStore."""
 
-    def test_add_receipt(self):
+    def test_add_receipt(self) -> None:
         """[FACT] Adds receipt to store."""
         store = ReceiptStore(max_receipts=10)
         receipt = Receipt(
@@ -89,9 +91,11 @@ class TestReceiptStore:
         store.add(receipt)
 
         assert len(store.get_all()) == 1
-        assert store.get_by_id("test_001").content == "Test content"
+        result = store.get_by_id("test_001")
+        assert result is not None
+        assert result.content == "Test content"
 
-    def test_get_all(self):
+    def test_get_all(self) -> None:
         """[FACT] Retrieves all receipts."""
         store = ReceiptStore(max_receipts=10)
 
@@ -102,7 +106,7 @@ class TestReceiptStore:
         all_receipts = store.get_all()
         assert len(all_receipts) == 2
 
-    def test_get_by_id(self):
+    def test_get_by_id(self) -> None:
         """[FACT] Retrieves receipt by ID."""
         store = ReceiptStore(max_receipts=10)
         store.add(Receipt("r1", "2024-01-01", "Content", True, None, "s1"))
@@ -114,7 +118,7 @@ class TestReceiptStore:
         not_found = store.get_by_id("nonexistent")
         assert not_found is None
 
-    def test_get_stats(self):
+    def test_get_stats(self) -> None:
         """[FACT] Returns store statistics."""
         store = ReceiptStore(max_receipts=10)
         store.add(Receipt("r1", "2024-01-01", "Content", True, None, "s1"))
@@ -122,7 +126,7 @@ class TestReceiptStore:
         stats = store.get_stats()
         assert stats["total"] == 1
 
-    def test_receipt_store_overflow(self):
+    def test_receipt_store_overflow(self) -> None:
         """[FACT] Removes oldest when exceeding max size."""
         store = ReceiptStore(max_receipts=3)
 
@@ -139,7 +143,7 @@ class TestReceiptStore:
 class TestGeminiTextClientCache:
     """[FACT] Test suite for client caching logic."""
 
-    def test_get_gemini_text_client_caching(self, monkeypatch):
+    def test_get_gemini_text_client_caching(self, monkeypatch: Any) -> None:
         """[FACT] Client is cached and reused."""
         monkeypatch.setenv("GEMINI_API_KEY", "test_key_12345")
 
@@ -155,7 +159,7 @@ class TestGeminiTextClientCache:
         # Should be same instance
         assert client1 is client2
 
-    def test_get_gemini_text_client_key_change(self, monkeypatch):
+    def test_get_gemini_text_client_key_change(self, monkeypatch: Any) -> None:
         """[FACT] New client created when key changes."""
         monkeypatch.setenv("GEMINI_API_KEY", "key_1")
 
@@ -179,7 +183,7 @@ class TestGeminiTextClientCache:
 class TestReceiptDataclass:
     """[FACT] Test Receipt dataclass."""
 
-    def test_receipt_defaults(self):
+    def test_receipt_defaults(self) -> None:
         """[FACT] Receipt has correct default values."""
         r = Receipt("r1", "2024-01-01", "Content", True)
 
@@ -190,7 +194,7 @@ class TestReceiptDataclass:
         assert r.drift_code is None
         assert r.session_id == ""  # Default
 
-    def test_receipt_with_drift(self):
+    def test_receipt_with_drift(self) -> None:
         """[FACT] Receipt captures drift code."""
         r = Receipt("r1", "2024-01-01", "Content", False, "DRIFT-A", "s1")
 

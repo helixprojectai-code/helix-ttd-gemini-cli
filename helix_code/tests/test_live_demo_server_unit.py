@@ -1,7 +1,7 @@
 from helix_code.live_demo_server import LiveMetrics, Receipt, ReceiptStore
 
 
-def test_live_metrics_recording():
+def test_live_metrics_recording() -> None:
     """[FACT] Verify real-time metric recording and averaging."""
     metrics = LiveMetrics()
     metrics.record_request(100.0)
@@ -16,7 +16,7 @@ def test_live_metrics_recording():
     assert data["latency_avg"] == 100.0
 
 
-def test_receipt_store():
+def test_receipt_store() -> None:
     """[FACT] Verify in-memory receipt storage and retrieval."""
     store = ReceiptStore(max_receipts=5)
     receipt = Receipt(
@@ -25,11 +25,13 @@ def test_receipt_store():
     store.add(receipt)
 
     assert len(store.get_all()) == 1
-    assert store.get_by_id("r1").content == "[FACT] Test"
+    receipt_result = store.get_by_id("r1")
+    assert receipt_result is not None
+    assert receipt_result.content == "[FACT] Test"
     assert store.get_stats()["total"] == 1
 
 
-def test_receipt_store_overflow():
+def test_receipt_store_overflow() -> None:
     """[FACT] Verify deque-based store correctly prunes old entries on overflow."""
     store = ReceiptStore(max_receipts=2)
     for i in range(3):

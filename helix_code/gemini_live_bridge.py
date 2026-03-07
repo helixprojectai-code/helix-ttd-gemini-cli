@@ -73,15 +73,14 @@ class GeminiLiveBridge:
         self.api_key = api_key or os.getenv("GEMINI_API_KEY")
         self.sessions: dict[str, LiveSession] = {}
         self.on_intervention: Callable | None = None
+        self.client: Any = None
 
         if GENAI_AVAILABLE and self.api_key:
             self.client = genai.Client(
                 api_key=self.api_key, http_options={"api_version": "v1alpha"}
             )
-        else:
-            self.client = None
-            if not self.api_key:
-                print("[WARNING] GEMINI_API_KEY not set. Gemini Live integration disabled.")
+        elif not self.api_key:
+            print("[WARNING] GEMINI_API_KEY not set. Gemini Live integration disabled.")
 
     async def create_session(self, session_id: str) -> LiveSession:
         """[FACT] Create a new validated live session."""
@@ -94,13 +93,39 @@ class GeminiLiveBridge:
         self.sessions[session_id] = session
         return session
 
-    async def start_gemini_live(self, session: LiveSession, model_id: str = "gemini-2.5-flash"):
-        """[FACT] Start the actual Gemini Live API session."""
+    # [FACT] Supported Gemini models with capabilities
+    SUPPORTED_MODELS = {
+        "gemini-2.5-flash": {"reasoning": False, "description": "Fast, efficient responses"},
+        "gemini-3.1-pro-preview": {
+            "reasoning": True,
+            "description": "Deep reasoning, edge case analysis",
+        },
+    }
+
+    async def start_gemini_live(
+        self,
+        session: LiveSession,
+        model_id: str = "gemini-2.5-flash",
+        reasoning_mode: bool = False,
+    ) -> None:
+        """[FACT] Start the actual Gemini Live API session.
+
+        Args:
+            session: Active live session instance
+            model_id: Gemini model to use (default: gemini-2.5-flash)
+            reasoning_mode: Enable deep reasoning mode for complex analysis
+        """
         if not self.client:
             print("[WARNING] Gemini Client not available.")
             return
 
-        config = {"response_modalities": ["TEXT"]}  # Force text for validation
+        # [HYPOTHESIS] Configure response modalities based on model capabilities
+        config: dict[str, Any] = {"response_modalities": ["TEXT"]}  # Force text for validation
+
+        # [FACT] Enable reasoning mode for Gemini 3.1 Pro
+        if reasoning_mode and model_id == "gemini-3.1-pro-preview":
+            config["reasoning_mode"] = True
+            print(f"[FACT] Gemini 3.1 Pro reasoning mode enabled for session: {session.session_id}")
 
         # [HYPOTHESIS] Bidirectional context manager for live connection
         async with self.client.aio.live.connect(model=model_id, config=config) as gemini_session:
@@ -180,7 +205,7 @@ class GeminiLiveBridge:
 
     async def stream_audio_to_gemini(
         self, session: LiveSession, audio_base64: str, narrative: str | None = None
-    ):
+    ) -> None:
         """[FACT] Send audio to active Gemini Live session."""
         session.audio_chunk_count += 1
         if narrative:
@@ -239,7 +264,7 @@ class GeminiLiveBridge:
             )  # nosec B311 - test simulation only, not cryptographic
         return await self.handle_gemini_response(session, {"text": simulated})
 
-    async def close_session(self, session_id: str):
+    async def close_session(self, session_id: str) -> None:
         """[FACT] Close an active session and cleanup resources."""
         session = self.sessions.pop(session_id, None)
         if session and session.gemini_session:

@@ -14,9 +14,10 @@ This module demonstrates use of:
 
 import json
 import os
+from collections.abc import Callable
 from dataclasses import asdict, dataclass
 from datetime import datetime
-from typing import Any
+from typing import Any, cast
 
 # [FACT] Google Cloud client libraries
 try:
@@ -95,14 +96,14 @@ class CloudPubSubFederation:
             receipt_hash=event.receipt_hash,
         )
 
-        return future.result()
+        return str(future.result())
 
     def _local_fallback_publish(self, event: FederationEvent) -> str:
         """[FACT] Local fallback when GCP Pub/Sub unavailable."""
         print(f"[LOCAL MODE] Federation event: {event.event_id}")
         return f"local-{event.event_id}"
 
-    def subscribe_to_federation(self, callback) -> None:
+    def subscribe_to_federation(self, callback: Callable[[FederationEvent], None]) -> None:
         """[FACT] Subscribe to federation events from all nodes.
 
         Args:
@@ -112,7 +113,7 @@ class CloudPubSubFederation:
             print("[LOCAL MODE] Pub/Sub subscription not available")
             return
 
-        def _message_handler(message):
+        def _message_handler(message: Any) -> None:
             data = json.loads(message.data.decode("utf-8"))
             event = FederationEvent(**data)
             callback(event)
@@ -194,7 +195,7 @@ class CloudStorageReceipts:
         for blob in blobs:
             if receipt_id in blob.name:
                 data = blob.download_as_string()
-                return json.loads(data)
+                return cast(dict[Any, Any], json.loads(data))
 
         return None
 
@@ -271,7 +272,7 @@ class SecretManagerDBC:
             request={"parent": secret.name, "payload": {"data": key_material}}
         )
 
-        return version.name
+        return str(version.name)
 
     def retrieve_dbc_key(self, agent_name: str) -> bytes | None:
         """[FACT] Retrieve DBC private key from Secret Manager."""
@@ -282,7 +283,7 @@ class SecretManagerDBC:
         name = f"projects/{self.project_id}/secrets/{secret_id}/versions/latest"
 
         response = self.client.access_secret_version(request={"name": name})
-        return response.payload.data
+        return bytes(response.payload.data)
 
     def _local_fallback_store(self, agent_name: str, key_material: bytes) -> str:
         """[FACT] Local fallback using environment variables."""
