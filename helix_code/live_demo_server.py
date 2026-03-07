@@ -508,6 +508,14 @@ async def demo_websocket_handler(websocket: WebSocket) -> None:
                         )
                     continue
 
+                if msg_type == "audio_end":
+                    # [FACT] Explicit turn boundary from client mic stop.
+                    await bridge.finalize_audio_turn(
+                        session,
+                        reason=str(data.get("reason", "mic_stop")),
+                    )
+                    continue
+
                 if msg_type == "text":
                     start_time = time.time()
                     content = data.get("content", "")

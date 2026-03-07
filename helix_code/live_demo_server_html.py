@@ -551,6 +551,9 @@ DEMO_HTML = """
                 btn.classList.remove('mic-active');
                 btn.innerHTML = '<span>🎤</span> Start Live Mic';
                 resetWaveform();
+                if (ws && ws.readyState === 1) {
+                    ws.send(JSON.stringify({ type: 'audio_end', reason: 'mic_stop' }));
+                }
                 addLog('user', '[AUDIO] Audio Stream Terminated.');
             }
         }

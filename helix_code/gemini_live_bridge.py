@@ -295,6 +295,37 @@ class GeminiLiveBridge:
                 )
             self._reset_turn_state(session)
 
+    async def finalize_audio_turn(
+        self, session: LiveSession, reason: str = "explicit_stop"
+    ) -> None:
+        """[FACT] Explicitly finalize the current audio turn (e.g., mic stop)."""
+        if session.client_ws:
+            await session.client_ws.send_json(
+                {
+                    "type": "system_event",
+                    "message": f"Turn boundary detected ({reason}). Finalizing transcription...",
+                }
+            )
+
+        if session.gemini_session:
+            with contextlib.suppress(Exception):
+                await session.gemini_session.send("", end_of_turn=True)
+            self._reset_turn_state(session)
+            return
+
+        if self.enable_simulation_fallback and session.client_ws:
+            processed = await self._simulate_gemini_response(session, "[Audio Turn Finalized]")
+            await session.client_ws.send_json(processed)
+        elif session.client_ws:
+            await session.client_ws.send_json(
+                {
+                    "type": "system_event",
+                    "message": "Gemini Live not connected. No transcript generated.",
+                }
+            )
+
+        self._reset_turn_state(session)
+
     def _decode_audio_chunk(self, audio_base64: str) -> bytes:
         """[FACT] Decode base64 PCM chunk; invalid chunks are ignored."""
         try:
@@ -337,6 +368,7 @@ class GeminiLiveBridge:
         """[FACT] Reset state used for turn-boundary detection."""
         session.audio_turn_ms = 0.0
         session.silent_chunk_streak = 0
+        session.last_chunk_ts = None
 
     async def _simulate_gemini_response(self, session: LiveSession, trigger: str) -> dict[str, Any]:
         """[FACT] Simulation mode for explicit fallback testing only."""

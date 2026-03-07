@@ -159,3 +159,23 @@ async def test_bridge_simulation_fallback_is_deterministic(monkeypatch: pytest.M
     ]
     assert delivered
     assert delivered[0] == "[ASSUMPTION] Simulation fallback transcript placeholder."
+
+
+@pytest.mark.anyio
+async def test_bridge_explicit_audio_end(monkeypatch: pytest.MonkeyPatch) -> None:
+    """[FACT] Explicit mic-stop signal should deterministically finalize the turn."""
+    monkeypatch.setenv("HELIX_AUDIO_SIMULATION", "1")
+    bridge = GeminiLiveBridge(api_key="test_key")
+
+    ws = DummyWS()
+    session = await bridge.create_session("test_session")
+    session.client_ws = ws
+
+    await bridge.finalize_audio_turn(session, reason="mic_stop")
+
+    assert any("mic_stop" in m.get("message", "") for m in ws.messages)
+    delivered = [
+        m.get("delivered", "") for m in ws.messages if m.get("type") == "validated_response"
+    ]
+    assert delivered
+    assert delivered[0] == "[ASSUMPTION] Simulation fallback transcript placeholder."
