@@ -96,7 +96,9 @@ class TestAudioAuditor:
     @pytest.fixture
     def auditor(self) -> AudioAuditor:
         """[FACT] Create fresh auditor for each test."""
-        return create_audio_auditor(api_key="test_key")
+        auditor = create_audio_auditor(api_key="test_key")
+        auditor.enable_simulation_fallback = True
+        return auditor
 
     @pytest.mark.anyio
     async def test_create_session(self, auditor: AudioAuditor) -> None:
@@ -181,6 +183,22 @@ class TestAudioAuditor:
         assert result["status"] == "no_audio"
 
     @pytest.mark.anyio
+    async def test_process_turn_no_transcript_when_simulation_disabled(
+        self, auditor: AudioAuditor
+    ) -> None:
+        """[FACT] No synthetic transcript is generated when simulation is disabled."""
+        auditor.enable_simulation_fallback = False
+        await auditor.create_session("test_no_transcript")
+
+        pcm_data = b"\x00\x00" * 1600
+        base64_pcm = base64.b64encode(pcm_data).decode()
+        await auditor.ingest_audio_chunk("test_no_transcript", base64_pcm)
+
+        result = await auditor.process_turn("test_no_transcript")
+        assert result["status"] == "no_transcript_available"
+        assert result["error_code"] == "NO_TRANSCRIPT_AVAILABLE"
+
+    @pytest.mark.anyio
     async def test_detect_turn_end_threshold(self, auditor: AudioAuditor) -> None:
         """[FACT] Turn detection triggers after ~2 seconds of audio."""
         session = await auditor.create_session("test_123")
@@ -229,6 +247,7 @@ class TestAudioAuditorIntegration:
     async def test_full_pipeline_simulation(self) -> None:
         """[FACT] End-to-end audio -> transcription -> validation pipeline."""
         auditor = create_audio_auditor()
+        auditor.enable_simulation_fallback = True
         callbacks: list[dict] = []
 
         def on_transcription(segment: TranscriptionSegment) -> None:
@@ -272,6 +291,7 @@ class TestAudioAuditorCallbacks:
             received.append(segment.text)
 
         auditor = create_audio_auditor()
+        auditor.enable_simulation_fallback = True
         await auditor.create_session("cb_test", on_transcription=callback)
 
         # Add audio and process

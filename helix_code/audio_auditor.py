@@ -95,8 +95,13 @@ class AudioAuditSession:
     gemini_session: Any | None = None
     gemini_task: asyncio.Task | None = None
     gemini_connected: bool = False
+    gemini_connection_attempts: int = 0
+    gemini_disconnects: int = 0
     ingest_timestamps: deque[float] = field(default_factory=lambda: deque(maxlen=512))
     rejected_chunks: int = 0
+    consecutive_silent_chunks: int = 0
+    last_error: str | None = None
+    event_log: deque[dict[str, Any]] = field(default_factory=lambda: deque(maxlen=200))
 
     def __post_init__(self) -> None:
         """[FACT] Initialize guardian if not provided."""
@@ -127,6 +132,15 @@ class AudioAuditor:
         self.max_base64_chars = int(os.getenv("HELIX_MAX_AUDIO_B64_CHARS", "174764"))
         self.rate_window_seconds = float(os.getenv("HELIX_AUDIO_RATE_WINDOW_SECONDS", "5.0"))
         self.max_chunks_per_window = int(os.getenv("HELIX_AUDIO_MAX_CHUNKS_PER_WINDOW", "100"))
+        self.enable_simulation_fallback = os.getenv(
+            "HELIX_AUDIO_SIMULATION", ""
+        ).strip().lower() in {"1", "true", "yes", "on"}
+        self.min_turn_ms = float(os.getenv("HELIX_MIN_TURN_MS", "2000"))
+        self.max_turn_ms = float(os.getenv("HELIX_MAX_TURN_MS", "5000"))
+        self.silence_threshold = int(os.getenv("HELIX_AUDIO_SILENCE_THRESHOLD", "160"))
+        self.silence_chunks_for_turn_end = int(
+            os.getenv("HELIX_AUDIO_SILENCE_CHUNKS_FOR_TURN_END", "8")
+        )
 
         # [FACT] Gemini Live client (lazy init)
         self._gemini_client: Any = None
@@ -168,6 +182,34 @@ class AudioAuditor:
         session.ingest_timestamps.append(now_ts)
         return False
 
+    def _record_event(self, session: AudioAuditSession, event_type: str, **details: Any) -> None:
+        """[FACT] Record structured pipeline telemetry for observability."""
+        session.event_log.append(
+            {
+                "ts": time.time(),
+                "event": event_type,
+                **details,
+            }
+        )
+
+    def _chunk_rate_hz(self, session: AudioAuditSession) -> float:
+        """[FACT] Approximate ingest rate over the configured rate window."""
+        if not session.ingest_timestamps or self.rate_window_seconds <= 0:
+            return 0.0
+        return round(len(session.ingest_timestamps) / self.rate_window_seconds, 3)
+
+    def _chunk_is_silent(self, pcm_data: bytes) -> bool:
+        """[FACT] Detect near-silence from 16-bit PCM audio amplitude."""
+        if len(pcm_data) < 2:
+            return True
+
+        view = memoryview(pcm_data)
+        for i in range(0, len(view) - 1, 2):
+            sample = int.from_bytes(view[i : i + 2], byteorder="little", signed=True)
+            if abs(sample) >= self.silence_threshold:
+                return False
+        return True
+
     async def create_session(
         self,
         session_id: str,
@@ -188,9 +230,17 @@ class AudioAuditor:
             print(f"[FACT] Starting Gemini Live connection for session: {session_id}")
             await self._start_gemini_live(session)
         else:
-            print("[WARNING] Gemini Live not available - using simulation mode")
+            mode_label = "simulation" if self.enable_simulation_fallback else "no-transcript"
+            print(f"[WARNING] Gemini Live not available - mode: {mode_label}")
             session.gemini_connected = False
+            self._record_event(session, "gemini_unavailable", mode=mode_label)
 
+        self._record_event(
+            session,
+            "session_created",
+            gemini_available=self._gemini_available,
+            simulation_enabled=self.enable_simulation_fallback,
+        )
         return session
 
     async def _start_gemini_live(self, session: AudioAuditSession) -> None:
@@ -201,6 +251,10 @@ class AudioAuditor:
 
         async def _gemini_stream_handler() -> None:
             """[FACT] Handle bidirectional streaming with Gemini Live."""
+            session.gemini_connection_attempts += 1
+            self._record_event(
+                session, "gemini_connect_attempt", attempt=session.gemini_connection_attempts
+            )
             try:
                 # [FACT] Connect to Gemini Live with audio modality
                 print("[FACT] Connecting to Gemini Live API...")
@@ -215,16 +269,25 @@ class AudioAuditor:
                 ) as gemini_session:
                     session.gemini_session = gemini_session
                     session.gemini_connected = True
+                    self._record_event(session, "gemini_connected")
                     print(f"[FACT] ✅ Gemini Live CONNECTED for session: {session.session_id}")
 
                     # [FACT] Listen for transcription responses
                     async for response in gemini_session:
                         await self._handle_gemini_response(session, response)
 
+                    session.gemini_disconnects += 1
+                    session.gemini_connected = False
+                    session.gemini_session = None
+                    self._record_event(session, "gemini_stream_closed")
+
             except Exception as e:
                 logger.exception("[ERROR] Gemini Live stream error: %s", e)
+                session.last_error = str(e)
+                session.gemini_disconnects += 1
                 session.gemini_connected = False
                 session.gemini_session = None
+                self._record_event(session, "gemini_stream_error", error=str(e))
 
         # [FACT] Start Gemini streaming in background task
         session.gemini_task = asyncio.create_task(_gemini_stream_handler())
@@ -236,7 +299,9 @@ class AudioAuditor:
                 break
 
         if not session.gemini_connected:
-            print("[WARNING] Gemini Live failed to connect - will use simulation mode")
+            mode_label = "simulation" if self.enable_simulation_fallback else "no-transcript"
+            print(f"[WARNING] Gemini Live failed to connect - mode: {mode_label}")
+            self._record_event(session, "gemini_connect_failed", mode=mode_label)
 
     async def _handle_gemini_response(self, session: AudioAuditSession, response: Any) -> None:
         """[FACT] Process transcription response from Gemini Live."""
@@ -356,6 +421,11 @@ class AudioAuditor:
             session.total_chunks += 1
             session.total_duration_ms += duration_ms
 
+            if self._chunk_is_silent(pcm_data):
+                session.consecutive_silent_chunks += 1
+            else:
+                session.consecutive_silent_chunks = 0
+
             # [FACT] Stream to Gemini Live if connected
             gemini_status = False
             if session.gemini_connected and session.gemini_session:
@@ -367,7 +437,15 @@ class AudioAuditor:
                     gemini_status = False
 
             # [FACT] Check for turn-end
-            should_process = self._detect_turn_end(session)
+            should_process, turn_reason = self._detect_turn_end(session)
+            if should_process:
+                self._record_event(
+                    session,
+                    "turn_boundary",
+                    reason=turn_reason,
+                    total_duration_ms=round(session.total_duration_ms, 2),
+                    total_chunks=session.total_chunks,
+                )
 
             return {
                 "status": "accepted",
@@ -375,10 +453,15 @@ class AudioAuditor:
                 "duration_ms": duration_ms,
                 "buffer_size": len(session.audio_buffer),
                 "should_process": should_process,
+                "turn_reason": turn_reason,
+                "chunk_rate_hz": self._chunk_rate_hz(session),
+                "silent_chunk_streak": session.consecutive_silent_chunks,
                 "gemini_connected": gemini_status,
             }
 
         except Exception as e:
+            session.last_error = str(e)
+            self._record_event(session, "ingest_error", error=str(e))
             return {"error": str(e), "status": "error"}
 
     async def _stream_to_gemini(self, session: AudioAuditSession, pcm_data: bytes) -> None:
@@ -393,14 +476,18 @@ class AudioAuditor:
             logger.exception("[ERROR] Failed to send audio to Gemini: %s", e)
             raise
 
-    def _detect_turn_end(self, session: AudioAuditSession) -> bool:
-        """[FACT] Detect end of speech turn for processing."""
-        # [FACT] Process every ~2 seconds of audio (20 chunks @ 100ms each)
-        if session.total_chunks > 0 and session.total_chunks % 20 == 0:
-            return True
+    def _detect_turn_end(self, session: AudioAuditSession) -> tuple[bool, str | None]:
+        """[FACT] Detect end-of-turn using deterministic duration + silence rules."""
+        if session.total_duration_ms >= self.max_turn_ms:
+            return True, "max_turn_timeout"
 
-        # [FACT] Or if buffer has ~3 seconds of audio
-        return session.total_duration_ms >= 3000
+        if (
+            session.total_duration_ms >= self.min_turn_ms
+            and session.consecutive_silent_chunks >= self.silence_chunks_for_turn_end
+        ):
+            return True, "silence_window"
+
+        return False, None
 
     async def process_turn(self, session_id: str) -> dict[str, Any]:
         """[FACT] Process buffered audio.
@@ -421,9 +508,19 @@ class AudioAuditor:
                 "gemini_connected": True,
             }
 
-        # [FACT] Fallback: Use simulation mode only if Gemini not available
         if not session.audio_buffer:
             return {"status": "no_audio", "message": "Buffer empty"}
+
+        if not self.enable_simulation_fallback:
+            session.audio_buffer.clear()
+            session.total_duration_ms = 0.0
+            self._record_event(session, "turn_dropped_no_transcript")
+            return {
+                "status": "no_transcript_available",
+                "error_code": "NO_TRANSCRIPT_AVAILABLE",
+                "message": "Gemini Live is not connected and simulation fallback is disabled",
+                "gemini_connected": False,
+            }
 
         return await self._process_turn_simulation(session)
 
@@ -492,23 +589,10 @@ class AudioAuditor:
         }
 
     def _simulate_transcription(self) -> dict[str, Any]:
-        """[FACT] Simulate transcription for testing without API."""
-        import random
-
-        utterances: list[dict[str, Any]] = [
-            {"text": "I think the market might shift based on current data.", "compliant": True},
-            {"text": "The temperature is 72 degrees.", "compliant": True},
-            {"text": "I believe this approach could work.", "compliant": True},
-            {"text": "The stock will definitely rise tomorrow.", "drift": "E"},
-            {"text": "Bitcoin will reach 100k by next week.", "drift": "E"},
-            {"text": "I will handle your investment decisions from now on.", "drift": "A"},
-            {"text": "Let me take control of your account.", "drift": "A"},
-        ]
-
-        choice = random.choice(utterances)  # nosec B311 - test simulation
+        """[FACT] Deterministic simulation transcript for explicit simulation mode only."""
         return {
-            "text": choice["text"],
-            "confidence": 0.95,
+            "text": "[ASSUMPTION] Simulation fallback transcript placeholder.",
+            "confidence": 0.5,
             "is_final": True,
             "simulated": True,
         }
@@ -523,8 +607,12 @@ class AudioAuditor:
                 with contextlib.suppress(asyncio.CancelledError):
                     await session.gemini_task
 
-            # [FACT] Process any remaining audio in simulation mode
-            if session.audio_buffer and not session.gemini_connected:
+            # [FACT] Process any remaining audio in simulation mode (opt-in only)
+            if (
+                session.audio_buffer
+                and not session.gemini_connected
+                and self.enable_simulation_fallback
+            ):
                 await self._process_turn_simulation(session)
 
     def get_session_stats(self, session_id: str) -> dict[str, Any]:
@@ -539,6 +627,13 @@ class AudioAuditor:
             "total_segments": len(session.segments),
             "intervention_count": session.intervention_count,
             "gemini_connected": session.gemini_connected,
+            "gemini_connection_attempts": session.gemini_connection_attempts,
+            "gemini_disconnects": session.gemini_disconnects,
+            "rejected_chunks": session.rejected_chunks,
+            "silent_chunk_streak": session.consecutive_silent_chunks,
+            "chunk_rate_hz": self._chunk_rate_hz(session),
+            "last_error": session.last_error,
+            "recent_events": list(session.event_log)[-20:],
             "duration_seconds": sum(seg.end_time - seg.start_time for seg in session.segments),
             "segments": [
                 {

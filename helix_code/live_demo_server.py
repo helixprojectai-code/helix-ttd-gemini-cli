@@ -70,6 +70,9 @@ class LiveMetrics:
     epistemic_count: int = 0
     prediction_count: int = 0
     valid_count: int = 0
+    ws_connect_count: int = 0
+    ws_disconnect_count: int = 0
+    turn_boundary_count: int = 0
 
     def record_request(self, latency_ms: float) -> None:
         """[FACT] Record a single request and its latency."""
@@ -90,6 +93,18 @@ class LiveMetrics:
             self.prediction_count += 1
         else:
             self.epistemic_count += 1
+
+    def record_ws_connect(self) -> None:
+        """[FACT] Track active WebSocket connection events."""
+        self.ws_connect_count += 1
+
+    def record_ws_disconnect(self) -> None:
+        """[FACT] Track WebSocket disconnection events."""
+        self.ws_disconnect_count += 1
+
+    def record_turn_boundary(self) -> None:
+        """[FACT] Track turn-boundary detections from audio pipeline."""
+        self.turn_boundary_count += 1
 
     def _calculate_percentile(self, percentile: float) -> float:
         """[FACT] Calculate latency percentile from history."""
@@ -120,6 +135,11 @@ class LiveMetrics:
                 "epistemic": self.epistemic_count,
                 "prediction": self.prediction_count,
                 "valid": self.valid_count,
+            },
+            "voice_pipe": {
+                "ws_connect_count": self.ws_connect_count,
+                "ws_disconnect_count": self.ws_disconnect_count,
+                "turn_boundary_count": self.turn_boundary_count,
             },
         }
 
@@ -593,6 +613,7 @@ async def audio_audit_websocket(websocket: WebSocket) -> None:
 
     await websocket.accept()
     session_id = f"audio_{datetime.utcnow().timestamp()}"
+    metrics.record_ws_connect()
 
     def on_transcription(segment: TranscriptionSegment) -> None:
         """[FACT] Callback for transcription events."""
@@ -638,7 +659,15 @@ async def audio_audit_websocket(websocket: WebSocket) -> None:
                 "session_id": session_id,
                 "message": "Live Multimodal Auditing active. Send 16kHz PCM audio chunks.",
                 "gemini_connected": session.gemini_connected,
-                "mode": "live" if session.gemini_connected else "simulation",
+                "mode": (
+                    "live"
+                    if session.gemini_connected
+                    else (
+                        "simulation"
+                        if audio_auditor.enable_simulation_fallback
+                        else "no-transcript"
+                    )
+                ),
             }
         )
 
@@ -669,12 +698,16 @@ async def audio_audit_websocket(websocket: WebSocket) -> None:
                         "type": "audio_ack",
                         "chunk_num": result.get("chunk_num"),
                         "buffer_size": result.get("buffer_size"),
+                        "chunk_rate_hz": result.get("chunk_rate_hz"),
+                        "turn_reason": result.get("turn_reason"),
+                        "silent_chunk_streak": result.get("silent_chunk_streak"),
                         "gemini_connected": result.get("gemini_connected", False),
                     }
                 )
 
                 # [FACT] Process turn if threshold reached
                 if result.get("should_process"):
+                    metrics.record_turn_boundary()
                     process_result = await audio_auditor.process_turn(session_id)
 
                     if process_result.get("status") == "processed":
@@ -704,6 +737,14 @@ async def audio_audit_websocket(websocket: WebSocket) -> None:
                                     "receipt_id": segment.receipt_id,
                                 }
                             )
+                    elif process_result.get("status") == "no_transcript_available":
+                        await websocket.send_json(
+                            {
+                                "type": "transcript_unavailable",
+                                "error_code": process_result.get("error_code"),
+                                "message": process_result.get("message"),
+                            }
+                        )
 
             elif msg_type == "get_stats":
                 stats = audio_auditor.get_session_stats(session_id)
@@ -713,8 +754,10 @@ async def audio_audit_websocket(websocket: WebSocket) -> None:
                 await websocket.send_json({"type": "pong"})
 
     except WebSocketDisconnect:
+        metrics.record_ws_disconnect()
         logger.info(f"[AUDIO-AUDIT] Session disconnected: {session_id}")
     except Exception as e:
+        metrics.record_ws_disconnect()
         logger.error(f"[AUDIO-AUDIT] Error: {e}")
     finally:
         await audio_auditor.close_session(session_id)
