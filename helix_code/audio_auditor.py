@@ -12,10 +12,8 @@ from __future__ import annotations
 import asyncio
 import base64
 import contextlib
-import io
 import os
 import time
-import wave
 from collections import deque
 from dataclasses import dataclass, field
 from datetime import datetime
@@ -176,7 +174,7 @@ class AudioAuditor:
                 ) as gemini_session:
                     session.gemini_session = gemini_session
                     session.gemini_connected = True
-                    print(f"[FACT] Gemini Live connected for session: {session.session_id}")
+                    print(f"[FACT] ✅ Gemini Live CONNECTED for session: {session.session_id}")
 
                     # [FACT] Listen for transcription responses
                     async for response in gemini_session:
@@ -184,30 +182,48 @@ class AudioAuditor:
 
             except Exception as e:
                 print(f"[ERROR] Gemini Live stream error: {e}")
+                import traceback
+
+                traceback.print_exc()
                 session.gemini_connected = False
                 session.gemini_session = None
 
         # [FACT] Start Gemini streaming in background task
         session.gemini_task = asyncio.create_task(_gemini_stream_handler())
 
-        # [FACT] Wait a moment for connection to establish
-        await asyncio.sleep(0.5)
+        # [FACT] Wait for connection to establish
+        for _ in range(10):  # Wait up to 5 seconds
+            await asyncio.sleep(0.5)
+            if session.gemini_connected:
+                break
+
+        if not session.gemini_connected:
+            print("[WARNING] Gemini Live failed to connect - will use simulation mode")
 
     async def _handle_gemini_response(self, session: AudioAuditSession, response: Any) -> None:
         """[FACT] Process transcription response from Gemini Live."""
         try:
+            print(f"[DEBUG] Raw Gemini response type: {type(response)}")
+            print(f"[DEBUG] Raw Gemini response: {response}")
+
             # [FACT] Extract text from Gemini response
             text = ""
             if hasattr(response, "text"):
                 text = response.text
+                print(f"[DEBUG] Response has text attribute: {text[:50]}...")
             elif isinstance(response, dict):
                 text = response.get("text", "")
+                print(f"[DEBUG] Response is dict, text: {text[:50]}...")
             elif hasattr(response, "data"):
-                # Handle raw response data
                 data = response.data if hasattr(response, "data") else str(response)
                 text = str(data)
+                print(f"[DEBUG] Response has data attribute: {text[:50]}...")
+            else:
+                text = str(response)
+                print(f"[DEBUG] Response as string: {text[:50]}...")
 
             if not text or not text.strip():
+                print("[DEBUG] Empty text, skipping")
                 return
 
             print(f"[FACT] Gemini transcription received: {text[:50]}...")
@@ -324,22 +340,12 @@ class AudioAuditor:
         if not session.gemini_session or not session.gemini_connected:
             raise RuntimeError("Gemini session not connected")
 
-        # [FACT] Convert PCM to WAV format
-        wav_buffer = io.BytesIO()
-        with wave.open(wav_buffer, "wb") as wav_file:
-            wav_file.setnchannels(1)  # Mono
-            wav_file.setsampwidth(2)  # 16-bit
-            wav_file.setframerate(16000)  # 16kHz
-            wav_file.writeframes(pcm_data)
-
-        wav_bytes = wav_buffer.getvalue()
-
-        # [FACT] Send to Gemini Live - base64 encode the WAV data
-        import base64 as b64
-
-        b64_audio = b64.b64encode(wav_bytes).decode("utf-8")
-
-        await session.gemini_session.send(input={"mime_type": "audio/wav", "data": b64_audio})
+        try:
+            # [FACT] Send raw PCM audio bytes directly
+            await session.gemini_session.send(input={"mime_type": "audio/pcm", "data": pcm_data})
+        except Exception as e:
+            print(f"[ERROR] Failed to send audio to Gemini: {e}")
+            raise
 
     def _detect_turn_end(self, session: AudioAuditSession) -> bool:
         """[FACT] Detect end of speech turn for processing."""
