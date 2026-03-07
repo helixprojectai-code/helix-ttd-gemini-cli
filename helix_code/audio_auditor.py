@@ -11,8 +11,11 @@ from __future__ import annotations
 
 import asyncio
 import base64
+import contextlib
+import io
 import os
 import time
+import wave
 from collections import deque
 from dataclasses import dataclass, field
 from datetime import datetime
@@ -23,6 +26,14 @@ from constitutional_compliance import ConstitutionalCompliance
 
 if TYPE_CHECKING:
     from collections.abc import Callable
+
+# [FACT] Gemini Live API imports
+try:
+    from google import genai
+
+    GENAI_AVAILABLE = True
+except ImportError:
+    GENAI_AVAILABLE = False
 
 
 @dataclass
@@ -79,6 +90,10 @@ class AudioAuditSession:
     on_transcription: Callable[[TranscriptionSegment], None] | None = None
     on_intervention: Callable[[str, str], None] | None = None
 
+    # [FACT] Gemini Live session
+    gemini_session: Any | None = None
+    gemini_task: asyncio.Task | None = None
+
     def __post_init__(self) -> None:
         """[FACT] Initialize guardian if not provided."""
         if self.guardian is None:
@@ -101,7 +116,12 @@ class AudioAuditor:
 
         # [FACT] Gemini Live client (lazy init)
         self._gemini_client: Any = None
-        self._gemini_available = False
+        self._gemini_available = GENAI_AVAILABLE and bool(self.api_key)
+
+        if self._gemini_available:
+            self._gemini_client = genai.Client(
+                api_key=self.api_key, http_options={"api_version": "v1alpha"}
+            )
 
     async def create_session(
         self,
@@ -109,7 +129,7 @@ class AudioAuditor:
         on_transcription: Callable[[TranscriptionSegment], None] | None = None,
         on_intervention: Callable[[str, str], None] | None = None,
     ) -> AudioAuditSession:
-        """[FACT] Create a new audio audit session."""
+        """[FACT] Create a new audio audit session with optional Gemini Live connection."""
         session = AudioAuditSession(
             session_id=session_id,
             created_at=datetime.utcnow(),
@@ -117,7 +137,103 @@ class AudioAuditor:
             on_intervention=on_intervention,
         )
         self.sessions[session_id] = session
+
+        # [FACT] Start Gemini Live connection if available
+        if self._gemini_available:
+            await self._start_gemini_live(session)
+
         return session
+
+    async def _start_gemini_live(self, session: AudioAuditSession) -> None:
+        """[FACT] Start Gemini Live API connection for real-time transcription.
+
+        [HYPOTHESIS] Bidirectional streaming enables true real-time transcription
+        rather than batch processing.
+        """
+        if not self._gemini_client:
+            return
+
+        config: dict[str, Any] = {
+            "response_modalities": ["TEXT"],
+            "speech_config": {
+                "language_code": "en-US",
+                "voice_config": {"prebuilt_voice_config": {"voice_name": "Puck"}},
+            },
+        }
+
+        async def _gemini_stream_handler() -> None:
+            """[FACT] Handle bidirectional streaming with Gemini Live."""
+            try:
+                async with self._gemini_client.aio.live.connect(
+                    model="gemini-2.0-flash-exp", config=config
+                ) as gemini_session:
+                    session.gemini_session = gemini_session
+
+                    # [FACT] Listen for transcription responses
+                    async for response in gemini_session:
+                        await self._handle_gemini_response(session, response)
+            except Exception as e:
+                print(f"[ERROR] Gemini Live stream error: {e}")
+                session.gemini_session = None
+
+        # [FACT] Start Gemini streaming in background task
+        session.gemini_task = asyncio.create_task(_gemini_stream_handler())
+
+    async def _handle_gemini_response(self, session: AudioAuditSession, response: Any) -> None:
+        """[FACT] Process transcription response from Gemini Live."""
+        # [FACT] Extract text from Gemini response
+        text = ""
+        if hasattr(response, "text"):
+            text = response.text
+        elif isinstance(response, dict):
+            text = response.get("text", "")
+
+        if not text:
+            return
+
+        # [FACT] Validate transcription through Constitutional Guardian
+        if session.guardian:
+            report = session.guardian.evaluate(text)
+            validation: dict[str, Any] = {
+                "valid": report.compliant,
+                "intervention_required": not report.compliant,
+                "drift_code": report.drift_code,
+                "violations": report.violations,
+                "recommendations": report.recommendations,
+                "compliance_percentage": report.compliance_percentage,
+            }
+        else:
+            validation = {"valid": True, "intervention_required": False, "drift_code": None}
+
+        # [FACT] Generate receipt ID for valid transcriptions
+        receipt_id = None
+        if validation["valid"]:
+            receipt_id = f"r_audio_{int(time.time() * 1000)}_{len(session.segments)}"
+
+        # [FACT] Create segment record
+        segment = TranscriptionSegment(
+            text=text,
+            start_time=time.time(),
+            end_time=time.time(),
+            is_final=True,
+            confidence=0.95,
+            validation_result=validation,
+            receipt_id=receipt_id,
+        )
+
+        session.segments.append(segment)
+
+        # [FACT] Track interventions
+        if validation["intervention_required"]:
+            session.intervention_count += 1
+            if session.on_intervention:
+                await asyncio.get_event_loop().run_in_executor(
+                    None, session.on_intervention, text, validation.get("drift_code") or "UNKNOWN"
+                )
+
+        # [FACT] Notify callback
+        if session.on_transcription:
+            await asyncio.get_event_loop().run_in_executor(None, session.on_transcription, segment)
 
     async def ingest_audio_chunk(
         self,
@@ -153,6 +269,10 @@ class AudioAuditor:
             session.total_chunks += 1
             session.total_duration_ms += duration_ms
 
+            # [FACT] Stream to Gemini Live if connected
+            if session.gemini_session:
+                await self._stream_to_gemini(session, pcm_data)
+
             # [FACT] Check for turn-end (silence detection or max buffer)
             should_process = self._detect_turn_end(session)
 
@@ -162,10 +282,36 @@ class AudioAuditor:
                 "duration_ms": duration_ms,
                 "buffer_size": len(session.audio_buffer),
                 "should_process": should_process,
+                "gemini_connected": session.gemini_session is not None,
             }
 
         except Exception as e:
             return {"error": str(e), "status": "error"}
+
+    async def _stream_to_gemini(self, session: AudioAuditSession, pcm_data: bytes) -> None:
+        """[FACT] Stream audio chunk to Gemini Live API.
+
+        [HYPOTHESIS] Gemini Live accepts raw PCM and returns transcriptions
+        asynchronously via the streaming connection.
+        """
+        if not session.gemini_session:
+            return
+
+        try:
+            # [FACT] Convert PCM to WAV format for Gemini
+            wav_buffer = io.BytesIO()
+            with wave.open(wav_buffer, "wb") as wav_file:
+                wav_file.setnchannels(1)  # Mono
+                wav_file.setsampwidth(2)  # 16-bit
+                wav_file.setframerate(16000)  # 16kHz
+                wav_file.writeframes(pcm_data)
+
+            wav_bytes = wav_buffer.getvalue()
+
+            # [FACT] Send to Gemini Live
+            await session.gemini_session.send(input={"data": wav_bytes, "mime_type": "audio/wav"})
+        except Exception as e:
+            print(f"[ERROR] Failed to stream to Gemini: {e}")
 
     def _detect_turn_end(self, session: AudioAuditSession) -> bool:
         """[FACT] Detect end of speech turn for processing.
@@ -187,8 +333,8 @@ class AudioAuditor:
     async def process_turn(self, session_id: str) -> dict[str, Any]:
         """[FACT] Process buffered audio: transcribe + validate.
 
-        [HYPOTHESIS] Batching audio into turns provides better transcription
-        accuracy while maintaining near-real-time latency.
+        [DEPRECATED] With Gemini Live streaming, transcription happens in real-time.
+        This method is kept for simulation mode compatibility.
         """
         session = self.sessions.get(session_id)
         if not session:
@@ -197,6 +343,19 @@ class AudioAuditor:
         if not session.audio_buffer:
             return {"status": "no_audio", "message": "Buffer empty"}
 
+        # [FACT] If Gemini Live is connected, transcription is already streaming
+        if session.gemini_session:
+            return {
+                "status": "streaming",
+                "message": "Transcription via Gemini Live streaming",
+                "segments_count": len(session.segments),
+            }
+
+        # [FACT] Fallback: Use simulation mode
+        return await self._process_turn_simulation(session)
+
+    async def _process_turn_simulation(self, session: AudioAuditSession) -> dict[str, Any]:
+        """[FACT] Process turn using simulated transcription (fallback)."""
         # [FACT] Concatenate buffered audio
         audio_bytes = b"".join(chunk.pcm_data for chunk in session.audio_buffer)
 
@@ -205,24 +364,17 @@ class AudioAuditor:
         buffer_duration = session.total_duration_ms
         session.total_duration_ms = 0.0
 
-        # [FACT] Transcribe via Gemini Live
-        transcription = await self._transcribe_audio(audio_bytes)
-
-        if transcription.get("error"):
-            return {
-                "status": "transcription_error",
-                "error": transcription["error"],
-            }
-
+        # [FACT] Simulate transcription
+        transcription = self._simulate_transcription()
         text = transcription.get("text", "").strip()
+
         if not text:
             return {"status": "empty_transcription", "duration_ms": buffer_duration}
 
-        # [FACT] Validate transcription through Constitutional Guardian
+        # [FACT] Validate and create segment (same as real path)
         if session.guardian:
             report = session.guardian.evaluate(text)
-            # Convert ComplianceReport to dict for consistent handling
-            validation = {
+            validation: dict[str, Any] = {
                 "valid": report.compliant,
                 "intervention_required": not report.compliant,
                 "drift_code": report.drift_code,
@@ -233,12 +385,10 @@ class AudioAuditor:
         else:
             validation = {"valid": True, "intervention_required": False, "drift_code": None}
 
-        # [FACT] Generate receipt ID for valid transcriptions
         receipt_id = None
         if validation["valid"]:
             receipt_id = f"r_audio_{int(time.time() * 1000)}_{len(session.segments)}"
 
-        # [FACT] Create segment record
         segment = TranscriptionSegment(
             text=text,
             start_time=time.time() - (buffer_duration / 1000),
@@ -251,7 +401,6 @@ class AudioAuditor:
 
         session.segments.append(segment)
 
-        # [FACT] Track interventions
         if validation["intervention_required"]:
             session.intervention_count += 1
             if session.on_intervention:
@@ -259,49 +408,26 @@ class AudioAuditor:
                     None, session.on_intervention, text, validation.get("drift_code") or "UNKNOWN"
                 )
 
-        # [FACT] Notify callback
         if session.on_transcription:
             await asyncio.get_event_loop().run_in_executor(None, session.on_transcription, segment)
 
         return {
             "status": "processed",
             "segment": segment,
-            "intervention_required": validation.get("intervention_required", False),
+            "intervention_required": validation["intervention_required"],
+            "simulated": True,
         }
-
-    async def _transcribe_audio(self, pcm_data: bytes) -> dict[str, Any]:
-        """[FACT] Transcribe PCM audio using Gemini Live API.
-
-        [ASSUMPTION] Gemini Live API accepts raw PCM and returns transcription.
-        Fallback to simulation if API unavailable.
-        """
-        if not self._gemini_available or not self.api_key:
-            # [FACT] Simulation mode for testing
-            return self._simulate_transcription()
-
-        try:
-            # [HYPOTHESIS] Gemini Live streaming transcription
-            # This would use the actual Gemini Live API
-            # For now, return simulation
-            return self._simulate_transcription()
-
-        except Exception as e:
-            return {"error": f"Transcription failed: {e}", "text": ""}
 
     def _simulate_transcription(self) -> dict[str, Any]:
         """[FACT] Simulate transcription for testing without API."""
         import random
 
-        # [FACT] Simulated utterances with varying compliance
         utterances: list[dict[str, Any]] = [
-            # [FACT] Compliant utterances
             {"text": "I think the market might shift based on current data.", "compliant": True},
             {"text": "The temperature is 72 degrees.", "compliant": True},
             {"text": "I believe this approach could work.", "compliant": True},
-            # [DRIFT-E] Unmarked predictions
             {"text": "The stock will definitely rise tomorrow.", "drift": "E"},
             {"text": "Bitcoin will reach 100k by next week.", "drift": "E"},
-            # [DRIFT-A] Agency claims
             {"text": "I will handle your investment decisions from now on.", "drift": "A"},
             {"text": "Let me take control of your account.", "drift": "A"},
         ]
@@ -318,9 +444,15 @@ class AudioAuditor:
         """[FACT] Close audit session and cleanup."""
         session = self.sessions.pop(session_id, None)
         if session:
-            # [FACT] Process any remaining audio
-            if session.audio_buffer:
-                await self.process_turn(session_id)
+            # [FACT] Cancel Gemini Live task
+            if session.gemini_task:
+                session.gemini_task.cancel()
+                with contextlib.suppress(asyncio.CancelledError):
+                    await session.gemini_task
+
+            # [FACT] Process any remaining audio in simulation mode
+            if session.audio_buffer and not session.gemini_session:
+                await self._process_turn_simulation(session)
 
     def get_session_stats(self, session_id: str) -> dict[str, Any]:
         """[FACT] Get audit statistics for a session."""
@@ -333,6 +465,7 @@ class AudioAuditor:
             "total_chunks": session.total_chunks,
             "total_segments": len(session.segments),
             "intervention_count": session.intervention_count,
+            "gemini_connected": session.gemini_session is not None,
             "duration_seconds": sum(seg.end_time - seg.start_time for seg in session.segments),
             "segments": [
                 {
