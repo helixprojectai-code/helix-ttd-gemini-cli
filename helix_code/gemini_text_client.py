@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """[FACT] Gemini Text API Client for Constitutional Guardian (REST Fallback)
 
-[HYPOTHESIS] Using direct REST API bypasses SDK parsing issues with gemini-2.5-pro
+[HYPOTHESIS] Using direct REST API bypasses SDK parsing issues with gemini-3.1-pro-preview
 reasoning-model responses (which include thoughtsTokenCount).
 
 Node: GCS-GUARDIAN
@@ -23,10 +23,10 @@ logger = logging.getLogger(__name__)
 class GeminiTextClient:
     """[FACT] Client for Gemini Text API with direct REST implementation.
 
-    [HYPOTHESIS] REST calls are more stable for v1beta models like gemini-2.5-pro.
+    [HYPOTHESIS] REST calls are more stable for v1beta models like gemini-3.1-pro-preview.
     """
 
-    def __init__(self, api_key: str | None = None, model: str = "gemini-2.5-pro"):
+    def __init__(self, api_key: str | None = None, model: str = os.getenv("GEMINI_TEXT_MODEL", "gemini-3.1-pro-preview")):
         """[FACT] Initialize Gemini client with REST configuration."""
         self.api_key = api_key or os.getenv("GEMINI_API_KEY")
         self.model = model
