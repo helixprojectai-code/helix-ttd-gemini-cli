@@ -1,6 +1,6 @@
 # 🛡️ Constitutional Guardian (Helix-TTD)
 
-[![CI](https://github.com/helixprojectai-code/helix-ttd-gemini-cli/actions/workflows/ci.yml/badge.svg)](https://github.com/helixprojectai-code/helix-ttd-gemini-cli/actions/workflows/ci.yml)
+[![CI](https://github.com/helixprojectai-code/helix-ttd-gemini-cli/actions/workflows/ci-hardened.yml/badge.svg)](https://github.com/helixprojectai-code/helix-ttd-gemini-cli/actions/workflows/ci-hardened.yml)
 [![Tests](https://img.shields.io/badge/tests-140%2F140%20passing-brightgreen)](helix_code/tests/)
 [![Coverage](https://img.shields.io/badge/coverage-79.5%25-brightgreen)](pyproject.toml)
 [![Python](https://img.shields.io/badge/python-3.10%2B-blue)](pyproject.toml)
@@ -9,7 +9,7 @@
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue)](LICENSE)
 [![PyPI](https://img.shields.io/pypi/v/helix-ttd-gemini)](https://pypi.org/project/helix-ttd-gemini/)
 
-<img src="ARCHITECTURE_CG.png" alt="Constitutional Guardian Architecture" width="100%">
+<img src="https://raw.githubusercontent.com/helixprojectai-code/helix-ttd-gemini-cli/main/ARCHITECTURE_CG.png" alt="Constitutional Guardian Architecture" width="100%">
 
 **[FACT]** Real-time AI governance for the Gemini Live API.
 **[HYPOTHESIS]** Intercepting voice and text drift at the edge prevents misaligned AI behavior from reaching the user.
@@ -98,7 +98,7 @@ This codebase is currently in its **Phase 6.1 (Pre-Filming)** stable state. All 
 
 ## 🏛️ Constitutional Framework
 
-<img src="covenant_governors_diagram.png" alt="Constitutional Governance" width="600">
+<img src="https://raw.githubusercontent.com/helixprojectai-code/helix-ttd-gemini-cli/main/covenant_governors_diagram.png" alt="Constitutional Governance" width="600">
 
 The Guardian enforces four immutable invariants:
 

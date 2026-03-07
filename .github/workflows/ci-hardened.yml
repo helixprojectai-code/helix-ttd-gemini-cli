@@ -6,7 +6,7 @@ name: Helix-TTD Hardened CI
 
 on:
   push:
-    branches: [dev]
+    branches: [main, dev]
     paths:
       - 'helix_code/**'
       - 'tools/**'

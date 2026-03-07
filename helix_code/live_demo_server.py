@@ -13,11 +13,12 @@ from collections import deque
 from dataclasses import dataclass, field
 from datetime import datetime
 
+# [FACT] Import our Helix modules
+from audio_auditor import TranscriptionSegment, create_audio_auditor
+
 # [FACT] FastAPI and WebSocket imports
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.responses import HTMLResponse
-
-# [FACT] Import our Gemini Live Bridge
 from gemini_live_bridge import create_gemini_bridge
 from gemini_text_client import GeminiTextClient, create_gemini_text_client
 
@@ -527,11 +528,153 @@ async def get_demo() -> HTMLResponse:
     return HTMLResponse(content=DEMO_HTML)
 
 
+@app.get("/audio-audit", response_class=HTMLResponse)
+async def get_audio_audit_client() -> HTMLResponse:
+    """[FACT] Serve the Live Multimodal Auditing client."""
+    import pathlib
+
+    html_path = pathlib.Path(__file__).parent / "audio_audit_client.html"
+    if html_path.exists():
+        return HTMLResponse(content=html_path.read_text())
+    return HTMLResponse(content="<h1>Audio Audit Client not found</h1>", status_code=404)
+
+
 @app.websocket("/demo-live")
 async def standalone_websocket(websocket: WebSocket) -> None:
     """[FACT] Standalone WebSocket endpoint for local testing."""
     await websocket.accept()
     await demo_websocket_handler(websocket)
+
+
+# [FACT] Global audio auditor instance
+audio_auditor = create_audio_auditor()
+
+
+@app.websocket("/audio-audit")
+async def audio_audit_websocket(websocket: WebSocket) -> None:
+    """[FACT] WebSocket endpoint for Live Multimodal Auditing.
+
+    [HYPOTHESIS] Real-time audio transcription with constitutional validation
+    enables voice-based AI interactions with immediate guardrails.
+
+    Protocol:
+    Client -> Server: {"type": "audio", "data": "base64_pcm_chunk"}
+    Server -> Client: {"type": "transcription", "text": "...", "valid": true}
+    Server -> Client: {"type": "intervention", "drift_code": "E", "original": "..."}
+    """
+    await websocket.accept()
+    session_id = f"audio_{datetime.utcnow().timestamp()}"
+
+    def on_transcription(segment: TranscriptionSegment) -> None:
+        """[FACT] Callback for transcription events."""
+        asyncio.create_task(
+            websocket.send_json(
+                {
+                    "type": "transcription",
+                    "text": segment.text,
+                    "is_final": segment.is_final,
+                    "confidence": segment.confidence,
+                    "receipt_id": segment.receipt_id,
+                }
+            )
+        )
+
+    def on_intervention(text: str, drift_code: str) -> None:
+        """[FACT] Callback for constitutional interventions."""
+        asyncio.create_task(
+            websocket.send_json(
+                {
+                    "type": "intervention",
+                    "drift_code": drift_code,
+                    "original": text,
+                    "message": f"[GUARDIAN] Constitutional violation detected: {drift_code}",
+                }
+            )
+        )
+
+    # [FACT] Create audit session
+    session = await audio_auditor.create_session(
+        session_id=session_id,
+        on_transcription=on_transcription,
+        on_intervention=on_intervention,
+    )
+
+    logger.info(f"[AUDIO-AUDIT] Session started: {session_id}")
+
+    try:
+        await websocket.send_json(
+            {
+                "type": "connected",
+                "session_id": session_id,
+                "message": "Live Multimodal Auditing active. Send 16kHz PCM audio chunks.",
+            }
+        )
+
+        while True:
+            message = await websocket.receive_text()
+            data = json.loads(message)
+            msg_type = data.get("type")
+
+            if msg_type == "audio":
+                # [FACT] Ingest audio chunk
+                base64_pcm = data.get("data", "")
+                result = await audio_auditor.ingest_audio_chunk(session_id, base64_pcm)
+
+                # [FACT] Acknowledge receipt
+                await websocket.send_json(
+                    {
+                        "type": "audio_ack",
+                        "chunk_num": result.get("chunk_num"),
+                        "buffer_size": result.get("buffer_size"),
+                    }
+                )
+
+                # [FACT] Process turn if threshold reached
+                if result.get("should_process"):
+                    process_result = await audio_auditor.process_turn(session_id)
+
+                    if process_result.get("status") == "processed":
+                        segment = process_result.get("segment")
+                        if segment:
+                            await websocket.send_json(
+                                {
+                                    "type": "validation",
+                                    "text": segment.text,
+                                    "valid": (
+                                        segment.validation_result.get("valid", True)
+                                        if segment.validation_result
+                                        else True
+                                    ),
+                                    "intervention": (
+                                        segment.validation_result.get(
+                                            "intervention_required", False
+                                        )
+                                        if segment.validation_result
+                                        else False
+                                    ),
+                                    "drift_code": (
+                                        segment.validation_result.get("drift_code")
+                                        if segment.validation_result
+                                        else None
+                                    ),
+                                    "receipt_id": segment.receipt_id,
+                                }
+                            )
+
+            elif msg_type == "get_stats":
+                stats = audio_auditor.get_session_stats(session_id)
+                await websocket.send_json({"type": "stats", "stats": stats})
+
+            elif msg_type == "ping":
+                await websocket.send_json({"type": "pong"})
+
+    except WebSocketDisconnect:
+        logger.info(f"[AUDIO-AUDIT] Session disconnected: {session_id}")
+    except Exception as e:
+        logger.error(f"[AUDIO-AUDIT] Error: {e}")
+    finally:
+        await audio_auditor.close_session(session_id)
+        logger.info(f"[AUDIO-AUDIT] Session closed: {session_id}")
 
 
 # [FACT] Placeholder for DEMO_HTML (I will extract this to its own module next)
