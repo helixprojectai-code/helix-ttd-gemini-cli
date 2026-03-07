@@ -101,7 +101,7 @@ class GeminiLiveBridge:
             os.getenv("HELIX_AUDIO_SILENCE_CHUNKS_FOR_TURN_END", "6")
         )
         self.chunk_gap_ms = float(os.getenv("HELIX_AUDIO_CHUNK_GAP_MS", "450"))
-        self.connect_max_retries = int(os.getenv("HELIX_GEMINI_CONNECT_RETRIES", "3"))
+        self.connect_max_retries = int(os.getenv("HELIX_GEMINI_CONNECT_RETRIES", "6"))
         self.connect_retry_base_delay_s = float(
             os.getenv("HELIX_GEMINI_CONNECT_RETRY_BASE_S", "1.0")
         )
@@ -162,7 +162,6 @@ class GeminiLiveBridge:
         if not self._is_native_audio_model(selected_model):
             return [("text_default", self._build_live_config(selected_model, reasoning_mode))]
         return [
-            ("text_input_tx", {"response_modalities": ["TEXT"], "input_audio_transcription": {}}),
             (
                 "audio_output_tx",
                 {"response_modalities": ["AUDIO"], "output_audio_transcription": {}},
@@ -175,6 +174,7 @@ class GeminiLiveBridge:
                     "output_audio_transcription": {},
                 },
             ),
+            ("text_input_tx", {"response_modalities": ["TEXT"], "input_audio_transcription": {}}),
         ]
 
     def _resolve_live_client(self, api_version: str) -> Any:
@@ -227,7 +227,11 @@ class GeminiLiveBridge:
         for variant_name, config in config_variants:
             for api_version in api_versions:
                 attempts.append((api_version, variant_name, config))
-        attempts = attempts[: max(1, self.connect_max_retries)]
+        max_attempts = max(1, self.connect_max_retries)
+        if self._is_native_audio_model(selected_model):
+            # [FACT] Try every config/API variant at least once for native-audio models.
+            max_attempts = max(max_attempts, len(attempts))
+        attempts = attempts[:max_attempts]
 
         last_error: str | None = None
         total_attempts = len(attempts)
