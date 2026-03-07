@@ -203,3 +203,14 @@ async def test_bridge_explicit_audio_end(monkeypatch: pytest.MonkeyPatch) -> Non
     ]
     assert delivered
     assert delivered[0] == "[ASSUMPTION] Simulation fallback transcript placeholder."
+
+
+def test_bridge_normalize_live_model_name() -> None:
+    """[FACT] Live model names are normalized by removing optional models/ prefix."""
+    bridge = GeminiLiveBridge(api_key="test_key")
+    assert bridge._normalize_live_model_name(
+        "models/gemini-2.5-flash-native-audio-preview-12-2025"
+    ) == ("gemini-2.5-flash-native-audio-preview-12-2025")
+    assert bridge._normalize_live_model_name("gemini-2.5-flash-native-audio-preview-12-2025") == (
+        "gemini-2.5-flash-native-audio-preview-12-2025"
+    )

@@ -67,9 +67,13 @@ class GeminiLiveBridge:
     """[FACT] Bridge between user, Gemini Live, and Constitutional Guardian."""
 
     SUPPORTED_MODELS = {
+        "gemini-2.5-flash-native-audio-preview-12-2025": {
+            "reasoning": False,
+            "description": "Gemini Live native audio model (preview)",
+        },
         "gemini-3.1-pro-preview": {
             "reasoning": True,
-            "description": "Deep reasoning, edge case analysis",
+            "description": "Text reasoning model (not for Live bidi audio)",
         },
     }
 
@@ -97,7 +101,9 @@ class GeminiLiveBridge:
 
         if GENAI_AVAILABLE and self.api_key:
             self.api_version = os.getenv("GEMINI_API_VERSION", "v1beta")
-            self.live_model = os.getenv("GEMINI_LIVE_MODEL", "models/gemini-2.0-flash-exp")
+            self.live_model = os.getenv(
+                "GEMINI_LIVE_MODEL", "gemini-2.5-flash-native-audio-preview-12-2025"
+            )
             self.client = genai.Client(
                 api_key=self.api_key,
                 http_options={"api_version": self.api_version},
@@ -117,6 +123,13 @@ class GeminiLiveBridge:
 
     def _is_task_active(self, task: Any) -> bool:
         return bool(task and hasattr(task, "done") and not task.done())
+
+    def _normalize_live_model_name(self, model_name: str) -> str:
+        """[FACT] Normalize model identifiers for SDK compatibility."""
+        normalized = (model_name or "").strip()
+        if normalized.startswith("models/"):
+            normalized = normalized[len("models/") :]
+        return normalized
 
     async def ensure_gemini_live(self, session: LiveSession) -> None:
         """[FACT] Lazy-start Gemini Live when audio starts and reconnect if needed."""
@@ -142,12 +155,9 @@ class GeminiLiveBridge:
         if not self.client:
             return
 
-        selected_model = model_id or self.live_model
+        selected_model = self._normalize_live_model_name(model_id or self.live_model)
         config: dict[str, Any] = {"response_modalities": ["TEXT"]}
-        if reasoning_mode and selected_model in {
-            "gemini-3.1-pro-preview",
-            "models/gemini-3.1-pro-preview",
-        }:
+        if reasoning_mode and selected_model in {"gemini-3.1-pro-preview"}:
             config["reasoning_mode"] = True
 
         last_error: str | None = None

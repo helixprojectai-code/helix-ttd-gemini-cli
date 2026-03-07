@@ -94,7 +94,9 @@ def _runtime_config_snapshot() -> dict[str, Any]:
 
     return {
         "models": {
-            "gemini_live_model": os.getenv("GEMINI_LIVE_MODEL", "gemini-3.1-pro-preview"),
+            "gemini_live_model": os.getenv(
+                "GEMINI_LIVE_MODEL", "gemini-2.5-flash-native-audio-preview-12-2025"
+            ),
             "gemini_text_model": os.getenv("GEMINI_TEXT_MODEL", "gemini-3.1-pro-preview"),
         },
         "auth": {
