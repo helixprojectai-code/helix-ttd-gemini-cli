@@ -119,6 +119,7 @@ python helix_code/live_demo_server.py
 - Audit dashboard endpoints: `GET /audit-dashboard` and `GET /api/audit-dashboard`
 - Optional operator auth: `HELIX_ADMIN_TOKEN` for runtime, security, dashboard, and receipt surfaces
 - Optional durable receipt envs: `HELIX_RECEIPT_PERSISTENCE`, `HELIX_RECEIPT_STORE_PATH`, `GCS_RECEIPT_BUCKET`
+- Recommended production receipt mode: `HELIX_RECEIPT_PERSISTENCE=dual` with a dedicated `GCS_RECEIPT_BUCKET`
 - Optional security transparency envs: `SECURITY_ARTIFACT_ANALYSIS_STATUS`, `SECURITY_ARTIFACT_ANALYSIS_TIMESTAMP`, `SECURITY_ARTIFACT_IMAGE_URI`
 
 **How to Use:**

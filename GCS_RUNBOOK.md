@@ -147,6 +147,8 @@ Current behavior:
 - builds Docker image under `us-central1-docker.pkg.dev/$PROJECT_ID/helix-repo/constitutional-guardian`
 - pushes immutable tag plus `latest`
 - deploys to Cloud Run from Artifact Registry
+- preserves optional runtime envs by updating only the managed runtime/security keys
+- resets artifact verification metadata to `unverified` for each newly deployed digest
 
 ### Manual submit
 
@@ -208,6 +210,100 @@ Cloud Run service account observed in production:
 Publisher role required on the topic:
 
 - `roles/pubsub.publisher`
+
+
+## Production Receipt Persistence
+
+### Current Implementation
+
+The app already supports these receipt persistence modes:
+
+- `memory`
+- `local`
+- `gcs`
+- `gcs+local`
+
+Relevant envs:
+
+- `HELIX_RECEIPT_PERSISTENCE=auto|local|gcs|dual`
+- `HELIX_RECEIPT_STORE_PATH`
+- `GCS_RECEIPT_BUCKET`
+
+Recommended production mode:
+
+- `HELIX_RECEIPT_PERSISTENCE=dual`
+- `GCS_RECEIPT_BUCKET=<bucket-name>`
+
+That gives:
+
+- durable GCS archive for cross-revision restore
+- local JSONL fallback for rapid same-instance access
+
+### Recommended Bucket
+
+Use a dedicated bucket, for example:
+
+- `helix-ai-deploy-receipts`
+
+Create it if needed:
+
+```powershell
+& $GCLOUD storage buckets create gs://helix-ai-deploy-receipts `
+  --project helix-ai-deploy `
+  --location us-central1
+```
+
+### Required IAM
+
+Grant the Cloud Run service account object permissions on the receipt bucket.
+
+Observed runtime service account:
+
+- `231586465188-compute@developer.gserviceaccount.com`
+
+Recommended role on the bucket:
+
+- `roles/storage.objectAdmin`
+
+### Rollout Command
+
+```powershell
+& $GCLOUD run services update constitutional-guardian `
+  --project helix-ai-deploy `
+  --region us-central1 `
+  --update-env-vars "HELIX_RECEIPT_PERSISTENCE=dual,GCS_RECEIPT_BUCKET=helix-ai-deploy-receipts"
+```
+
+### Verification
+
+Runtime config:
+
+```powershell
+Invoke-RestMethod "https://constitutional-guardian-231586465188.us-central1.run.app/api/runtime-config"
+```
+
+Audit dashboard:
+
+```powershell
+Invoke-RestMethod "https://constitutional-guardian-231586465188.us-central1.run.app/api/audit-dashboard"
+```
+
+Expected storage signals after rollout:
+
+- `receipts.persistence_mode = dual`
+- `receipts.gcs_bucket_configured = true`
+- audit/dashboard storage backend = `gcs+local` or `gcs`
+
+### Restart Test
+
+After enabling the bucket:
+
+1. generate one or more receipts
+2. record a receipt ID from `/api/receipts`
+3. force a new revision or redeploy
+4. verify the same receipt ID is still retrievable
+
+That is the real production persistence check.
 
 ## Artifact Analysis / Vulnerability Verification
 
@@ -301,7 +397,7 @@ Observed good state on 2026-03-08:
 
 - `artifact_analysis.status=clean`
 - `artifact_analysis.scan_timestamp=2026-03-08T11:29:23Z`
-- `artifact_analysis.image_uri` matches the live `gcr.io` digest
+- `artifact_analysis.image_uri` matches the live Artifact Registry digest
 
 ## Audio / Gemini Live Known Good Configuration
 

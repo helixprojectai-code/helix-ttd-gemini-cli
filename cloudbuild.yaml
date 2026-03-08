@@ -1,4 +1,4 @@
-﻿# [FACT] Google Cloud Build configuration for Constitutional Guardian
+# [FACT] Google Cloud Build configuration for Constitutional Guardian
 # [HYPOTHESIS] Automated CI/CD improves deployment reliability
 # [ASSUMPTION] Cloud Build triggers on push to main branch
 
@@ -64,6 +64,7 @@ steps:
         SCAN_TS="$(cat /workspace/security_scan_timestamp.txt)"
 
         IMAGE_BASE="us-central1-docker.pkg.dev/$PROJECT_ID/helix-repo/constitutional-guardian"
+        RUNTIME_ENV_VARS="^~^HELIX_NODE_ID=GCS-GUARDIAN~HELIX_ENV=production~GOOGLE_CLOUD_PROJECT=$PROJECT_ID~PUBSUB_TOPIC=projects/$PROJECT_ID/topics/helix-events~GEMINI_LIVE_MODEL=gemini-2.5-flash-native-audio-preview-12-2025~GEMINI_TEXT_MODEL=gemini-3.1-pro-preview~GEMINI_API_VERSION=v1beta~SECURITY_SCAN_TIMESTAMP=$$SCAN_TS~SECURITY_TEST_STATUS=$$TEST_STATUS~SECURITY_POSTURE_SCORE=90+~SECURITY_CHECK_BANDIT=passing~SECURITY_CHECK_RUFF=passing~SECURITY_CHECK_MYPY=passing~SECURITY_CHECK_BLACK=passing~SECURITY_CHECK_ISORT=passing~SECURITY_CHECK_PRE_COMMIT=passing"
 
         gcloud run deploy constitutional-guardian \
           --image "$$IMAGE_BASE:$$IMAGE_TAG" \
@@ -75,8 +76,28 @@ steps:
           --concurrency 50 \
           --timeout 300 \
           --max-instances 10 \
-          --set-env-vars "^~^HELIX_NODE_ID=GCS-GUARDIAN~HELIX_ENV=production~GOOGLE_CLOUD_PROJECT=$PROJECT_ID~PUBSUB_TOPIC=projects/$PROJECT_ID/topics/helix-events~GEMINI_LIVE_MODEL=gemini-2.5-flash-native-audio-preview-12-2025~GEMINI_TEXT_MODEL=gemini-3.1-pro-preview~GEMINI_API_VERSION=v1beta~SECURITY_SCAN_TIMESTAMP=$$SCAN_TS~SECURITY_TEST_STATUS=$$TEST_STATUS~SECURITY_POSTURE_SCORE=90+~SECURITY_CHECK_BANDIT=passing~SECURITY_CHECK_RUFF=passing~SECURITY_CHECK_MYPY=passing~SECURITY_CHECK_BLACK=passing~SECURITY_CHECK_ISORT=passing~SECURITY_CHECK_PRE_COMMIT=passing" \
+          --update-env-vars "$$RUNTIME_ENV_VARS" \
           --set-secrets GEMINI_API_KEY=GEMINI_API_KEY:latest
+
+  # [FACT] Reset artifact verification metadata for the newly deployed image digest.
+  - name: 'gcr.io/cloud-builders/gcloud'
+    id: 'stamp-artifact-metadata'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        set -euo pipefail
+        IMAGE_DIGEST="$(gcloud run revisions list \
+          --service constitutional-guardian \
+          --region us-central1 \
+          --sort-by='~metadata.creationTimestamp' \
+          --limit 1 \
+          --format='value(status.imageDigest)')"
+
+        gcloud run services update constitutional-guardian \
+          --region us-central1 \
+          --update-env-vars "SECURITY_ARTIFACT_ANALYSIS_STATUS=unverified,SECURITY_ARTIFACT_ANALYSIS_TIMESTAMP=unavailable,SECURITY_ARTIFACT_IMAGE_URI=$$IMAGE_DIGEST" \
+          --quiet
 
 # [FACT] Cloud Build options
 options:
