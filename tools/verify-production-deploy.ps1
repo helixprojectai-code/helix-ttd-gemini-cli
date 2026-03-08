@@ -37,6 +37,33 @@ function Invoke-HelixJson {
     }
 }
 
+
+function Get-NestedValue {
+    param(
+        [Parameter(Mandatory = $true)][AllowNull()][object]$Object,
+        [Parameter(Mandatory = $true)][string[]]$Path,
+        [Parameter()][object]$Default = $null
+    )
+
+    $current = $Object
+    foreach ($segment in $Path) {
+        if ($null -eq $current) {
+            return $Default
+        }
+
+        $property = $current.PSObject.Properties[$segment]
+        if ($null -eq $property) {
+            return $Default
+        }
+        $current = $property.Value
+    }
+
+    if ($null -eq $current) {
+        return $Default
+    }
+    return $current
+}
+
 function Add-CheckResult {
     param(
         [Parameter(Mandatory = $true)][object]$Results,
@@ -60,8 +87,9 @@ if ($AdminToken) {
 }
 
 $health = Invoke-HelixJson -Url "$baseUrl/health"
-$healthPassed = $health.StatusCode -eq 200 -and $null -ne $health.Body.version
-Add-CheckResult -Results $results -Name 'health' -Passed $healthPassed -Details "status=$($health.StatusCode); version=$($health.Body.version)"
+$healthVersion = Get-NestedValue -Object $health.Body -Path @('version') -Default 'unknown'
+$healthPassed = $health.StatusCode -eq 200 -and $healthVersion -ne 'unknown'
+Add-CheckResult -Results $results -Name 'health' -Passed $healthPassed -Details "status=$($health.StatusCode); version=$healthVersion"
 
 $unauthRuntime = Invoke-HelixJson -Url "$baseUrl/api/runtime-config"
 $expectedUnauth = if ($AdminToken) { 401 } else { @('200','401','503') }
@@ -70,12 +98,14 @@ Add-CheckResult -Results $results -Name 'runtime-config-auth-gate' -Passed $unau
 
 if ($AdminToken) {
     $runtime = Invoke-HelixJson -Url "$baseUrl/api/runtime-config" -Headers $authHeaders
-    $runtimePassed = $runtime.StatusCode -eq 200 -and $runtime.Body.receipts.persistence_mode -eq 'dual' -and $runtime.Body.receipts.gcs_bucket_configured
-    Add-CheckResult -Results $results -Name 'runtime-config-authenticated' -Passed $runtimePassed -Details "status=$($runtime.StatusCode); persistence_mode=$($runtime.Body.receipts.persistence_mode); gcs_bucket_configured=$($runtime.Body.receipts.gcs_bucket_configured)"
+    $persistenceMode = Get-NestedValue -Object $runtime.Body -Path @('receipts', 'persistence_mode') -Default 'missing'
+    $gcsBucketConfigured = [bool](Get-NestedValue -Object $runtime.Body -Path @('receipts', 'gcs_bucket_configured') -Default $false)
+    $runtimePassed = $runtime.StatusCode -eq 200 -and $persistenceMode -eq 'dual' -and $gcsBucketConfigured
+    Add-CheckResult -Results $results -Name 'runtime-config-authenticated' -Passed $runtimePassed -Details "status=$($runtime.StatusCode); persistence_mode=$persistenceMode; gcs_bucket_configured=$gcsBucketConfigured"
 
     $security = Invoke-HelixJson -Url "$baseUrl/api/security-transparency" -Headers $authHeaders
-    $artifactStatus = $security.Body.artifact_analysis.status
-    $artifactImage = $security.Body.artifact_analysis.image_uri
+    $artifactStatus = Get-NestedValue -Object $security.Body -Path @('artifact_analysis', 'status') -Default 'missing'
+    $artifactImage = Get-NestedValue -Object $security.Body -Path @('artifact_analysis', 'image_uri') -Default 'missing'
     $securityPassed = $security.StatusCode -eq 200 -and $artifactImage -like 'us-central1-docker.pkg.dev/*'
     if ($RequireCleanArtifact) {
         $securityPassed = $securityPassed -and $artifactStatus -eq 'clean'
@@ -83,9 +113,10 @@ if ($AdminToken) {
     Add-CheckResult -Results $results -Name 'security-transparency-authenticated' -Passed $securityPassed -Details "status=$($security.StatusCode); artifact_status=$artifactStatus; image_uri=$artifactImage"
 
     $dashboard = Invoke-HelixJson -Url "$baseUrl/api/audit-dashboard" -Headers $authHeaders
-    $storageBackend = $dashboard.Body.storage.backend
+    $storageBackend = Get-NestedValue -Object $dashboard.Body -Path @('storage', 'backend') -Default 'missing'
+    $storageTotal = Get-NestedValue -Object $dashboard.Body -Path @('storage', 'total') -Default 'missing'
     $dashboardPassed = $dashboard.StatusCode -eq 200 -and ($storageBackend -eq 'gcs+local' -or $storageBackend -eq 'gcs')
-    Add-CheckResult -Results $results -Name 'audit-dashboard-authenticated' -Passed $dashboardPassed -Details "status=$($dashboard.StatusCode); backend=$storageBackend; total=$($dashboard.Body.storage.total)"
+    Add-CheckResult -Results $results -Name 'audit-dashboard-authenticated' -Passed $dashboardPassed -Details "status=$($dashboard.StatusCode); backend=$storageBackend; total=$storageTotal"
 }
 else {
     Add-CheckResult -Results $results -Name 'authenticated-checks-skipped' -Passed $true -Details 'No admin token supplied; only public and auth-gate checks were run.'
