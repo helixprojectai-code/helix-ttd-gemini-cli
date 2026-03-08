@@ -94,6 +94,15 @@ jobs:
           sleep 10
           curl -s "${{ steps.deploy.outputs.service_url }}/health" || echo "Service starting up..."
 
+      # [FACT] Stamp artifact metadata for the newly deployed revision.
+      - name: Reset Artifact Verification Metadata
+        run: |
+          echo "=== Resolving deployed image digest ==="
+          IMAGE_DIGEST=$(gcloud run revisions list             --service ${{ env.SERVICE_NAME }}             --region ${{ env.REGION }}             --project ${{ env.PROJECT_ID }}             --sort-by="~metadata.creationTimestamp"             --limit 1             --format='value(status.imageDigest)')
+
+          echo "Deployed digest: $IMAGE_DIGEST"
+          gcloud run services update ${{ env.SERVICE_NAME }}             --region ${{ env.REGION }}             --project ${{ env.PROJECT_ID }}             --update-env-vars "SECURITY_ARTIFACT_ANALYSIS_STATUS=unverified,SECURITY_ARTIFACT_ANALYSIS_TIMESTAMP=unavailable,SECURITY_ARTIFACT_IMAGE_URI=$IMAGE_DIGEST"             --quiet
+
       # [FACT] Output summary
       - name: Deployment Summary
         run: |

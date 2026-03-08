@@ -30,11 +30,11 @@ It covers:
 - Repo commits carrying registry migration and verification work: `b50fec8` and follow-up workflow repair.
 - Cloud Run security transparency endpoint now reports:
   - `artifact_analysis.status=clean`
-  - `artifact_analysis.scan_timestamp=2026-03-08T12:00:00Z`
-  - `artifact_analysis.image_uri=us-central1-docker.pkg.dev/helix-ai-deploy/helix-repo/constitutional-guardian@sha256:2b2e62435dd93289205499624dcacb19f81659904d7ea45a2467aa3745b5e893`
+  - `artifact_analysis.scan_timestamp=2026-03-08T11:29:23Z`
+  - `artifact_analysis.image_uri=us-central1-docker.pkg.dev/helix-ai-deploy/helix-repo/constitutional-guardian@sha256:a68ebdc0075e40d0b734b3c2e220cb277e6d84e19843031a5ded68e7013a5c77`
 - Deploy-time scan timestamp remains separate from post-deploy Artifact Analysis verification:
   - `latest_scan_timestamp=2026-03-08T10:42:57Z`
-  - `artifact_analysis.scan_timestamp=2026-03-08T12:00:00Z`
+  - `artifact_analysis.scan_timestamp=2026-03-08T11:29:23Z`
 
 ## Current Runtime Model Defaults
 
@@ -225,12 +225,12 @@ Historical note:
 
 ### Live verified digest
 
-- `us-central1-docker.pkg.dev/helix-ai-deploy/helix-repo/constitutional-guardian@sha256:2b2e62435dd93289205499624dcacb19f81659904d7ea45a2467aa3745b5e893`
+- `us-central1-docker.pkg.dev/helix-ai-deploy/helix-repo/constitutional-guardian@sha256:a68ebdc0075e40d0b734b3c2e220cb277e6d84e19843031a5ded68e7013a5c77`
 
 ### Query vulnerabilities for live image
 
 ```powershell
-$IMAGE="us-central1-docker.pkg.dev/helix-ai-deploy/helix-repo/constitutional-guardian@sha256:2b2e62435dd93289205499624dcacb19f81659904d7ea45a2467aa3745b5e893"
+$IMAGE="us-central1-docker.pkg.dev/helix-ai-deploy/helix-repo/constitutional-guardian@sha256:a68ebdc0075e40d0b734b3c2e220cb277e6d84e19843031a5ded68e7013a5c77"
 
 & $GCLOUD artifacts vulnerabilities list $IMAGE `
   --project helix-ai-deploy `
@@ -255,7 +255,7 @@ Observed result on 2026-03-08:
 & $GCLOUD run services update constitutional-guardian `
   --project helix-ai-deploy `
   --region us-central1 `
-  --update-env-vars "SECURITY_ARTIFACT_ANALYSIS_STATUS=clean,SECURITY_ARTIFACT_ANALYSIS_TIMESTAMP=2026-03-08T12:00:00Z,SECURITY_ARTIFACT_IMAGE_URI=us-central1-docker.pkg.dev/helix-ai-deploy/helix-repo/constitutional-guardian@sha256:2b2e62435dd93289205499624dcacb19f81659904d7ea45a2467aa3745b5e893"
+  --update-env-vars "SECURITY_ARTIFACT_ANALYSIS_STATUS=clean,SECURITY_ARTIFACT_ANALYSIS_TIMESTAMP=2026-03-08T11:29:23Z,SECURITY_ARTIFACT_IMAGE_URI=us-central1-docker.pkg.dev/helix-ai-deploy/helix-repo/constitutional-guardian@sha256:a68ebdc0075e40d0b734b3c2e220cb277e6d84e19843031a5ded68e7013a5c77"
 ```
 
 ### Verify published security metadata
@@ -300,7 +300,7 @@ then the Cloud Run metadata update has not yet been applied to the live revision
 Observed good state on 2026-03-08:
 
 - `artifact_analysis.status=clean`
-- `artifact_analysis.scan_timestamp=2026-03-08T12:00:00Z`
+- `artifact_analysis.scan_timestamp=2026-03-08T11:29:23Z`
 - `artifact_analysis.image_uri` matches the live `gcr.io` digest
 
 ## Audio / Gemini Live Known Good Configuration

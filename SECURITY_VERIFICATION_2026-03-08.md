@@ -8,13 +8,13 @@ Artifact Analysis verification for the live Cloud Run image serving Constitution
 
 ## Verified Image
 
-- Image URI: `us-central1-docker.pkg.dev/helix-ai-deploy/helix-repo/constitutional-guardian@sha256:2b2e62435dd93289205499624dcacb19f81659904d7ea45a2467aa3745b5e893`
+- Image URI: `us-central1-docker.pkg.dev/helix-ai-deploy/helix-repo/constitutional-guardian@sha256:a68ebdc0075e40d0b734b3c2e220cb277e6d84e19843031a5ded68e7013a5c77`
 - Cloud Run revision: `constitutional-guardian-00245-kzl`
 - Tags observed: commit-tagged Artifact Registry image plus `latest`
 
 ## Verification Result
 
-- Artifact Analysis query time: `2026-03-08T12:00:00Z`
+- Artifact Analysis query time: `2026-03-08T11:29:23Z`
 - Result: `clean`
 - Vulnerability findings returned: `0`
 
@@ -27,7 +27,7 @@ Artifact Analysis verification for the live Cloud Run image serving Constitution
 ## Verification Commands
 
 ```powershell
-$IMAGE = "us-central1-docker.pkg.dev/helix-ai-deploy/helix-repo/constitutional-guardian@sha256:2b2e62435dd93289205499624dcacb19f81659904d7ea45a2467aa3745b5e893"
+$IMAGE = "us-central1-docker.pkg.dev/helix-ai-deploy/helix-repo/constitutional-guardian@sha256:a68ebdc0075e40d0b734b3c2e220cb277e6d84e19843031a5ded68e7013a5c77"
 
 & $GCLOUD artifacts vulnerabilities list $IMAGE `
   --project helix-ai-deploy `
@@ -47,5 +47,5 @@ SHORT_DESCRIPTION  EFFECTIVE_SEVERITY  AFFECTED_PACKAGE  FULL_NAME
 - Earlier `gcr.io` verification remains historical evidence for the pre-migration revision lineage.
 - Security transparency surfaces should be populated with this verification using:
   - `SECURITY_ARTIFACT_ANALYSIS_STATUS=clean`
-  - `SECURITY_ARTIFACT_ANALYSIS_TIMESTAMP=2026-03-08T12:00:00Z`
-  - `SECURITY_ARTIFACT_IMAGE_URI=us-central1-docker.pkg.dev/helix-ai-deploy/helix-repo/constitutional-guardian@sha256:2b2e62435dd93289205499624dcacb19f81659904d7ea45a2467aa3745b5e893`
+  - `SECURITY_ARTIFACT_ANALYSIS_TIMESTAMP=2026-03-08T11:29:23Z`
+  - `SECURITY_ARTIFACT_IMAGE_URI=us-central1-docker.pkg.dev/helix-ai-deploy/helix-repo/constitutional-guardian@sha256:a68ebdc0075e40d0b734b3c2e220cb277e6d84e19843031a5ded68e7013a5c77`

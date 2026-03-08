@@ -48,7 +48,7 @@ v1.4.6 is an operational hardening release focused on secure operator surfaces, 
 ## Post-Release Verification
 
 - Artifact Analysis verification
-  - Live Cloud Run digest verified clean on `2026-03-08T12:00:00Z`.
-  - Verified image: `us-central1-docker.pkg.dev/helix-ai-deploy/helix-repo/constitutional-guardian@sha256:2b2e62435dd93289205499624dcacb19f81659904d7ea45a2467aa3745b5e893`.
+  - Live Cloud Run digest verified clean on `2026-03-08T11:29:23Z`.
+  - Verified image: `us-central1-docker.pkg.dev/helix-ai-deploy/helix-repo/constitutional-guardian@sha256:a68ebdc0075e40d0b734b3c2e220cb277e6d84e19843031a5ded68e7013a5c77`.
   - Production image lineage has been migrated to Artifact Registry.
   - Reported vulnerability findings: none.
