@@ -15,7 +15,7 @@ from datetime import datetime
 from http.cookies import SimpleCookie
 from pathlib import Path
 from tempfile import gettempdir
-from typing import Any
+from typing import Any, cast
 from urllib.parse import parse_qs
 from uuid import uuid4
 
@@ -30,6 +30,7 @@ from gemini_text_client import GeminiTextClient, create_gemini_text_client
 
 try:
     from gcp_integrations import CloudStorageReceipts
+    from request_limits import SlidingWindowRateLimiter
     from secret_resolver import (
         gemini_secret_cache_key,
         resolve_admin_token,
@@ -37,6 +38,7 @@ try:
     )
 except ImportError:  # pragma: no cover
     from .gcp_integrations import CloudStorageReceipts
+    from .request_limits import SlidingWindowRateLimiter
     from .secret_resolver import (
         gemini_secret_cache_key,
         resolve_admin_token,
@@ -49,10 +51,56 @@ logger = logging.getLogger("guardian-demo")
 
 # [FACT] Global bridge instance
 bridge = create_gemini_bridge()
+audio_ingress_rate_limiter: SlidingWindowRateLimiter = SlidingWindowRateLimiter()
 
 # [FACT] Cached Gemini client with key-change detection
 gemini_text_client: GeminiTextClient | None = None
 gemini_cached_key: str | None = None
+
+
+def _env_int(name: str, default: int) -> int:
+    """[FACT] Parse integer deployment knobs with safe fallback behavior."""
+    try:
+        return int(os.getenv(name, str(default)).strip())
+    except (TypeError, ValueError):
+        return default
+
+
+def _env_float(name: str, default: float) -> float:
+    """[FACT] Parse float deployment knobs with safe fallback behavior."""
+    try:
+        return float(os.getenv(name, str(default)).strip())
+    except (TypeError, ValueError):
+        return default
+
+
+def _websocket_client_identity(websocket: WebSocket) -> str:
+    """[FACT] Derive a stable client identity for WebSocket throttling."""
+    forwarded_for = (websocket.headers.get("x-forwarded-for") or "").strip()
+    if forwarded_for:
+        return forwarded_for.split(",", 1)[0].strip()
+    if websocket.client and websocket.client.host:
+        return cast(str, websocket.client.host)
+    return "unknown"
+
+
+def _audio_ingress_rate_limit_settings() -> tuple[int, float]:
+    """[FACT] Bound new audio ingress connections per client in a short window."""
+    return (
+        _env_int("HELIX_AUDIO_INGRESS_MAX_CONNECTIONS", 12),
+        _env_float("HELIX_AUDIO_INGRESS_RATE_LIMIT_WINDOW_SECONDS", 60.0),
+    )
+
+
+def _check_audio_ingress_rate_limit(websocket: WebSocket) -> tuple[bool, float]:
+    """[FACT] Return whether a client may open another audio ingress WebSocket now."""
+    limit, window_seconds = _audio_ingress_rate_limit_settings()
+    allowed, retry_after = audio_ingress_rate_limiter.allow(
+        key=f"audio:{_websocket_client_identity(websocket)}",
+        limit=limit,
+        window_seconds=window_seconds,
+    )
+    return bool(allowed), float(retry_after)
 
 
 def get_gemini_text_client() -> GeminiTextClient | None:
@@ -327,8 +375,8 @@ class ReceiptPersistenceManager:
             "enabled": self.is_enabled(),
             "backend": self.backend_name,
             "mode": self.mode,
-            "local_path": str(self.local_ledger.path) if self.local_ledger is not None else None,
-            "gcs_bucket": self.gcs_archive.bucket_name if self.gcs_archive is not None else None,
+            "local_path": (str(self.local_ledger.path) if self.local_ledger is not None else None),
+            "gcs_bucket": (self.gcs_archive.bucket_name if self.gcs_archive is not None else None),
         }
 
 
@@ -336,7 +384,9 @@ class ReceiptStore:
     """[FACT] Receipt store with optional durable persistence backends."""
 
     def __init__(
-        self, max_receipts: int = 1000, persistence: ReceiptPersistenceManager | None = None
+        self,
+        max_receipts: int = 1000,
+        persistence: ReceiptPersistenceManager | None = None,
     ):
         """[FACT] Initialize store with memory cache and optional durable backing store."""
         self.receipts: deque[Receipt] = deque(maxlen=max_receipts)
@@ -587,7 +637,10 @@ async def demo_websocket_handler(websocket: WebSocket) -> None:
                     if client and client.is_available():
                         # [FACT] Call REAL Gemini API with retry logic for 503 errors
                         await websocket.send_json(
-                            {"type": "system_event", "message": "[GEMINI] Sending to Live API..."}
+                            {
+                                "type": "system_event",
+                                "message": "[GEMINI] Sending to Live API...",
+                            }
                         )
 
                         # [DEBUG] Log what's being sent
@@ -978,6 +1031,15 @@ async def audio_audit_websocket(websocket: WebSocket) -> None:
     if not _is_audio_audit_authorized(websocket):
         logger.warning("[AUDIO-AUDIT] Unauthorized WebSocket connection attempt rejected")
         await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
+        return
+
+    allowed, retry_after = _check_audio_ingress_rate_limit(websocket)
+    if not allowed:
+        logger.warning(
+            "[AUDIO-AUDIT] Rate-limited WebSocket connection rejected (retry_after=%ss)",
+            max(1, int(retry_after) or 1),
+        )
+        await websocket.close(code=status.WS_1013_TRY_AGAIN_LATER)
         return
 
     await websocket.accept()

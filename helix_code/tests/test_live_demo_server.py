@@ -10,10 +10,12 @@ from helix_code.live_demo_server import (
     LiveMetrics,
     Receipt,
     ReceiptStore,
+    _check_audio_ingress_rate_limit,
     _generate_session_id,
     _is_audio_audit_authorized,
     get_gemini_text_client,
 )
+from helix_code.request_limits import SlidingWindowRateLimiter
 
 
 class TestLiveMetrics:
@@ -242,6 +244,37 @@ class TestReceiptDataclass:
         assert r.session_id == "s1"
 
 
+class TestAudioIngressRateLimiting:
+    """[FACT] Test audio ingress connection throttling."""
+
+    def test_audio_ingress_rate_limit_rejects_bursts(self, monkeypatch: Any) -> None:
+        """[FACT] Audio ingress allows the first connection and throttles the next in-window attempt."""
+        monkeypatch.setenv("HELIX_AUDIO_INGRESS_MAX_CONNECTIONS", "1")
+        monkeypatch.setenv("HELIX_AUDIO_INGRESS_RATE_LIMIT_WINDOW_SECONDS", "60")
+
+        import helix_code.live_demo_server as server
+
+        monkeypatch.setattr(
+            server,
+            "audio_ingress_rate_limiter",
+            SlidingWindowRateLimiter(now_fn=lambda: 300.0),
+        )
+
+        class StubClient:
+            host = "203.0.113.10"
+
+        class StubWebSocket:
+            headers: dict[str, str] = {}
+            client = StubClient()
+
+        first_allowed, _ = _check_audio_ingress_rate_limit(StubWebSocket())
+        second_allowed, retry_after = _check_audio_ingress_rate_limit(StubWebSocket())
+
+        assert first_allowed is True
+        assert second_allowed is False
+        assert retry_after > 0
+
+
 class TestAudioAuditAuthorization:
     """[FACT] Test suite for audio audit authorization gates."""
 
@@ -284,7 +317,10 @@ class TestAudioAuditAuthorization:
 
         class StubWebSocket:
             query_params: dict[str, str] = {}
-            headers = {"origin": "https://helixprojectai.com", "x-audio-audit-token": "s3cr3t"}
+            headers = {
+                "origin": "https://helixprojectai.com",
+                "x-audio-audit-token": "s3cr3t",
+            }
 
         assert _is_audio_audit_authorized(StubWebSocket()) is True
 

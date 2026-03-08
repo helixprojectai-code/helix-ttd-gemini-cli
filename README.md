@@ -114,11 +114,12 @@ python helix_code/live_demo_server.py
 - Instant transcription with constitutional validation
 - Visual intervention alerts for drift detection
 - Optional auth hardening: `AUDIO_AUDIT_TOKEN`, `AUDIO_AUDIT_ALLOWED_ORIGINS`, and `HELIX_ALLOWED_ORIGINS`
-- Abuse controls: `HELIX_MAX_AUDIO_CHUNK_BYTES`, `HELIX_MAX_AUDIO_B64_CHARS`, `HELIX_AUDIO_RATE_WINDOW_SECONDS`, `HELIX_AUDIO_MAX_CHUNKS_PER_WINDOW`
+- Abuse controls: `HELIX_MAX_AUDIO_CHUNK_BYTES`, `HELIX_MAX_AUDIO_B64_CHARS`, `HELIX_AUDIO_RATE_WINDOW_SECONDS`, `HELIX_AUDIO_MAX_CHUNKS_PER_WINDOW`, `HELIX_AUDIO_INGRESS_RATE_LIMIT_WINDOW_SECONDS`, `HELIX_AUDIO_INGRESS_MAX_CONNECTIONS`
 - Runtime verification endpoint: `GET /api/runtime-config`
 - Audit dashboard endpoints: `GET /audit-dashboard` and `GET /api/audit-dashboard`
 - Optional operator auth: `HELIX_ADMIN_TOKEN` for runtime, security, dashboard, and receipt surfaces
 - Recommended production operator posture: set `HELIX_ADMIN_TOKEN` and `HELIX_ENFORCE_ADMIN_TOKEN=true`
+- Recommended production throttling posture: keep operator APIs on `HELIX_OPERATOR_RATE_LIMIT_MAX_REQUESTS=120` / `HELIX_OPERATOR_RATE_LIMIT_WINDOW_SECONDS=60` and audio ingress on `HELIX_AUDIO_INGRESS_MAX_CONNECTIONS=12` / `HELIX_AUDIO_INGRESS_RATE_LIMIT_WINDOW_SECONDS=60` unless measured load requires adjustment
 - Recommended production browser posture: set `HELIX_ALLOWED_ORIGINS` to the exact trusted UI origins; otherwise Guardian WebSockets default to same-origin-only in production
 - Optional durable receipt envs: `HELIX_RECEIPT_PERSISTENCE`, `HELIX_RECEIPT_STORE_PATH`, `GCS_RECEIPT_BUCKET`
 - Recommended production receipt mode: `HELIX_RECEIPT_PERSISTENCE=dual` with a dedicated `GCS_RECEIPT_BUCKET`

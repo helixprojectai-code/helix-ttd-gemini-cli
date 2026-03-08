@@ -20,7 +20,7 @@ from contextlib import asynccontextmanager
 from datetime import datetime
 from http.cookies import SimpleCookie
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 from urllib.parse import parse_qs
 
 # [FACT] Add parent directory to path for imports
@@ -38,6 +38,7 @@ from federation_receipts import FederationReceiptManager
 from gemini_text_client import create_gemini_text_client
 
 try:
+    from request_limits import SlidingWindowRateLimiter
     from secret_resolver import (
         active_secret_backend,
         is_gemini_api_key_configured,
@@ -46,6 +47,7 @@ try:
         vault_is_configured,
     )
 except ImportError:  # pragma: no cover
+    from .request_limits import SlidingWindowRateLimiter
     from .secret_resolver import (
         active_secret_backend,
         is_gemini_api_key_configured,
@@ -60,6 +62,8 @@ except ImportError:  # pragma: no cover
 compliance: ConstitutionalCompliance | None = None
 receipts: FederationReceiptManager | None = None
 telemetry: DriftTelemetry | None = None
+operator_rate_limiter = SlidingWindowRateLimiter()
+auth_rate_limiter = SlidingWindowRateLimiter()
 
 
 @asynccontextmanager
@@ -120,6 +124,22 @@ app.add_middleware(
 )
 
 ADMIN_COOKIE_NAME = "helix_admin_session"
+
+
+def _env_int(name: str, default: int) -> int:
+    """[FACT] Parse integer deployment knobs with safe fallback behavior."""
+    try:
+        return int(os.getenv(name, str(default)).strip())
+    except (TypeError, ValueError):
+        return default
+
+
+def _env_float(name: str, default: float) -> float:
+    """[FACT] Parse float deployment knobs with safe fallback behavior."""
+    try:
+        return float(os.getenv(name, str(default)).strip())
+    except (TypeError, ValueError):
+        return default
 
 
 def _env_flag(name: str) -> bool:
@@ -201,6 +221,67 @@ def _extract_admin_token_from_scope(headers: Any) -> str:
 def _extract_admin_token(request: Request) -> str:
     """[FACT] Resolve admin auth from request headers or cookie."""
     return _extract_admin_token_from_scope(request.headers)
+
+
+def _client_identity(request: Request) -> str:
+    """[FACT] Derive a stable client identity for request-level throttling."""
+    forwarded_for = (request.headers.get("x-forwarded-for") or "").strip()
+    if forwarded_for:
+        return forwarded_for.split(",", 1)[0].strip()
+    if request.client and request.client.host:
+        return cast(str, request.client.host)
+    return "unknown"
+
+
+def _operator_rate_limit_settings() -> tuple[int, float]:
+    """[FACT] Operator endpoints share a coarse request budget per client."""
+    return (
+        _env_int("HELIX_OPERATOR_RATE_LIMIT_MAX_REQUESTS", 120),
+        _env_float("HELIX_OPERATOR_RATE_LIMIT_WINDOW_SECONDS", 60.0),
+    )
+
+
+def _auth_rate_limit_settings() -> tuple[int, float]:
+    """[FACT] Admin login attempts use a tighter budget than read-only operator APIs."""
+    return (
+        _env_int("HELIX_AUTH_RATE_LIMIT_MAX_ATTEMPTS", 12),
+        _env_float("HELIX_AUTH_RATE_LIMIT_WINDOW_SECONDS", 300.0),
+    )
+
+
+def _enforce_http_rate_limit(
+    request: Request,
+    limiter: SlidingWindowRateLimiter,
+    scope: str,
+    limit: int,
+    window_seconds: float,
+) -> None:
+    """[FACT] Reject bursty operator traffic with an explicit Retry-After signal."""
+    allowed, retry_after = limiter.allow(
+        key=f"{scope}:{_client_identity(request)}",
+        limit=limit,
+        window_seconds=window_seconds,
+    )
+    if allowed:
+        return
+
+    raise HTTPException(
+        status_code=429,
+        detail=f"Rate limit exceeded for {scope}",
+        headers={"Retry-After": str(max(1, int(retry_after) or 1))},
+    )
+
+
+def _enforce_operator_rate_limit(request: Request) -> None:
+    """[FACT] Apply shared throttling to operator API and HTML surfaces."""
+    limit, window_seconds = _operator_rate_limit_settings()
+    _enforce_http_rate_limit(request, operator_rate_limiter, "operator", limit, window_seconds)
+
+
+def _enforce_auth_rate_limit(request: Request) -> None:
+    """[FACT] Protect the admin login form from brute-force attempts."""
+    limit, window_seconds = _auth_rate_limit_settings()
+    _enforce_http_rate_limit(request, auth_rate_limiter, "auth", limit, window_seconds)
 
 
 def _set_admin_session_cookie(
@@ -366,6 +447,20 @@ def _runtime_config_snapshot() -> dict[str, Any]:
             "audio_max_chunks_per_window": int(
                 os.getenv("HELIX_AUDIO_MAX_CHUNKS_PER_WINDOW", "100")
             ),
+            "operator_rate_limit_window_seconds": _env_float(
+                "HELIX_OPERATOR_RATE_LIMIT_WINDOW_SECONDS", 60.0
+            ),
+            "operator_rate_limit_max_requests": _env_int(
+                "HELIX_OPERATOR_RATE_LIMIT_MAX_REQUESTS", 120
+            ),
+            "auth_rate_limit_window_seconds": _env_float(
+                "HELIX_AUTH_RATE_LIMIT_WINDOW_SECONDS", 300.0
+            ),
+            "auth_rate_limit_max_attempts": _env_int("HELIX_AUTH_RATE_LIMIT_MAX_ATTEMPTS", 12),
+            "audio_ingress_rate_limit_window_seconds": _env_float(
+                "HELIX_AUDIO_INGRESS_RATE_LIMIT_WINDOW_SECONDS", 60.0
+            ),
+            "audio_ingress_max_connections": _env_int("HELIX_AUDIO_INGRESS_MAX_CONNECTIONS", 12),
         },
         "federation": {
             "pubsub_topic": os.getenv("PUBSUB_TOPIC", default_topic),
@@ -458,6 +553,7 @@ async def root(request: Request) -> HTMLResponse:
 @app.post("/auth/admin")
 async def admin_login(request: Request) -> RedirectResponse:
     """[FACT] Exchange an operator token for an HttpOnly admin session cookie."""
+    _enforce_auth_rate_limit(request)
     body = (await request.body()).decode("utf-8")
     form = parse_qs(body, keep_blank_values=True)
     token = str(form.get("token", [""])[0]).strip()
@@ -518,6 +614,7 @@ async def gemini_status() -> JSONResponse:
 @app.get("/api/runtime-config")
 async def runtime_config(request: Request) -> JSONResponse:
     """[FACT] Expose effective runtime config (non-secret) for deploy verification."""
+    _enforce_operator_rate_limit(request)
     _require_admin_token(request)
     return JSONResponse(status_code=200, content=_runtime_config_snapshot())
 
@@ -525,6 +622,7 @@ async def runtime_config(request: Request) -> JSONResponse:
 @app.get("/api/security-transparency")
 async def security_transparency_api(request: Request) -> JSONResponse:
     """[FACT] Machine-readable security transparency snapshot."""
+    _enforce_operator_rate_limit(request)
     _require_admin_token(request)
     return JSONResponse(status_code=200, content=_security_transparency_snapshot())
 
@@ -532,6 +630,7 @@ async def security_transparency_api(request: Request) -> JSONResponse:
 @app.get("/security-transparency", response_class=HTMLResponse)
 async def security_transparency_page(request: Request) -> HTMLResponse:
     """[FACT] Public page exposing security posture and latest scan timestamp."""
+    _enforce_operator_rate_limit(request)
     gate = _guard_html_page(request, "/security-transparency")
     if isinstance(gate, HTMLResponse):
         return gate
@@ -591,6 +690,7 @@ async def security_transparency_page(request: Request) -> HTMLResponse:
 @app.get("/api/audit-dashboard")
 async def audit_dashboard_api(request: Request, limit: int = 50) -> JSONResponse:
     """[FACT] Machine-readable audit dashboard snapshot for enterprise reporting."""
+    _enforce_operator_rate_limit(request)
     _require_admin_token(request)
     return JSONResponse(status_code=200, content=_audit_dashboard_snapshot(limit=limit))
 
@@ -598,6 +698,7 @@ async def audit_dashboard_api(request: Request, limit: int = 50) -> JSONResponse
 @app.get("/audit-dashboard", response_class=HTMLResponse)
 async def audit_dashboard_page(request: Request) -> HTMLResponse:
     """[FACT] Human-friendly audit trail dashboard for compliance review."""
+    _enforce_operator_rate_limit(request)
     gate = _guard_html_page(request, "/audit-dashboard")
     if isinstance(gate, HTMLResponse):
         return gate
@@ -813,6 +914,7 @@ async def demo_websocket(websocket: WebSocket) -> None:
 @app.get("/api/receipts")
 async def get_receipts(request: Request, limit: int = 50) -> dict[str, Any]:
     """[FACT] API endpoint for demo receipt explorer retrieval."""
+    _enforce_operator_rate_limit(request)
     _require_admin_token(request)
     from live_demo_server import receipt_store
 
@@ -836,6 +938,7 @@ async def get_receipts(request: Request, limit: int = 50) -> dict[str, Any]:
 @app.get("/api/receipts/{receipt_id}")
 async def get_receipt(receipt_id: str, request: Request) -> dict[str, Any]:
     """[FACT] API endpoint for specific receipt detail and verification."""
+    _enforce_operator_rate_limit(request)
     _require_admin_token(request)
     from live_demo_server import receipt_store
 

@@ -68,6 +68,12 @@ Optional hardened envs:
 - `HELIX_ADMIN_TOKEN`
 - `HELIX_ENFORCE_ADMIN_TOKEN=true`
 - `HELIX_ALLOWED_ORIGINS=https://console.example.com,https://ops.example.com`
+- `HELIX_OPERATOR_RATE_LIMIT_MAX_REQUESTS=120`
+- `HELIX_OPERATOR_RATE_LIMIT_WINDOW_SECONDS=60`
+- `HELIX_AUTH_RATE_LIMIT_MAX_ATTEMPTS=12`
+- `HELIX_AUTH_RATE_LIMIT_WINDOW_SECONDS=300`
+- `HELIX_AUDIO_INGRESS_MAX_CONNECTIONS=12`
+- `HELIX_AUDIO_INGRESS_RATE_LIMIT_WINDOW_SECONDS=60`
 - `HELIX_RECEIPT_PERSISTENCE=auto|local|gcs|dual`
 - `HELIX_RECEIPT_STORE_PATH`
 - `GCS_RECEIPT_BUCKET`
@@ -179,6 +185,29 @@ Verification:
 - trusted same-origin or allowlisted browser clients should connect normally
 - off-origin browser WebSocket attempts to `/live` or `/demo-live` should close with policy violation
 - `/api/runtime-config` reports both `guardian_allowed_origins` and `guardian_origin_enforced`
+
+## Production Rate Limiting
+
+Current hardening adds coarse in-memory throttling for operator surfaces and audio ingress. Recommended starting values:
+
+- `HELIX_OPERATOR_RATE_LIMIT_MAX_REQUESTS=120`
+- `HELIX_OPERATOR_RATE_LIMIT_WINDOW_SECONDS=60`
+- `HELIX_AUTH_RATE_LIMIT_MAX_ATTEMPTS=12`
+- `HELIX_AUTH_RATE_LIMIT_WINDOW_SECONDS=300`
+- `HELIX_AUDIO_INGRESS_MAX_CONNECTIONS=12`
+- `HELIX_AUDIO_INGRESS_RATE_LIMIT_WINDOW_SECONDS=60`
+
+Coverage:
+
+- operator APIs and HTML surfaces: `/api/runtime-config`, `/api/security-transparency`, `/security-transparency`, `/api/audit-dashboard`, `/audit-dashboard`, `/api/receipts`, `/api/receipts/{receipt_id}`
+- admin login form: `/auth/admin`
+- audio ingress WebSocket: `/audio-audit`
+
+Expected behavior:
+
+- over-limit operator or auth requests return `429` with a `Retry-After` header
+- over-limit audio ingress attempts close with WebSocket `1013` (try again later)
+- `/api/runtime-config` reflects the active rate-limit window and budget values
 
 ## Deployment Verification Script
 

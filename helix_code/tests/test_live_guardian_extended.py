@@ -7,6 +7,7 @@
 from fastapi.testclient import TestClient
 
 import helix_code.live_guardian as live_guardian
+from helix_code.request_limits import SlidingWindowRateLimiter
 
 app = live_guardian.app
 
@@ -359,6 +360,58 @@ class TestProtectedOperationalEndpoints:
         with TestClient(app) as client:
             response = client.get("/audit-dashboard")
             assert response.status_code == 503
+
+
+class TestOperatorRateLimiting:
+    """[FACT] Test operator and auth throttling behavior."""
+
+    def test_runtime_config_rate_limits_operator_requests(self, monkeypatch) -> None:
+        monkeypatch.setenv("HELIX_ADMIN_TOKEN", "secret-token")
+        monkeypatch.setenv("HELIX_OPERATOR_RATE_LIMIT_MAX_REQUESTS", "1")
+        monkeypatch.setenv("HELIX_OPERATOR_RATE_LIMIT_WINDOW_SECONDS", "60")
+        monkeypatch.setattr(
+            live_guardian,
+            "operator_rate_limiter",
+            SlidingWindowRateLimiter(now_fn=lambda: 100.0),
+        )
+
+        with TestClient(app) as client:
+            first = client.get(
+                "/api/runtime-config",
+                headers={"X-Helix-Admin-Token": "secret-token"},
+            )
+            second = client.get(
+                "/api/runtime-config",
+                headers={"X-Helix-Admin-Token": "secret-token"},
+            )
+
+        assert first.status_code == 200
+        assert second.status_code == 429
+        assert second.json()["detail"] == "Rate limit exceeded for operator"
+
+    def test_admin_login_rate_limits_repeated_attempts(self, monkeypatch) -> None:
+        monkeypatch.setenv("HELIX_ADMIN_TOKEN", "secret-token")
+        monkeypatch.setenv("HELIX_AUTH_RATE_LIMIT_MAX_ATTEMPTS", "1")
+        monkeypatch.setenv("HELIX_AUTH_RATE_LIMIT_WINDOW_SECONDS", "300")
+        monkeypatch.setattr(
+            live_guardian,
+            "auth_rate_limiter",
+            SlidingWindowRateLimiter(now_fn=lambda: 200.0),
+        )
+
+        with TestClient(app) as client:
+            first = client.post(
+                "/auth/admin",
+                data={"token": "wrong-token", "next": "/audit-dashboard"},
+            )
+            second = client.post(
+                "/auth/admin",
+                data={"token": "wrong-token", "next": "/audit-dashboard"},
+            )
+
+        assert first.status_code == 401
+        assert second.status_code == 429
+        assert second.json()["detail"] == "Rate limit exceeded for auth"
 
 
 class TestAdminLoginFlow:
