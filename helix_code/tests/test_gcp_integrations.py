@@ -3,6 +3,7 @@
 from types import SimpleNamespace
 
 import helix_code.gcp_integrations as gcp_integrations
+from helix_code.gcp_integrations import sanitize_receipt_id
 
 
 class _FakePublisher:
@@ -47,3 +48,9 @@ def test_pubsub_topic_accepts_fully_qualified_path(monkeypatch) -> None:
 
     assert pubsub.topic_name == "helix-events"
     assert pubsub.topic_path == "projects/helix-ai-deploy/topics/helix-events"
+
+
+def test_sanitize_receipt_id_blocks_path_traversal() -> None:
+    """[FACT] Receipt identifiers are normalized before path construction."""
+    assert sanitize_receipt_id("../../evil/receipt.json") == "evil_receipt.json"
+    assert sanitize_receipt_id("receipt:alpha") == "receipt_alpha"

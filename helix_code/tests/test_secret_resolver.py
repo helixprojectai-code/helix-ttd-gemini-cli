@@ -88,3 +88,29 @@ def test_is_configured_false_when_missing(monkeypatch: Any) -> None:
     _clear_cache()
 
     assert secret_resolver.is_gemini_api_key_configured() is False
+
+
+def test_admin_and_audio_tokens_use_shared_resolver(monkeypatch: Any) -> None:
+    monkeypatch.setenv("HELIX_ADMIN_TOKEN", "admin_secret")
+    monkeypatch.setenv("AUDIO_AUDIT_TOKEN", "audio_secret")
+
+    _clear_cache()
+
+    assert secret_resolver.resolve_admin_token(refresh=True) == "admin_secret"
+    assert secret_resolver.resolve_audio_audit_token(refresh=True) == "audio_secret"
+    assert secret_resolver.is_admin_token_configured() is True
+    assert secret_resolver.is_audio_audit_token_configured() is True
+
+
+def test_cache_identity_is_hashed(monkeypatch: Any) -> None:
+    monkeypatch.setenv("HELIX_SECRET_BACKEND", "env")
+    monkeypatch.setenv("HELIX_ADMIN_TOKEN", "secret:with:colons")
+    monkeypatch.setenv("HELIX_ADMIN_TOKEN_VAULT_PATH", "path:with:colons")
+
+    _clear_cache()
+    secret_resolver.resolve_admin_token(refresh=True)
+
+    cache_keys = list(secret_resolver._secret_cache.keys())  # noqa: SLF001
+    assert len(cache_keys) == 1
+    assert ":with:colons" not in cache_keys[0]
+    assert len(cache_keys[0]) == 64

@@ -46,13 +46,13 @@ This project is a submission for the **Gemini Live Agent Challenge (March 2026)*
 
 | Metric | Value | Period |
 |--------|-------|--------|
-| **Git Clones** | 4,803 | Last 14 days |
-| **Unique Cloners** | 621 | Last 14 days |
-| **Repository Views** | 858 | Last 14 days |
-| **Peak Daily Clones** | 1,223 | Single day |
-| **Peak Daily Cloners** | 191 | Single day |
+| **Git Clones** | 6,330 | Last 14 days |
+| **Unique Cloners** | 754 | Last 14 days |
+| **Repository Views** | 1,044 | Last 14 days |
+| **Peak Daily Clones** | 1,527 | Single day |
+| **Peak Daily Cloners** | 198 | Single day |
 
-**[HYPOTHESIS]** 7.7 clones per unique cloner indicates active developer exploration and potential contribution activity.
+**[HYPOTHESIS]** 8.4 clones per unique cloner indicates active developer exploration and potential contribution activity.
 
 ## 📦 Installation
 

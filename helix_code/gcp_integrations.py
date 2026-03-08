@@ -14,6 +14,7 @@ This module demonstrates use of:
 
 import json
 import os
+import re
 from collections.abc import Callable
 from dataclasses import asdict, dataclass
 from datetime import datetime
@@ -27,6 +28,15 @@ try:
     GCP_AVAILABLE = True
 except ImportError:
     GCP_AVAILABLE = False
+
+
+_RECEIPT_ID_SAFE_PATTERN = re.compile(r"[^A-Za-z0-9._-]+")
+
+
+def sanitize_receipt_id(receipt_id: str | None) -> str:
+    """[FACT] Normalize receipt identifiers before using them in storage paths."""
+    normalized = _RECEIPT_ID_SAFE_PATTERN.sub("_", receipt_id or "").strip("._-")
+    return normalized or "receipt"
 
 
 @dataclass
@@ -177,12 +187,13 @@ class CloudStorageReceipts:
 
         # [FACT] Organize receipts by date for efficient querying
         today = datetime.utcnow().strftime("%Y/%m/%d")
-        blob_path = f"receipts/{today}/{receipt_id}.json"
+        safe_receipt_id = sanitize_receipt_id(receipt_id)
+        blob_path = f"receipts/{today}/{safe_receipt_id}.json"
         blob = self.bucket.blob(blob_path)
 
         # [FACT] Enable object versioning for audit compliance
         blob.metadata = {
-            "receipt_id": receipt_id,
+            "receipt_id": sanitize_receipt_id(receipt_id),
             "timestamp": receipt_data.get("timestamp", ""),
             "node_id": receipt_data.get("node_id", ""),
             "content_hash": receipt_data.get("content_hash", ""),
@@ -228,7 +239,8 @@ class CloudStorageReceipts:
         """[FACT] Local filesystem fallback for development."""
         import os
 
-        local_path = f"docs/receipts/gcs_fallback/{receipt_id}.json"
+        safe_receipt_id = sanitize_receipt_id(receipt_id)
+        local_path = f"docs/receipts/gcs_fallback/{safe_receipt_id}.json"
         os.makedirs(os.path.dirname(local_path), exist_ok=True)
 
         with open(local_path, "w") as f:
@@ -368,7 +380,7 @@ class CloudAuditLogger:
             "compliant": result.get("compliant", False),
             "epistemic_markers": result.get("epistemic_markers", {}),
             "agency_violations": result.get("agency_violations", []),
-            "receipt_id": receipt_id,
+            "receipt_id": sanitize_receipt_id(receipt_id),
             "timestamp": datetime.utcnow().isoformat(),
             "severity": "INFO" if result.get("compliant") else "WARNING",
         }

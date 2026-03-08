@@ -18,8 +18,10 @@ import sys
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from datetime import datetime
+from http.cookies import SimpleCookie
 from pathlib import Path
 from typing import Any
+from urllib.parse import parse_qs
 
 # [FACT] Add parent directory to path for imports
 sys.path.insert(0, str(Path(__file__).parent))
@@ -31,7 +33,7 @@ from constitutional_compliance import ConstitutionalCompliance
 from drift_telemetry import DriftTelemetry
 from fastapi import FastAPI, HTTPException, Request, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import HTMLResponse, JSONResponse
+from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 from federation_receipts import FederationReceiptManager
 from gemini_text_client import create_gemini_text_client
 
@@ -39,12 +41,16 @@ try:
     from secret_resolver import (
         active_secret_backend,
         is_gemini_api_key_configured,
+        resolve_admin_token,
+        resolve_audio_audit_token,
         vault_is_configured,
     )
 except ImportError:  # pragma: no cover
     from .secret_resolver import (
         active_secret_backend,
         is_gemini_api_key_configured,
+        resolve_admin_token,
+        resolve_audio_audit_token,
         vault_is_configured,
     )
 
@@ -94,6 +100,145 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+ADMIN_COOKIE_NAME = "helix_admin_session"
+
+
+def _env_flag(name: str) -> bool:
+    """[FACT] Parse a deployment flag using conservative truthy values."""
+    return (os.getenv(name, "") or "").strip().lower() in {"1", "true", "yes", "on"}
+
+
+def _extract_cookie_token(raw_cookie: str | None, cookie_name: str) -> str:
+    """[FACT] Parse a named cookie value from request or WebSocket headers."""
+    if not raw_cookie:
+        return ""
+
+    parsed = SimpleCookie()
+    parsed.load(raw_cookie)
+    morsel = parsed.get(cookie_name)
+    if morsel is None:
+        return ""
+    return morsel.value.strip()
+
+
+def _configured_admin_token() -> str:
+    """[FACT] Resolve the effective admin token through the secret resolver."""
+    return resolve_admin_token(refresh=True) or ""
+
+
+def _extract_admin_token_from_scope(headers: Any) -> str:
+    """[FACT] Accept admin auth via bearer header, custom header, or HttpOnly cookie."""
+    auth_header = (headers.get("authorization") or "").strip()
+    if auth_header.lower().startswith("bearer "):
+        return auth_header[7:].strip()
+
+    header_token = (headers.get("x-helix-admin-token") or "").strip()
+    if header_token:
+        return header_token
+
+    return _extract_cookie_token(headers.get("cookie"), ADMIN_COOKIE_NAME)
+
+
+def _extract_admin_token(request: Request) -> str:
+    """[FACT] Resolve admin auth from request headers or cookie."""
+    return _extract_admin_token_from_scope(request.headers)
+
+
+def _set_admin_session_cookie(
+    response: HTMLResponse | RedirectResponse, request: Request, token: str
+) -> None:
+    """[FACT] Issue an HttpOnly admin session cookie for same-origin UI flows."""
+    if not token:
+        return
+
+    response.set_cookie(
+        key=ADMIN_COOKIE_NAME,
+        value=token,
+        httponly=True,
+        samesite="strict",
+        secure=request.url.scheme == "https",
+        max_age=8 * 60 * 60,
+        path="/",
+    )
+
+
+def _admin_login_page(next_path: str) -> HTMLResponse:
+    """[FACT] Minimal browser login surface for admin-protected HTML pages."""
+    html = f"""
+    <!DOCTYPE html>
+    <html lang='en'>
+    <head>
+      <meta charset='utf-8' />
+      <meta name='viewport' content='width=device-width, initial-scale=1' />
+      <title>Admin Access Required</title>
+      <style>
+        body {{ font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; background: #0f172a; color: #e2e8f0; display: flex; min-height: 100vh; align-items: center; justify-content: center; }}
+        .card {{ width: min(420px, 92vw); background: #111827; border: 1px solid #334155; border-radius: 14px; padding: 24px; box-shadow: 0 10px 30px rgba(0,0,0,0.35); }}
+        h1 {{ margin-top: 0; font-size: 24px; }}
+        p {{ color: #94a3b8; line-height: 1.5; }}
+        input {{ width: 100%; box-sizing: border-box; padding: 12px; border-radius: 10px; border: 1px solid #475569; background: #020617; color: #f8fafc; margin: 12px 0 16px; }}
+        button {{ width: 100%; border: none; border-radius: 10px; padding: 12px; background: #22c55e; color: #052e16; font-weight: 700; cursor: pointer; }}
+      </style>
+    </head>
+    <body>
+      <div class='card'>
+        <h1>Admin Access Required</h1>
+        <p>Provide the operator token to access this surface. The token is stored only in an HttpOnly session cookie.</p>
+        <form method='post' action='/auth/admin'>
+          <input type='hidden' name='next' value='{next_path}' />
+          <input type='password' name='token' placeholder='HELIX admin token' autocomplete='current-password' />
+          <button type='submit'>Unlock</button>
+        </form>
+      </div>
+    </body>
+    </html>
+    """
+    return HTMLResponse(content=html, status_code=401)
+
+
+def _admin_auth_enabled() -> bool:
+    """[FACT] Admin auth becomes active when configured or explicitly enforced."""
+    return bool(_configured_admin_token()) or _env_flag("HELIX_ENFORCE_ADMIN_TOKEN")
+
+
+def _require_admin_token(request: Request) -> str:
+    """[FACT] Enforce admin auth on protected request handlers."""
+    required_token = _configured_admin_token()
+    if not required_token:
+        if _env_flag("HELIX_ENFORCE_ADMIN_TOKEN"):
+            raise HTTPException(
+                status_code=503, detail="Admin token is required but not configured"
+            )
+        return ""
+
+    provided_token = _extract_admin_token(request)
+    if provided_token != required_token:
+        raise HTTPException(status_code=401, detail="Admin token required")
+    return provided_token
+
+
+def _guard_html_page(request: Request, next_path: str) -> str | HTMLResponse:
+    """[FACT] Require admin access for browser pages when admin auth is enabled."""
+    if not _admin_auth_enabled():
+        return ""
+
+    required_token = _configured_admin_token()
+    if not required_token:
+        return HTMLResponse(content="Admin token is required but not configured", status_code=503)
+
+    provided_token = _extract_admin_token(request)
+    if provided_token != required_token:
+        return _admin_login_page(next_path)
+    return provided_token
+
+
+def _require_admin_websocket(headers: Any) -> bool:
+    """[FACT] Enforce admin auth for WebSocket surfaces using header or cookie state."""
+    required_token = _configured_admin_token()
+    if not required_token:
+        return not _env_flag("HELIX_ENFORCE_ADMIN_TOKEN")
+    return _extract_admin_token_from_scope(headers) == required_token
+
 
 def _security_transparency_snapshot() -> dict[str, Any]:
     """[FACT] Snapshot of security posture signals for public transparency page."""
@@ -142,9 +287,10 @@ def _runtime_config_snapshot() -> dict[str, Any]:
             "gemini_text_model": os.getenv("GEMINI_TEXT_MODEL", "gemini-3.1-pro-preview"),
         },
         "auth": {
-            "audio_audit_token_required": bool(os.getenv("AUDIO_AUDIT_TOKEN", "").strip()),
+            "audio_audit_token_required": bool(resolve_audio_audit_token(refresh=True)),
             "audio_audit_allowed_origins": allowed_origins,
-            "admin_token_required": bool(os.getenv("HELIX_ADMIN_TOKEN", "").strip()),
+            "admin_token_required": bool(resolve_admin_token(refresh=True)),
+            "admin_token_enforced": _env_flag("HELIX_ENFORCE_ADMIN_TOKEN"),
         },
         "limits": {
             "max_audio_chunk_bytes": int(os.getenv("HELIX_MAX_AUDIO_CHUNK_BYTES", "131072")),
@@ -213,30 +359,6 @@ def _audit_dashboard_snapshot(limit: int = 50) -> dict[str, Any]:
     }
 
 
-def _extract_admin_token(request: Request) -> str:
-    """[FACT] Accept admin auth via bearer token, custom header, or query param."""
-    auth_header = (request.headers.get("authorization") or "").strip()
-    if auth_header.lower().startswith("bearer "):
-        return auth_header[7:].strip()
-
-    header_token = (request.headers.get("x-helix-admin-token") or "").strip()
-    if header_token:
-        return header_token
-
-    return (request.query_params.get("token") or "").strip()
-
-
-def _require_admin_token(request: Request) -> None:
-    """[FACT] Enforce optional admin token on protected operational endpoints."""
-    required_token = os.getenv("HELIX_ADMIN_TOKEN", "").strip()
-    if not required_token:
-        return
-
-    provided_token = _extract_admin_token(request)
-    if provided_token != required_token:
-        raise HTTPException(status_code=401, detail="Admin token required")
-
-
 @app.get("/health")
 async def health_check() -> JSONResponse:
     """[FACT] Cloud Run health check endpoint for node status."""
@@ -252,12 +374,39 @@ async def health_check() -> JSONResponse:
 
 
 @app.get("/", response_class=HTMLResponse)
-async def root() -> HTMLResponse:
+async def root(request: Request) -> HTMLResponse:
     """[FACT] Root endpoint serves the interactive demo dashboard."""
+    gate = _guard_html_page(request, "/")
+    if isinstance(gate, HTMLResponse):
+        return gate
+
     # Import demo HTML from live_demo_server_html
     from live_demo_server_html import DEMO_HTML
 
-    return HTMLResponse(content=DEMO_HTML)
+    response = HTMLResponse(content=DEMO_HTML)
+    _set_admin_session_cookie(response, request, gate)
+    return response
+
+
+@app.post("/auth/admin")
+async def admin_login(request: Request) -> RedirectResponse:
+    """[FACT] Exchange an operator token for an HttpOnly admin session cookie."""
+    body = (await request.body()).decode("utf-8")
+    form = parse_qs(body, keep_blank_values=True)
+    token = str(form.get("token", [""])[0]).strip()
+    next_path = str(form.get("next", ["/"])[0]).strip() or "/"
+
+    required_token = _configured_admin_token()
+    if not required_token:
+        raise HTTPException(status_code=503, detail="Admin token is not configured")
+    if token != required_token:
+        raise HTTPException(status_code=401, detail="Admin token required")
+    if not next_path.startswith("/"):
+        next_path = "/"
+
+    response = RedirectResponse(url=next_path, status_code=303)
+    _set_admin_session_cookie(response, request, token)
+    return response
 
 
 @app.get("/api")
@@ -316,7 +465,9 @@ async def security_transparency_api(request: Request) -> JSONResponse:
 @app.get("/security-transparency", response_class=HTMLResponse)
 async def security_transparency_page(request: Request) -> HTMLResponse:
     """[FACT] Public page exposing security posture and latest scan timestamp."""
-    _require_admin_token(request)
+    gate = _guard_html_page(request, "/security-transparency")
+    if isinstance(gate, HTMLResponse):
+        return gate
     snapshot = _security_transparency_snapshot()
     checks_html = "".join(
         f"<li><strong>{name}</strong>: {status}</li>" for name, status in snapshot["checks"].items()
@@ -358,7 +509,9 @@ async def security_transparency_page(request: Request) -> HTMLResponse:
     </body>
     </html>
     """
-    return HTMLResponse(content=html)
+    response = HTMLResponse(content=html)
+    _set_admin_session_cookie(response, request, gate)
+    return response
 
 
 @app.get("/api/audit-dashboard")
@@ -371,7 +524,9 @@ async def audit_dashboard_api(request: Request, limit: int = 50) -> JSONResponse
 @app.get("/audit-dashboard", response_class=HTMLResponse)
 async def audit_dashboard_page(request: Request) -> HTMLResponse:
     """[FACT] Human-friendly audit trail dashboard for compliance review."""
-    _require_admin_token(request)
+    gate = _guard_html_page(request, "/audit-dashboard")
+    if isinstance(gate, HTMLResponse):
+        return gate
     html = """
     <!DOCTYPE html>
     <html lang='en'>
@@ -412,7 +567,7 @@ async def audit_dashboard_page(request: Request) -> HTMLResponse:
       </div>
       <script>
         async function refreshDashboard() {
-          const res = await fetch('/api/audit-dashboard?limit=25');
+          const res = await fetch('/api/audit-dashboard?limit=25', { credentials: 'same-origin' });
           const data = await res.json();
           document.getElementById('total').textContent = data.receipts.total;
           document.getElementById('rate').textContent = data.receipts.compliance_rate + '%';
@@ -435,7 +590,9 @@ async def audit_dashboard_page(request: Request) -> HTMLResponse:
     </body>
     </html>
     """
-    return HTMLResponse(content=html)
+    response = HTMLResponse(content=html)
+    _set_admin_session_cookie(response, request, gate)
+    return response
 
 
 @app.post("/validate")
@@ -517,6 +674,9 @@ async def live_websocket(websocket: WebSocket) -> None:
 
     Receives audio/text stream, validates constitution, returns safe response.
     """
+    if _admin_auth_enabled() and not _require_admin_websocket(websocket.headers):
+        await websocket.close(code=1008)
+        return
     await websocket.accept()
     print("[FACT] Live session connected")
 
@@ -552,6 +712,10 @@ async def demo_websocket(websocket: WebSocket) -> None:
     client_host = websocket.client.host if websocket.client else "unknown"
     print(f"[FACT] WebSocket connection attempt from: {client_host}")
     try:
+        if _admin_auth_enabled() and not _require_admin_websocket(websocket.headers):
+            print(f"[WARN] WebSocket admin auth rejected for: {client_host}")
+            await websocket.close(code=1008)
+            return
         await websocket.accept()
         print(f"[FACT] WebSocket connection ACCEPTED for: {client_host}")
         # Import here to avoid circular dependency

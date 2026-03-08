@@ -12,26 +12,36 @@ import time
 from collections import deque
 from dataclasses import asdict, dataclass, field
 from datetime import datetime
+from http.cookies import SimpleCookie
 from pathlib import Path
 from tempfile import gettempdir
 from typing import Any
+from urllib.parse import parse_qs
 from uuid import uuid4
 
 # [FACT] Import our Helix modules
 from audio_auditor import TranscriptionSegment, create_audio_auditor
 
 # [FACT] FastAPI and WebSocket imports
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect, status
-from fastapi.responses import HTMLResponse
+from fastapi import FastAPI, HTTPException, Request, WebSocket, WebSocketDisconnect, status
+from fastapi.responses import HTMLResponse, RedirectResponse
 from gemini_live_bridge import create_gemini_bridge
 from gemini_text_client import GeminiTextClient, create_gemini_text_client
 
 try:
     from gcp_integrations import CloudStorageReceipts
-    from secret_resolver import gemini_secret_cache_key
+    from secret_resolver import (
+        gemini_secret_cache_key,
+        resolve_admin_token,
+        resolve_audio_audit_token,
+    )
 except ImportError:  # pragma: no cover
     from .gcp_integrations import CloudStorageReceipts
-    from .secret_resolver import gemini_secret_cache_key
+    from .secret_resolver import (
+        gemini_secret_cache_key,
+        resolve_admin_token,
+        resolve_audio_audit_token,
+    )
 
 # [FACT] Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -385,16 +395,128 @@ class ReceiptStore:
 
 receipt_store = ReceiptStore()
 
+ADMIN_COOKIE_NAME = "helix_admin_session"
+
+
+def _env_flag(name: str) -> bool:
+    """[FACT] Parse a deployment flag using conservative truthy values."""
+    return (os.getenv(name, "") or "").strip().lower() in {"1", "true", "yes", "on"}
+
+
+def _extract_cookie_token(raw_cookie: str | None, cookie_name: str) -> str:
+    """[FACT] Parse a named cookie value from request or WebSocket headers."""
+    if not raw_cookie:
+        return ""
+
+    parsed = SimpleCookie()
+    parsed.load(raw_cookie)
+    morsel = parsed.get(cookie_name)
+    if morsel is None:
+        return ""
+    return morsel.value.strip()
+
+
+def _configured_admin_token() -> str:
+    """[FACT] Resolve standalone admin auth through the shared secret resolver."""
+    return resolve_admin_token(refresh=True) or ""
+
+
+def _extract_admin_token_from_headers(headers: Any) -> str:
+    """[FACT] Resolve admin auth from bearer header, custom header, or cookie."""
+    auth_header = (headers.get("authorization") or "").strip()
+    if auth_header.lower().startswith("bearer "):
+        return auth_header[7:].strip()
+
+    header_token = (headers.get("x-helix-admin-token") or "").strip()
+    if header_token:
+        return header_token
+
+    return _extract_cookie_token(headers.get("cookie"), ADMIN_COOKIE_NAME)
+
+
+def _admin_auth_enabled() -> bool:
+    """[FACT] Standalone app requires admin auth when configured or explicitly enforced."""
+    return bool(_configured_admin_token()) or _env_flag("HELIX_ENFORCE_ADMIN_TOKEN")
+
+
+def _guard_standalone_page(request: Request, next_path: str) -> str | HTMLResponse:
+    """[FACT] Require admin access for standalone HTML pages when enabled."""
+    if not _admin_auth_enabled():
+        return ""
+
+    required_token = _configured_admin_token()
+    if not required_token:
+        return HTMLResponse(content="Admin token is required but not configured", status_code=503)
+
+    provided_token = _extract_admin_token_from_headers(request.headers)
+    if provided_token != required_token:
+        return _standalone_admin_login_page(next_path)
+    return provided_token
+
+
+def _set_admin_session_cookie(
+    response: HTMLResponse | RedirectResponse, request: Request, token: str
+) -> None:
+    """[FACT] Persist standalone admin auth in an HttpOnly cookie for browser flows."""
+    if not token:
+        return
+
+    response.set_cookie(
+        key=ADMIN_COOKIE_NAME,
+        value=token,
+        httponly=True,
+        samesite="strict",
+        secure=request.url.scheme == "https",
+        max_age=8 * 60 * 60,
+        path="/",
+    )
+
+
+def _standalone_admin_login_page(next_path: str) -> HTMLResponse:
+    """[FACT] Minimal login form for protected standalone demo surfaces."""
+    html = f"""
+    <!DOCTYPE html>
+    <html lang='en'>
+    <head>
+      <meta charset='utf-8' />
+      <meta name='viewport' content='width=device-width, initial-scale=1' />
+      <title>Admin Access Required</title>
+      <style>
+        body {{ font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; background: #0f172a; color: #e2e8f0; display: flex; min-height: 100vh; align-items: center; justify-content: center; }}
+        .card {{ width: min(420px, 92vw); background: #111827; border: 1px solid #334155; border-radius: 14px; padding: 24px; box-shadow: 0 10px 30px rgba(0,0,0,0.35); }}
+        input {{ width: 100%; box-sizing: border-box; padding: 12px; border-radius: 10px; border: 1px solid #475569; background: #020617; color: #f8fafc; margin: 12px 0 16px; }}
+        button {{ width: 100%; border: none; border-radius: 10px; padding: 12px; background: #22c55e; color: #052e16; font-weight: 700; cursor: pointer; }}
+      </style>
+    </head>
+    <body>
+      <div class='card'>
+        <h1>Admin Access Required</h1>
+        <p>Provide the operator token to access this local demo surface.</p>
+        <form method='post' action='/auth/admin'>
+          <input type='hidden' name='next' value='{next_path}' />
+          <input type='password' name='token' placeholder='HELIX admin token' autocomplete='current-password' />
+          <button type='submit'>Unlock</button>
+        </form>
+      </div>
+    </body>
+    </html>
+    """
+    return HTMLResponse(content=html, status_code=401)
+
+
+def _require_admin_websocket(headers: Any) -> bool:
+    """[FACT] Enforce standalone WebSocket admin auth via headers or cookie state."""
+    required_token = _configured_admin_token()
+    if not required_token:
+        return not _env_flag("HELIX_ENFORCE_ADMIN_TOKEN")
+    return _extract_admin_token_from_headers(headers) == required_token
+
 
 def _is_audio_audit_authorized(websocket: WebSocket) -> bool:
     """[FACT] Enforce optional token + origin checks for audio audit WebSocket."""
-    required_token = os.getenv("AUDIO_AUDIT_TOKEN", "").strip()
+    required_token = resolve_audio_audit_token(refresh=True) or ""
     if required_token:
-        provided_token = (
-            websocket.query_params.get("token")
-            or websocket.headers.get("x-audio-audit-token")
-            or ""
-        ).strip()
+        provided_token = (websocket.headers.get("x-audio-audit-token") or "").strip()
         if provided_token != required_token:
             return False
 
@@ -769,29 +891,65 @@ app = FastAPI()
 
 
 @app.get("/", response_class=HTMLResponse)
-async def get_demo() -> HTMLResponse:
+async def get_demo(request: Request) -> HTMLResponse:
     """[FACT] Serve the interactive demo HTML page."""
+    gate = _guard_standalone_page(request, "/")
+    if isinstance(gate, HTMLResponse):
+        return gate
+
     from live_demo_server_html import (
         DEMO_HTML,  # Assuming we extract HTML to its own file for clarity
     )
 
-    return HTMLResponse(content=DEMO_HTML)
+    response = HTMLResponse(content=DEMO_HTML)
+    _set_admin_session_cookie(response, request, gate)
+    return response
 
 
 @app.get("/audio-audit", response_class=HTMLResponse)
-async def get_audio_audit_client() -> HTMLResponse:
+async def get_audio_audit_client(request: Request) -> HTMLResponse:
     """[FACT] Serve the Live Multimodal Auditing client."""
+    gate = _guard_standalone_page(request, "/audio-audit")
+    if isinstance(gate, HTMLResponse):
+        return gate
+
     import pathlib
 
     html_path = pathlib.Path(__file__).parent / "audio_audit_client.html"
     if html_path.exists():
-        return HTMLResponse(content=html_path.read_text())
+        response = HTMLResponse(content=html_path.read_text())
+        _set_admin_session_cookie(response, request, gate)
+        return response
     return HTMLResponse(content="<h1>Audio Audit Client not found</h1>", status_code=404)
+
+
+@app.post("/auth/admin")
+async def admin_login(request: Request) -> RedirectResponse:
+    """[FACT] Exchange an operator token for an HttpOnly admin session cookie."""
+    body = (await request.body()).decode("utf-8")
+    form = parse_qs(body, keep_blank_values=True)
+    token = str(form.get("token", [""])[0]).strip()
+    next_path = str(form.get("next", ["/"])[0]).strip() or "/"
+
+    required_token = _configured_admin_token()
+    if not required_token:
+        raise HTTPException(status_code=503, detail="Admin token is not configured")
+    if token != required_token:
+        raise HTTPException(status_code=401, detail="Admin token required")
+    if not next_path.startswith("/"):
+        next_path = "/"
+
+    response = RedirectResponse(url=next_path, status_code=303)
+    _set_admin_session_cookie(response, request, token)
+    return response
 
 
 @app.websocket("/demo-live")
 async def standalone_websocket(websocket: WebSocket) -> None:
     """[FACT] Standalone WebSocket endpoint for local testing."""
+    if _admin_auth_enabled() and not _require_admin_websocket(websocket.headers):
+        await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
+        return
     await websocket.accept()
     await demo_websocket_handler(websocket)
 
@@ -812,6 +970,11 @@ async def audio_audit_websocket(websocket: WebSocket) -> None:
     Server -> Client: {"type": "transcription", "text": "...", "valid": true}
     Server -> Client: {"type": "intervention", "drift_code": "E", "original": "..."}
     """
+    if _admin_auth_enabled() and not _require_admin_websocket(websocket.headers):
+        logger.warning("[AUDIO-AUDIT] Standalone admin auth rejected")
+        await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
+        return
+
     if not _is_audio_audit_authorized(websocket):
         logger.warning("[AUDIO-AUDIT] Unauthorized WebSocket connection attempt rejected")
         await websocket.close(code=status.WS_1008_POLICY_VIOLATION)

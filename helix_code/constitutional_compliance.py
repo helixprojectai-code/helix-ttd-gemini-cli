@@ -80,6 +80,20 @@ class ConstitutionalCompliance:
             r"^(Here is|The following|Regarding your query|To provide a detailed)",
             r"^(That statement|Your question|The concept of)",
         ]
+        self._intro_prefix = re.compile(
+            r"^(?:Based on|Thank you|In response to|To (?:clarify|summarize|address)|As requested|Understood|Of course|Certainly|Let's (?:explore|examine|look at|break down)|Here is|The following|Regarding your query|To provide a detailed|That statement|Your question|The concept of)\b[\s,:;-]*",
+            re.IGNORECASE,
+        )
+
+    def _strip_intro_prefix(self, sentence: str) -> str:
+        """Extract substantive content after a leading meta-introduction."""
+        current = sentence.strip()
+        while current:
+            stripped = self._intro_prefix.sub("", current, count=1).strip()
+            if not stripped or stripped == current:
+                return current
+            current = stripped
+        return sentence.strip()
 
     def check_epistemic_integrity(self, text: str) -> tuple[float, list[str]]:
         """Validate epistemic labeling compliance."""
@@ -97,29 +111,29 @@ class ConstitutionalCompliance:
         for sentence in sentences:
             trimmed = sentence.strip()
             if len(trimmed) > 50:  # Increased threshold for substantive claim
-                # [FACT] Ignore introductory phrases ending in colons or matching intro patterns
-                if trimmed.endswith(":"):
+                substantive = self._strip_intro_prefix(trimmed)
+
+                if substantive.endswith(":") and len(substantive.rstrip(":").strip()) < 20:
                     continue
 
-                is_intro = any(re.search(p, trimmed, re.IGNORECASE) for p in self.intro_patterns)
-                if is_intro:
+                if len(substantive) <= 50:
                     continue
 
-                has_label = any(label.value in sentence for label in EpistemicLabel)
+                has_label = any(label.value in substantive for label in EpistemicLabel)
                 if not has_label:
                     # [HYPOTHESIS] Check for "Hallucination Laundering" (hedged assertions)
                     is_hedged = any(
-                        re.search(p, sentence, re.IGNORECASE) for p in self.hedging_patterns
+                        re.search(p, substantive, re.IGNORECASE) for p in self.hedging_patterns
                     )
                     if is_hedged:
                         violations.append(
-                            f"Hallucination laundering (hedged claim): {sentence[:60]}..."
+                            f"Hallucination laundering (hedged claim): {substantive[:60]}..."
                         )
                         bare_assertions += 1
                     else:
                         bare_assertions += 1
                         if bare_assertions <= 3:
-                            violations.append(f"Unlabeled claim: {sentence[:60]}...")
+                            violations.append(f"Unlabeled claim: {substantive[:60]}...")
 
         total_substantive = total_statements + bare_assertions
         if total_substantive == 0:

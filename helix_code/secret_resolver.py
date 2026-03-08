@@ -66,6 +66,31 @@ def _cache_set(cache_key: str, value: str | None) -> None:
         _secret_cache[cache_key] = (value, expires_at)
 
 
+def _cache_identity(
+    backend: str,
+    env_var: str,
+    path_env: str,
+    field_env: str,
+) -> str:
+    """Build a collision-resistant cache identity from active resolution inputs."""
+    payload = {
+        "backend": backend,
+        "env_var": env_var,
+        "secret_backend_pref": os.getenv("HELIX_SECRET_BACKEND", "auto"),
+        "vault_addr": os.getenv("VAULT_ADDR", ""),
+        "vault_namespace": os.getenv("VAULT_NAMESPACE", ""),
+        "vault_mount": os.getenv("VAULT_KV_MOUNT", ""),
+        "path_env": path_env,
+        "path_value": os.getenv(path_env, ""),
+        "field_env": field_env,
+        "field_value": os.getenv(field_env, ""),
+    }
+    digest = hashlib.sha256(
+        json.dumps(payload, sort_keys=True, separators=(",", ":")).encode("utf-8")
+    ).hexdigest()
+    return digest
+
+
 def _vault_config_for(path_env: str, field_env: str) -> VaultConfig | None:
     address = os.getenv("VAULT_ADDR", "").strip().rstrip("/")
     token = os.getenv("VAULT_TOKEN", "").strip()
@@ -170,7 +195,7 @@ def resolve_secret(
     refresh: bool = False,
 ) -> str | None:
     backend = _selected_backend(path_env=path_env, field_env=field_env)
-    cache_key = f"{backend}:{env_var}:{path_env}:{field_env}"
+    cache_key = _cache_identity(backend, env_var, path_env, field_env)
 
     if not refresh:
         found, cached = _cache_get(cache_key)
@@ -203,8 +228,34 @@ def resolve_gemini_api_key(refresh: bool = False) -> str | None:
     )
 
 
+def resolve_admin_token(refresh: bool = False) -> str | None:
+    return resolve_secret(
+        "HELIX_ADMIN_TOKEN",
+        path_env="HELIX_ADMIN_TOKEN_VAULT_PATH",
+        field_env="HELIX_ADMIN_TOKEN_VAULT_FIELD",
+        refresh=refresh,
+    )
+
+
+def resolve_audio_audit_token(refresh: bool = False) -> str | None:
+    return resolve_secret(
+        "AUDIO_AUDIT_TOKEN",
+        path_env="AUDIO_AUDIT_TOKEN_VAULT_PATH",
+        field_env="AUDIO_AUDIT_TOKEN_VAULT_FIELD",
+        refresh=refresh,
+    )
+
+
 def is_gemini_api_key_configured() -> bool:
     return bool(resolve_gemini_api_key())
+
+
+def is_admin_token_configured() -> bool:
+    return bool(resolve_admin_token())
+
+
+def is_audio_audit_token_configured() -> bool:
+    return bool(resolve_audio_audit_token())
 
 
 def gemini_secret_cache_key(refresh: bool = False) -> str | None:

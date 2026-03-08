@@ -235,13 +235,14 @@ class TestProtectedOperationalEndpoints:
             )
             assert response.status_code == 200
 
-    def test_audit_dashboard_page_accepts_query_token(self, monkeypatch) -> None:
-        """[FACT] Dashboard page accepts query-param token for operator access."""
+    def test_audit_dashboard_page_returns_login_form_when_token_missing(self, monkeypatch) -> None:
+        """[FACT] Protected dashboard HTML returns a login form when no admin session exists."""
         monkeypatch.setenv("HELIX_ADMIN_TOKEN", "secret-token")
 
         with TestClient(app) as client:
-            response = client.get("/audit-dashboard?token=secret-token")
-            assert response.status_code == 200
+            response = client.get("/audit-dashboard")
+            assert response.status_code == 401
+            assert "Admin Access Required" in response.text
 
     def test_receipts_api_accepts_custom_admin_header(self, monkeypatch) -> None:
         """[FACT] Receipts API accepts custom admin header."""
@@ -253,3 +254,29 @@ class TestProtectedOperationalEndpoints:
                 headers={"X-Helix-Admin-Token": "secret-token"},
             )
             assert response.status_code == 200
+
+
+class TestAdminLoginFlow:
+    """[FACT] Test browser-oriented admin session flow for protected HTML pages."""
+
+    def test_admin_login_sets_cookie_for_dashboard(self, monkeypatch) -> None:
+        monkeypatch.setenv("HELIX_ADMIN_TOKEN", "secret-token")
+
+        with TestClient(app) as client:
+            login = client.post(
+                "/auth/admin",
+                data={"token": "secret-token", "next": "/audit-dashboard"},
+                follow_redirects=False,
+            )
+            assert login.status_code == 303
+
+            response = client.get("/audit-dashboard")
+            assert response.status_code == 200
+            assert "Audit Trail Dashboard" in response.text
+
+    def test_query_param_token_is_rejected_for_api(self, monkeypatch) -> None:
+        monkeypatch.setenv("HELIX_ADMIN_TOKEN", "secret-token")
+
+        with TestClient(app) as client:
+            response = client.get("/api/runtime-config?token=secret-token")
+            assert response.status_code == 401

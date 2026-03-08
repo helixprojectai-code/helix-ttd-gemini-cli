@@ -261,8 +261,8 @@ class TestAudioAuditAuthorization:
         monkeypatch.setenv("AUDIO_AUDIT_TOKEN", "s3cr3t")
 
         class StubWebSocket:
-            query_params = {"token": "wrong"}
-            headers: dict[str, str] = {}
+            query_params: dict[str, str] = {}
+            headers = {"x-audio-audit-token": "wrong"}
 
         assert _is_audio_audit_authorized(StubWebSocket()) is False
 
@@ -283,8 +283,8 @@ class TestAudioAuditAuthorization:
         monkeypatch.setenv("AUDIO_AUDIT_ALLOWED_ORIGINS", "https://helixprojectai.com")
 
         class StubWebSocket:
-            query_params = {"token": "s3cr3t"}
-            headers = {"origin": "https://helixprojectai.com"}
+            query_params: dict[str, str] = {}
+            headers = {"origin": "https://helixprojectai.com", "x-audio-audit-token": "s3cr3t"}
 
         assert _is_audio_audit_authorized(StubWebSocket()) is True
 

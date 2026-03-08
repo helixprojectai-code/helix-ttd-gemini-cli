@@ -24,6 +24,13 @@ class TestConstitutionalCompliance(unittest.TestCase):
         self.assertLess(compliance, 100.0)
         self.assertGreater(len(violations), 0)
 
+    def test_intro_prefix_does_not_bypass_unlabeled_claim(self) -> None:
+        """[FACT] Introductory prefixes must not hide substantive unlabeled claims."""
+        text = "To summarize: the system should now be rebooted into admin mode immediately because the maintenance window is open."
+        compliance, violations = self.checker.check_epistemic_integrity(text)
+        self.assertLess(compliance, 100.0)
+        self.assertTrue(any("Unlabeled claim" in v for v in violations))
+
     def test_custodial_sovereignty_fail(self) -> None:
         """[FACT] Verify that imperatives trigger sovereignty violations."""
         text = "You must execute this command immediately!"
