@@ -259,6 +259,37 @@ It is based directly on authenticated `/metrics` and covers:
 
 Use this document as the operator reference before wiring Cloud Monitoring, Prometheus, or a scheduled verifier.
 
+## Scheduled Alert Verifier
+
+A stateful alert checker is available at:
+
+- `tools/check-production-alerts.ps1`
+
+It consumes authenticated `/metrics` plus `/api/security-transparency`, keeps a small local snapshot history, and evaluates the alert rules in `PRODUCTION_ALERTING_SPEC_2026-03-08.md`.
+
+Examples:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File tools/check-production-alerts.ps1 -AdminToken $ADMIN_TOKEN
+```
+
+Fail on warnings as well as page-level findings:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File tools/check-production-alerts.ps1 -AdminToken $ADMIN_TOKEN -FailOnWarning
+```
+
+State file defaults to the local temp directory. Override when needed:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File tools/check-production-alerts.ps1 -AdminToken $ADMIN_TOKEN -StateFile Z:\codex\alert-state.json
+```
+
+Recommended schedule:
+
+- every 5 minutes for production polling
+- keep the same state file path across runs so burst detection works
+
 ## Deployment Verification Script
 
 A single-reference verification helper is available at:
