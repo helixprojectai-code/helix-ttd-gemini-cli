@@ -67,6 +67,7 @@ Optional hardened envs:
 
 - `HELIX_ADMIN_TOKEN`
 - `HELIX_ENFORCE_ADMIN_TOKEN=true`
+- `HELIX_ALLOWED_ORIGINS=https://console.example.com,https://ops.example.com`
 - `HELIX_RECEIPT_PERSISTENCE=auto|local|gcs|dual`
 - `HELIX_RECEIPT_STORE_PATH`
 - `GCS_RECEIPT_BUCKET`
@@ -154,6 +155,30 @@ Browser workflow:
 - open a protected page
 - submit token through `/auth/admin`
 - app stores an HttpOnly cookie for same-origin operator access
+
+## Production Browser Origin Policy
+
+Recommended production posture:
+
+- set `HELIX_ALLOWED_ORIGINS` to the exact trusted browser origins that should access Guardian APIs or WebSockets cross-origin
+- keep the list narrow; do not use `*` in production
+- if `HELIX_ALLOWED_ORIGINS` is unset in production, Guardian WebSockets fall back to same-origin-only validation using forwarded host/proto headers
+- audio audit remains separately controllable through `AUDIO_AUDIT_ALLOWED_ORIGINS`
+
+Example:
+
+```powershell
+& $GCLOUD run services update constitutional-guardian `
+  --project helix-ai-deploy `
+  --region us-central1 `
+  --update-env-vars "HELIX_ALLOWED_ORIGINS=https://constitutional-guardian-231586465188.us-central1.run.app,https://console.helixprojectai.com"
+```
+
+Verification:
+
+- trusted same-origin or allowlisted browser clients should connect normally
+- off-origin browser WebSocket attempts to `/live` or `/demo-live` should close with policy violation
+- `/api/runtime-config` reports both `guardian_allowed_origins` and `guardian_origin_enforced`
 
 ## Deployment Verification Script
 

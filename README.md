@@ -113,12 +113,13 @@ python helix_code/live_demo_server.py
 - Real-time streaming to Gemini Live API (`gemini-2.5-flash-native-audio-preview-12-2025` default)
 - Instant transcription with constitutional validation
 - Visual intervention alerts for drift detection
-- Optional auth hardening: `AUDIO_AUDIT_TOKEN` and `AUDIO_AUDIT_ALLOWED_ORIGINS`
+- Optional auth hardening: `AUDIO_AUDIT_TOKEN`, `AUDIO_AUDIT_ALLOWED_ORIGINS`, and `HELIX_ALLOWED_ORIGINS`
 - Abuse controls: `HELIX_MAX_AUDIO_CHUNK_BYTES`, `HELIX_MAX_AUDIO_B64_CHARS`, `HELIX_AUDIO_RATE_WINDOW_SECONDS`, `HELIX_AUDIO_MAX_CHUNKS_PER_WINDOW`
 - Runtime verification endpoint: `GET /api/runtime-config`
 - Audit dashboard endpoints: `GET /audit-dashboard` and `GET /api/audit-dashboard`
 - Optional operator auth: `HELIX_ADMIN_TOKEN` for runtime, security, dashboard, and receipt surfaces
 - Recommended production operator posture: set `HELIX_ADMIN_TOKEN` and `HELIX_ENFORCE_ADMIN_TOKEN=true`
+- Recommended production browser posture: set `HELIX_ALLOWED_ORIGINS` to the exact trusted UI origins; otherwise Guardian WebSockets default to same-origin-only in production
 - Optional durable receipt envs: `HELIX_RECEIPT_PERSISTENCE`, `HELIX_RECEIPT_STORE_PATH`, `GCS_RECEIPT_BUCKET`
 - Recommended production receipt mode: `HELIX_RECEIPT_PERSISTENCE=dual` with a dedicated `GCS_RECEIPT_BUCKET`
 - Production restart test verified receipt survival across Cloud Run revisions on `2026-03-08`

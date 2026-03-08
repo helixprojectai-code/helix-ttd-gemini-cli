@@ -6,7 +6,9 @@
 
 from fastapi.testclient import TestClient
 
-from helix_code.live_guardian import app
+import helix_code.live_guardian as live_guardian
+
+app = live_guardian.app
 
 
 class TestLiveGuardianExtended:
@@ -160,6 +162,7 @@ class TestRuntimeConfigEndpoint:
             "https://helixprojectai.com,https://app.helixprojectai.com",
         )
         monkeypatch.setenv("HELIX_MAX_AUDIO_CHUNK_BYTES", "262144")
+        monkeypatch.setenv("HELIX_ALLOWED_ORIGINS", "https://console.helixprojectai.com")
 
         with TestClient(app) as client:
             response = client.get("/api/runtime-config")
@@ -167,6 +170,10 @@ class TestRuntimeConfigEndpoint:
             data = response.json()
             assert data["auth"]["audio_audit_token_required"] is True
             assert len(data["auth"]["audio_audit_allowed_origins"]) == 2
+            assert data["auth"]["guardian_allowed_origins"] == [
+                "https://console.helixprojectai.com"
+            ]
+            assert data["auth"]["guardian_origin_enforced"] is True
             assert data["limits"]["max_audio_chunk_bytes"] == 262144
 
 
@@ -220,6 +227,73 @@ class TestAuditDashboardEndpoint:
             assert response.status_code == 200
             assert "text/html" in response.headers["content-type"]
             assert "Audit Trail Dashboard" in response.text
+
+
+class TestGuardianOriginPolicy:
+    """[FACT] Test Guardian CORS and WebSocket origin policy helpers."""
+
+    def test_guardian_origin_is_not_enforced_in_non_production_without_allowlist(
+        self, monkeypatch
+    ) -> None:
+        monkeypatch.delenv("HELIX_ALLOWED_ORIGINS", raising=False)
+        monkeypatch.setenv("HELIX_ENV", "development")
+
+        assert live_guardian._guardian_origin_enforced() is False
+        assert (
+            live_guardian._is_guardian_websocket_origin_allowed({"origin": "https://evil.example"})
+            is True
+        )
+
+    def test_guardian_origin_requires_same_origin_in_production(self, monkeypatch) -> None:
+        monkeypatch.delenv("HELIX_ALLOWED_ORIGINS", raising=False)
+        monkeypatch.setenv("HELIX_ENV", "production")
+
+        assert live_guardian._guardian_origin_enforced() is True
+        assert (
+            live_guardian._is_guardian_websocket_origin_allowed(
+                {
+                    "origin": "https://constitutional-guardian.example",
+                    "host": "constitutional-guardian.example",
+                    "x-forwarded-proto": "https",
+                }
+            )
+            is True
+        )
+        assert (
+            live_guardian._is_guardian_websocket_origin_allowed(
+                {
+                    "origin": "https://evil.example",
+                    "host": "constitutional-guardian.example",
+                    "x-forwarded-proto": "https",
+                }
+            )
+            is False
+        )
+        assert (
+            live_guardian._is_guardian_websocket_origin_allowed(
+                {"host": "constitutional-guardian.example"}
+            )
+            is False
+        )
+
+    def test_guardian_origin_honors_explicit_allowlist(self, monkeypatch) -> None:
+        monkeypatch.setenv(
+            "HELIX_ALLOWED_ORIGINS",
+            "https://console.helixprojectai.com,https://app.helixprojectai.com",
+        )
+        monkeypatch.setenv("HELIX_ENV", "production")
+
+        assert live_guardian._guardian_origin_enforced() is True
+        assert (
+            live_guardian._is_guardian_websocket_origin_allowed(
+                {"origin": "https://console.helixprojectai.com"}
+            )
+            is True
+        )
+        assert (
+            live_guardian._is_guardian_websocket_origin_allowed({"origin": "https://evil.example"})
+            is False
+        )
 
 
 class TestProtectedOperationalEndpoints:

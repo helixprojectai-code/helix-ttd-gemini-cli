@@ -81,6 +81,25 @@ async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
     yield
 
 
+def _csv_env_values(name: str) -> list[str]:
+    """[FACT] Parse a comma-separated env var into normalized values."""
+    raw = os.getenv(name, "").strip()
+    if not raw:
+        return []
+    return [value.strip() for value in raw.split(",") if value.strip()]
+
+
+def _guardian_allowed_origins() -> list[str]:
+    """[FACT] Return explicit browser origins allowed for cross-origin Guardian access."""
+    return _csv_env_values("HELIX_ALLOWED_ORIGINS")
+
+
+_cors_origins = _guardian_allowed_origins()
+_cors_allows_credentials = bool(_cors_origins)
+if not _cors_origins and os.getenv("HELIX_ENV", "").strip().lower() != "production":
+    _cors_origins = ["*"]
+
+
 # [FACT] FastAPI application for Cloud Run
 app = FastAPI(
     lifespan=lifespan,
@@ -94,8 +113,8 @@ app = FastAPI(
 # [FACT] Enable CORS for browser-based demo
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
+    allow_origins=_cors_origins,
+    allow_credentials=_cors_allows_credentials,
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -106,6 +125,46 @@ ADMIN_COOKIE_NAME = "helix_admin_session"
 def _env_flag(name: str) -> bool:
     """[FACT] Parse a deployment flag using conservative truthy values."""
     return (os.getenv(name, "") or "").strip().lower() in {"1", "true", "yes", "on"}
+
+
+def _guardian_origin_enforced() -> bool:
+    """[FACT] Production deploys enforce WebSocket origin validation by default."""
+    return bool(_guardian_allowed_origins()) or (
+        os.getenv("HELIX_ENV", "").strip().lower() == "production"
+    )
+
+
+def _origin_candidates_from_headers(headers: Any) -> set[str]:
+    """[FACT] Derive same-origin browser candidates from forwarded request headers."""
+    host = (headers.get("x-forwarded-host") or headers.get("host") or "").strip()
+    proto = (headers.get("x-forwarded-proto") or "").strip()
+
+    if "," in host:
+        host = host.split(",", 1)[0].strip()
+    if "," in proto:
+        proto = proto.split(",", 1)[0].strip()
+
+    if not host:
+        return set()
+
+    normalized_proto = proto or "https"
+    return {f"{normalized_proto}://{host}"}
+
+
+def _is_guardian_websocket_origin_allowed(headers: Any) -> bool:
+    """[FACT] Restrict Guardian WebSockets to explicit allowlists or same-origin browsers."""
+    if not _guardian_origin_enforced():
+        return True
+
+    origin = (headers.get("origin") or "").strip()
+    if not origin:
+        return False
+
+    configured_origins = _guardian_allowed_origins()
+    if configured_origins:
+        return origin in configured_origins
+
+    return origin in _origin_candidates_from_headers(headers)
 
 
 def _extract_cookie_token(raw_cookie: str | None, cookie_name: str) -> str:
@@ -297,6 +356,8 @@ def _runtime_config_snapshot() -> dict[str, Any]:
             "audio_audit_allowed_origins": allowed_origins,
             "admin_token_required": bool(resolve_admin_token(refresh=True)),
             "admin_token_enforced": _env_flag("HELIX_ENFORCE_ADMIN_TOKEN"),
+            "guardian_allowed_origins": _guardian_allowed_origins(),
+            "guardian_origin_enforced": _guardian_origin_enforced(),
         },
         "limits": {
             "max_audio_chunk_bytes": int(os.getenv("HELIX_MAX_AUDIO_CHUNK_BYTES", "131072")),
@@ -687,6 +748,9 @@ async def live_websocket(websocket: WebSocket) -> None:
 
     Receives audio/text stream, validates constitution, returns safe response.
     """
+    if not _is_guardian_websocket_origin_allowed(websocket.headers):
+        await websocket.close(code=1008)
+        return
     if _admin_auth_enabled() and not _require_admin_websocket(websocket.headers):
         await websocket.close(code=1008)
         return
@@ -725,6 +789,10 @@ async def demo_websocket(websocket: WebSocket) -> None:
     client_host = websocket.client.host if websocket.client else "unknown"
     print(f"[FACT] WebSocket connection attempt from: {client_host}")
     try:
+        if not _is_guardian_websocket_origin_allowed(websocket.headers):
+            print(f"[WARN] WebSocket origin rejected for: {client_host}")
+            await websocket.close(code=1008)
+            return
         if _admin_auth_enabled() and not _require_admin_websocket(websocket.headers):
             print(f"[WARN] WebSocket admin auth rejected for: {client_host}")
             await websocket.close(code=1008)
