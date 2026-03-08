@@ -12,6 +12,24 @@ import pytest
 from helix_code.gemini_text_client import GeminiTextClient, create_gemini_text_client
 
 
+@pytest.fixture(autouse=True)
+def reset_secret_resolution_state(monkeypatch: Any) -> None:
+    """[FACT] Ensure tests run with deterministic env-based secret resolution."""
+    monkeypatch.delenv("HELIX_SECRET_BACKEND", raising=False)
+    monkeypatch.delenv("VAULT_ADDR", raising=False)
+    monkeypatch.delenv("VAULT_TOKEN", raising=False)
+    monkeypatch.delenv("VAULT_NAMESPACE", raising=False)
+    monkeypatch.delenv("GEMINI_API_KEY_VAULT_PATH", raising=False)
+    monkeypatch.delenv("GEMINI_API_KEY_VAULT_FIELD", raising=False)
+
+    import sys
+
+    for module_name in ("secret_resolver", "helix_code.secret_resolver"):
+        module = sys.modules.get(module_name)
+        if module is not None and hasattr(module, "_secret_cache"):
+            module._secret_cache.clear()  # type: ignore[attr-defined]
+
+
 class TestGeminiTextClient:
     """[FACT] Test suite for Gemini REST client."""
 

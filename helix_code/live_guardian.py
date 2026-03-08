@@ -32,6 +32,19 @@ from fastapi.responses import HTMLResponse, JSONResponse
 from federation_receipts import FederationReceiptManager
 from gemini_text_client import create_gemini_text_client
 
+try:
+    from secret_resolver import (
+        active_secret_backend,
+        is_gemini_api_key_configured,
+        vault_is_configured,
+    )
+except ImportError:  # pragma: no cover
+    from .secret_resolver import (
+        active_secret_backend,
+        is_gemini_api_key_configured,
+        vault_is_configured,
+    )
+
 # [FACT] Import demo components
 
 # [FACT] FastAPI application for Cloud Run
@@ -120,7 +133,9 @@ def _runtime_config_snapshot() -> dict[str, Any]:
             "pubsub_topic": os.getenv("PUBSUB_TOPIC", default_topic),
         },
         "secrets": {
-            "gemini_api_key_configured": bool(os.getenv("GEMINI_API_KEY", "").strip()),
+            "backend": active_secret_backend(),
+            "vault_configured": vault_is_configured(),
+            "gemini_api_key_configured": is_gemini_api_key_configured(),
         },
     }
 
@@ -246,11 +261,11 @@ async def security_transparency_page() -> HTMLResponse:
       <div class='wrap'>
         <div class='card'>
           <h1>Security Transparency</h1>
-          <p class='pill'>Security Posture: {snapshot['security_posture_score']}</p>
+          <p class='pill'>Security Posture: {snapshot["security_posture_score"]}</p>
           <div class='meta'>
-            <div><strong>Latest Scan Timestamp:</strong><br>{snapshot['latest_scan_timestamp']}</div>
-            <div><strong>Timestamp Source:</strong><br>{snapshot['timestamp_source']}</div>
-            <div><strong>Test Status:</strong><br>{snapshot['test_status']}</div>
+            <div><strong>Latest Scan Timestamp:</strong><br>{snapshot["latest_scan_timestamp"]}</div>
+            <div><strong>Timestamp Source:</strong><br>{snapshot["timestamp_source"]}</div>
+            <div><strong>Test Status:</strong><br>{snapshot["test_status"]}</div>
             <div><strong>Runtime:</strong><br>Google Cloud Run</div>
           </div>
           <h2>Control Checks</h2>

@@ -38,6 +38,11 @@ except ImportError:
 
 from constitutional_compliance import ConstitutionalCompliance
 
+try:
+    from secret_resolver import resolve_gemini_api_key
+except ImportError:  # pragma: no cover
+    from .secret_resolver import resolve_gemini_api_key
+
 
 @dataclass
 class LiveSession:
@@ -90,7 +95,8 @@ class GeminiLiveBridge:
     AUDIO_LIVE_MODEL_PREFIXES = ("gemini-2.5-flash-native-audio",)
 
     def __init__(self, api_key: str | None = None):
-        self.api_key = api_key or os.getenv("GEMINI_API_KEY")
+        self._explicit_api_key = api_key is not None
+        self.api_key = api_key or resolve_gemini_api_key()
         self.sessions: dict[str, LiveSession] = {}
         self.on_intervention: Callable | None = None
         self.client: Any = None
@@ -120,11 +126,12 @@ class GeminiLiveBridge:
         )
         self.connect_retry_cooldown_s = float(os.getenv("HELIX_GEMINI_CONNECT_COOLDOWN_S", "8.0"))
 
+        self.api_version = os.getenv("GEMINI_API_VERSION", "v1beta")
+        self.live_model = os.getenv(
+            "GEMINI_LIVE_MODEL", "gemini-2.5-flash-native-audio-preview-12-2025"
+        )
+
         if GENAI_AVAILABLE and self.api_key:
-            self.api_version = os.getenv("GEMINI_API_VERSION", "v1beta")
-            self.live_model = os.getenv(
-                "GEMINI_LIVE_MODEL", "gemini-2.5-flash-native-audio-preview-12-2025"
-            )
             self.client = genai.Client(
                 api_key=self.api_key,
                 http_options={"api_version": self.api_version},
@@ -209,6 +216,27 @@ class GeminiLiveBridge:
             ),
         ]
 
+    def _refresh_client_credentials(self) -> None:
+        """[FACT] Reload API credentials when backing secret rotates."""
+        if self._explicit_api_key or not GENAI_AVAILABLE:
+            return
+
+        refreshed_key = resolve_gemini_api_key(refresh=True)
+        if refreshed_key == self.api_key:
+            return
+
+        self.api_key = refreshed_key
+        self._alt_clients = {}
+
+        if not self.api_key:
+            self.client = None
+            return
+
+        self.client = genai.Client(
+            api_key=self.api_key,
+            http_options={"api_version": self.api_version},
+        )
+
     def _resolve_live_client(self, api_version: str) -> Any:
         if api_version == self.api_version:
             return self.client
@@ -226,6 +254,7 @@ class GeminiLiveBridge:
 
     async def ensure_gemini_live(self, session: LiveSession) -> None:
         """[FACT] Lazy-start Gemini Live when audio starts and reconnect if needed."""
+        self._refresh_client_credentials()
         if not self.client:
             return
         if session.gemini_session is not None:
@@ -245,6 +274,7 @@ class GeminiLiveBridge:
         model_id: str | None = None,
         reasoning_mode: bool = False,
     ) -> None:
+        self._refresh_client_credentials()
         if not self.client:
             return
 

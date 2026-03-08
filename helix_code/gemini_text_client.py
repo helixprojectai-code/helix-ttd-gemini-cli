@@ -17,6 +17,11 @@ from typing import Any
 
 import httpx
 
+try:
+    from secret_resolver import resolve_gemini_api_key
+except ImportError:  # pragma: no cover
+    from .secret_resolver import resolve_gemini_api_key
+
 logger = logging.getLogger(__name__)
 
 
@@ -32,7 +37,8 @@ class GeminiTextClient:
         model: str = os.getenv("GEMINI_TEXT_MODEL", "gemini-3.1-pro-preview"),
     ):
         """[FACT] Initialize Gemini client with REST configuration."""
-        self.api_key = api_key or os.getenv("GEMINI_API_KEY")
+        self._explicit_api_key = api_key is not None
+        self.api_key = api_key or resolve_gemini_api_key()
         self.model = model
         self.base_url = "https://generativelanguage.googleapis.com/v1beta"
 
@@ -43,6 +49,8 @@ class GeminiTextClient:
 
     def is_available(self) -> bool:
         """[FACT] Check if API key is configured."""
+        if not self._explicit_api_key and not self.api_key:
+            self.api_key = resolve_gemini_api_key()
         return self.api_key is not None
 
     async def generate_response(
@@ -52,6 +60,11 @@ class GeminiTextClient:
         temperature: float = 0.7,
     ) -> dict[str, Any]:
         """[FACT] Generate response using direct HTTP POST to Google API."""
+        if not self._explicit_api_key:
+            refreshed_key = resolve_gemini_api_key(refresh=True)
+            if refreshed_key:
+                self.api_key = refreshed_key
+
         if not self.api_key:
             return {
                 "success": False,

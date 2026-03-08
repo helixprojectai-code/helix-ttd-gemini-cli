@@ -145,6 +145,8 @@ class TestRuntimeConfigEndpoint:
             assert "limits" in data
             assert "federation" in data
             assert "secrets" in data
+            assert "backend" in data["secrets"]
+            assert "vault_configured" in data["secrets"]
 
     def test_runtime_config_reflects_env(self, monkeypatch) -> None:
         """[FACT] Runtime config reflects safe env overrides."""
