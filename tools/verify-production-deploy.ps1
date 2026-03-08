@@ -39,17 +39,17 @@ function Invoke-HelixJson {
 
 function Add-CheckResult {
     param(
-        [Parameter(Mandatory = $true)][System.Collections.Generic.List[object]]$Results,
+        [Parameter(Mandatory = $true)][object]$Results,
         [Parameter(Mandatory = $true)][string]$Name,
         [Parameter(Mandatory = $true)][bool]$Passed,
         [Parameter(Mandatory = $true)][string]$Details
     )
 
-    $Results.Add([pscustomobject]@{
+    [void]$Results.Add([pscustomobject]@{
         Check = $Name
         Passed = $Passed
         Details = $Details
-    }) | Out-Null
+    })
 }
 
 $results = New-Object 'System.Collections.Generic.List[object]'
