@@ -25,6 +25,11 @@ genai_types: Any
 # [FACT] Constitutional compliance for intent validation
 from constitutional_compliance import ConstitutionalCompliance
 
+try:
+    from secret_resolver import resolve_gemini_api_key
+except ImportError:  # pragma: no cover
+    from .secret_resolver import resolve_gemini_api_key
+
 if TYPE_CHECKING:
     from collections.abc import Callable
 
@@ -125,7 +130,8 @@ class AudioAuditor:
 
     def __init__(self, api_key: str | None = None):
         """[FACT] Initialize the audio auditor."""
-        self.api_key = api_key or os.getenv("GEMINI_API_KEY")
+        self._explicit_api_key = api_key is not None
+        self.api_key = api_key or resolve_gemini_api_key()
         self.sessions: dict[str, AudioAuditSession] = {}
         self.debug_logging = os.getenv("HELIX_AUDIO_AUDITOR_DEBUG", "").strip().lower() in {
             "1",
@@ -161,6 +167,31 @@ class AudioAuditor:
             except Exception as e:
                 logger.exception("[ERROR] Failed to initialize Gemini client: %s", e)
                 self._gemini_available = False
+
+    def _refresh_gemini_client(self) -> None:
+        """[FACT] Refresh Gemini client when configured secrets rotate."""
+        if self._explicit_api_key:
+            return
+
+        refreshed_key = resolve_gemini_api_key(refresh=True)
+        if refreshed_key == self.api_key and self._gemini_client is not None:
+            return
+
+        self.api_key = refreshed_key
+        self._gemini_client = None
+        self._gemini_available = GENAI_AVAILABLE and bool(self.api_key)
+
+        if not self._gemini_available:
+            return
+
+        try:
+            self._gemini_client = genai.Client(
+                api_key=self.api_key,
+                http_options={"api_version": os.getenv("GEMINI_API_VERSION", "v1beta")},
+            )
+        except Exception as e:
+            logger.exception("[ERROR] Failed to refresh Gemini client: %s", e)
+            self._gemini_available = False
 
     def _debug(self, message: str, *args: Any) -> None:
         """[FACT] Emit debug logs only when explicitly enabled."""
@@ -240,6 +271,7 @@ class AudioAuditor:
         on_intervention: Callable[[str, str], None] | None = None,
     ) -> AudioAuditSession:
         """[FACT] Create a new audio audit session with optional Gemini Live connection."""
+        self._refresh_gemini_client()
         session = AudioAuditSession(
             session_id=session_id,
             created_at=datetime.utcnow(),

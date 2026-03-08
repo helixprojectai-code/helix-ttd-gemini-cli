@@ -23,6 +23,11 @@ from fastapi.responses import HTMLResponse
 from gemini_live_bridge import create_gemini_bridge
 from gemini_text_client import GeminiTextClient, create_gemini_text_client
 
+try:
+    from secret_resolver import gemini_secret_cache_key
+except ImportError:  # pragma: no cover
+    from .secret_resolver import gemini_secret_cache_key
+
 # [FACT] Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("guardian-demo")
@@ -39,7 +44,7 @@ def get_gemini_text_client() -> GeminiTextClient | None:
     """[FACT] Lazy init with key-change detection to avoid recreating client."""
     global gemini_text_client, gemini_cached_key
 
-    current_key = os.getenv("GEMINI_API_KEY")
+    current_key = gemini_secret_cache_key(refresh=True)
 
     # Create new client if: (1) no client exists, or (2) key changed
     if gemini_text_client is None or current_key != gemini_cached_key:

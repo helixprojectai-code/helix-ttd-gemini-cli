@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import os
 import sys
+from datetime import datetime
 from pathlib import Path
 from typing import Any
 
@@ -31,6 +32,19 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse, JSONResponse
 from federation_receipts import FederationReceiptManager
 from gemini_text_client import create_gemini_text_client
+
+try:
+    from secret_resolver import (
+        active_secret_backend,
+        is_gemini_api_key_configured,
+        vault_is_configured,
+    )
+except ImportError:  # pragma: no cover
+    from .secret_resolver import (
+        active_secret_backend,
+        is_gemini_api_key_configured,
+        vault_is_configured,
+    )
 
 # [FACT] Import demo components
 
@@ -120,8 +134,52 @@ def _runtime_config_snapshot() -> dict[str, Any]:
             "pubsub_topic": os.getenv("PUBSUB_TOPIC", default_topic),
         },
         "secrets": {
-            "gemini_api_key_configured": bool(os.getenv("GEMINI_API_KEY", "").strip()),
+            "backend": active_secret_backend(),
+            "vault_configured": vault_is_configured(),
+            "gemini_api_key_configured": is_gemini_api_key_configured(),
         },
+    }
+
+
+def _audit_dashboard_snapshot(limit: int = 50) -> dict[str, Any]:
+    """[FACT] Build audit dashboard payload from in-memory receipt + metrics stores."""
+    from live_demo_server import metrics, receipt_store
+
+    safe_limit = max(1, min(limit, 250))
+    all_receipts = receipt_store.get_all()
+    recent_receipts = list(all_receipts)[-safe_limit:]
+
+    valid_count = sum(1 for r in all_receipts if r.valid)
+    intervention_count = len(all_receipts) - valid_count
+    drift_counts: dict[str, int] = {}
+    for receipt in all_receipts:
+        code = receipt.drift_code or "PASS"
+        drift_counts[code] = drift_counts.get(code, 0) + 1
+
+    compliance_rate = 100.0
+    if all_receipts:
+        compliance_rate = round((valid_count / len(all_receipts)) * 100, 2)
+
+    return {
+        "snapshot_at": datetime.utcnow().isoformat(),
+        "receipts": {
+            "total": len(all_receipts),
+            "valid": valid_count,
+            "interventions": intervention_count,
+            "compliance_rate": compliance_rate,
+        },
+        "drift_counts": drift_counts,
+        "metrics": metrics.to_dict(),
+        "recent_receipts": [
+            {
+                "receipt_id": r.receipt_id,
+                "timestamp": r.timestamp,
+                "valid": r.valid,
+                "drift_code": r.drift_code,
+                "session_id": r.session_id,
+            }
+            for r in recent_receipts
+        ],
     }
 
 
@@ -185,6 +243,8 @@ async def api_info() -> JSONResponse:
                 "runtime_config": "/api/runtime-config",
                 "security_transparency": "/security-transparency",
                 "security_transparency_api": "/api/security-transparency",
+                "audit_dashboard": "/audit-dashboard",
+                "audit_dashboard_api": "/api/audit-dashboard",
             },
         },
     )
@@ -246,11 +306,11 @@ async def security_transparency_page() -> HTMLResponse:
       <div class='wrap'>
         <div class='card'>
           <h1>Security Transparency</h1>
-          <p class='pill'>Security Posture: {snapshot['security_posture_score']}</p>
+          <p class='pill'>Security Posture: {snapshot["security_posture_score"]}</p>
           <div class='meta'>
-            <div><strong>Latest Scan Timestamp:</strong><br>{snapshot['latest_scan_timestamp']}</div>
-            <div><strong>Timestamp Source:</strong><br>{snapshot['timestamp_source']}</div>
-            <div><strong>Test Status:</strong><br>{snapshot['test_status']}</div>
+            <div><strong>Latest Scan Timestamp:</strong><br>{snapshot["latest_scan_timestamp"]}</div>
+            <div><strong>Timestamp Source:</strong><br>{snapshot["timestamp_source"]}</div>
+            <div><strong>Test Status:</strong><br>{snapshot["test_status"]}</div>
             <div><strong>Runtime:</strong><br>Google Cloud Run</div>
           </div>
           <h2>Control Checks</h2>
@@ -258,6 +318,81 @@ async def security_transparency_page() -> HTMLResponse:
           <p><a href='/api/security-transparency'>View JSON API</a></p>
         </div>
       </div>
+    </body>
+    </html>
+    """
+    return HTMLResponse(content=html)
+
+
+@app.get("/api/audit-dashboard")
+async def audit_dashboard_api(limit: int = 50) -> JSONResponse:
+    """[FACT] Machine-readable audit dashboard snapshot for enterprise reporting."""
+    return JSONResponse(status_code=200, content=_audit_dashboard_snapshot(limit=limit))
+
+
+@app.get("/audit-dashboard", response_class=HTMLResponse)
+async def audit_dashboard_page() -> HTMLResponse:
+    """[FACT] Human-friendly audit trail dashboard for compliance review."""
+    html = """
+    <!DOCTYPE html>
+    <html lang='en'>
+    <head>
+      <meta charset='utf-8' />
+      <meta name='viewport' content='width=device-width, initial-scale=1' />
+      <title>Audit Dashboard</title>
+      <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; background: #f5f7fa; color: #0f172a; }
+        .wrap { max-width: 1080px; margin: 0 auto; padding: 28px 18px 36px; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-bottom: 18px; }
+        .card { background: #fff; border-radius: 10px; box-shadow: 0 6px 18px rgba(15, 23, 42, 0.08); padding: 14px; }
+        .label { font-size: 12px; color: #475569; text-transform: uppercase; letter-spacing: .06em; }
+        .value { font-size: 24px; font-weight: 700; margin-top: 6px; }
+        table { width: 100%; border-collapse: collapse; background: #fff; border-radius: 10px; overflow: hidden; box-shadow: 0 6px 18px rgba(15, 23, 42, 0.08); }
+        th, td { padding: 10px 12px; border-bottom: 1px solid #e2e8f0; font-size: 14px; text-align: left; }
+        th { background: #0f172a; color: #f8fafc; font-weight: 600; }
+        .ok { color: #047857; font-weight: 600; }
+        .bad { color: #b91c1c; font-weight: 600; }
+      </style>
+    </head>
+    <body>
+      <div class='wrap'>
+        <h1>Audit Trail Dashboard</h1>
+        <p>Live constitutional receipt telemetry for compliance review.</p>
+        <div class='grid'>
+          <div class='card'><div class='label'>Receipts</div><div id='total' class='value'>0</div></div>
+          <div class='card'><div class='label'>Compliance Rate</div><div id='rate' class='value'>0%</div></div>
+          <div class='card'><div class='label'>Interventions</div><div id='interventions' class='value'>0</div></div>
+          <div class='card'><div class='label'>Requests</div><div id='requests' class='value'>0</div></div>
+        </div>
+        <table>
+          <thead>
+            <tr><th>Timestamp</th><th>Receipt</th><th>Status</th><th>Drift Code</th><th>Session</th></tr>
+          </thead>
+          <tbody id='rows'></tbody>
+        </table>
+      </div>
+      <script>
+        async function refreshDashboard() {
+          const res = await fetch('/api/audit-dashboard?limit=25');
+          const data = await res.json();
+          document.getElementById('total').textContent = data.receipts.total;
+          document.getElementById('rate').textContent = data.receipts.compliance_rate + '%';
+          document.getElementById('interventions').textContent = data.receipts.interventions;
+          document.getElementById('requests').textContent = data.metrics.request_count;
+
+          const rows = document.getElementById('rows');
+          rows.innerHTML = '';
+          for (const r of data.recent_receipts.slice().reverse()) {
+            const tr = document.createElement('tr');
+            const statusClass = r.valid ? 'ok' : 'bad';
+            tr.innerHTML = `<td>${r.timestamp}</td><td>${r.receipt_id}</td><td class="${statusClass}">${r.valid ? 'PASS' : 'INTERVENTION'}</td><td>${r.drift_code || ''}</td><td>${r.session_id || ''}</td>`;
+            rows.appendChild(tr);
+          }
+        }
+
+        refreshDashboard();
+        setInterval(refreshDashboard, 5000);
+      </script>
     </body>
     </html>
     """

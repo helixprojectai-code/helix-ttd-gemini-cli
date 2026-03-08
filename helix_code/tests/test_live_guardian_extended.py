@@ -145,6 +145,8 @@ class TestRuntimeConfigEndpoint:
             assert "limits" in data
             assert "federation" in data
             assert "secrets" in data
+            assert "backend" in data["secrets"]
+            assert "vault_configured" in data["secrets"]
 
     def test_runtime_config_reflects_env(self, monkeypatch) -> None:
         """[FACT] Runtime config reflects safe env overrides."""
@@ -182,3 +184,27 @@ class TestSecurityTransparencyEndpoint:
             assert data["latest_scan_timestamp"] == "2026-03-07T18:15:00Z"
             assert data["test_status"] == "186/186 passing"
             assert data["checks"]["bandit"] == "passing"
+
+
+class TestAuditDashboardEndpoint:
+    """[FACT] Test audit dashboard API and HTML surface."""
+
+    def test_audit_dashboard_api_structure(self) -> None:
+        """[FACT] /api/audit-dashboard returns summary payload."""
+        with TestClient(app) as client:
+            response = client.get("/api/audit-dashboard")
+            assert response.status_code == 200
+            data = response.json()
+            assert "snapshot_at" in data
+            assert "receipts" in data
+            assert "drift_counts" in data
+            assert "metrics" in data
+            assert "recent_receipts" in data
+
+    def test_audit_dashboard_page(self) -> None:
+        """[FACT] /audit-dashboard serves an HTML compliance view."""
+        with TestClient(app) as client:
+            response = client.get("/audit-dashboard")
+            assert response.status_code == 200
+            assert "text/html" in response.headers["content-type"]
+            assert "Audit Trail Dashboard" in response.text
