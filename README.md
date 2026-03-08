@@ -24,6 +24,7 @@ This project is a submission for the **Gemini Live Agent Challenge (March 2026)*
 - **Protected Operator Surfaces:** Runtime config, security transparency, audit dashboard, and receipts APIs can be locked behind `HELIX_ADMIN_TOKEN`.
 - **Durable Receipt Persistence:** Validation receipts can persist to local JSONL storage and optionally archive/restore through GCS.
 - **Audit Dashboard:** Dedicated `/audit-dashboard` and `/api/audit-dashboard` surfaces now expose compliance and storage telemetry for operators.
+- **Artifact Analysis Visibility:** Security transparency surfaces can now show verified image scan status, scan timestamp, and image digest.
 
 ## 🚀 Key Features
 
@@ -118,6 +119,7 @@ python helix_code/live_demo_server.py
 - Audit dashboard endpoints: `GET /audit-dashboard` and `GET /api/audit-dashboard`
 - Optional operator auth: `HELIX_ADMIN_TOKEN` for runtime, security, dashboard, and receipt surfaces
 - Optional durable receipt envs: `HELIX_RECEIPT_PERSISTENCE`, `HELIX_RECEIPT_STORE_PATH`, `GCS_RECEIPT_BUCKET`
+- Optional security transparency envs: `SECURITY_ARTIFACT_ANALYSIS_STATUS`, `SECURITY_ARTIFACT_ANALYSIS_TIMESTAMP`, `SECURITY_ARTIFACT_IMAGE_URI`
 
 **How to Use:**
 1. Click "Connect" to establish WebSocket connection
@@ -140,7 +142,12 @@ curl http://localhost:8180/api/runtime-config
 
 # Inspect operator audit summary
 curl http://localhost:8180/api/audit-dashboard
+
+# Inspect security transparency metadata
+curl http://localhost:8180/api/security-transparency
 ```
+
+**Current security verification record:** `RELEASE_NOTES_v1.4.6.md` and `SECURITY_VERIFICATION_2026-03-08.md` capture the March 8, 2026 clean Artifact Analysis result for the live Cloud Run digest.
 
 ## 🎥 Recording Sprint (March 12th)
 

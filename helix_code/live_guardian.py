@@ -261,6 +261,11 @@ def _security_transparency_snapshot() -> dict[str, Any]:
         "isort": os.getenv("SECURITY_CHECK_ISORT", "unknown"),
         "pre_commit": os.getenv("SECURITY_CHECK_PRE_COMMIT", "unknown"),
     }
+    artifact_analysis = {
+        "status": os.getenv("SECURITY_ARTIFACT_ANALYSIS_STATUS", "unverified"),
+        "scan_timestamp": os.getenv("SECURITY_ARTIFACT_ANALYSIS_TIMESTAMP", "unavailable"),
+        "image_uri": os.getenv("SECURITY_ARTIFACT_IMAGE_URI", "unavailable"),
+    }
 
     return {
         "latest_scan_timestamp": latest_scan_timestamp,
@@ -268,6 +273,7 @@ def _security_transparency_snapshot() -> dict[str, Any]:
         "security_posture_score": os.getenv("SECURITY_POSTURE_SCORE", "unscored"),
         "checks": checks,
         "test_status": os.getenv("SECURITY_TEST_STATUS", "unknown"),
+        "artifact_analysis": artifact_analysis,
     }
 
 
@@ -472,6 +478,7 @@ async def security_transparency_page(request: Request) -> HTMLResponse:
     checks_html = "".join(
         f"<li><strong>{name}</strong>: {status}</li>" for name, status in snapshot["checks"].items()
     )
+    artifact = snapshot["artifact_analysis"]
     html = f"""
     <!DOCTYPE html>
     <html lang='en'>
@@ -500,6 +507,12 @@ async def security_transparency_page(request: Request) -> HTMLResponse:
             <div><strong>Timestamp Source:</strong><br>{snapshot["timestamp_source"]}</div>
             <div><strong>Test Status:</strong><br>{snapshot["test_status"]}</div>
             <div><strong>Runtime:</strong><br>Google Cloud Run</div>
+          </div>
+          <h2>Artifact Analysis</h2>
+          <div class='meta'>
+            <div><strong>Status:</strong><br>{artifact["status"]}</div>
+            <div><strong>Verification Timestamp:</strong><br>{artifact["scan_timestamp"]}</div>
+            <div style='grid-column: 1 / -1;'><strong>Image:</strong><br><code>{artifact["image_uri"]}</code></div>
           </div>
           <h2>Control Checks</h2>
           <ul>{checks_html}</ul>

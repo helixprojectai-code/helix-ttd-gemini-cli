@@ -14,7 +14,7 @@ v1.4.6 is an operational hardening release focused on secure operator surfaces, 
 
 - Operator protection
   - Added optional `HELIX_ADMIN_TOKEN` protection for runtime config, security transparency, audit dashboard, and receipts endpoints.
-  - Accepted auth via bearer token, `X-Helix-Admin-Token`, or query token.
+  - Accepted auth via bearer token, `X-Helix-Admin-Token`, or browser session cookie.
 
 - Audit and receipts
   - Added audit dashboard HTML/API surfaces for compliance review.
@@ -44,3 +44,10 @@ v1.4.6 is an operational hardening release focused on secure operator surfaces, 
 - Optional envs:
   - `HELIX_RECEIPT_STORE_PATH`
   - `GCS_RECEIPT_BUCKET`
+
+## Post-Release Verification
+
+- Artifact Analysis verification
+  - Live Cloud Run digest verified clean on `2026-03-08T11:05:00Z`.
+  - Verified image: `gcr.io/helix-ai-deploy/constitutional-guardian@sha256:8abb896eb558ddc978c24af226bcc62d425f6e54f8513773b2ed62cbbe1726c7`.
+  - Reported vulnerability findings: none.

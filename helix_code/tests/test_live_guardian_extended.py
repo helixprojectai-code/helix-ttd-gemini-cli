@@ -178,6 +178,12 @@ class TestSecurityTransparencyEndpoint:
         monkeypatch.setenv("SECURITY_SCAN_TIMESTAMP", "2026-03-07T18:15:00Z")
         monkeypatch.setenv("SECURITY_TEST_STATUS", "186/186 passing")
         monkeypatch.setenv("SECURITY_CHECK_BANDIT", "passing")
+        monkeypatch.setenv("SECURITY_ARTIFACT_ANALYSIS_STATUS", "clean")
+        monkeypatch.setenv("SECURITY_ARTIFACT_ANALYSIS_TIMESTAMP", "2026-03-08T11:05:00Z")
+        monkeypatch.setenv(
+            "SECURITY_ARTIFACT_IMAGE_URI",
+            "gcr.io/helix-ai-deploy/constitutional-guardian@sha256:8abb896eb558ddc978c24af226bcc62d425f6e54f8513773b2ed62cbbe1726c7",
+        )
 
         with TestClient(app) as client:
             response = client.get("/api/security-transparency")
@@ -186,6 +192,9 @@ class TestSecurityTransparencyEndpoint:
             assert data["latest_scan_timestamp"] == "2026-03-07T18:15:00Z"
             assert data["test_status"] == "186/186 passing"
             assert data["checks"]["bandit"] == "passing"
+            assert data["artifact_analysis"]["status"] == "clean"
+            assert data["artifact_analysis"]["scan_timestamp"] == "2026-03-08T11:05:00Z"
+            assert "sha256:8abb896e" in data["artifact_analysis"]["image_uri"]
 
 
 class TestAuditDashboardEndpoint:
