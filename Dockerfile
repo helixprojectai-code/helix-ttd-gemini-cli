@@ -19,8 +19,11 @@ COPY helix_code/ ./helix_code/
 COPY tools/ ./tools/
 COPY pyproject.toml ./
 
+# [FACT] Upgrade packaging toolchain to pick up fixed pip/wheel/setuptools vendors.
+RUN python -m pip install --no-cache-dir --upgrade     pip==25.3     wheel>=0.46.2     setuptools>=82.0.0
+
 # [FACT] Install dependencies from synced requirements.txt
-RUN pip install --no-cache-dir -r helix_code/requirements.txt
+RUN python -m pip install --no-cache-dir -r helix_code/requirements.txt
 
 # [FACT] Create non-root user for security (Cloud Run best practice)
 RUN useradd -m -u 1000 helix && chown -R helix:helix /app
