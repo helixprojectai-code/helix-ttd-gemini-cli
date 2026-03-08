@@ -66,6 +66,7 @@ jobs:
         id: deploy
         run: |
           echo "=== Deploying to Cloud Run ==="
+          RUNTIME_ENV_VARS="HELIX_NODE_ID=GCS-GUARDIAN,HELIX_ENV=production,GOOGLE_CLOUD_PROJECT=${{ env.PROJECT_ID }},PUBSUB_TOPIC=projects/${{ env.PROJECT_ID }}/topics/helix-events,GEMINI_LIVE_MODEL=gemini-2.5-flash-native-audio-preview-12-2025,GEMINI_TEXT_MODEL=gemini-3.1-pro-preview,GEMINI_API_VERSION=v1beta"
           gcloud run deploy ${{ env.SERVICE_NAME }} \
             --image ${{ env.IMAGE }}:${{ github.sha }} \
             --region ${{ env.REGION }} \
@@ -74,7 +75,7 @@ jobs:
             --memory 1Gi \
             --cpu 2 \
             --port 8180 \
-            --set-env-vars "HELIX_NODE_ID=GCS-GUARDIAN,HELIX_ENV=production,GOOGLE_CLOUD_PROJECT=${{ env.PROJECT_ID }}" \
+            --update-env-vars "$RUNTIME_ENV_VARS" \
             --set-secrets "GEMINI_API_KEY=GEMINI_API_KEY:latest" \
             --quiet
 
