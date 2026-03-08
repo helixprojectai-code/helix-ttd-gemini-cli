@@ -25,7 +25,7 @@ This project is a submission for the **Gemini Live Agent Challenge (March 2026)*
 - **Durable Receipt Persistence:** Validation receipts can persist to local JSONL storage and optionally archive/restore through GCS.
 - **Audit Dashboard:** Dedicated `/audit-dashboard` and `/api/audit-dashboard` surfaces now expose compliance and storage telemetry for operators.
 - **Artifact Analysis Visibility:** Security transparency surfaces can now show verified image scan status, scan timestamp, and image digest.
-- **Authenticated Observability:** Prometheus-style `/metrics` export is available behind operator auth for production scraping and post-deploy verification.
+- **Authenticated Observability:** Prometheus-style `/metrics` export is available behind operator auth for production scraping and post-deploy verification, including auth-failure and rate-limit counters.
 
 ## 🚀 Key Features
 

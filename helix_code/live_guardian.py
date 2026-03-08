@@ -249,6 +249,16 @@ def _auth_rate_limit_settings() -> tuple[int, float]:
     )
 
 
+def _record_security_metric(event: str, scope: str) -> None:
+    """[FACT] Forward operator security events into the shared live metrics store."""
+    from live_demo_server import metrics
+
+    if event == "rate_limit":
+        metrics.record_rate_limit(scope)
+    elif event == "auth_failure":
+        metrics.record_auth_failure(scope)
+
+
 def _enforce_http_rate_limit(
     request: Request,
     limiter: SlidingWindowRateLimiter,
@@ -265,6 +275,7 @@ def _enforce_http_rate_limit(
     if allowed:
         return
 
+    _record_security_metric("rate_limit", scope)
     raise HTTPException(
         status_code=429,
         detail=f"Rate limit exceeded for {scope}",
@@ -346,6 +357,7 @@ def _require_admin_token(request: Request) -> str:
     required_token = _configured_admin_token()
     if not required_token:
         if _env_flag("HELIX_ENFORCE_ADMIN_TOKEN"):
+            _record_security_metric("auth_failure", "operator")
             raise HTTPException(
                 status_code=503, detail="Admin token is required but not configured"
             )
@@ -353,6 +365,7 @@ def _require_admin_token(request: Request) -> str:
 
     provided_token = _extract_admin_token(request)
     if provided_token != required_token:
+        _record_security_metric("auth_failure", "operator")
         raise HTTPException(status_code=401, detail="Admin token required")
     return provided_token
 
@@ -364,10 +377,12 @@ def _guard_html_page(request: Request, next_path: str) -> str | HTMLResponse:
 
     required_token = _configured_admin_token()
     if not required_token:
+        _record_security_metric("auth_failure", "operator")
         return HTMLResponse(content="Admin token is required but not configured", status_code=503)
 
     provided_token = _extract_admin_token(request)
     if provided_token != required_token:
+        _record_security_metric("auth_failure", "operator")
         return _admin_login_page(next_path)
     return provided_token
 
@@ -376,8 +391,15 @@ def _require_admin_websocket(headers: Any) -> bool:
     """[FACT] Enforce admin auth for WebSocket surfaces using header or cookie state."""
     required_token = _configured_admin_token()
     if not required_token:
-        return not _env_flag("HELIX_ENFORCE_ADMIN_TOKEN")
-    return _extract_admin_token_from_scope(headers) == required_token
+        allowed = not _env_flag("HELIX_ENFORCE_ADMIN_TOKEN")
+        if not allowed:
+            _record_security_metric("auth_failure", "websocket")
+        return allowed
+
+    allowed = _extract_admin_token_from_scope(headers) == required_token
+    if not allowed:
+        _record_security_metric("auth_failure", "websocket")
+    return allowed
 
 
 def _security_transparency_snapshot() -> dict[str, Any]:
@@ -551,6 +573,7 @@ def _metrics_snapshot_text() -> str:
     receipt_data = audit["receipts"]
     voice_pipe = metrics_data["voice_pipe"]
     categories = metrics_data["categories"]
+    security_events = metrics_data.get("security_events", {})
     artifact = security["artifact_analysis"]
     storage = audit["storage"]
 
@@ -696,6 +719,20 @@ def _metrics_snapshot_text() -> str:
             labels={"drift_code": drift_code},
         )
         for drift_code, count in sorted(audit["drift_counts"].items())
+    )
+    lines.extend(
+        [
+            "# HELP helix_security_events_total Security-relevant auth and throttling events.",
+            "# TYPE helix_security_events_total counter",
+        ]
+    )
+    lines.extend(
+        _prometheus_metric(
+            "helix_security_events_total",
+            count,
+            labels={"event": event_name.removesuffix("_count")},
+        )
+        for event_name, count in sorted(security_events.items())
     )
 
     return "\n".join(lines) + "\n"

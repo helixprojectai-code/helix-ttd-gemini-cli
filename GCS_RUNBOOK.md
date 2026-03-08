@@ -219,6 +219,7 @@ Coverage includes:
 - latency averages and percentiles
 - drift category totals
 - voice-pipeline event totals
+- auth-failure and rate-limit counters
 - receipt backend status
 - artifact verification state
 - active rate-limit configuration

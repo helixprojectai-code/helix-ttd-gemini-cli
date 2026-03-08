@@ -6,6 +6,7 @@
 
 from fastapi.testclient import TestClient
 
+import helix_code.live_demo_server as live_demo_server
 import helix_code.live_guardian as live_guardian
 from helix_code.request_limits import SlidingWindowRateLimiter
 
@@ -356,6 +357,8 @@ class TestProtectedOperationalEndpoints:
             "SECURITY_ARTIFACT_IMAGE_URI",
             "us-central1-docker.pkg.dev/helix-ai-deploy/helix-repo/constitutional-guardian@sha256:test",
         )
+        live_demo_server.metrics.record_rate_limit("operator")
+        live_demo_server.metrics.record_auth_failure("operator")
 
         with TestClient(app) as client:
             response = client.get(
@@ -367,6 +370,8 @@ class TestProtectedOperationalEndpoints:
         assert "text/plain" in response.headers["content-type"]
         assert "helix_requests_total" in response.text
         assert "helix_receipt_storage_backend" in response.text
+        assert 'helix_security_events_total{event="operator_auth_failure"}' in response.text
+        assert 'helix_security_events_total{event="operator_rate_limit"}' in response.text
         assert (
             'helix_artifact_analysis_state{image_uri="us-central1-docker.pkg.dev/helix-ai-deploy/helix-repo/constitutional-guardian@sha256:test",status="clean"} 1'
             in response.text

@@ -142,6 +142,11 @@ class LiveMetrics:
     ws_connect_count: int = 0
     ws_disconnect_count: int = 0
     turn_boundary_count: int = 0
+    operator_rate_limit_count: int = 0
+    auth_rate_limit_count: int = 0
+    audio_rate_limit_count: int = 0
+    operator_auth_failure_count: int = 0
+    websocket_auth_failure_count: int = 0
 
     def record_request(self, latency_ms: float) -> None:
         """[FACT] Record a single request and its latency."""
@@ -174,6 +179,22 @@ class LiveMetrics:
     def record_turn_boundary(self) -> None:
         """[FACT] Track turn-boundary detections from audio pipeline."""
         self.turn_boundary_count += 1
+
+    def record_rate_limit(self, scope: str) -> None:
+        """[FACT] Track ingress and operator throttling outcomes by scope."""
+        if scope == "auth":
+            self.auth_rate_limit_count += 1
+        elif scope == "audio":
+            self.audio_rate_limit_count += 1
+        else:
+            self.operator_rate_limit_count += 1
+
+    def record_auth_failure(self, scope: str) -> None:
+        """[FACT] Track rejected admin auth attempts across HTTP and WebSocket surfaces."""
+        if scope == "websocket":
+            self.websocket_auth_failure_count += 1
+        else:
+            self.operator_auth_failure_count += 1
 
     def _calculate_percentile(self, percentile: float) -> float:
         """[FACT] Calculate latency percentile from history."""
@@ -209,6 +230,13 @@ class LiveMetrics:
                 "ws_connect_count": self.ws_connect_count,
                 "ws_disconnect_count": self.ws_disconnect_count,
                 "turn_boundary_count": self.turn_boundary_count,
+            },
+            "security_events": {
+                "operator_rate_limit_count": self.operator_rate_limit_count,
+                "auth_rate_limit_count": self.auth_rate_limit_count,
+                "audio_rate_limit_count": self.audio_rate_limit_count,
+                "operator_auth_failure_count": self.operator_auth_failure_count,
+                "websocket_auth_failure_count": self.websocket_auth_failure_count,
             },
         }
 
@@ -496,10 +524,12 @@ def _guard_standalone_page(request: Request, next_path: str) -> str | HTMLRespon
 
     required_token = _configured_admin_token()
     if not required_token:
+        metrics.record_auth_failure("operator")
         return HTMLResponse(content="Admin token is required but not configured", status_code=503)
 
     provided_token = _extract_admin_token_from_headers(request.headers)
     if provided_token != required_token:
+        metrics.record_auth_failure("operator")
         return _standalone_admin_login_page(next_path)
     return provided_token
 
@@ -558,8 +588,15 @@ def _require_admin_websocket(headers: Any) -> bool:
     """[FACT] Enforce standalone WebSocket admin auth via headers or cookie state."""
     required_token = _configured_admin_token()
     if not required_token:
-        return not _env_flag("HELIX_ENFORCE_ADMIN_TOKEN")
-    return _extract_admin_token_from_headers(headers) == required_token
+        allowed = not _env_flag("HELIX_ENFORCE_ADMIN_TOKEN")
+        if not allowed:
+            metrics.record_auth_failure("websocket")
+        return allowed
+
+    allowed = _extract_admin_token_from_headers(headers) == required_token
+    if not allowed:
+        metrics.record_auth_failure("websocket")
+    return allowed
 
 
 def _is_audio_audit_authorized(websocket: WebSocket) -> bool:
@@ -568,6 +605,7 @@ def _is_audio_audit_authorized(websocket: WebSocket) -> bool:
     if required_token:
         provided_token = (websocket.headers.get("x-audio-audit-token") or "").strip()
         if provided_token != required_token:
+            metrics.record_auth_failure("websocket")
             return False
 
     allowed_origins_raw = os.getenv("AUDIO_AUDIT_ALLOWED_ORIGINS", "").strip()
@@ -577,6 +615,7 @@ def _is_audio_audit_authorized(websocket: WebSocket) -> bool:
         }
         origin = (websocket.headers.get("origin") or "").strip()
         if origin not in allowed_origins:
+            metrics.record_auth_failure("websocket")
             return False
 
     return True
@@ -1035,6 +1074,7 @@ async def audio_audit_websocket(websocket: WebSocket) -> None:
 
     allowed, retry_after = _check_audio_ingress_rate_limit(websocket)
     if not allowed:
+        metrics.record_rate_limit("audio")
         logger.warning(
             "[AUDIO-AUDIT] Rate-limited WebSocket connection rejected (retry_after=%ss)",
             max(1, int(retry_after) or 1),

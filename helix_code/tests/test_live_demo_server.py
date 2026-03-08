@@ -95,6 +95,22 @@ class TestLiveMetrics:
         assert data["voice_pipe"]["ws_disconnect_count"] == 1
         assert data["voice_pipe"]["turn_boundary_count"] == 1
 
+    def test_security_event_metrics(self) -> None:
+        """[FACT] Tracks auth failures and throttling events for observability."""
+        metrics = LiveMetrics()
+        metrics.record_rate_limit("operator")
+        metrics.record_rate_limit("auth")
+        metrics.record_rate_limit("audio")
+        metrics.record_auth_failure("operator")
+        metrics.record_auth_failure("websocket")
+
+        data = metrics.to_dict()
+        assert data["security_events"]["operator_rate_limit_count"] == 1
+        assert data["security_events"]["auth_rate_limit_count"] == 1
+        assert data["security_events"]["audio_rate_limit_count"] == 1
+        assert data["security_events"]["operator_auth_failure_count"] == 1
+        assert data["security_events"]["websocket_auth_failure_count"] == 1
+
 
 class TestReceiptStore:
     """[FACT] Test suite for ReceiptStore."""
