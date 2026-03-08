@@ -23,7 +23,7 @@ It covers:
 - Region: `us-central1`
 - Cloud Run Service: `constitutional-guardian`
 - Public URL: `https://constitutional-guardian-231586465188.us-central1.run.app`
-- Live image lineage: `gcr.io/helix-ai-deploy/constitutional-guardian`
+- Canonical image lineage: `us-central1-docker.pkg.dev/helix-ai-deploy/helix-repo/constitutional-guardian`
 
 ## Current Verified State
 
@@ -144,9 +144,9 @@ Build config:
 Current behavior:
 
 - emits security metadata
-- builds Docker image under `gcr.io/$PROJECT_ID/constitutional-guardian`
+- builds Docker image under `us-central1-docker.pkg.dev/$PROJECT_ID/helix-repo/constitutional-guardian`
 - pushes immutable tag plus `latest`
-- deploys to Cloud Run
+- deploys to Cloud Run from Artifact Registry
 
 ### Manual submit
 
@@ -213,11 +213,14 @@ Publisher role required on the topic:
 
 ### Important registry note
 
-Production currently serves from:
+Canonical deploy target now uses Artifact Registry:
 
-- `gcr.io/helix-ai-deploy/constitutional-guardian`
+- `us-central1-docker.pkg.dev/helix-ai-deploy/helix-repo/constitutional-guardian`
 
-This is distinct from the Artifact Registry `helix-repo` image lineage. Do not verify the wrong image.
+Historical note:
+
+- prior production revisions used `gcr.io/helix-ai-deploy/constitutional-guardian`
+- the 2026-03-08 verification record below references that pre-migration live digest
 
 ### Live verified digest
 
@@ -352,11 +355,11 @@ git config --global core.sshCommand "C:/Windows/System32/OpenSSH/ssh.exe"
 
 The current deployment is operational, but the registry story is split:
 
-- deploys run from `gcr.io/...`
-- Artifact Registry browsing is under `us-central1-docker.pkg.dev/.../helix-repo/...`
+- build and deploy should now converge on `us-central1-docker.pkg.dev/.../helix-repo/...`
+- any remaining `gcr.io/...` references should be treated as historical and cleaned up as revisions roll forward
 
-Recommended future cleanup:
+Recommended follow-through:
 
-1. migrate build output fully to Artifact Registry
-2. update `cloudbuild.yaml` deploy image path
-3. retire dual-registry ambiguity
+1. run the first Artifact Registry-backed deploy
+2. verify Cloud Run serves the new Artifact Registry image path
+3. refresh verification docs with the first Artifact Registry digest
