@@ -123,6 +123,7 @@ python helix_code/live_demo_server.py
 - Recommended production receipt mode: `HELIX_RECEIPT_PERSISTENCE=dual` with a dedicated `GCS_RECEIPT_BUCKET`
 - Production restart test verified receipt survival across Cloud Run revisions on `2026-03-08`
 - Optional security transparency envs: `SECURITY_ARTIFACT_ANALYSIS_STATUS`, `SECURITY_ARTIFACT_ANALYSIS_TIMESTAMP`, `SECURITY_ARTIFACT_IMAGE_URI`
+- Deployment verification helper: `powershell -ExecutionPolicy Bypass -File tools/verify-production-deploy.ps1 [-AdminToken <token>]`
 
 **How to Use:**
 1. Click "Connect" to establish WebSocket connection

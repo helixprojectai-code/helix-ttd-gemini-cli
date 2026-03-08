@@ -155,6 +155,39 @@ Browser workflow:
 - submit token through `/auth/admin`
 - app stores an HttpOnly cookie for same-origin operator access
 
+## Deployment Verification Script
+
+A single-reference verification helper is available at:
+
+- `tools/verify-production-deploy.ps1`
+
+Examples:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File tools/verify-production-deploy.ps1
+```
+
+For full operator checks:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File tools/verify-production-deploy.ps1 -AdminToken $ADMIN_TOKEN
+```
+
+Optional strict artifact requirement:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File tools/verify-production-deploy.ps1 -AdminToken $ADMIN_TOKEN -RequireCleanArtifact
+```
+
+What it checks:
+
+- `/health`
+- unauthenticated runtime-config gate behavior
+- authenticated `/api/runtime-config`
+- authenticated `/api/security-transparency`
+- authenticated `/api/audit-dashboard`
+- active receipt persistence backend
+
 ## Windows PowerShell Setup
 
 Use a writable local config directory or `gcloud` will fail on credentials/log writes.
