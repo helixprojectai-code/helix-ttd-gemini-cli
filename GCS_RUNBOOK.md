@@ -305,6 +305,16 @@ After enabling the bucket:
 
 That is the real production persistence check.
 
+### Verified Result
+
+Production restart validation passed on `2026-03-08`.
+
+- Tested receipt ID: `live_demo_9b50bffacd6e4bc1961d6e09d8b13e1d_1`
+- Receipt retrieval succeeded before restart
+- Receipt retrieval succeeded after forced new Cloud Run revision
+- Hash verification remained valid after restart
+- Effective production storage backend: `gcs+local`
+
 ## Artifact Analysis / Vulnerability Verification
 
 ### Important registry note
