@@ -117,7 +117,7 @@ Protected surfaces include:
 
 ### Better Production Pattern
 
-Use Secret Manager-backed env injection for the token and keep enforcement separate.
+Use Secret Manager-backed env injection for the token and keep enforcement separate. Deploy automation now preserves that binding by using secret updates instead of replacing the full secret set.
 
 Example:
 
@@ -249,6 +249,7 @@ Current behavior:
 - pushes immutable tag plus `latest`
 - deploys to Cloud Run from Artifact Registry
 - preserves optional runtime envs by updating only the managed runtime/security keys
+- preserves existing secret bindings by updating only declared secrets
 - resets artifact verification metadata to `unverified` for each newly deployed digest
 
 ### Manual submit

@@ -76,7 +76,7 @@ jobs:
             --cpu 2 \
             --port 8180 \
             --update-env-vars "$RUNTIME_ENV_VARS" \
-            --set-secrets "GEMINI_API_KEY=GEMINI_API_KEY:latest" \
+            --update-secrets "GEMINI_API_KEY=GEMINI_API_KEY:latest" \
             --quiet
 
           SERVICE_URL=$(gcloud run services describe ${{ env.SERVICE_NAME }} \

@@ -124,6 +124,7 @@ python helix_code/live_demo_server.py
 - Production restart test verified receipt survival across Cloud Run revisions on `2026-03-08`
 - Optional security transparency envs: `SECURITY_ARTIFACT_ANALYSIS_STATUS`, `SECURITY_ARTIFACT_ANALYSIS_TIMESTAMP`, `SECURITY_ARTIFACT_IMAGE_URI`
 - Deployment verification helper: `powershell -ExecutionPolicy Bypass -File tools/verify-production-deploy.ps1 [-AdminToken <token>]`
+- Deployment automation preserves optional operator secret bindings by using secret updates rather than replacing the full secret set
 
 **How to Use:**
 1. Click "Connect" to establish WebSocket connection

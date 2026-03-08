@@ -77,7 +77,7 @@ steps:
           --timeout 300 \
           --max-instances 10 \
           --update-env-vars "$$RUNTIME_ENV_VARS" \
-          --set-secrets GEMINI_API_KEY=GEMINI_API_KEY:latest
+          --update-secrets GEMINI_API_KEY=GEMINI_API_KEY:latest
 
   # [FACT] Reset artifact verification metadata for the newly deployed image digest.
   - name: 'gcr.io/cloud-builders/gcloud'
