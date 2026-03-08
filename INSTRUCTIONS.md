@@ -25,13 +25,13 @@
    ```
 
 4. **Launch Browser:**
-   *Open `http://localhost:8180/` and verify `http://localhost:8180/api/runtime-config`.*
+   *Open `http://localhost:8180/`, verify `http://localhost:8180/api/runtime-config`, and if operator auth is enabled include the admin token when checking `/audit-dashboard`.*
 
 ## 🎬 Recording Sequence
 
 ### 1. Introduction (The UI)
 -   Show the dashboard with **0 Receipts / 0 Drifts**.
--   Highlight the **"LIVE v1.4.5"** branding and the **Pulse-Green** header.
+-   Highlight the **"LIVE v1.4.6"** branding and the **Pulse-Green** header.
 
 ### 2. Live Audio Demo (The Waveform)
 -   Click **"Start Live Mic"**.
@@ -49,6 +49,7 @@
 -   Scroll down to the **Latency Line Chart**.
 -   Show how it tracks every validation event.
 -   Point to the **Bar Chart** showing the distribution of violations.
+-   Open the **audit dashboard** and show receipt/storage telemetry if you want the operator view on camera.
 
 ### 5. Conclusion
 -   Stop the mic.

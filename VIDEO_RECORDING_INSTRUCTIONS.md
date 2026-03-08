@@ -5,6 +5,7 @@
 **Deadline:** March 14, 2026
 **Target Length:** 2-3 minutes
 **Upload To:** YouTube (Unlisted)
+**Current Release:** `v1.4.6`
 
 ---
 
@@ -78,7 +79,7 @@
 ### Scene 3: The Solution (30 seconds)
 **Visual:** Architecture diagram with arrows showing flow
 **Script:**
-> "Constitutional Guardian sits between the user and Gemini Live. Every utterance flows through our FastAPI server on Google Cloud Run. We validate for three epistemic markers: FACT for verifiable claims, HYPOTHESIS for predictions, and ASSUMPTION for explicit constraints. If an utterance lacks markers, we intervene before the user hears it."
+> "Constitutional Guardian sits between the user and Gemini Live. Every utterance flows through our FastAPI server on Google Cloud Run. We validate for three epistemic markers: FACT for verifiable claims, HYPOTHESIS for predictions, and ASSUMPTION for explicit constraints. We also persist receipts and expose an audit dashboard for operator review. If an utterance lacks markers, we intervene before the user hears it."
 
 ### Scene 4: Live Demo (60 seconds)
 **Visual:** Terminal window

@@ -7,7 +7,7 @@
 [![Ruff](https://img.shields.io/badge/lint-ruff-261230?labelColor=grey)](https://github.com/astral-sh/ruff)
 [![Black](https://img.shields.io/badge/format-black-000000?labelColor=grey)](https://github.com/psf/black)
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue)](LICENSE)
-[![PyPI](https://img.shields.io/badge/PyPI-1.4.5-blue)](https://pypi.org/project/helix-ttd-gemini/)
+[![PyPI](https://img.shields.io/badge/PyPI-1.4.6-blue)](https://pypi.org/project/helix-ttd-gemini/)
 
 <img src="https://raw.githubusercontent.com/helixprojectai-code/helix-ttd-gemini-cli/main/helix-ttd-gemini.png" alt="Constitutional Guardian Overview" width="100%">
 
@@ -16,7 +16,14 @@
 
 This project is a submission for the **Gemini Live Agent Challenge (March 2026)**.
 
-**Current Release:** `v1.4.5`
+**Current Release:** `v1.4.6`
+
+## Operational Hardening In v1.4.6
+
+- **Vault-Aware Secret Resolution:** Gemini credentials can now resolve through Vault with environment fallback for local and Cloud Run-safe operation.
+- **Protected Operator Surfaces:** Runtime config, security transparency, audit dashboard, and receipts APIs can be locked behind `HELIX_ADMIN_TOKEN`.
+- **Durable Receipt Persistence:** Validation receipts can persist to local JSONL storage and optionally archive/restore through GCS.
+- **Audit Dashboard:** Dedicated `/audit-dashboard` and `/api/audit-dashboard` surfaces now expose compliance and storage telemetry for operators.
 
 ## 🚀 Key Features
 
@@ -29,7 +36,7 @@ This project is a submission for the **Gemini Live Agent Challenge (March 2026)*
 
 ## 📈 Engineering Standards
 
-- **Test Pass Rate:** Enforced by CI on every main merge.
+- **Test Pass Rate:** `201/201` passing in release validation, with CI enforced on every main merge.
 - **High Coverage:** 75% statement coverage across all critical modules.
 - **Linting:** 100% compliant with `ruff`, `black`, and `isort`.
 
@@ -108,6 +115,9 @@ python helix_code/live_demo_server.py
 - Optional auth hardening: `AUDIO_AUDIT_TOKEN` and `AUDIO_AUDIT_ALLOWED_ORIGINS`
 - Abuse controls: `HELIX_MAX_AUDIO_CHUNK_BYTES`, `HELIX_MAX_AUDIO_B64_CHARS`, `HELIX_AUDIO_RATE_WINDOW_SECONDS`, `HELIX_AUDIO_MAX_CHUNKS_PER_WINDOW`
 - Runtime verification endpoint: `GET /api/runtime-config`
+- Audit dashboard endpoints: `GET /audit-dashboard` and `GET /api/audit-dashboard`
+- Optional operator auth: `HELIX_ADMIN_TOKEN` for runtime, security, dashboard, and receipt surfaces
+- Optional durable receipt envs: `HELIX_RECEIPT_PERSISTENCE`, `HELIX_RECEIPT_STORE_PATH`, `GCS_RECEIPT_BUCKET`
 
 **How to Use:**
 1. Click "Connect" to establish WebSocket connection
@@ -127,6 +137,9 @@ gcloud run deploy constitutional-guardian --source . --region us-central1 --allo
 ```bash
 # Verify effective runtime model/auth/limits (non-secret)
 curl http://localhost:8180/api/runtime-config
+
+# Inspect operator audit summary
+curl http://localhost:8180/api/audit-dashboard
 ```
 
 ## 🎥 Recording Sprint (March 12th)
@@ -149,7 +162,7 @@ The Guardian enforces four immutable invariants:
 ## 🧪 Test Results
 
 ```
-168 passed, 9 warnings
+201 passed, 7 warnings
 Coverage: 75%
 ```
 
