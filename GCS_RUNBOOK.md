@@ -243,6 +243,22 @@ Recommended usage:
 - keep scraping same-origin or behind your trusted monitoring path
 - use `tools/verify-production-deploy.ps1 -AdminToken $ADMIN_TOKEN -RequireCleanArtifact` after a manual verification cycle
 
+## Alerting Baseline
+
+The first production alert set is documented in:
+
+- `PRODUCTION_ALERTING_SPEC_2026-03-08.md`
+
+It is based directly on authenticated `/metrics` and covers:
+
+- live artifact verification drift
+- operator auth failure bursts
+- operator and audio ingress rate-limit spikes
+- receipt backend posture drift
+- origin/auth enforcement regression
+
+Use this document as the operator reference before wiring Cloud Monitoring, Prometheus, or a scheduled verifier.
+
 ## Deployment Verification Script
 
 A single-reference verification helper is available at:

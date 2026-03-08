@@ -161,6 +161,8 @@ curl -H "X-Helix-Admin-Token: $env:HELIX_ADMIN_TOKEN" http://localhost:8180/metr
 
 **Current security verification record:** `RELEASE_NOTES_v1.4.6.md` and `SECURITY_VERIFICATION_2026-03-08.md` capture the March 8, 2026 clean Artifact Analysis result for the live Cloud Run digest.
 
+**Production alerting baseline:** `PRODUCTION_ALERTING_SPEC_2026-03-08.md` defines the first authenticated-metrics alert set for artifact verification, auth failures, rate limiting, and receipt persistence posture.
+
 ## 🎥 Recording Sprint (March 12th)
 
 This codebase is currently in its **Phase 6.1 (Pre-Filming)** stable state. All visual triggers and simulation scenarios are tuned for high-impact demonstration.
