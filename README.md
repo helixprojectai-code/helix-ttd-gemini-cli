@@ -33,19 +33,19 @@ This project is a submission for the **Gemini Live Agent Challenge (March 2026)*
 - **High Coverage:** 75% statement coverage across all critical modules.
 - **Linting:** 100% compliant with `ruff`, `black`, and `isort`.
 
-## 📊 Repository Traction (March 5, 2026)
+## 📊 Repository Traction (March 7, 2026)
 
 **[FACT]** The Constitutional Guardian is gaining significant developer interest.
 
 | Metric | Value | Period |
 |--------|-------|--------|
-| **Git Clones** | 3,571 | Last 14 days (Feb 24-Mar 5) |
-| **Unique Cloners** | 471 | Last 14 days |
-| **Repository Views** | 711 | Last 14 days |
+| **Git Clones** | 4,803 | Last 14 days |
+| **Unique Cloners** | 621 | Last 14 days |
+| **Repository Views** | 858 | Last 14 days |
 | **Peak Daily Clones** | 1,223 | Single day |
-| **Peak Daily Cloners** | 147 | Single day |
+| **Peak Daily Cloners** | 191 | Single day |
 
-**[HYPOTHESIS]** 7.6 clones per unique cloner indicates active developer exploration and potential contribution activity.
+**[HYPOTHESIS]** 7.7 clones per unique cloner indicates active developer exploration and potential contribution activity.
 
 ## 📦 Installation
 
@@ -135,7 +135,7 @@ This codebase is currently in its **Phase 6.1 (Pre-Filming)** stable state. All 
 
 ## 🏛️ Constitutional Framework
 
-<img src="https://raw.githubusercontent.com/helixprojectai-code/helix-ttd-gemini-cli/main/covenant_governors_diagram.png" alt="Constitutional Governance" width="600">
+<img src="https://raw.githubusercontent.com/helixprojectai-code/helix-ttd-gemini-cli/main/ARCHITECTURE_CG.png" alt="Constitutional Governance" width="600">
 
 The Guardian enforces four immutable invariants:
 
