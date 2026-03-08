@@ -87,6 +87,74 @@ Recommended model:
 - do not pass admin tokens through query params
 - use bearer header, `X-Helix-Admin-Token`, or browser session cookie
 
+
+## Production Operator Access Control
+
+Recommended production posture:
+
+- inject `HELIX_ADMIN_TOKEN`
+- set `HELIX_ENFORCE_ADMIN_TOKEN=true`
+
+Protected surfaces include:
+
+- `/api/runtime-config`
+- `/api/security-transparency`
+- `/security-transparency`
+- `/api/audit-dashboard`
+- `/audit-dashboard`
+- `/api/receipts`
+- `/api/receipts/{receipt_id}`
+- WebSockets: `/live`, `/demo-live`
+
+### Rollout Using Cloud Run Env Vars
+
+```powershell
+& $GCLOUD run services update constitutional-guardian `
+  --project helix-ai-deploy `
+  --region us-central1 `
+  --update-env-vars "HELIX_ADMIN_TOKEN=REPLACE_ME,HELIX_ENFORCE_ADMIN_TOKEN=true"
+```
+
+### Better Production Pattern
+
+Use Secret Manager-backed env injection for the token and keep enforcement separate.
+
+Example:
+
+```powershell
+& $GCLOUD run services update constitutional-guardian `
+  --project helix-ai-deploy `
+  --region us-central1 `
+  --update-env-vars "HELIX_ENFORCE_ADMIN_TOKEN=true" `
+  --update-secrets "HELIX_ADMIN_TOKEN=HELIX_ADMIN_TOKEN:latest"
+```
+
+### Verification
+
+Unauthenticated API request should fail:
+
+```powershell
+Invoke-RestMethod "https://constitutional-guardian-231586465188.us-central1.run.app/api/runtime-config"
+```
+
+Expected result:
+
+- `401` when token is configured but not supplied
+- `503` when enforcement is enabled but token is missing
+
+Authenticated request:
+
+```powershell
+$headers = @{ "X-Helix-Admin-Token" = "YOUR_TOKEN" }
+Invoke-RestMethod "https://constitutional-guardian-231586465188.us-central1.run.app/api/runtime-config" -Headers $headers
+```
+
+Browser workflow:
+
+- open a protected page
+- submit token through `/auth/admin`
+- app stores an HttpOnly cookie for same-origin operator access
+
 ## Windows PowerShell Setup
 
 Use a writable local config directory or `gcloud` will fail on credentials/log writes.

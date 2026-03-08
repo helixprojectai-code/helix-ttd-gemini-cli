@@ -118,6 +118,7 @@ python helix_code/live_demo_server.py
 - Runtime verification endpoint: `GET /api/runtime-config`
 - Audit dashboard endpoints: `GET /audit-dashboard` and `GET /api/audit-dashboard`
 - Optional operator auth: `HELIX_ADMIN_TOKEN` for runtime, security, dashboard, and receipt surfaces
+- Recommended production operator posture: set `HELIX_ADMIN_TOKEN` and `HELIX_ENFORCE_ADMIN_TOKEN=true`
 - Optional durable receipt envs: `HELIX_RECEIPT_PERSISTENCE`, `HELIX_RECEIPT_STORE_PATH`, `GCS_RECEIPT_BUCKET`
 - Recommended production receipt mode: `HELIX_RECEIPT_PERSISTENCE=dual` with a dedicated `GCS_RECEIPT_BUCKET`
 - Production restart test verified receipt survival across Cloud Run revisions on `2026-03-08`
