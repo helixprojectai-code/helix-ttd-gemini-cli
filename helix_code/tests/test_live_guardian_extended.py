@@ -264,7 +264,9 @@ class TestProtectedOperationalEndpoints:
             )
             assert response.status_code == 200
 
-    def test_runtime_config_returns_503_when_admin_enforced_without_token(self, monkeypatch) -> None:
+    def test_runtime_config_returns_503_when_admin_enforced_without_token(
+        self, monkeypatch
+    ) -> None:
         """[FACT] Enforced admin mode fails closed when the token is missing."""
         monkeypatch.delenv("HELIX_ADMIN_TOKEN", raising=False)
         monkeypatch.setenv("HELIX_ENFORCE_ADMIN_TOKEN", "true")
@@ -273,7 +275,9 @@ class TestProtectedOperationalEndpoints:
             response = client.get("/api/runtime-config")
             assert response.status_code == 503
 
-    def test_protected_html_returns_503_when_admin_enforced_without_token(self, monkeypatch) -> None:
+    def test_protected_html_returns_503_when_admin_enforced_without_token(
+        self, monkeypatch
+    ) -> None:
         """[FACT] Protected HTML surfaces fail closed when admin auth is enforced but unset."""
         monkeypatch.delenv("HELIX_ADMIN_TOKEN", raising=False)
         monkeypatch.setenv("HELIX_ENFORCE_ADMIN_TOKEN", "true")
