@@ -208,3 +208,45 @@ class TestAuditDashboardEndpoint:
             assert response.status_code == 200
             assert "text/html" in response.headers["content-type"]
             assert "Audit Trail Dashboard" in response.text
+
+
+class TestProtectedOperationalEndpoints:
+    """[FACT] Test admin token protection for operational surfaces."""
+
+    def test_runtime_config_requires_admin_token(self, monkeypatch) -> None:
+        """[FACT] Runtime config rejects unauthenticated requests when token is set."""
+        monkeypatch.setenv("HELIX_ADMIN_TOKEN", "secret-token")
+
+        with TestClient(app) as client:
+            response = client.get("/api/runtime-config")
+            assert response.status_code == 401
+
+    def test_runtime_config_accepts_bearer_admin_token(self, monkeypatch) -> None:
+        """[FACT] Runtime config accepts bearer authorization."""
+        monkeypatch.setenv("HELIX_ADMIN_TOKEN", "secret-token")
+
+        with TestClient(app) as client:
+            response = client.get(
+                "/api/runtime-config",
+                headers={"Authorization": "Bearer secret-token"},
+            )
+            assert response.status_code == 200
+
+    def test_audit_dashboard_page_accepts_query_token(self, monkeypatch) -> None:
+        """[FACT] Dashboard page accepts query-param token for operator access."""
+        monkeypatch.setenv("HELIX_ADMIN_TOKEN", "secret-token")
+
+        with TestClient(app) as client:
+            response = client.get("/audit-dashboard?token=secret-token")
+            assert response.status_code == 200
+
+    def test_receipts_api_accepts_custom_admin_header(self, monkeypatch) -> None:
+        """[FACT] Receipts API accepts custom admin header."""
+        monkeypatch.setenv("HELIX_ADMIN_TOKEN", "secret-token")
+
+        with TestClient(app) as client:
+            response = client.get(
+                "/api/receipts",
+                headers={"X-Helix-Admin-Token": "secret-token"},
+            )
+            assert response.status_code == 200

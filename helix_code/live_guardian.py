@@ -27,7 +27,7 @@ import uvicorn
 # [FACT] Import Helix-TTD core modules
 from constitutional_compliance import ConstitutionalCompliance
 from drift_telemetry import DriftTelemetry
-from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, HTTPException, Request, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse, JSONResponse
 from federation_receipts import FederationReceiptManager
@@ -121,6 +121,7 @@ def _runtime_config_snapshot() -> dict[str, Any]:
         "auth": {
             "audio_audit_token_required": bool(os.getenv("AUDIO_AUDIT_TOKEN", "").strip()),
             "audio_audit_allowed_origins": allowed_origins,
+            "admin_token_required": bool(os.getenv("HELIX_ADMIN_TOKEN", "").strip()),
         },
         "limits": {
             "max_audio_chunk_bytes": int(os.getenv("HELIX_MAX_AUDIO_CHUNK_BYTES", "131072")),
@@ -181,6 +182,30 @@ def _audit_dashboard_snapshot(limit: int = 50) -> dict[str, Any]:
             for r in recent_receipts
         ],
     }
+
+
+def _extract_admin_token(request: Request) -> str:
+    """[FACT] Accept admin auth via bearer token, custom header, or query param."""
+    auth_header = (request.headers.get("authorization") or "").strip()
+    if auth_header.lower().startswith("bearer "):
+        return auth_header[7:].strip()
+
+    header_token = (request.headers.get("x-helix-admin-token") or "").strip()
+    if header_token:
+        return header_token
+
+    return (request.query_params.get("token") or "").strip()
+
+
+def _require_admin_token(request: Request) -> None:
+    """[FACT] Enforce optional admin token on protected operational endpoints."""
+    required_token = os.getenv("HELIX_ADMIN_TOKEN", "").strip()
+    if not required_token:
+        return
+
+    provided_token = _extract_admin_token(request)
+    if provided_token != required_token:
+        raise HTTPException(status_code=401, detail="Admin token required")
 
 
 @app.on_event("startup")
@@ -266,20 +291,23 @@ async def gemini_status() -> JSONResponse:
 
 
 @app.get("/api/runtime-config")
-async def runtime_config() -> JSONResponse:
+async def runtime_config(request: Request) -> JSONResponse:
     """[FACT] Expose effective runtime config (non-secret) for deploy verification."""
+    _require_admin_token(request)
     return JSONResponse(status_code=200, content=_runtime_config_snapshot())
 
 
 @app.get("/api/security-transparency")
-async def security_transparency_api() -> JSONResponse:
+async def security_transparency_api(request: Request) -> JSONResponse:
     """[FACT] Machine-readable security transparency snapshot."""
+    _require_admin_token(request)
     return JSONResponse(status_code=200, content=_security_transparency_snapshot())
 
 
 @app.get("/security-transparency", response_class=HTMLResponse)
-async def security_transparency_page() -> HTMLResponse:
+async def security_transparency_page(request: Request) -> HTMLResponse:
     """[FACT] Public page exposing security posture and latest scan timestamp."""
+    _require_admin_token(request)
     snapshot = _security_transparency_snapshot()
     checks_html = "".join(
         f"<li><strong>{name}</strong>: {status}</li>" for name, status in snapshot["checks"].items()
@@ -325,14 +353,16 @@ async def security_transparency_page() -> HTMLResponse:
 
 
 @app.get("/api/audit-dashboard")
-async def audit_dashboard_api(limit: int = 50) -> JSONResponse:
+async def audit_dashboard_api(request: Request, limit: int = 50) -> JSONResponse:
     """[FACT] Machine-readable audit dashboard snapshot for enterprise reporting."""
+    _require_admin_token(request)
     return JSONResponse(status_code=200, content=_audit_dashboard_snapshot(limit=limit))
 
 
 @app.get("/audit-dashboard", response_class=HTMLResponse)
-async def audit_dashboard_page() -> HTMLResponse:
+async def audit_dashboard_page(request: Request) -> HTMLResponse:
     """[FACT] Human-friendly audit trail dashboard for compliance review."""
+    _require_admin_token(request)
     html = """
     <!DOCTYPE html>
     <html lang='en'>
@@ -527,8 +557,9 @@ async def demo_websocket(websocket: WebSocket) -> None:
 
 
 @app.get("/api/receipts")
-async def get_receipts(limit: int = 50) -> dict[str, Any]:
+async def get_receipts(request: Request, limit: int = 50) -> dict[str, Any]:
     """[FACT] API endpoint for demo receipt explorer retrieval."""
+    _require_admin_token(request)
     from live_demo_server import receipt_store
 
     receipts = receipt_store.get_all()
@@ -549,8 +580,9 @@ async def get_receipts(limit: int = 50) -> dict[str, Any]:
 
 
 @app.get("/api/receipts/{receipt_id}")
-async def get_receipt(receipt_id: str) -> dict[str, Any]:
+async def get_receipt(receipt_id: str, request: Request) -> dict[str, Any]:
     """[FACT] API endpoint for specific receipt detail and verification."""
+    _require_admin_token(request)
     from live_demo_server import receipt_store
 
     receipt = receipt_store.get_by_id(receipt_id)
