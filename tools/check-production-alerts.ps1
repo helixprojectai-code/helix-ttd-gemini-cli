@@ -2,6 +2,7 @@ param(
     [string]$ServiceUrl = "https://constitutional-guardian-231586465188.us-central1.run.app",
     [string]$AdminToken = "",
     [string]$StateFile = "",
+    [string]$JsonOutput = "",
     [int]$StateRetentionHours = 24,
     [int]$ArtifactGraceMinutes = 30,
     [switch]$FailOnWarning
@@ -66,6 +67,46 @@ function Add-Result {
         Passed = $Passed
         Details = $Details
     })
+}
+
+function Write-AlertSummary {
+    param(
+        [string]$OutputPath,
+        [datetime]$EvaluatedAt,
+        [string]$BaseUrl,
+        [string]$OverallStatus,
+        [string]$ArtifactStatus = 'missing',
+        [string]$ArtifactImage = 'missing',
+        [string]$StorageBackend = 'missing',
+        [string]$StorageMode = 'missing',
+        [object[]]$PageFailures = @(),
+        [object[]]$WarnFailures = @(),
+        [object[]]$Checks = @()
+    )
+
+    if (-not $OutputPath) {
+        return
+    }
+
+    $jsonDir = Split-Path -Path $OutputPath -Parent
+    if ($jsonDir) {
+        New-Item -ItemType Directory -Path $jsonDir -Force | Out-Null
+    }
+
+    $summary = [pscustomobject]@{
+        evaluated_at = $EvaluatedAt.ToString('o')
+        service_url = $BaseUrl
+        overall_status = $OverallStatus
+        artifact_status = $ArtifactStatus
+        artifact_image = $ArtifactImage
+        storage_backend = $StorageBackend
+        storage_mode = $StorageMode
+        page_failures = @($PageFailures)
+        warn_failures = @($WarnFailures)
+        checks = @($Checks)
+    }
+
+    $summary | ConvertTo-Json -Depth 8 | Set-Content -Path $OutputPath -Encoding UTF8
 }
 
 function Parse-PrometheusLabels {
@@ -234,6 +275,7 @@ $metricsResponse = Invoke-HelixText -Url "$baseUrl/metrics" -Headers $headers
 if ($metricsResponse.StatusCode -ne 200) {
     Add-Result -Results $results -Name 'metrics-scrape' -Severity 'page' -Passed $false -Details "status=$($metricsResponse.StatusCode)"
     $results | Format-Table -AutoSize | Out-String | Write-Host
+    Write-AlertSummary -OutputPath $JsonOutput -EvaluatedAt $now -BaseUrl $baseUrl -OverallStatus 'page' -PageFailures @($results) -Checks @($results)
     exit 1
 }
 
@@ -241,6 +283,7 @@ $securityResponse = Invoke-HelixJson -Url "$baseUrl/api/security-transparency" -
 if ($securityResponse.StatusCode -ne 200) {
     Add-Result -Results $results -Name 'security-transparency' -Severity 'page' -Passed $false -Details "status=$($securityResponse.StatusCode)"
     $results | Format-Table -AutoSize | Out-String | Write-Host
+    Write-AlertSummary -OutputPath $JsonOutput -EvaluatedAt $now -BaseUrl $baseUrl -OverallStatus 'page' -PageFailures @($results) -Checks @($results)
     exit 1
 }
 
@@ -332,13 +375,42 @@ $results | Format-Table -AutoSize | Out-String | Write-Host
 
 $pageFailures = @($results | Where-Object { -not $_.Passed -and $_.Severity -eq 'page' })
 $warnFailures = @($results | Where-Object { -not $_.Passed -and $_.Severity -eq 'warn' })
+$exitCode = 0
+$overallStatus = 'pass'
 
 if ($pageFailures.Count -gt 0) {
+    $exitCode = 1
+    $overallStatus = 'page'
+}
+elseif ($FailOnWarning -and $warnFailures.Count -gt 0) {
+    $exitCode = 2
+    $overallStatus = 'warn'
+}
+elseif ($warnFailures.Count -gt 0) {
+    $overallStatus = 'warn'
+}
+
+$summary = [pscustomobject]@{
+    evaluated_at = $now.ToString('o')
+    service_url = $baseUrl
+    overall_status = $overallStatus
+    artifact_status = $artifactStatus
+    artifact_image = $artifactImage
+    storage_backend = $storageBackend
+    storage_mode = $storageMode
+    page_failures = @($pageFailures)
+    warn_failures = @($warnFailures)
+    checks = @($results)
+}
+
+Write-AlertSummary -OutputPath $JsonOutput -EvaluatedAt $now -BaseUrl $baseUrl -OverallStatus $overallStatus -ArtifactStatus $artifactStatus -ArtifactImage $artifactImage -StorageBackend $storageBackend -StorageMode $storageMode -PageFailures @($pageFailures) -WarnFailures @($warnFailures) -Checks @($results)
+
+if ($exitCode -eq 1) {
     Write-Host "Production alert check failed with page-level findings." -ForegroundColor Red
     exit 1
 }
 
-if ($FailOnWarning -and $warnFailures.Count -gt 0) {
+if ($exitCode -eq 2) {
     Write-Host "Production alert check failed with warning-level findings." -ForegroundColor Yellow
     exit 2
 }

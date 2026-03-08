@@ -290,6 +290,31 @@ Recommended schedule:
 - every 5 minutes for production polling
 - keep the same state file path across runs so burst detection works
 
+Repo-managed schedule:
+
+- `.github/workflows/production-alert-check.yml`
+
+This workflow:
+
+- authenticates with the existing GitHub deploy identity
+- restores the prior checker state from `gs://helix-ai-deploy-receipts/ops/production-alert-state.json`
+- runs `tools/check-production-alerts.ps1`
+- publishes the JSON summary to Cloud Logging under `helix-production-alerts`
+- writes the updated state file back to GCS so burst detection survives runner resets
+
+Prerequisites:
+
+- repo secret: `HELIX_ADMIN_TOKEN`
+- deploy identity access to:
+  - `gs://helix-ai-deploy-receipts/ops/production-alert-state.json`
+  - Cloud Logging write
+
+Publisher helper:
+
+- `tools/publish-monitoring-snapshot.py`
+
+This reads the alert checker JSON summary and emits a structured Cloud Logging entry keyed by the current overall status.
+
 ## Deployment Verification Script
 
 A single-reference verification helper is available at:
