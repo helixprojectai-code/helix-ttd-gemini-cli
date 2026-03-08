@@ -128,6 +128,7 @@ class TestApiInfoEndpoint:
             assert data["node"] == "GCS-GUARDIAN"
             assert data["status"] == "RATIFIED"
             assert "endpoints" in data
+            assert data["endpoints"]["metrics"] == "/metrics"
 
 
 class TestRuntimeConfigEndpoint:
@@ -338,6 +339,38 @@ class TestProtectedOperationalEndpoints:
                 headers={"X-Helix-Admin-Token": "secret-token"},
             )
             assert response.status_code == 200
+
+    def test_metrics_requires_admin_token(self, monkeypatch) -> None:
+        """[FACT] Metrics export rejects unauthenticated requests when admin auth is enabled."""
+        monkeypatch.setenv("HELIX_ADMIN_TOKEN", "secret-token")
+
+        with TestClient(app) as client:
+            response = client.get("/metrics")
+            assert response.status_code == 401
+
+    def test_metrics_returns_prometheus_payload(self, monkeypatch) -> None:
+        """[FACT] Metrics export returns authenticated Prometheus text."""
+        monkeypatch.setenv("HELIX_ADMIN_TOKEN", "secret-token")
+        monkeypatch.setenv("SECURITY_ARTIFACT_ANALYSIS_STATUS", "clean")
+        monkeypatch.setenv(
+            "SECURITY_ARTIFACT_IMAGE_URI",
+            "us-central1-docker.pkg.dev/helix-ai-deploy/helix-repo/constitutional-guardian@sha256:test",
+        )
+
+        with TestClient(app) as client:
+            response = client.get(
+                "/metrics",
+                headers={"X-Helix-Admin-Token": "secret-token"},
+            )
+
+        assert response.status_code == 200
+        assert "text/plain" in response.headers["content-type"]
+        assert "helix_requests_total" in response.text
+        assert "helix_receipt_storage_backend" in response.text
+        assert (
+            'helix_artifact_analysis_state{image_uri="us-central1-docker.pkg.dev/helix-ai-deploy/helix-repo/constitutional-guardian@sha256:test",status="clean"} 1'
+            in response.text
+        )
 
     def test_runtime_config_returns_503_when_admin_enforced_without_token(
         self, monkeypatch

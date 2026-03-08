@@ -25,6 +25,7 @@ This project is a submission for the **Gemini Live Agent Challenge (March 2026)*
 - **Durable Receipt Persistence:** Validation receipts can persist to local JSONL storage and optionally archive/restore through GCS.
 - **Audit Dashboard:** Dedicated `/audit-dashboard` and `/api/audit-dashboard` surfaces now expose compliance and storage telemetry for operators.
 - **Artifact Analysis Visibility:** Security transparency surfaces can now show verified image scan status, scan timestamp, and image digest.
+- **Authenticated Observability:** Prometheus-style `/metrics` export is available behind operator auth for production scraping and post-deploy verification.
 
 ## 🚀 Key Features
 
@@ -126,6 +127,7 @@ python helix_code/live_demo_server.py
 - Production restart test verified receipt survival across Cloud Run revisions on `2026-03-08`
 - Optional security transparency envs: `SECURITY_ARTIFACT_ANALYSIS_STATUS`, `SECURITY_ARTIFACT_ANALYSIS_TIMESTAMP`, `SECURITY_ARTIFACT_IMAGE_URI`
 - Deployment verification helper: `powershell -ExecutionPolicy Bypass -File tools/verify-production-deploy.ps1 [-AdminToken <token>]`
+- Authenticated metrics endpoint: `GET /metrics` using bearer token, `X-Helix-Admin-Token`, or the operator session cookie
 - Deployment automation preserves optional operator secret bindings by using secret updates rather than replacing the full secret set
 
 **How to Use:**
@@ -152,6 +154,9 @@ curl http://localhost:8180/api/audit-dashboard
 
 # Inspect security transparency metadata
 curl http://localhost:8180/api/security-transparency
+
+# Scrape authenticated Prometheus-style metrics
+curl -H "X-Helix-Admin-Token: $env:HELIX_ADMIN_TOKEN" http://localhost:8180/metrics
 ```
 
 **Current security verification record:** `RELEASE_NOTES_v1.4.6.md` and `SECURITY_VERIFICATION_2026-03-08.md` capture the March 8, 2026 clean Artifact Analysis result for the live Cloud Run digest.

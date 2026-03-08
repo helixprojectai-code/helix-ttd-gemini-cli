@@ -209,6 +209,39 @@ Expected behavior:
 - over-limit audio ingress attempts close with WebSocket `1013` (try again later)
 - `/api/runtime-config` reflects the active rate-limit window and budget values
 
+## Authenticated Observability
+
+The Guardian now exposes a Prometheus-style `/metrics` endpoint behind operator auth. This keeps operational telemetry available for scraping without making compliance or deployment metadata public.
+
+Coverage includes:
+
+- request, receipt, intervention, and error counts
+- latency averages and percentiles
+- drift category totals
+- voice-pipeline event totals
+- receipt backend status
+- artifact verification state
+- active rate-limit configuration
+
+Example scrape with header auth:
+
+```powershell
+$headers = @{ "X-Helix-Admin-Token" = $ADMIN_TOKEN }
+Invoke-WebRequest "https://constitutional-guardian-231586465188.us-central1.run.app/metrics" -Headers $headers
+```
+
+Expected behavior:
+
+- unauthenticated requests return `401` when operator auth is configured
+- authenticated requests return Prometheus exposition text
+- the artifact verification line should show the current live digest and `status="clean"` only after manual verification
+
+Recommended usage:
+
+- treat `/metrics` as an operator-only surface
+- keep scraping same-origin or behind your trusted monitoring path
+- use `tools/verify-production-deploy.ps1 -AdminToken $ADMIN_TOKEN -RequireCleanArtifact` after a manual verification cycle
+
 ## Deployment Verification Script
 
 A single-reference verification helper is available at:

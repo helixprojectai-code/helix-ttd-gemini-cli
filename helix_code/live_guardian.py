@@ -33,7 +33,7 @@ from constitutional_compliance import ConstitutionalCompliance
 from drift_telemetry import DriftTelemetry
 from fastapi import FastAPI, HTTPException, Request, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
+from fastapi.responses import HTMLResponse, JSONResponse, PlainTextResponse, RedirectResponse
 from federation_receipts import FederationReceiptManager
 from gemini_text_client import create_gemini_text_client
 
@@ -521,6 +521,186 @@ def _audit_dashboard_snapshot(limit: int = 50) -> dict[str, Any]:
     }
 
 
+def _prometheus_label_value(value: Any) -> str:
+    """[FACT] Escape metric label values for Prometheus text exposition."""
+    return str(value).replace("\\", "\\\\").replace('"', '\\"').replace("\n", "\\n")
+
+
+def _prometheus_metric(
+    name: str,
+    value: int | float,
+    *,
+    labels: dict[str, Any] | None = None,
+) -> str:
+    """[FACT] Format a single Prometheus metric sample."""
+    if labels:
+        rendered = ",".join(
+            f'{key}="{_prometheus_label_value(label_value)}"'
+            for key, label_value in sorted(labels.items())
+        )
+        return f"{name}{{{rendered}}} {value}"
+    return f"{name} {value}"
+
+
+def _metrics_snapshot_text() -> str:
+    """[FACT] Export authenticated operational telemetry in Prometheus text format."""
+    runtime = _runtime_config_snapshot()
+    audit = _audit_dashboard_snapshot(limit=50)
+    security = _security_transparency_snapshot()
+    metrics_data = audit["metrics"]
+    receipt_data = audit["receipts"]
+    voice_pipe = metrics_data["voice_pipe"]
+    categories = metrics_data["categories"]
+    artifact = security["artifact_analysis"]
+    storage = audit["storage"]
+
+    lines = [
+        "# HELP helix_requests_total Total validated/demo requests processed by the guardian.",
+        "# TYPE helix_requests_total counter",
+        _prometheus_metric("helix_requests_total", metrics_data["request_count"]),
+        "# HELP helix_receipts_total Total receipts currently retained by the audit store.",
+        "# TYPE helix_receipts_total gauge",
+        _prometheus_metric("helix_receipts_total", receipt_data["total"]),
+        "# HELP helix_receipts_valid_total Total valid receipts retained by the audit store.",
+        "# TYPE helix_receipts_valid_total gauge",
+        _prometheus_metric("helix_receipts_valid_total", receipt_data["valid"]),
+        "# HELP helix_receipts_interventions_total Total intervention receipts retained by the audit store.",
+        "# TYPE helix_receipts_interventions_total gauge",
+        _prometheus_metric("helix_receipts_interventions_total", receipt_data["interventions"]),
+        "# HELP helix_compliance_rate Compliance rate percentage over retained receipts.",
+        "# TYPE helix_compliance_rate gauge",
+        _prometheus_metric("helix_compliance_rate", receipt_data["compliance_rate"]),
+        "# HELP helix_errors_total Total runtime errors recorded by the guardian demo metrics.",
+        "# TYPE helix_errors_total counter",
+        _prometheus_metric("helix_errors_total", metrics_data["error_count"]),
+        "# HELP helix_latency_average_milliseconds Average response latency in milliseconds.",
+        "# TYPE helix_latency_average_milliseconds gauge",
+        _prometheus_metric("helix_latency_average_milliseconds", metrics_data["latency_avg"]),
+        "# HELP helix_latency_percentile_milliseconds Response latency percentile in milliseconds.",
+        "# TYPE helix_latency_percentile_milliseconds gauge",
+        _prometheus_metric(
+            "helix_latency_percentile_milliseconds",
+            metrics_data["latency_p50"],
+            labels={"percentile": "50"},
+        ),
+        _prometheus_metric(
+            "helix_latency_percentile_milliseconds",
+            metrics_data["latency_p95"],
+            labels={"percentile": "95"},
+        ),
+        _prometheus_metric(
+            "helix_latency_percentile_milliseconds",
+            metrics_data["latency_p99"],
+            labels={"percentile": "99"},
+        ),
+        "# HELP helix_uptime_seconds Guardian process uptime in seconds.",
+        "# TYPE helix_uptime_seconds gauge",
+        _prometheus_metric("helix_uptime_seconds", metrics_data["uptime_seconds"]),
+        "# HELP helix_operator_auth_enforced Whether operator auth enforcement is active.",
+        "# TYPE helix_operator_auth_enforced gauge",
+        _prometheus_metric(
+            "helix_operator_auth_enforced",
+            1 if runtime["auth"]["admin_token_enforced"] else 0,
+        ),
+        "# HELP helix_guardian_origin_enforced Whether Guardian WebSocket origin enforcement is active.",
+        "# TYPE helix_guardian_origin_enforced gauge",
+        _prometheus_metric(
+            "helix_guardian_origin_enforced",
+            1 if runtime["auth"]["guardian_origin_enforced"] else 0,
+        ),
+        "# HELP helix_receipt_storage_enabled Whether durable receipt storage is active.",
+        "# TYPE helix_receipt_storage_enabled gauge",
+        _prometheus_metric("helix_receipt_storage_enabled", 1 if storage["enabled"] else 0),
+        "# HELP helix_receipt_storage_backend Active receipt storage backend and mode.",
+        "# TYPE helix_receipt_storage_backend gauge",
+        _prometheus_metric(
+            "helix_receipt_storage_backend",
+            1,
+            labels={"backend": storage["backend"], "mode": storage["mode"]},
+        ),
+        "# HELP helix_artifact_analysis_state Artifact verification state for the current live image.",
+        "# TYPE helix_artifact_analysis_state gauge",
+        _prometheus_metric(
+            "helix_artifact_analysis_state",
+            1,
+            labels={"status": artifact["status"], "image_uri": artifact["image_uri"]},
+        ),
+        "# HELP helix_rate_limit_config Current configured rate-limit budget values.",
+        "# TYPE helix_rate_limit_config gauge",
+        _prometheus_metric(
+            "helix_rate_limit_config",
+            runtime["limits"]["operator_rate_limit_max_requests"],
+            labels={"scope": "operator", "kind": "max_requests"},
+        ),
+        _prometheus_metric(
+            "helix_rate_limit_config",
+            runtime["limits"]["operator_rate_limit_window_seconds"],
+            labels={"scope": "operator", "kind": "window_seconds"},
+        ),
+        _prometheus_metric(
+            "helix_rate_limit_config",
+            runtime["limits"]["auth_rate_limit_max_attempts"],
+            labels={"scope": "auth", "kind": "max_attempts"},
+        ),
+        _prometheus_metric(
+            "helix_rate_limit_config",
+            runtime["limits"]["auth_rate_limit_window_seconds"],
+            labels={"scope": "auth", "kind": "window_seconds"},
+        ),
+        _prometheus_metric(
+            "helix_rate_limit_config",
+            runtime["limits"]["audio_ingress_max_connections"],
+            labels={"scope": "audio_ingress", "kind": "max_connections"},
+        ),
+        _prometheus_metric(
+            "helix_rate_limit_config",
+            runtime["limits"]["audio_ingress_rate_limit_window_seconds"],
+            labels={"scope": "audio_ingress", "kind": "window_seconds"},
+        ),
+        "# HELP helix_drift_category_total Total receipts/interventions by constitutional category.",
+        "# TYPE helix_drift_category_total gauge",
+    ]
+
+    lines.extend(
+        _prometheus_metric(
+            "helix_drift_category_total",
+            count,
+            labels={"category": category},
+        )
+        for category, count in sorted(categories.items())
+    )
+    lines.extend(
+        [
+            "# HELP helix_voice_pipe_events_total Total voice-pipeline lifecycle events.",
+            "# TYPE helix_voice_pipe_events_total counter",
+        ]
+    )
+    lines.extend(
+        _prometheus_metric(
+            "helix_voice_pipe_events_total",
+            count,
+            labels={"event": event_name.removesuffix("_count")},
+        )
+        for event_name, count in sorted(voice_pipe.items())
+    )
+    lines.extend(
+        [
+            "# HELP helix_drift_events_total Total retained receipts by drift code.",
+            "# TYPE helix_drift_events_total gauge",
+        ]
+    )
+    lines.extend(
+        _prometheus_metric(
+            "helix_drift_events_total",
+            count,
+            labels={"drift_code": drift_code},
+        )
+        for drift_code, count in sorted(audit["drift_counts"].items())
+    )
+
+    return "\n".join(lines) + "\n"
+
+
 @app.get("/health")
 async def health_check() -> JSONResponse:
     """[FACT] Cloud Run health check endpoint for node status."""
@@ -591,6 +771,7 @@ async def api_info() -> JSONResponse:
                 "security_transparency_api": "/api/security-transparency",
                 "audit_dashboard": "/audit-dashboard",
                 "audit_dashboard_api": "/api/audit-dashboard",
+                "metrics": "/metrics",
             },
         },
     )
@@ -693,6 +874,17 @@ async def audit_dashboard_api(request: Request, limit: int = 50) -> JSONResponse
     _enforce_operator_rate_limit(request)
     _require_admin_token(request)
     return JSONResponse(status_code=200, content=_audit_dashboard_snapshot(limit=limit))
+
+
+@app.get("/metrics", response_class=PlainTextResponse)
+async def prometheus_metrics(request: Request) -> PlainTextResponse:
+    """[FACT] Authenticated Prometheus-style metrics for production observability."""
+    _enforce_operator_rate_limit(request)
+    _require_admin_token(request)
+    return PlainTextResponse(
+        content=_metrics_snapshot_text(),
+        media_type="text/plain; version=0.0.4; charset=utf-8",
+    )
 
 
 @app.get("/audit-dashboard", response_class=HTMLResponse)
