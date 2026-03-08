@@ -28,7 +28,26 @@ def test_receipt_store() -> None:
     receipt_result = store.get_by_id("r1")
     assert receipt_result is not None
     assert receipt_result.content == "[FACT] Test"
-    assert store.get_stats()["total"] == 1
+    stats = store.get_stats()
+    assert stats["total"] == 1
+    assert stats["backend"] == "memory"
+
+
+def test_receipt_store_local_restore(monkeypatch, tmp_path) -> None:
+    """[FACT] Receipt store restores persisted entries from local JSONL ledger."""
+    ledger_path = tmp_path / "receipt-store.jsonl"
+    monkeypatch.setenv("HELIX_RECEIPT_PERSISTENCE", "local")
+    monkeypatch.setenv("HELIX_RECEIPT_STORE_PATH", str(ledger_path))
+
+    store = ReceiptStore(max_receipts=5)
+    store.add(Receipt("persisted", "2026-03-05T10:00:00", "[FACT] Persisted", True))
+
+    restored_store = ReceiptStore(max_receipts=5)
+    restored = restored_store.get_by_id("persisted")
+
+    assert restored is not None
+    assert restored.content == "[FACT] Persisted"
+    assert restored_store.get_stats()["enabled"] is True
 
 
 def test_receipt_store_overflow() -> None:

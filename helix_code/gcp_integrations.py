@@ -207,6 +207,23 @@ class CloudStorageReceipts:
 
         return None
 
+    def list_receipts(self, limit: int | None = None) -> list[dict[str, Any]]:
+        """[FACT] List receipt payloads from GCS, newest first by object update time."""
+        if not self.client:
+            return []
+
+        blobs = list(self.client.list_blobs(self.bucket_name, prefix="receipts/"))
+        blobs.sort(key=lambda blob: blob.updated or datetime.min)
+        if limit is not None:
+            blobs = blobs[-max(limit, 0) :]
+
+        receipts: list[dict[str, Any]] = []
+        for blob in blobs:
+            data = blob.download_as_string()
+            receipts.append(cast(dict[str, Any], json.loads(data)))
+
+        return receipts
+
     def _local_fallback_store(self, receipt_id: str, receipt_data: dict) -> str:
         """[FACT] Local filesystem fallback for development."""
         import os

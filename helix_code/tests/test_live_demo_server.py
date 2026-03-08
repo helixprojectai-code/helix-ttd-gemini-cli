@@ -145,6 +145,25 @@ class TestReceiptStore:
 
         stats = store.get_stats()
         assert stats["total"] == 1
+        assert stats["backend"] == "memory"
+        assert stats["enabled"] is False
+
+    def test_receipt_store_local_persistence_round_trip(self, monkeypatch, tmp_path) -> None:
+        """[FACT] Local receipt persistence restores recent receipts across store instances."""
+        ledger_path = tmp_path / "receipts.jsonl"
+        monkeypatch.setenv("HELIX_RECEIPT_PERSISTENCE", "local")
+        monkeypatch.setenv("HELIX_RECEIPT_STORE_PATH", str(ledger_path))
+
+        store = ReceiptStore(max_receipts=10)
+        store.add(Receipt("persisted", "2024-01-01", "Saved", True, None, "s1"))
+
+        restored_store = ReceiptStore(max_receipts=10)
+        restored = restored_store.get_by_id("persisted")
+
+        assert restored is not None
+        assert restored.content == "Saved"
+        assert restored_store.get_stats()["backend"] == "local"
+        assert ledger_path.exists()
 
     def test_receipt_store_overflow(self) -> None:
         """[FACT] Removes oldest when exceeding max size."""

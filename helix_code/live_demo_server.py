@@ -10,8 +10,11 @@ import logging
 import os
 import time
 from collections import deque
-from dataclasses import dataclass, field
+from dataclasses import asdict, dataclass, field
 from datetime import datetime
+from pathlib import Path
+from tempfile import gettempdir
+from typing import Any
 from uuid import uuid4
 
 # [FACT] Import our Helix modules
@@ -24,8 +27,10 @@ from gemini_live_bridge import create_gemini_bridge
 from gemini_text_client import GeminiTextClient, create_gemini_text_client
 
 try:
+    from gcp_integrations import CloudStorageReceipts
     from secret_resolver import gemini_secret_cache_key
 except ImportError:  # pragma: no cover
+    from .gcp_integrations import CloudStorageReceipts
     from .secret_resolver import gemini_secret_cache_key
 
 # [FACT] Configure logging
@@ -164,36 +169,218 @@ class Receipt:
     drift_code: str | None = None
     session_id: str = ""
 
+    def to_dict(self) -> dict[str, Any]:
+        """[FACT] Serialize receipt for durable storage backends."""
+        return asdict(self)
+
+    @classmethod
+    def from_dict(cls, payload: dict[str, Any]) -> "Receipt":
+        """[FACT] Rehydrate receipt payloads from durable storage."""
+        return cls(
+            receipt_id=str(payload.get("receipt_id", "")),
+            timestamp=str(payload.get("timestamp", "")),
+            content=str(payload.get("content", "")),
+            valid=bool(payload.get("valid", False)),
+            drift_code=payload.get("drift_code"),
+            session_id=str(payload.get("session_id", "")),
+        )
+
+
+def _default_local_receipt_path() -> Path:
+    """[FACT] Resolve cross-platform local receipt ledger path."""
+    configured_path = (os.getenv("HELIX_RECEIPT_STORE_PATH", "") or "").strip()
+    if configured_path:
+        return Path(configured_path)
+    return Path(gettempdir()) / "helix-guardian" / "receipt-store.jsonl"
+
+
+class LocalReceiptLedger:
+    """[FACT] Append-only local JSONL ledger for receipt durability."""
+
+    def __init__(self, path: Path):
+        self.path = path
+
+    def append(self, receipt: Receipt) -> None:
+        """[FACT] Persist a single receipt to the local ledger."""
+        self.path.parent.mkdir(parents=True, exist_ok=True)
+        with self.path.open("a", encoding="utf-8") as handle:
+            handle.write(json.dumps(receipt.to_dict(), ensure_ascii=True) + "\n")
+
+    def load_recent(self, limit: int) -> list[Receipt]:
+        """[FACT] Load the newest persisted receipts from the local ledger."""
+        if not self.path.exists():
+            return []
+
+        with self.path.open(encoding="utf-8") as handle:
+            lines = deque((line.strip() for line in handle if line.strip()), maxlen=max(limit, 1))
+
+        return [Receipt.from_dict(json.loads(line)) for line in lines]
+
+    def get_by_id(self, receipt_id: str) -> Receipt | None:
+        """[FACT] Search the local ledger for a specific receipt identifier."""
+        if not self.path.exists():
+            return None
+
+        with self.path.open(encoding="utf-8") as handle:
+            lines = [line.strip() for line in handle if line.strip()]
+
+        for line in reversed(lines):
+            payload = json.loads(line)
+            if payload.get("receipt_id") == receipt_id:
+                return Receipt.from_dict(payload)
+
+        return None
+
+
+class ReceiptPersistenceManager:
+    """[FACT] Coordinate optional durable receipt backends for runtime restore and archival."""
+
+    def __init__(self, mode: str | None = None):
+        configured_mode = (
+            str(mode or os.getenv("HELIX_RECEIPT_PERSISTENCE", "auto") or "auto").strip().lower()
+        )
+        self.mode = configured_mode or "auto"
+        self.local_ledger: LocalReceiptLedger | None = None
+        self.gcs_archive: CloudStorageReceipts | None = None
+
+        gcs_bucket = (os.getenv("GCS_RECEIPT_BUCKET", "") or "").strip()
+        if self.mode in {"auto", "gcs", "dual"} and gcs_bucket:
+            archive = CloudStorageReceipts(gcs_bucket)
+            if archive.client:
+                self.gcs_archive = archive
+            else:
+                logger.warning(
+                    "[WARN] GCS receipt archive configured but unavailable; continuing without GCS"
+                )
+
+        local_enabled = self.mode in {"local", "dual"} or (
+            self.mode == "auto"
+            and (
+                bool((os.getenv("HELIX_RECEIPT_STORE_PATH", "") or "").strip())
+                or self.gcs_archive is not None
+            )
+        )
+        if local_enabled:
+            self.local_ledger = LocalReceiptLedger(_default_local_receipt_path())
+
+    @property
+    def backend_name(self) -> str:
+        """[FACT] Human-readable backend summary for operator diagnostics."""
+        if self.local_ledger and self.gcs_archive:
+            return "gcs+local"
+        if self.gcs_archive:
+            return "gcs"
+        if self.local_ledger:
+            return "local"
+        return "memory"
+
+    def is_enabled(self) -> bool:
+        """[FACT] True when any durable backend is active."""
+        return self.local_ledger is not None or self.gcs_archive is not None
+
+    def append(self, receipt: Receipt) -> None:
+        """[FACT] Persist receipt to all configured durable backends."""
+        if self.local_ledger is not None:
+            self.local_ledger.append(receipt)
+
+        if self.gcs_archive is not None:
+            self.gcs_archive.store_receipt(receipt.receipt_id, receipt.to_dict())
+
+    def load_recent(self, limit: int) -> list[Receipt]:
+        """[FACT] Restore the newest receipts from the highest-durability backend available."""
+        if self.gcs_archive is not None:
+            payloads = self.gcs_archive.list_receipts(limit=limit)
+            return [Receipt.from_dict(payload) for payload in payloads]
+
+        if self.local_ledger is not None:
+            return self.local_ledger.load_recent(limit)
+
+        return []
+
+    def get_by_id(self, receipt_id: str) -> Receipt | None:
+        """[FACT] Resolve a receipt from durable storage when not in memory."""
+        if self.local_ledger is not None:
+            receipt = self.local_ledger.get_by_id(receipt_id)
+            if receipt is not None:
+                return receipt
+
+        if self.gcs_archive is not None:
+            payload = self.gcs_archive.retrieve_receipt(receipt_id)
+            if payload is not None:
+                return Receipt.from_dict(payload)
+
+        return None
+
+    def stats(self) -> dict[str, Any]:
+        """[FACT] Return persistence diagnostics for runtime and audit surfaces."""
+        return {
+            "enabled": self.is_enabled(),
+            "backend": self.backend_name,
+            "mode": self.mode,
+            "local_path": str(self.local_ledger.path) if self.local_ledger is not None else None,
+            "gcs_bucket": self.gcs_archive.bucket_name if self.gcs_archive is not None else None,
+        }
+
 
 class ReceiptStore:
-    """[FACT] In-memory store for validation receipts."""
+    """[FACT] Receipt store with optional durable persistence backends."""
 
-    def __init__(self, max_receipts: int = 1000):
-        """[FACT] Initialize store with a maximum receipt limit."""
-        self.receipts: deque = deque(maxlen=max_receipts)
+    def __init__(
+        self, max_receipts: int = 1000, persistence: ReceiptPersistenceManager | None = None
+    ):
+        """[FACT] Initialize store with memory cache and optional durable backing store."""
+        self.receipts: deque[Receipt] = deque(maxlen=max_receipts)
         self.receipts_by_id: dict[str, Receipt] = {}
+        self.persistence = persistence or ReceiptPersistenceManager()
+        self._restore_recent_receipts()
 
-    def add(self, receipt: Receipt) -> None:
-        """[FACT] Add a receipt to the store and prune if overflowing."""
+    def _cache_receipt(self, receipt: Receipt) -> None:
+        """[FACT] Cache receipt in memory and prune the oldest mapping on overflow."""
         if self.receipts.maxlen is not None and len(self.receipts) >= self.receipts.maxlen:
-            # Remove oldest from mapping
             oldest = self.receipts[0]
             self.receipts_by_id.pop(oldest.receipt_id, None)
 
         self.receipts.append(receipt)
         self.receipts_by_id[receipt.receipt_id] = receipt
 
-    def get_all(self) -> list:
+    def _restore_recent_receipts(self) -> None:
+        """[FACT] Hydrate memory cache from durable storage on startup."""
+        if not self.persistence.is_enabled():
+            return
+
+        limit = self.receipts.maxlen or 1000
+        for receipt in self.persistence.load_recent(limit):
+            self._cache_receipt(receipt)
+
+    def add(self, receipt: Receipt) -> None:
+        """[FACT] Add a receipt to memory and durable storage."""
+        self._cache_receipt(receipt)
+        if self.persistence.is_enabled():
+            self.persistence.append(receipt)
+
+    def get_all(self) -> list[Receipt]:
         """[FACT] Retrieve all stored receipts."""
         return list(self.receipts)
 
     def get_by_id(self, receipt_id: str) -> Receipt | None:
-        """[FACT] Retrieve a specific receipt by ID."""
-        return self.receipts_by_id.get(receipt_id)
+        """[FACT] Retrieve a specific receipt by ID, falling back to persistence if needed."""
+        cached = self.receipts_by_id.get(receipt_id)
+        if cached is not None:
+            return cached
 
-    def get_stats(self) -> dict:
-        """[FACT] Get storage statistics."""
-        return {"total": len(self.receipts)}
+        if self.persistence.is_enabled():
+            restored = self.persistence.get_by_id(receipt_id)
+            if restored is not None:
+                self._cache_receipt(restored)
+                return restored
+
+        return None
+
+    def get_stats(self) -> dict[str, Any]:
+        """[FACT] Get storage statistics and persistence backend details."""
+        stats = {"total": len(self.receipts)}
+        stats.update(self.persistence.stats())
+        return stats
 
 
 receipt_store = ReceiptStore()

@@ -147,6 +147,8 @@ class TestRuntimeConfigEndpoint:
             assert "secrets" in data
             assert "backend" in data["secrets"]
             assert "vault_configured" in data["secrets"]
+            assert "receipts" in data
+            assert "persistence_mode" in data["receipts"]
 
     def test_runtime_config_reflects_env(self, monkeypatch) -> None:
         """[FACT] Runtime config reflects safe env overrides."""
@@ -199,6 +201,7 @@ class TestAuditDashboardEndpoint:
             assert "receipts" in data
             assert "drift_counts" in data
             assert "metrics" in data
+            assert "storage" in data
             assert "recent_receipts" in data
 
     def test_audit_dashboard_page(self) -> None:

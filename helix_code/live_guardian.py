@@ -162,6 +162,11 @@ def _runtime_config_snapshot() -> dict[str, Any]:
             "vault_configured": vault_is_configured(),
             "gemini_api_key_configured": is_gemini_api_key_configured(),
         },
+        "receipts": {
+            "persistence_mode": os.getenv("HELIX_RECEIPT_PERSISTENCE", "auto"),
+            "local_store_path_configured": bool(os.getenv("HELIX_RECEIPT_STORE_PATH", "").strip()),
+            "gcs_bucket_configured": bool(os.getenv("GCS_RECEIPT_BUCKET", "").strip()),
+        },
     }
 
 
@@ -194,6 +199,7 @@ def _audit_dashboard_snapshot(limit: int = 50) -> dict[str, Any]:
         },
         "drift_counts": drift_counts,
         "metrics": metrics.to_dict(),
+        "storage": receipt_store.get_stats(),
         "recent_receipts": [
             {
                 "receipt_id": r.receipt_id,
