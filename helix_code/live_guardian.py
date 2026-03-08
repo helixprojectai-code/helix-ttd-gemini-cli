@@ -15,6 +15,8 @@ from __future__ import annotations
 
 import os
 import sys
+from collections.abc import AsyncIterator
+from contextlib import asynccontextmanager
 from datetime import datetime
 from pathlib import Path
 from typing import Any
@@ -48,8 +50,34 @@ except ImportError:  # pragma: no cover
 
 # [FACT] Import demo components
 
+# [FACT] Global state (initialized on startup)
+compliance: ConstitutionalCompliance | None = None
+receipts: FederationReceiptManager | None = None
+telemetry: DriftTelemetry | None = None
+
+
+@asynccontextmanager
+async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
+    """[FACT] Initialize constitutional guardian components on app startup."""
+    global compliance, receipts, telemetry
+
+    print("=== CONSTITUTIONAL GUARDIAN STARTUP ===")
+
+    compliance = ConstitutionalCompliance()
+    receipts = FederationReceiptManager()
+    telemetry = DriftTelemetry()
+
+    print("[FACT] Compliance engine initialized")
+    print("[FACT] Receipt manager initialized")
+    print("[FACT] Drift telemetry initialized")
+    print("[LATTICE] Guardian is watching. The Two Owls are vigilant.")
+
+    yield
+
+
 # [FACT] FastAPI application for Cloud Run
 app = FastAPI(
+    lifespan=lifespan,
     title="Constitutional Guardian",
     description="Real-time constitutional compliance for Gemini Live API. Validates epistemic integrity using [FACT]/[HYPOTHESIS]/[ASSUMPTION] markers.",
     version="1.4.5",
@@ -65,11 +93,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-# [FACT] Global state (initialized on startup)
-compliance: ConstitutionalCompliance | None = None
-receipts: FederationReceiptManager | None = None
-telemetry: DriftTelemetry | None = None
 
 
 def _security_transparency_snapshot() -> dict[str, Any]:
@@ -206,26 +229,6 @@ def _require_admin_token(request: Request) -> None:
     provided_token = _extract_admin_token(request)
     if provided_token != required_token:
         raise HTTPException(status_code=401, detail="Admin token required")
-
-
-@app.on_event("startup")
-async def startup_event() -> None:
-    """[FACT] Initialize constitutional guardian components.
-
-    [HYPOTHESIS] Early initialization ensures all dependent services are ready for the demo.
-    """
-    global compliance, receipts, telemetry
-
-    print("=== CONSTITUTIONAL GUARDIAN STARTUP ===")
-
-    compliance = ConstitutionalCompliance()
-    receipts = FederationReceiptManager()
-    telemetry = DriftTelemetry()
-
-    print("[FACT] Compliance engine initialized")
-    print("[FACT] Receipt manager initialized")
-    print("[FACT] Drift telemetry initialized")
-    print("[LATTICE] Guardian is watching. The Two Owls are vigilant.")
 
 
 @app.get("/health")
