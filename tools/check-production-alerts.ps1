@@ -390,19 +390,6 @@ elseif ($warnFailures.Count -gt 0) {
     $overallStatus = 'warn'
 }
 
-$summary = [pscustomobject]@{
-    evaluated_at = $now.ToString('o')
-    service_url = $baseUrl
-    overall_status = $overallStatus
-    artifact_status = $artifactStatus
-    artifact_image = $artifactImage
-    storage_backend = $storageBackend
-    storage_mode = $storageMode
-    page_failures = @($pageFailures)
-    warn_failures = @($warnFailures)
-    checks = @($results)
-}
-
 Write-AlertSummary -OutputPath $JsonOutput -EvaluatedAt $now -BaseUrl $baseUrl -OverallStatus $overallStatus -ArtifactStatus $artifactStatus -ArtifactImage $artifactImage -StorageBackend $storageBackend -StorageMode $storageMode -PageFailures @($pageFailures) -WarnFailures @($warnFailures) -Checks @($results)
 
 if ($exitCode -eq 1) {
