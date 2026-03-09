@@ -8,7 +8,7 @@ DEMO_HTML = """
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Constitutional Guardian - LIVE v1.4.7</title>
+    <title>Constitutional Guardian - LIVE v1.4.8</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root { --primary: #00ff88; --bg: #0a0a12; --panel: #161b22; --border: #30363d; --text: #fff; --text-dim: #8b949e; --red: #f85149; --blue: #58a6ff; --purple: #bc8cff; }
@@ -187,7 +187,7 @@ DEMO_HTML = """
                 <span class="anchor">|</span>
                 <span class="owl right">O</span>
             </div>
-            <h1>CONSTITUTIONAL GUARDIAN <span style="font-size: 0.8rem; vertical-align: middle; color: var(--text-dim);">LIVE v1.4.7</span></h1>
+            <h1>CONSTITUTIONAL GUARDIAN <span style="font-size: 0.8rem; vertical-align: middle; color: var(--text-dim);">LIVE v1.4.8</span></h1>
             <div class="metrics">
                 <div class="metric"><div class="metric-value" id="count-receipts">0</div><div style="color:var(--text-dim); font-size:0.8rem;">Receipts</div></div>
                 <div class="metric"><div class="metric-value" id="count-drifts" style="color:var(--red);">0</div><div style="color:var(--text-dim); font-size:0.8rem;">Drifts</div></div>

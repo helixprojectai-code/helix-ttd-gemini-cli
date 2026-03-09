@@ -15,7 +15,7 @@ with open("README.md", encoding="utf-8") as fh:
 
 setup(
     name="helix-ttd",
-    version="1.4.7",
+    version="1.4.8",
     author="Stephen Hope",
     author_email="sbhope@gmail.com",
     description="Constitutional AI governance utilities for the Helix-TTD Federation",

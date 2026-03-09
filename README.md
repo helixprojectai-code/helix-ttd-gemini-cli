@@ -7,7 +7,7 @@
 [![Ruff](https://img.shields.io/badge/lint-ruff-261230?labelColor=grey)](https://github.com/astral-sh/ruff)
 [![Black](https://img.shields.io/badge/format-black-000000?labelColor=grey)](https://github.com/psf/black)
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue)](LICENSE)
-[![PyPI](https://img.shields.io/badge/PyPI-1.4.7-blue)](https://pypi.org/project/helix-ttd-gemini/)
+[![PyPI](https://img.shields.io/badge/PyPI-1.4.8-blue)](https://pypi.org/project/helix-ttd-gemini/)
 
 ![Constitutional Guardian Overview](https://raw.githubusercontent.com/helixprojectai-code/helix-ttd-gemini-cli/main/assets/helix-ttd-gemini.png)
 
@@ -16,16 +16,16 @@
 
 This project is a submission for the **Gemini Live Agent Challenge (March 2026)**.
 
-**Current Release:** `v1.4.7`
+**Current Release:** `v1.4.8`
 
-## Production Stabilization In v1.4.7
+## Incident Board In v1.4.8
 
-- **GCP-Native Production Monitoring:** The scheduled production checker now runs as a Cloud Run Job with Cloud Scheduler and Cloud Logging integration instead of GitHub Actions.
-- **Alert Signal Cleanup:** Missing credentials no longer inflate operator or websocket auth-failure counters; only explicit invalid credentials are counted.
-- **Release-Ready Monitor State:** Production monitoring now reports `overall_status=pass`, `monitor_integrity_status=ok`, and a clean live artifact attestation.
-- **Operator Enforcement Baseline:** Admin auth, origin enforcement, authenticated metrics, and `gcs+local` dual receipt persistence remain active in production.
-- **Artifact Verification Workflow:** Live images are scanned and promoted to `clean` against Artifact Registry digests after deploy.
-- **Operational Proof Refresh:** README traction, archived release notes, and proof assets were rotated into the current documentation layout.
+- **Operator Incident Board:** Added authenticated `/incidents` and `/api/incidents` surfaces for operator-facing incident review.
+- **Triage Workflow:** Operators can acknowledge and reopen incidents directly from the board with authenticated API actions.
+- **Persistent Triage State:** Incident triage is now durable and shared instead of instance-local, so triage survives restarts and stays coherent across Cloud Run instances.
+- **Fingerprint-Based Incident Identity:** Material incident state changes now generate new incident fingerprints, so fresh escalations cannot hide under older acknowledgments.
+- **Production Controls Preserved:** Admin auth, origin enforcement, authenticated metrics, GCP-native monitoring, and `gcs+local` dual receipt persistence remain active in production.
+- **Artifact Verification Workflow:** Live images continue to be scanned and promoted to `clean` against Artifact Registry digests after deploy.
 
 ## 🚀 Key Features
 
@@ -38,7 +38,7 @@ This project is a submission for the **Gemini Live Agent Challenge (March 2026)*
 
 ## 📈 Engineering Standards
 
-- **Test Pass Rate:** `201/201` passing in release validation, with CI enforced on every main merge.
+- **Test Pass Rate:** `231/231` passing in release validation, with CI enforced on every main merge.
 - **High Coverage:** 75% statement coverage across all critical modules.
 - **Linting:** 100% compliant with `ruff`, `black`, and `isort`.
 
@@ -165,7 +165,7 @@ curl http://localhost:8180/api/security-transparency
 curl -H "X-Helix-Admin-Token: $env:HELIX_ADMIN_TOKEN" http://localhost:8180/metrics
 ```
 
-**Current security verification record:** `RELEASE_NOTES_v1.4.7.md` and `SECURITY_VERIFICATION_2026-03-09.md` capture the March 9, 2026 clean Artifact Analysis result for the live Cloud Run digest.
+**Current security verification record:** `RELEASE_NOTES_v1.4.8.md` and `SECURITY_VERIFICATION_2026-03-09.md` capture the March 9, 2026 clean Artifact Analysis result for the live Cloud Run digest.
 
 **Production alerting baseline:** `PRODUCTION_ALERTING_SPEC_2026-03-08.md` defines the first authenticated-metrics alert set for artifact verification, auth failures, rate limiting, and receipt persistence posture.
 
@@ -191,7 +191,7 @@ The Guardian enforces four immutable invariants:
 ## 🧪 Test Results
 
 ```
-201 passed, 7 warnings
+231 passed, 7 warnings
 Coverage: 75%
 ```
 
