@@ -170,11 +170,11 @@ jobs:
             echo '```' >> "$GITHUB_STEP_SUMMARY"
           fi
 
-      - name: Fail On Page-Level Alert
-        if: steps.checker.outputs.check_exit == '1'
+      - name: Report Alert Check Outcome
+        if: steps.checker.outputs.check_exit == '1' || steps.checker.outputs.check_exit == '2'
         run: |
-          echo "Production alert check reported page-level findings."
-          exit 1
+          echo "Production alert check reported alert conditions."
+          echo "See the job summary and Cloud Logging log '$ALERT_LOG_NAME' for details."
 
       - name: Fail On Invalid Operator Token Secret
         if: steps.token_check.outputs.token_status != 'ok'

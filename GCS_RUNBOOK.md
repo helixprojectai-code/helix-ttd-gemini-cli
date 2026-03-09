@@ -302,6 +302,7 @@ This workflow:
 - runs `tools/check-production-alerts.ps1`
 - publishes the JSON summary to Cloud Logging under `helix-production-alerts`
 - writes the updated state file back to GCS so burst detection survives runner resets
+- stays green for alert conditions and only hard-fails when the monitor itself cannot authenticate or scrape production
 
 Prerequisites:
 
