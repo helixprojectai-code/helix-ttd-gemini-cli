@@ -10,7 +10,6 @@ from pathlib import Path
 
 from google.cloud import logging as cloud_logging
 
-
 SEVERITY_BY_STATUS = {
     "pass": "INFO",
     "warn": "WARNING",
@@ -64,9 +63,7 @@ def main() -> int:
             "overall_status": overall_status,
         },
     )
-    print(
-        f"Published production alert summary to log '{args.log_name}' with severity {severity}."
-    )
+    print(f"Published production alert summary to log '{args.log_name}' with severity {severity}.")
     return 0
 
 
