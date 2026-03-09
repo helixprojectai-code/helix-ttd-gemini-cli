@@ -518,24 +518,35 @@ def _incident_snapshot(
 
     production_mode = os.getenv("HELIX_ENV", "").strip().lower() == "production"
     incidents: list[dict[str, Any]] = []
+    intervention_receipt_ids = [
+        receipt["receipt_id"]
+        for receipt in reversed(audit["recent_receipts"])
+        if not receipt["valid"] and receipt.get("receipt_id")
+    ]
 
     def add_incident(
         incident_id: str,
         severity: str,
+        category: str,
         title: str,
         details: str,
         action: str,
         *,
         evidence: dict[str, Any] | None = None,
+        investigate_url: str = "/audit-dashboard",
+        investigate_label: str = "Open Audit Dashboard",
     ) -> None:
         incidents.append(
             {
                 "id": incident_id,
                 "severity": severity,
+                "category": category,
                 "title": title,
                 "details": details,
                 "action": action,
                 "evidence": evidence or {},
+                "investigate_url": investigate_url,
+                "investigate_label": investigate_label,
             }
         )
 
@@ -544,6 +555,7 @@ def _incident_snapshot(
         add_incident(
             "artifact-verification",
             "warn" if artifact["status"] == "unverified" else "page",
+            "security",
             "Live Artifact Verification Pending",
             f"Artifact status is {artifact['status']} for the active image.",
             "Scan the live Artifact Registry digest and promote runtime metadata to clean.",
@@ -551,24 +563,32 @@ def _incident_snapshot(
                 "image_uri": artifact["image_uri"],
                 "scan_timestamp": artifact["scan_timestamp"],
             },
+            investigate_url="/security-transparency",
+            investigate_label="Open Security Transparency",
         )
 
     if production_mode and not runtime["auth"]["admin_token_enforced"]:
         add_incident(
             "operator-auth-enforcement",
             "page",
+            "auth",
             "Operator Auth Enforcement Disabled",
             "Protected operator surfaces are reachable without enforced admin auth.",
             "Set HELIX_ENFORCE_ADMIN_TOKEN=true and verify HELIX_ADMIN_TOKEN is bound from Secret Manager.",
+            investigate_url="/api/runtime-config",
+            investigate_label="Inspect Runtime Config JSON",
         )
 
     if production_mode and not runtime["auth"]["guardian_origin_enforced"]:
         add_incident(
             "guardian-origin-policy",
             "page",
+            "websocket",
             "Guardian Origin Enforcement Disabled",
             "Browser Guardian WebSocket traffic is not restricted by origin policy.",
             "Set HELIX_ALLOWED_ORIGINS to trusted UI origins and verify guardian_origin_enforced stays true.",
+            investigate_url="/api/runtime-config",
+            investigate_label="Inspect Runtime Config JSON",
         )
 
     storage = audit["storage"]
@@ -576,6 +596,7 @@ def _incident_snapshot(
         add_incident(
             "receipt-storage-posture",
             "page",
+            "storage",
             "Receipt Storage Posture Drift",
             f"Receipt storage is {storage.get('backend')} with mode {storage.get('mode')}.",
             "Restore dual-mode persistence and verify the GCS receipt bucket is writable.",
@@ -584,6 +605,8 @@ def _incident_snapshot(
                 "mode": storage.get("mode"),
                 "gcs_bucket": storage.get("gcs_bucket"),
             },
+            investigate_url="/audit-dashboard",
+            investigate_label="Open Audit Dashboard",
         )
 
     receipt_summary = audit["receipts"]
@@ -592,6 +615,7 @@ def _incident_snapshot(
         add_incident(
             "constitutional-interventions",
             "warn",
+            "compliance",
             "Interventions Recorded In Active Receipt Window",
             f"{receipt_summary['interventions']} intervention receipts are currently retained.",
             "Review the latest intervention receipts and confirm the drift pattern is expected before customer impact widens.",
@@ -599,7 +623,10 @@ def _incident_snapshot(
                 "interventions": receipt_summary["interventions"],
                 "compliance_rate": receipt_summary["compliance_rate"],
                 "top_drift_code": top_drift,
+                "recent_receipt_ids": ", ".join(intervention_receipt_ids[:3]) or "none",
             },
+            investigate_url="/audit-dashboard",
+            investigate_label="Review Intervention Receipts",
         )
 
     metrics_data = audit["metrics"]
@@ -607,10 +634,13 @@ def _incident_snapshot(
         add_incident(
             "runtime-errors",
             "warn",
+            "runtime",
             "Runtime Errors Recorded",
             f"{metrics_data['error_count']} runtime errors were recorded since process start.",
             "Inspect logs around the current revision and verify error_count returns to zero on the next clean interval.",
             evidence={"error_count": metrics_data["error_count"]},
+            investigate_url="/metrics",
+            investigate_label="Inspect Metrics",
         )
 
     security_events = metrics_data.get("security_events", {})
@@ -641,10 +671,13 @@ def _incident_snapshot(
             add_incident(
                 event_name.removesuffix("_count").replace("_", "-"),
                 "warn",
+                "security",
                 title,
                 f"{count} events recorded since the current revision started.",
                 action,
                 evidence={"count": count},
+                investigate_url="/metrics",
+                investigate_label="Inspect Metrics",
             )
 
     incidents = incidents[: max(1, min(limit, 50))]
@@ -653,6 +686,10 @@ def _incident_snapshot(
         "warn": sum(1 for incident in incidents if incident["severity"] == "warn"),
     }
     severity_counts["total"] = len(incidents)
+    category_counts: dict[str, int] = {}
+    for incident in incidents:
+        category = str(incident["category"])
+        category_counts[category] = category_counts.get(category, 0) + 1
 
     return {
         "snapshot_at": datetime.utcnow().isoformat(),
@@ -661,6 +698,7 @@ def _incident_snapshot(
             "page_total": severity_counts["page"],
             "warn_total": severity_counts["warn"],
             "all_clear": len(incidents) == 0,
+            "category_totals": category_counts,
         },
         "incidents": incidents,
     }
@@ -1207,25 +1245,35 @@ async def incident_dashboard_page(request: Request) -> HTMLResponse:
         .value.ok { color: #4ade80; }
         .value.warn { color: #fbbf24; }
         .value.page { color: #f87171; }
-        .incidents { display: grid; gap: 12px; margin-bottom: 18px; }
-        .incident { padding: 16px; }
+        .toolbar { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 18px; align-items: center; }
+        .pill { border: 1px solid #334155; background: #0f172a; color: #cbd5e1; border-radius: 999px; padding: 8px 12px; cursor: pointer; font-weight: 600; }
+        .pill.active { background: #1d4ed8; border-color: #1d4ed8; color: #eff6ff; }
+        .layout { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(320px, 0.85fr); gap: 16px; margin-bottom: 18px; }
+        .incidents { display: grid; gap: 12px; }
+        .incident { padding: 16px; width: 100%; text-align: left; color: inherit; font: inherit; }
         .incident.page { border-color: #7f1d1d; }
         .incident.warn { border-color: #854d0e; }
+        .incident.active { box-shadow: 0 0 0 2px rgba(147, 197, 253, 0.45); }
         .incident-header { display: flex; justify-content: space-between; gap: 12px; align-items: center; margin-bottom: 8px; }
         .incident h2 { margin: 0; font-size: 18px; }
         .badge { padding: 4px 9px; border-radius: 999px; font-size: 12px; font-weight: 700; text-transform: uppercase; }
         .badge.page { background: rgba(248, 113, 113, 0.18); color: #fecaca; }
         .badge.warn { background: rgba(251, 191, 36, 0.18); color: #fde68a; }
+        .badge.category { background: rgba(148, 163, 184, 0.15); color: #cbd5e1; }
         .incident p { margin: 0 0 10px; color: #cbd5e1; line-height: 1.45; }
         .incident dl { margin: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 8px 12px; }
         .incident dt { font-size: 11px; color: #94a3b8; text-transform: uppercase; }
         .incident dd { margin: 2px 0 0; font-size: 14px; color: #f8fafc; }
         .supporting { padding: 16px; }
         .supporting h2 { margin: 0 0 12px; font-size: 18px; }
+        .actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 12px; }
+        .action-link { display: inline-flex; align-items: center; justify-content: center; border-radius: 10px; padding: 10px 12px; background: #1d4ed8; color: #eff6ff; font-weight: 700; text-decoration: none; }
+        .action-link.secondary { background: #1e293b; color: #cbd5e1; }
         table { width: 100%; border-collapse: collapse; }
         th, td { padding: 9px 10px; border-bottom: 1px solid #1e293b; text-align: left; font-size: 14px; }
         th { color: #94a3b8; font-weight: 600; }
         .empty { padding: 24px; text-align: center; color: #94a3b8; }
+        @media (max-width: 900px) { .layout { grid-template-columns: 1fr; } }
       </style>
     </head>
     <body>
@@ -1247,7 +1295,18 @@ async def incident_dashboard_page(request: Request) -> HTMLResponse:
           <div class='card'><div class='label'>Warnings</div><div id='warn-total' class='value warn'>0</div></div>
           <div class='card'><div class='label'>Status</div><div id='status' class='value ok'>All Clear</div></div>
         </div>
-        <div id='incidents' class='incidents'></div>
+        <div class='toolbar'>
+          <button class='pill active' data-filter='all'>All</button>
+          <button class='pill' data-filter='page'>Page</button>
+          <button class='pill' data-filter='warn'>Warn</button>
+        </div>
+        <div class='layout'>
+          <div id='incidents' class='incidents'></div>
+          <div class='supporting'>
+            <h2>Selected Incident</h2>
+            <div id='selected-incident' class='empty'>Select an incident to view investigation links and evidence.</div>
+          </div>
+        </div>
         <div class='supporting'>
           <h2>Recent Receipt Evidence</h2>
           <table>
@@ -1257,10 +1316,98 @@ async def incident_dashboard_page(request: Request) -> HTMLResponse:
         </div>
       </div>
       <script>
+        let currentFilter = 'all';
+        let currentIncidents = [];
+        let selectedIncidentId = null;
+
         function renderEvidence(evidence) {
           const entries = Object.entries(evidence || {});
           if (!entries.length) return '';
           return `<dl>${entries.map(([key, value]) => `<div><dt>${key.replaceAll('_', ' ')}</dt><dd>${value}</dd></div>`).join('')}</dl>`;
+        }
+
+        function filteredIncidents() {
+          if (currentFilter === 'all') return currentIncidents;
+          return currentIncidents.filter((incident) => incident.severity === currentFilter);
+        }
+
+        function renderSelectedIncident() {
+          const panel = document.getElementById('selected-incident');
+          const incident = currentIncidents.find((entry) => entry.id === selectedIncidentId) || filteredIncidents()[0];
+          if (!incident) {
+            panel.className = 'empty';
+            panel.textContent = 'No incident selected.';
+            return;
+          }
+
+          selectedIncidentId = incident.id;
+          panel.className = '';
+          panel.innerHTML = `
+            <div class='incident ${incident.severity} active'>
+              <div class='incident-header'>
+                <h2>${incident.title}</h2>
+                <div>
+                  <span class='badge ${incident.severity}'>${incident.severity}</span>
+                  <span class='badge category'>${incident.category}</span>
+                </div>
+              </div>
+              <p>${incident.details}</p>
+              <p><strong>Operator action:</strong> ${incident.action}</p>
+              ${renderEvidence(incident.evidence)}
+              <div class='actions'>
+                <a class='action-link' href='${incident.investigate_url}'>${incident.investigate_label}</a>
+                <a class='action-link secondary' href='/api/incidents'>View Incident JSON</a>
+              </div>
+            </div>
+          `;
+        }
+
+        function renderIncidentCards() {
+          const board = document.getElementById('incidents');
+          const incidents = filteredIncidents();
+          board.innerHTML = '';
+          if (!incidents.length) {
+            board.innerHTML = "<div class='empty incident'><strong>No incidents in this filter.</strong><p>Switch filters or wait for the next telemetry refresh.</p></div>";
+            renderSelectedIncident();
+            return;
+          }
+
+          for (const incident of incidents) {
+            const node = document.createElement('button');
+            node.type = 'button';
+            node.className = `incident ${incident.severity}${incident.id === selectedIncidentId ? ' active' : ''}`;
+            node.innerHTML = `
+              <div class='incident-header'>
+                <h2>${incident.title}</h2>
+                <div>
+                  <span class='badge ${incident.severity}'>${incident.severity}</span>
+                  <span class='badge category'>${incident.category}</span>
+                </div>
+              </div>
+              <p>${incident.details}</p>
+              <p><strong>Next step:</strong> ${incident.action}</p>
+            `;
+            node.addEventListener('click', () => {
+              selectedIncidentId = incident.id;
+              renderIncidentCards();
+              renderSelectedIncident();
+            });
+            board.appendChild(node);
+          }
+
+          renderSelectedIncident();
+        }
+
+        function bindFilters() {
+          for (const pill of document.querySelectorAll('[data-filter]')) {
+            pill.addEventListener('click', () => {
+              currentFilter = pill.dataset.filter;
+              for (const node of document.querySelectorAll('[data-filter]')) {
+                node.classList.toggle('active', node.dataset.filter === currentFilter);
+              }
+              renderIncidentCards();
+            });
+          }
         }
 
         async function refreshIncidentBoard() {
@@ -1270,6 +1417,10 @@ async def incident_dashboard_page(request: Request) -> HTMLResponse:
           ]);
           const incidentData = await incidentRes.json();
           const auditData = await auditRes.json();
+          currentIncidents = incidentData.incidents;
+          if (!selectedIncidentId && currentIncidents.length) {
+            selectedIncidentId = currentIncidents[0].id;
+          }
 
           document.getElementById('active').textContent = incidentData.summary.active_total;
           document.getElementById('page-total').textContent = incidentData.summary.page_total;
@@ -1277,27 +1428,7 @@ async def incident_dashboard_page(request: Request) -> HTMLResponse:
           const statusNode = document.getElementById('status');
           statusNode.textContent = incidentData.summary.all_clear ? 'All Clear' : 'Attention';
           statusNode.className = 'value ' + (incidentData.summary.all_clear ? 'ok' : (incidentData.summary.page_total ? 'page' : 'warn'));
-
-          const board = document.getElementById('incidents');
-          board.innerHTML = '';
-          if (!incidentData.incidents.length) {
-            board.innerHTML = "<div class='empty incident'><strong>No active incidents.</strong><p>The current runtime, storage, and security posture is stable.</p></div>";
-          } else {
-            for (const incident of incidentData.incidents) {
-              const node = document.createElement('div');
-              node.className = `incident ${incident.severity}`;
-              node.innerHTML = `
-                <div class='incident-header'>
-                  <h2>${incident.title}</h2>
-                  <span class='badge ${incident.severity}'>${incident.severity}</span>
-                </div>
-                <p>${incident.details}</p>
-                <p><strong>Operator action:</strong> ${incident.action}</p>
-                ${renderEvidence(incident.evidence)}
-              `;
-              board.appendChild(node);
-            }
-          }
+          renderIncidentCards();
 
           const rows = document.getElementById('receipts');
           rows.innerHTML = '';
@@ -1308,6 +1439,7 @@ async def incident_dashboard_page(request: Request) -> HTMLResponse:
           }
         }
 
+        bindFilters();
         refreshIncidentBoard();
         setInterval(refreshIncidentBoard, 5000);
       </script>

@@ -1,4 +1,4 @@
-"""[FACT] Extended tests for live_guardian.py to reach 80% coverage.
+﻿"""[FACT] Extended tests for live_guardian.py to reach 80% coverage.
 
 [HYPOTHESIS] Testing additional endpoints improves coverage.
 [ASSUMPTION] FastAPI TestClient allows synchronous testing of async endpoints.
@@ -249,6 +249,7 @@ class TestIncidentDashboardEndpoint:
             assert "incidents" in data
             assert "active_total" in data["summary"]
             assert "all_clear" in data["summary"]
+            assert "category_totals" in data["summary"]
 
     def test_incident_api_surfaces_active_signals(self, monkeypatch) -> None:
         monkeypatch.setenv("HELIX_ENV", "production")
@@ -270,6 +271,11 @@ class TestIncidentDashboardEndpoint:
         incident_ids = {incident["id"] for incident in data["incidents"]}
         assert "artifact-verification" in incident_ids
         assert "operator-auth-failure" in incident_ids
+        artifact = next(
+            incident for incident in data["incidents"] if incident["id"] == "artifact-verification"
+        )
+        assert artifact["category"] == "security"
+        assert artifact["investigate_url"] == "/security-transparency"
         assert data["summary"]["active_total"] >= 2
 
     def test_incident_dashboard_page(self) -> None:
@@ -278,6 +284,8 @@ class TestIncidentDashboardEndpoint:
             assert response.status_code == 200
             assert "Operator Incident Board" in response.text
             assert "/api/incidents" in response.text
+            assert "Selected Incident" in response.text
+            assert "data-filter='warn'" in response.text
 
 
 class TestGuardianOriginPolicy:
