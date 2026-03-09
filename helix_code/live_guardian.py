@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import os
 import sys
+import threading
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from datetime import datetime
@@ -64,6 +65,8 @@ receipts: FederationReceiptManager | None = None
 telemetry: DriftTelemetry | None = None
 operator_rate_limiter = SlidingWindowRateLimiter()
 auth_rate_limiter = SlidingWindowRateLimiter()
+_incident_triage_lock = threading.Lock()
+_incident_triage_state: dict[str, dict[str, str]] = {}
 
 
 @asynccontextmanager
@@ -91,6 +94,42 @@ def _csv_env_values(name: str) -> list[str]:
     if not raw:
         return []
     return [value.strip() for value in raw.split(",") if value.strip()]
+
+
+def _incident_triage_snapshot() -> dict[str, dict[str, str]]:
+    """[FACT] Return a copy of in-memory operator triage state for active incidents."""
+    with _incident_triage_lock:
+        return {incident_id: state.copy() for incident_id, state in _incident_triage_state.items()}
+
+
+def _incident_triage_fields(incident_id: str) -> dict[str, Any]:
+    """[FACT] Return the current operator triage metadata for an incident."""
+    triage_state = _incident_triage_snapshot().get(incident_id)
+    if not triage_state:
+        return {"triage_status": "open", "triaged_at": None}
+    return {
+        "triage_status": triage_state.get("status", "open"),
+        "triaged_at": triage_state.get("updated_at"),
+    }
+
+
+def _set_incident_triage_status(incident_id: str, status: str) -> dict[str, Any]:
+    """[FACT] Update operator triage state for an active incident."""
+    with _incident_triage_lock:
+        if status == "open":
+            _incident_triage_state.pop(incident_id, None)
+        else:
+            _incident_triage_state[incident_id] = {
+                "status": status,
+                "updated_at": datetime.utcnow().isoformat(),
+            }
+    return _incident_triage_fields(incident_id)
+
+
+def _reset_incident_triage_state() -> None:
+    """[FACT] Clear in-memory incident triage state for tests and operator resets."""
+    with _incident_triage_lock:
+        _incident_triage_state.clear()
 
 
 def _guardian_allowed_origins() -> list[str]:
@@ -536,6 +575,7 @@ def _incident_snapshot(
         investigate_url: str = "/audit-dashboard",
         investigate_label: str = "Open Audit Dashboard",
     ) -> None:
+        triage = _incident_triage_fields(incident_id)
         incidents.append(
             {
                 "id": incident_id,
@@ -547,6 +587,10 @@ def _incident_snapshot(
                 "evidence": evidence or {},
                 "investigate_url": investigate_url,
                 "investigate_label": investigate_label,
+                "triage_status": triage["triage_status"],
+                "triaged_at": triage["triaged_at"],
+                "acknowledge_url": f"/api/incidents/{incident_id}/acknowledge",
+                "reopen_url": f"/api/incidents/{incident_id}/reopen",
             }
         )
 
@@ -691,10 +735,16 @@ def _incident_snapshot(
         category = str(incident["category"])
         category_counts[category] = category_counts.get(category, 0) + 1
 
+    acknowledged_total = sum(
+        1 for incident in incidents if incident["triage_status"] == "acknowledged"
+    )
+
     return {
         "snapshot_at": datetime.utcnow().isoformat(),
         "summary": {
             "active_total": len(incidents),
+            "open_total": len(incidents) - acknowledged_total,
+            "acknowledged_total": acknowledged_total,
             "page_total": severity_counts["page"],
             "warn_total": severity_counts["warn"],
             "all_clear": len(incidents) == 0,
@@ -1129,6 +1179,48 @@ async def incidents_api(request: Request, limit: int = 8) -> JSONResponse:
     return JSONResponse(status_code=200, content=_incident_snapshot(limit=limit))
 
 
+@app.post("/api/incidents/{incident_id}/acknowledge")
+async def acknowledge_incident(request: Request, incident_id: str) -> JSONResponse:
+    """[FACT] Mark an active incident as acknowledged for operator triage."""
+    _enforce_operator_rate_limit(request)
+    _require_admin_token(request)
+    snapshot = _incident_snapshot(limit=50)
+    if not any(incident["id"] == incident_id for incident in snapshot["incidents"]):
+        raise HTTPException(status_code=404, detail="Incident not found")
+    _set_incident_triage_status(incident_id, "acknowledged")
+    updated = _incident_snapshot(limit=50)
+    incident = next(item for item in updated["incidents"] if item["id"] == incident_id)
+    return JSONResponse(
+        status_code=200,
+        content={
+            "snapshot_at": updated["snapshot_at"],
+            "summary": updated["summary"],
+            "incident": incident,
+        },
+    )
+
+
+@app.post("/api/incidents/{incident_id}/reopen")
+async def reopen_incident(request: Request, incident_id: str) -> JSONResponse:
+    """[FACT] Return an acknowledged incident to the open triage state."""
+    _enforce_operator_rate_limit(request)
+    _require_admin_token(request)
+    snapshot = _incident_snapshot(limit=50)
+    if not any(incident["id"] == incident_id for incident in snapshot["incidents"]):
+        raise HTTPException(status_code=404, detail="Incident not found")
+    _set_incident_triage_status(incident_id, "open")
+    updated = _incident_snapshot(limit=50)
+    incident = next(item for item in updated["incidents"] if item["id"] == incident_id)
+    return JSONResponse(
+        status_code=200,
+        content={
+            "snapshot_at": updated["snapshot_at"],
+            "summary": updated["summary"],
+            "incident": incident,
+        },
+    )
+
+
 @app.get("/metrics", response_class=PlainTextResponse)
 async def prometheus_metrics(request: Request) -> PlainTextResponse:
     """[FACT] Authenticated Prometheus-style metrics for production observability."""
@@ -1260,6 +1352,8 @@ async def incident_dashboard_page(request: Request) -> HTMLResponse:
         .badge.page { background: rgba(248, 113, 113, 0.18); color: #fecaca; }
         .badge.warn { background: rgba(251, 191, 36, 0.18); color: #fde68a; }
         .badge.category { background: rgba(148, 163, 184, 0.15); color: #cbd5e1; }
+        .badge.open { background: rgba(59, 130, 246, 0.18); color: #bfdbfe; }
+        .badge.acknowledged { background: rgba(74, 222, 128, 0.18); color: #bbf7d0; }
         .incident p { margin: 0 0 10px; color: #cbd5e1; line-height: 1.45; }
         .incident dl { margin: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 8px 12px; }
         .incident dt { font-size: 11px; color: #94a3b8; text-transform: uppercase; }
@@ -1267,7 +1361,7 @@ async def incident_dashboard_page(request: Request) -> HTMLResponse:
         .supporting { padding: 16px; }
         .supporting h2 { margin: 0 0 12px; font-size: 18px; }
         .actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 12px; }
-        .action-link { display: inline-flex; align-items: center; justify-content: center; border-radius: 10px; padding: 10px 12px; background: #1d4ed8; color: #eff6ff; font-weight: 700; text-decoration: none; }
+        .action-link { display: inline-flex; align-items: center; justify-content: center; border-radius: 10px; padding: 10px 12px; background: #1d4ed8; color: #eff6ff; font-weight: 700; text-decoration: none; border: none; cursor: pointer; font: inherit; }
         .action-link.secondary { background: #1e293b; color: #cbd5e1; }
         table { width: 100%; border-collapse: collapse; }
         th, td { padding: 9px 10px; border-bottom: 1px solid #1e293b; text-align: left; font-size: 14px; }
@@ -1291,6 +1385,8 @@ async def incident_dashboard_page(request: Request) -> HTMLResponse:
         </div>
         <div class='grid'>
           <div class='card'><div class='label'>Active Incidents</div><div id='active' class='value ok'>0</div></div>
+          <div class='card'><div class='label'>Open</div><div id='open-total' class='value warn'>0</div></div>
+          <div class='card'><div class='label'>Acknowledged</div><div id='acknowledged-total' class='value ok'>0</div></div>
           <div class='card'><div class='label'>Page-Level</div><div id='page-total' class='value page'>0</div></div>
           <div class='card'><div class='label'>Warnings</div><div id='warn-total' class='value warn'>0</div></div>
           <div class='card'><div class='label'>Status</div><div id='status' class='value ok'>All Clear</div></div>
@@ -1304,7 +1400,7 @@ async def incident_dashboard_page(request: Request) -> HTMLResponse:
           <div id='incidents' class='incidents'></div>
           <div class='supporting'>
             <h2>Selected Incident</h2>
-            <div id='selected-incident' class='empty'>Select an incident to view investigation links and evidence.</div>
+            <div id='selected-incident' class='empty'>Select an incident to view investigation links, triage actions, and evidence.</div>
           </div>
         </div>
         <div class='supporting'>
@@ -1331,6 +1427,15 @@ async def incident_dashboard_page(request: Request) -> HTMLResponse:
           return currentIncidents.filter((incident) => incident.severity === currentFilter);
         }
 
+        async function performTriageAction(action, incident) {
+          const endpoint = action === 'acknowledge' ? incident.acknowledge_url : incident.reopen_url;
+          const response = await fetch(endpoint, { method: 'POST', credentials: 'same-origin' });
+          if (!response.ok) {
+            return;
+          }
+          await refreshIncidentBoard();
+        }
+
         function renderSelectedIncident() {
           const panel = document.getElementById('selected-incident');
           const incident = currentIncidents.find((entry) => entry.id === selectedIncidentId) || filteredIncidents()[0];
@@ -1342,6 +1447,9 @@ async def incident_dashboard_page(request: Request) -> HTMLResponse:
 
           selectedIncidentId = incident.id;
           panel.className = '';
+          const triageAction = incident.triage_status === 'acknowledged'
+            ? `<button type='button' class='action-link secondary' data-triage-action='reopen'>Reopen Incident</button>`
+            : `<button type='button' class='action-link secondary' data-triage-action='acknowledge'>Acknowledge Incident</button>`;
           panel.innerHTML = `
             <div class='incident ${incident.severity} active'>
               <div class='incident-header'>
@@ -1349,17 +1457,25 @@ async def incident_dashboard_page(request: Request) -> HTMLResponse:
                 <div>
                   <span class='badge ${incident.severity}'>${incident.severity}</span>
                   <span class='badge category'>${incident.category}</span>
+                  <span class='badge ${incident.triage_status}'>${incident.triage_status}</span>
                 </div>
               </div>
               <p>${incident.details}</p>
               <p><strong>Operator action:</strong> ${incident.action}</p>
+              <p><strong>Triage state:</strong> ${incident.triage_status}${incident.triaged_at ? ` at ${incident.triaged_at}` : ''}</p>
               ${renderEvidence(incident.evidence)}
               <div class='actions'>
                 <a class='action-link' href='${incident.investigate_url}'>${incident.investigate_label}</a>
+                ${triageAction}
                 <a class='action-link secondary' href='/api/incidents'>View Incident JSON</a>
               </div>
             </div>
           `;
+          for (const node of panel.querySelectorAll('[data-triage-action]')) {
+            node.addEventListener('click', async () => {
+              await performTriageAction(node.dataset.triageAction, incident);
+            });
+          }
         }
 
         function renderIncidentCards() {
@@ -1382,6 +1498,7 @@ async def incident_dashboard_page(request: Request) -> HTMLResponse:
                 <div>
                   <span class='badge ${incident.severity}'>${incident.severity}</span>
                   <span class='badge category'>${incident.category}</span>
+                  <span class='badge ${incident.triage_status}'>${incident.triage_status}</span>
                 </div>
               </div>
               <p>${incident.details}</p>
@@ -1423,6 +1540,8 @@ async def incident_dashboard_page(request: Request) -> HTMLResponse:
           }
 
           document.getElementById('active').textContent = incidentData.summary.active_total;
+          document.getElementById('open-total').textContent = incidentData.summary.open_total;
+          document.getElementById('acknowledged-total').textContent = incidentData.summary.acknowledged_total;
           document.getElementById('page-total').textContent = incidentData.summary.page_total;
           document.getElementById('warn-total').textContent = incidentData.summary.warn_total;
           const statusNode = document.getElementById('status');

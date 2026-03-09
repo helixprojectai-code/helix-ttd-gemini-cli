@@ -1,4 +1,4 @@
-﻿"""[FACT] Extended tests for live_guardian.py to reach 80% coverage.
+"""[FACT] Extended tests for live_guardian.py to reach 80% coverage.
 
 [HYPOTHESIS] Testing additional endpoints improves coverage.
 [ASSUMPTION] FastAPI TestClient allows synchronous testing of async endpoints.
@@ -240,6 +240,7 @@ class TestIncidentDashboardEndpoint:
     """[FACT] Test operator incident API and HTML surface."""
 
     def test_incident_api_structure(self) -> None:
+        live_guardian._reset_incident_triage_state()
         with TestClient(app) as client:
             response = client.get("/api/incidents")
             assert response.status_code == 200
@@ -248,6 +249,8 @@ class TestIncidentDashboardEndpoint:
             assert "summary" in data
             assert "incidents" in data
             assert "active_total" in data["summary"]
+            assert "open_total" in data["summary"]
+            assert "acknowledged_total" in data["summary"]
             assert "all_clear" in data["summary"]
             assert "category_totals" in data["summary"]
 
@@ -285,7 +288,41 @@ class TestIncidentDashboardEndpoint:
             assert "Operator Incident Board" in response.text
             assert "/api/incidents" in response.text
             assert "Selected Incident" in response.text
+            assert "Acknowledge Incident" in response.text
             assert "data-filter='warn'" in response.text
+
+    def test_incident_acknowledge_and_reopen_flow(self, monkeypatch) -> None:
+        monkeypatch.setenv("HELIX_ENV", "production")
+        monkeypatch.setenv("SECURITY_ARTIFACT_ANALYSIS_STATUS", "unverified")
+        monkeypatch.setenv(
+            "SECURITY_ARTIFACT_IMAGE_URI",
+            "us-central1-docker.pkg.dev/helix-ai-deploy/helix-repo/constitutional-guardian@sha256:test",
+        )
+        live_guardian._reset_incident_triage_state()
+
+        with TestClient(app) as client:
+            acknowledge = client.post("/api/incidents/artifact-verification/acknowledge")
+            assert acknowledge.status_code == 200
+            acknowledged = acknowledge.json()
+            assert acknowledged["incident"]["triage_status"] == "acknowledged"
+            assert acknowledged["summary"]["acknowledged_total"] == 1
+            assert acknowledged["summary"]["open_total"] >= 0
+
+            incidents = client.get("/api/incidents")
+            assert incidents.status_code == 200
+            artifact = next(
+                incident
+                for incident in incidents.json()["incidents"]
+                if incident["id"] == "artifact-verification"
+            )
+            assert artifact["triage_status"] == "acknowledged"
+            assert artifact["triaged_at"] is not None
+
+            reopen = client.post("/api/incidents/artifact-verification/reopen")
+            assert reopen.status_code == 200
+            reopened = reopen.json()
+            assert reopened["incident"]["triage_status"] == "open"
+            assert reopened["summary"]["acknowledged_total"] == 0
 
 
 class TestGuardianOriginPolicy:
