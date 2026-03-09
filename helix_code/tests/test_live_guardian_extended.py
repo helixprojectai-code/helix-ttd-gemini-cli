@@ -4,6 +4,7 @@
 [ASSUMPTION] FastAPI TestClient allows synchronous testing of async endpoints.
 """
 
+import live_demo_server as standalone_live_demo_server
 from fastapi.testclient import TestClient
 
 import helix_code.live_demo_server as live_demo_server
@@ -305,10 +306,31 @@ class TestProtectedOperationalEndpoints:
     def test_runtime_config_requires_admin_token(self, monkeypatch) -> None:
         """[FACT] Runtime config rejects unauthenticated requests when token is set."""
         monkeypatch.setenv("HELIX_ADMIN_TOKEN", "secret-token")
+        patched_metrics = live_demo_server.LiveMetrics()
+        monkeypatch.setattr(live_demo_server, "metrics", patched_metrics)
+        monkeypatch.setattr(standalone_live_demo_server, "metrics", patched_metrics)
 
         with TestClient(app) as client:
             response = client.get("/api/runtime-config")
             assert response.status_code == 401
+
+        assert live_demo_server.metrics.operator_auth_failure_count == 0
+
+    def test_runtime_config_counts_invalid_admin_token_attempts(self, monkeypatch) -> None:
+        """[FACT] Operator auth metrics count wrong tokens but ignore missing credentials."""
+        monkeypatch.setenv("HELIX_ADMIN_TOKEN", "secret-token")
+        patched_metrics = live_demo_server.LiveMetrics()
+        monkeypatch.setattr(live_demo_server, "metrics", patched_metrics)
+        monkeypatch.setattr(standalone_live_demo_server, "metrics", patched_metrics)
+
+        with TestClient(app) as client:
+            response = client.get(
+                "/api/runtime-config",
+                headers={"X-Helix-Admin-Token": "wrong-token"},
+            )
+
+        assert response.status_code == 401
+        assert live_demo_server.metrics.operator_auth_failure_count == 1
 
     def test_runtime_config_accepts_bearer_admin_token(self, monkeypatch) -> None:
         """[FACT] Runtime config accepts bearer authorization."""
@@ -398,6 +420,21 @@ class TestProtectedOperationalEndpoints:
         with TestClient(app) as client:
             response = client.get("/audit-dashboard")
             assert response.status_code == 503
+
+    def test_guardian_websocket_auth_counts_only_wrong_tokens(self, monkeypatch) -> None:
+        """[FACT] Guardian WebSocket auth metrics ignore missing credentials but count wrong tokens."""
+        monkeypatch.setenv("HELIX_ADMIN_TOKEN", "secret-token")
+        patched_metrics = live_demo_server.LiveMetrics()
+        monkeypatch.setattr(live_demo_server, "metrics", patched_metrics)
+        monkeypatch.setattr(standalone_live_demo_server, "metrics", patched_metrics)
+
+        assert live_guardian._require_admin_websocket({}) is False
+        assert live_demo_server.metrics.websocket_auth_failure_count == 0
+
+        assert (
+            live_guardian._require_admin_websocket({"x-helix-admin-token": "wrong-token"}) is False
+        )
+        assert live_demo_server.metrics.websocket_auth_failure_count == 1
 
 
 class TestOperatorRateLimiting:

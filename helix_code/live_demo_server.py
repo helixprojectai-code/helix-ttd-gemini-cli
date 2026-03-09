@@ -529,7 +529,8 @@ def _guard_standalone_page(request: Request, next_path: str) -> str | HTMLRespon
 
     provided_token = _extract_admin_token_from_headers(request.headers)
     if provided_token != required_token:
-        metrics.record_auth_failure("operator")
+        if provided_token:
+            metrics.record_auth_failure("operator")
         return _standalone_admin_login_page(next_path)
     return provided_token
 
@@ -593,9 +594,11 @@ def _require_admin_websocket(headers: Any) -> bool:
             metrics.record_auth_failure("websocket")
         return allowed
 
-    allowed = _extract_admin_token_from_headers(headers) == required_token
+    provided_token = _extract_admin_token_from_headers(headers)
+    allowed = provided_token == required_token
     if not allowed:
-        metrics.record_auth_failure("websocket")
+        if provided_token:
+            metrics.record_auth_failure("websocket")
     return allowed
 
 
@@ -605,7 +608,8 @@ def _is_audio_audit_authorized(websocket: WebSocket) -> bool:
     if required_token:
         provided_token = (websocket.headers.get("x-audio-audit-token") or "").strip()
         if provided_token != required_token:
-            metrics.record_auth_failure("websocket")
+            if provided_token:
+                metrics.record_auth_failure("websocket")
             return False
 
     allowed_origins_raw = os.getenv("AUDIO_AUDIT_ALLOWED_ORIGINS", "").strip()
@@ -615,7 +619,8 @@ def _is_audio_audit_authorized(websocket: WebSocket) -> bool:
         }
         origin = (websocket.headers.get("origin") or "").strip()
         if origin not in allowed_origins:
-            metrics.record_auth_failure("websocket")
+            if origin:
+                metrics.record_auth_failure("websocket")
             return False
 
     return True

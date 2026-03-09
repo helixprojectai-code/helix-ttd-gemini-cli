@@ -365,7 +365,8 @@ def _require_admin_token(request: Request) -> str:
 
     provided_token = _extract_admin_token(request)
     if provided_token != required_token:
-        _record_security_metric("auth_failure", "operator")
+        if provided_token:
+            _record_security_metric("auth_failure", "operator")
         raise HTTPException(status_code=401, detail="Admin token required")
     return provided_token
 
@@ -382,7 +383,8 @@ def _guard_html_page(request: Request, next_path: str) -> str | HTMLResponse:
 
     provided_token = _extract_admin_token(request)
     if provided_token != required_token:
-        _record_security_metric("auth_failure", "operator")
+        if provided_token:
+            _record_security_metric("auth_failure", "operator")
         return _admin_login_page(next_path)
     return provided_token
 
@@ -396,9 +398,11 @@ def _require_admin_websocket(headers: Any) -> bool:
             _record_security_metric("auth_failure", "websocket")
         return allowed
 
-    allowed = _extract_admin_token_from_scope(headers) == required_token
+    provided_token = _extract_admin_token_from_scope(headers)
+    allowed = provided_token == required_token
     if not allowed:
-        _record_security_metric("auth_failure", "websocket")
+        if provided_token:
+            _record_security_metric("auth_failure", "websocket")
     return allowed
 
 

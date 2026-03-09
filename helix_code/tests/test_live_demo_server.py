@@ -6,6 +6,7 @@
 
 from typing import Any
 
+import helix_code.live_demo_server as live_demo_server
 from helix_code.live_demo_server import (
     LiveMetrics,
     Receipt,
@@ -291,6 +292,29 @@ class TestAudioIngressRateLimiting:
         assert retry_after > 0
 
 
+class TestStandaloneAdminWebsocketAuthorization:
+    """[FACT] Test standalone WebSocket admin gating telemetry."""
+
+    def test_missing_websocket_admin_token_does_not_increment_failure_metric(
+        self, monkeypatch: Any
+    ) -> None:
+        monkeypatch.setenv("HELIX_ADMIN_TOKEN", "secret-token")
+        monkeypatch.setattr(live_demo_server, "metrics", LiveMetrics())
+
+        assert live_demo_server._require_admin_websocket({}) is False
+        assert live_demo_server.metrics.websocket_auth_failure_count == 0
+
+    def test_wrong_websocket_admin_token_increments_failure_metric(self, monkeypatch: Any) -> None:
+        monkeypatch.setenv("HELIX_ADMIN_TOKEN", "secret-token")
+        monkeypatch.setattr(live_demo_server, "metrics", LiveMetrics())
+
+        assert (
+            live_demo_server._require_admin_websocket({"x-helix-admin-token": "wrong-token"})
+            is False
+        )
+        assert live_demo_server.metrics.websocket_auth_failure_count == 1
+
+
 class TestAudioAuditAuthorization:
     """[FACT] Test suite for audio audit authorization gates."""
 
@@ -305,15 +329,31 @@ class TestAudioAuditAuthorization:
 
         assert _is_audio_audit_authorized(StubWebSocket()) is True
 
+    def test_authorization_rejects_missing_token_without_counting_auth_failure(
+        self, monkeypatch: Any
+    ) -> None:
+        """[FACT] Missing audio-audit tokens are denied without inflating failure metrics."""
+        monkeypatch.setenv("AUDIO_AUDIT_TOKEN", "s3cr3t")
+        monkeypatch.setattr(live_demo_server, "metrics", LiveMetrics())
+
+        class StubWebSocket:
+            query_params: dict[str, str] = {}
+            headers: dict[str, str] = {}
+
+        assert _is_audio_audit_authorized(StubWebSocket()) is False
+        assert live_demo_server.metrics.websocket_auth_failure_count == 0
+
     def test_authorization_rejects_bad_token(self, monkeypatch: Any) -> None:
         """[FACT] Wrong token is denied."""
         monkeypatch.setenv("AUDIO_AUDIT_TOKEN", "s3cr3t")
+        monkeypatch.setattr(live_demo_server, "metrics", LiveMetrics())
 
         class StubWebSocket:
             query_params: dict[str, str] = {}
             headers = {"x-audio-audit-token": "wrong"}
 
         assert _is_audio_audit_authorized(StubWebSocket()) is False
+        assert live_demo_server.metrics.websocket_auth_failure_count == 1
 
     def test_authorization_rejects_bad_origin(self, monkeypatch: Any) -> None:
         """[FACT] Origin not in allowlist is denied."""
