@@ -7,12 +7,10 @@ import argparse
 import json
 import math
 import os
-import sys
 import urllib.error
 import urllib.request
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
-from pathlib import Path
 from typing import Any
 
 from google.cloud import logging as cloud_logging
@@ -130,7 +128,12 @@ def parse_prometheus_text(text: str) -> list[MetricSample]:
     return samples
 
 
-def metric_value(samples: list[MetricSample], name: str, labels: dict[str, str] | None = None, default: float = math.nan) -> float:
+def metric_value(
+    samples: list[MetricSample],
+    name: str,
+    labels: dict[str, str] | None = None,
+    default: float = math.nan,
+) -> float:
     expected = labels or {}
     for sample in samples:
         if sample.name != name:
@@ -140,7 +143,13 @@ def metric_value(samples: list[MetricSample], name: str, labels: dict[str, str] 
     return default
 
 
-def metric_label_value(samples: list[MetricSample], name: str, label: str, labels: dict[str, str] | None = None, default: str = "missing") -> str:
+def metric_label_value(
+    samples: list[MetricSample],
+    name: str,
+    label: str,
+    labels: dict[str, str] | None = None,
+    default: str = "missing",
+) -> str:
     expected = labels or {}
     for sample in samples:
         if sample.name != name:
@@ -167,16 +176,24 @@ def save_state(storage_client: storage.Client, state_uri: str, state: dict[str, 
     blob.upload_from_string(json.dumps(state, indent=2), content_type="application/json")
 
 
-def baseline_snapshot(snapshots: list[dict[str, Any]], now: datetime, window_minutes: int) -> dict[str, Any] | None:
+def baseline_snapshot(
+    snapshots: list[dict[str, Any]], now: datetime, window_minutes: int
+) -> dict[str, Any] | None:
     target = now - timedelta(minutes=window_minutes)
-    eligible = [snapshot for snapshot in snapshots if datetime.fromisoformat(snapshot["timestamp"]) <= target]
+    eligible = [
+        snapshot
+        for snapshot in snapshots
+        if datetime.fromisoformat(snapshot["timestamp"]) <= target
+    ]
     if not eligible:
         return None
     eligible.sort(key=lambda snapshot: snapshot["timestamp"], reverse=True)
     return eligible[0]
 
 
-def counter_delta(current: dict[str, Any], baseline: dict[str, Any] | None, field: str) -> float | None:
+def counter_delta(
+    current: dict[str, Any], baseline: dict[str, Any] | None, field: str
+) -> float | None:
     if baseline is None:
         return None
     return max(float(current["counters"][field]) - float(baseline["counters"][field]), 0.0)
@@ -221,7 +238,11 @@ def build_failure_summary(now: datetime, service_url: str, details: str) -> dict
 def main() -> int:
     args = parse_args()
     if not args.admin_token:
-        summary = build_failure_summary(utcnow(), args.service_url, "HELIX_ADMIN_TOKEN is required for Cloud Run Job monitoring.")
+        summary = build_failure_summary(
+            utcnow(),
+            args.service_url,
+            "HELIX_ADMIN_TOKEN is required for Cloud Run Job monitoring.",
+        )
         print(json.dumps(summary, indent=2))
         publish_summary(summary, args.log_name, args.component)
         return 1
@@ -230,12 +251,18 @@ def main() -> int:
     now = utcnow()
 
     try:
-        preflight_status, _ = http_get(f"{args.service_url.rstrip('/')}/api/runtime-config", headers)
+        preflight_status, _ = http_get(
+            f"{args.service_url.rstrip('/')}/api/runtime-config", headers
+        )
         if preflight_status != 200:
-            raise MonitorIntegrityError(f"Runtime-config preflight auth failed with status {preflight_status}")
+            raise MonitorIntegrityError(
+                f"Runtime-config preflight auth failed with status {preflight_status}"
+            )
 
         metrics_text = get_text(f"{args.service_url.rstrip('/')}/metrics", headers)
-        security_body = get_json(f"{args.service_url.rstrip('/')}/api/security-transparency", headers)
+        security_body = get_json(
+            f"{args.service_url.rstrip('/')}/api/security-transparency", headers
+        )
     except MonitorIntegrityError as exc:
         summary = build_failure_summary(now, args.service_url, str(exc))
         print(json.dumps(summary, indent=2))
@@ -256,10 +283,18 @@ def main() -> int:
     current_snapshot = {
         "timestamp": now.isoformat(),
         "counters": {
-            "operator_auth_failure": metric_value(samples, "helix_security_events_total", {"event": "operator_auth_failure"}, 0),
-            "operator_rate_limit": metric_value(samples, "helix_security_events_total", {"event": "operator_rate_limit"}, 0),
-            "audio_rate_limit": metric_value(samples, "helix_security_events_total", {"event": "audio_rate_limit"}, 0),
-            "websocket_auth_failure": metric_value(samples, "helix_security_events_total", {"event": "websocket_auth_failure"}, 0),
+            "operator_auth_failure": metric_value(
+                samples, "helix_security_events_total", {"event": "operator_auth_failure"}, 0
+            ),
+            "operator_rate_limit": metric_value(
+                samples, "helix_security_events_total", {"event": "operator_rate_limit"}, 0
+            ),
+            "audio_rate_limit": metric_value(
+                samples, "helix_security_events_total", {"event": "audio_rate_limit"}, 0
+            ),
+            "websocket_auth_failure": metric_value(
+                samples, "helix_security_events_total", {"event": "websocket_auth_failure"}, 0
+            ),
         },
     }
 
@@ -273,8 +308,14 @@ def main() -> int:
     save_state(storage_client, args.state_gcs_uri, {"snapshots": all_snapshots})
 
     results: list[dict[str, Any]] = []
-    results.append(make_check("operator-auth-enforced", "page", auth_enforced == 1, f"value={auth_enforced}"))
-    results.append(make_check("guardian-origin-enforced", "page", origin_enforced == 1, f"value={origin_enforced}"))
+    results.append(
+        make_check("operator-auth-enforced", "page", auth_enforced == 1, f"value={auth_enforced}")
+    )
+    results.append(
+        make_check(
+            "guardian-origin-enforced", "page", origin_enforced == 1, f"value={origin_enforced}"
+        )
+    )
     results.append(
         make_check(
             "receipt-backend-posture",
@@ -285,14 +326,18 @@ def main() -> int:
     )
 
     latest_scan_timestamp_raw = str(security_body.get("latest_scan_timestamp", "unavailable"))
-    artifact_scan_timestamp_raw = str(security_body.get("artifact_analysis", {}).get("scan_timestamp", "unavailable"))
+    artifact_scan_timestamp_raw = str(
+        security_body.get("artifact_analysis", {}).get("scan_timestamp", "unavailable")
+    )
     artifact_details = f"status={artifact_status}; image_uri={artifact_image}"
     artifact_passed = True
     if artifact_status == "unverified":
         deploy_anchor: datetime | None = None
         if latest_scan_timestamp_raw and latest_scan_timestamp_raw != "unavailable":
             try:
-                deploy_anchor = datetime.fromisoformat(latest_scan_timestamp_raw.replace("Z", "+00:00")).astimezone(timezone.utc)
+                deploy_anchor = datetime.fromisoformat(
+                    latest_scan_timestamp_raw.replace("Z", "+00:00")
+                ).astimezone(timezone.utc)
             except ValueError:
                 deploy_anchor = None
         if deploy_anchor is None:
@@ -304,30 +349,98 @@ def main() -> int:
             artifact_details += f"; unverified_for_minutes={age_minutes}"
     elif artifact_status == "clean":
         artifact_details += f"; verified_at={artifact_scan_timestamp_raw}"
-    results.append(make_check("artifact-verification-window", "warn", artifact_passed, artifact_details))
+    results.append(
+        make_check("artifact-verification-window", "warn", artifact_passed, artifact_details)
+    )
 
     thresholds = [
-        {"name": "operator-auth-failure-burst-5m", "severity": "warn", "field": "operator_auth_failure", "window": 5, "threshold": 5},
-        {"name": "operator-auth-failure-burst-15m", "severity": "page", "field": "operator_auth_failure", "window": 15, "threshold": 20},
-        {"name": "operator-rate-limit-burst-10m", "severity": "warn", "field": "operator_rate_limit", "window": 10, "threshold": 10},
-        {"name": "operator-rate-limit-burst-15m", "severity": "page", "field": "operator_rate_limit", "window": 15, "threshold": 50},
-        {"name": "audio-rate-limit-burst-5m", "severity": "warn", "field": "audio_rate_limit", "window": 5, "threshold": 10},
-        {"name": "audio-rate-limit-burst-10m", "severity": "page", "field": "audio_rate_limit", "window": 10, "threshold": 30},
-        {"name": "websocket-auth-failure-burst-5m", "severity": "warn", "field": "websocket_auth_failure", "window": 5, "threshold": 5},
-        {"name": "websocket-auth-failure-burst-15m", "severity": "page", "field": "websocket_auth_failure", "window": 15, "threshold": 20},
+        {
+            "name": "operator-auth-failure-burst-5m",
+            "severity": "warn",
+            "field": "operator_auth_failure",
+            "window": 5,
+            "threshold": 5,
+        },
+        {
+            "name": "operator-auth-failure-burst-15m",
+            "severity": "page",
+            "field": "operator_auth_failure",
+            "window": 15,
+            "threshold": 20,
+        },
+        {
+            "name": "operator-rate-limit-burst-10m",
+            "severity": "warn",
+            "field": "operator_rate_limit",
+            "window": 10,
+            "threshold": 10,
+        },
+        {
+            "name": "operator-rate-limit-burst-15m",
+            "severity": "page",
+            "field": "operator_rate_limit",
+            "window": 15,
+            "threshold": 50,
+        },
+        {
+            "name": "audio-rate-limit-burst-5m",
+            "severity": "warn",
+            "field": "audio_rate_limit",
+            "window": 5,
+            "threshold": 10,
+        },
+        {
+            "name": "audio-rate-limit-burst-10m",
+            "severity": "page",
+            "field": "audio_rate_limit",
+            "window": 10,
+            "threshold": 30,
+        },
+        {
+            "name": "websocket-auth-failure-burst-5m",
+            "severity": "warn",
+            "field": "websocket_auth_failure",
+            "window": 5,
+            "threshold": 5,
+        },
+        {
+            "name": "websocket-auth-failure-burst-15m",
+            "severity": "page",
+            "field": "websocket_auth_failure",
+            "window": 15,
+            "threshold": 20,
+        },
     ]
 
     for rule in thresholds:
         baseline = baseline_snapshot(all_snapshots, now, rule["window"])
         if baseline is None:
-            results.append(make_check(rule["name"], rule["severity"], True, f"insufficient_history=true; window_minutes={rule['window']}"))
+            results.append(
+                make_check(
+                    rule["name"],
+                    rule["severity"],
+                    True,
+                    f"insufficient_history=true; window_minutes={rule['window']}",
+                )
+            )
             continue
         delta = counter_delta(current_snapshot, baseline, rule["field"])
         passed = delta is not None and delta < rule["threshold"]
-        results.append(make_check(rule["name"], rule["severity"], passed, f"delta={delta}; threshold={rule['threshold']}; window_minutes={rule['window']}"))
+        results.append(
+            make_check(
+                rule["name"],
+                rule["severity"],
+                passed,
+                f"delta={delta}; threshold={rule['threshold']}; window_minutes={rule['window']}",
+            )
+        )
 
-    page_failures = [check for check in results if not check["Passed"] and check["Severity"] == "page"]
-    warn_failures = [check for check in results if not check["Passed"] and check["Severity"] == "warn"]
+    page_failures = [
+        check for check in results if not check["Passed"] and check["Severity"] == "page"
+    ]
+    warn_failures = [
+        check for check in results if not check["Passed"] and check["Severity"] == "warn"
+    ]
 
     overall_status = "pass"
     if page_failures:
