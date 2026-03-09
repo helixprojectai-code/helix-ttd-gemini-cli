@@ -67,6 +67,8 @@ operator_rate_limiter = SlidingWindowRateLimiter()
 auth_rate_limiter = SlidingWindowRateLimiter()
 _incident_triage_lock = threading.Lock()
 _incident_triage_state: dict[str, dict[str, str]] = {}
+_INCIDENT_TRIAGE_MAX_ENTRIES = 1000
+_ALLOWED_INCIDENT_TRIAGE_STATUSES = {"open", "acknowledged"}
 
 
 @asynccontextmanager
@@ -115,10 +117,16 @@ def _incident_triage_fields(incident_id: str) -> dict[str, Any]:
 
 def _set_incident_triage_status(incident_id: str, status: str) -> dict[str, Any]:
     """[FACT] Update operator triage state for an active incident."""
+    if status not in _ALLOWED_INCIDENT_TRIAGE_STATUSES:
+        raise ValueError(f"Unsupported incident triage status: {status}")
+
     with _incident_triage_lock:
         if status == "open":
             _incident_triage_state.pop(incident_id, None)
         else:
+            if incident_id not in _incident_triage_state:
+                while len(_incident_triage_state) >= _INCIDENT_TRIAGE_MAX_ENTRIES:
+                    _incident_triage_state.pop(next(iter(_incident_triage_state)))
             _incident_triage_state[incident_id] = {
                 "status": status,
                 "updated_at": datetime.utcnow().isoformat(),
@@ -1617,7 +1625,9 @@ async def validate_text(text: str) -> dict:
         drift_code=(
             "DRIFT-E"
             if not compliant and epistemic_count == 0
-            else "DRIFT-A" if not compliant else None
+            else "DRIFT-A"
+            if not compliant
+            else None
         ),
     )
     receipt_store.add(receipt)

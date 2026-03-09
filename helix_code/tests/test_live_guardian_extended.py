@@ -324,6 +324,32 @@ class TestIncidentDashboardEndpoint:
             assert reopened["incident"]["triage_status"] == "open"
             assert reopened["summary"]["acknowledged_total"] == 0
 
+    def test_incident_triage_status_validation(self) -> None:
+        live_guardian._reset_incident_triage_state()
+
+        try:
+            live_guardian._set_incident_triage_status("artifact-verification", "closed")
+        except ValueError as exc:
+            assert "Unsupported incident triage status" in str(exc)
+        else:
+            raise AssertionError("Expected ValueError for unsupported triage status")
+
+    def test_incident_triage_entry_limit(self) -> None:
+        live_guardian._reset_incident_triage_state()
+        previous_limit = live_guardian._INCIDENT_TRIAGE_MAX_ENTRIES
+        live_guardian._INCIDENT_TRIAGE_MAX_ENTRIES = 3
+        try:
+            for index in range(4):
+                live_guardian._set_incident_triage_status(f"incident-{index}", "acknowledged")
+
+            snapshot = live_guardian._incident_triage_snapshot()
+            assert len(snapshot) == 3
+            assert "incident-0" not in snapshot
+            assert "incident-3" in snapshot
+        finally:
+            live_guardian._INCIDENT_TRIAGE_MAX_ENTRIES = previous_limit
+            live_guardian._reset_incident_triage_state()
+
 
 class TestGuardianOriginPolicy:
     """[FACT] Test Guardian CORS and WebSocket origin policy helpers."""
