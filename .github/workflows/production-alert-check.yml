@@ -50,8 +50,89 @@ jobs:
           mkdir -p "$RUNNER_TEMP/helix-alerts"
           gcloud storage cp "$ALERT_STATE_GCS_URI" "$RUNNER_TEMP/helix-alerts/production-alert-state.json" || true
 
+      - name: Validate Operator Token Secret
+        id: token_check
+        shell: bash
+        env:
+          HELIX_ADMIN_TOKEN: ${{ secrets.HELIX_ADMIN_TOKEN }}
+        run: |
+          set +e
+          mkdir -p "$RUNNER_TEMP/helix-alerts"
+
+          if [ -z "$HELIX_ADMIN_TOKEN" ]; then
+            echo "token_status=missing" >> "$GITHUB_OUTPUT"
+            cat > "$RUNNER_TEMP/helix-alerts/alert-summary.json" <<EOF
+          {
+            "evaluated_at": "$(date -u +"%Y-%m-%dT%H:%M:%SZ")",
+            "service_url": "$SERVICE_URL",
+            "overall_status": "page",
+            "artifact_status": "unknown",
+            "artifact_image": "unknown",
+            "storage_backend": "unknown",
+            "storage_mode": "unknown",
+            "page_failures": [
+              {
+                "Check": "operator-token-secret",
+                "Severity": "page",
+                "Passed": false,
+                "Details": "Repository secret HELIX_ADMIN_TOKEN is missing."
+              }
+            ],
+            "warn_failures": [],
+            "checks": [
+              {
+                "Check": "operator-token-secret",
+                "Severity": "page",
+                "Passed": false,
+                "Details": "Repository secret HELIX_ADMIN_TOKEN is missing."
+              }
+            ]
+          }
+          EOF
+            exit 0
+          fi
+
+          HTTP_CODE=$(curl -sS -o "$RUNNER_TEMP/helix-alerts/token-check-body.json" -w "%{http_code}"             -H "X-Helix-Admin-Token: $HELIX_ADMIN_TOKEN"             "$SERVICE_URL/api/runtime-config")
+
+          if [ "$HTTP_CODE" = "200" ]; then
+            echo "token_status=ok" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          echo "token_status=invalid" >> "$GITHUB_OUTPUT"
+          cat > "$RUNNER_TEMP/helix-alerts/alert-summary.json" <<EOF
+          {
+            "evaluated_at": "$(date -u +"%Y-%m-%dT%H:%M:%SZ")",
+            "service_url": "$SERVICE_URL",
+            "overall_status": "page",
+            "artifact_status": "unknown",
+            "artifact_image": "unknown",
+            "storage_backend": "unknown",
+            "storage_mode": "unknown",
+            "page_failures": [
+              {
+                "Check": "operator-token-secret",
+                "Severity": "page",
+                "Passed": false,
+                "Details": "Repository secret HELIX_ADMIN_TOKEN failed preflight runtime-config auth with status $HTTP_CODE."
+              }
+            ],
+            "warn_failures": [],
+            "checks": [
+              {
+                "Check": "operator-token-secret",
+                "Severity": "page",
+                "Passed": false,
+                "Details": "Repository secret HELIX_ADMIN_TOKEN failed preflight runtime-config auth with status $HTTP_CODE."
+              }
+            ]
+          }
+          EOF
+          exit 0
+
       - name: Run Alert Checker
         id: checker
+        if: steps.token_check.outputs.token_status == 'ok'
         shell: bash
         env:
           HELIX_ADMIN_TOKEN: ${{ secrets.HELIX_ADMIN_TOKEN }}
@@ -93,4 +174,11 @@ jobs:
         if: steps.checker.outputs.check_exit == '1'
         run: |
           echo "Production alert check reported page-level findings."
+          exit 1
+
+      - name: Fail On Invalid Operator Token Secret
+        if: steps.token_check.outputs.token_status != 'ok'
+        run: |
+          echo "Production alert check could not authenticate with repository secret HELIX_ADMIN_TOKEN."
+          echo "Update the repository secret to the current production operator token."
           exit 1

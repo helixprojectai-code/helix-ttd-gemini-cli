@@ -129,6 +129,7 @@ python helix_code/live_demo_server.py
 - Deployment verification helper: `powershell -ExecutionPolicy Bypass -File tools/verify-production-deploy.ps1 [-AdminToken <token>]`
 - Scheduled alert checker: `powershell -ExecutionPolicy Bypass -File tools/check-production-alerts.ps1 -AdminToken <token>`
 - Scheduled production polling workflow: `.github/workflows/production-alert-check.yml`
+- Workflow includes operator-token preflight validation so stale GitHub secrets fail with a direct auth diagnosis
 - Cloud Logging sink publisher: `python tools/publish-monitoring-snapshot.py --input <summary.json>`
 - Authenticated metrics endpoint: `GET /metrics` using bearer token, `X-Helix-Admin-Token`, or the operator session cookie
 - Deployment automation preserves optional operator secret bindings by using secret updates rather than replacing the full secret set

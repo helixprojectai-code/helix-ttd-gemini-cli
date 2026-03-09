@@ -298,6 +298,7 @@ This workflow:
 
 - authenticates with the existing GitHub deploy identity
 - restores the prior checker state from `gs://helix-ai-deploy-receipts/ops/production-alert-state.json`
+- validates the `HELIX_ADMIN_TOKEN` repo secret against `/api/runtime-config` before full alert evaluation
 - runs `tools/check-production-alerts.ps1`
 - publishes the JSON summary to Cloud Logging under `helix-production-alerts`
 - writes the updated state file back to GCS so burst detection survives runner resets
