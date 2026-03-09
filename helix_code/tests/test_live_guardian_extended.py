@@ -131,6 +131,8 @@ class TestApiInfoEndpoint:
             assert data["status"] == "RATIFIED"
             assert "endpoints" in data
             assert data["endpoints"]["metrics"] == "/metrics"
+            assert data["endpoints"]["incident_board"] == "/incidents"
+            assert data["endpoints"]["incident_api"] == "/api/incidents"
 
 
 class TestRuntimeConfigEndpoint:
@@ -223,6 +225,7 @@ class TestAuditDashboardEndpoint:
             assert "metrics" in data
             assert "storage" in data
             assert "recent_receipts" in data
+            assert "incidents" in data
 
     def test_audit_dashboard_page(self) -> None:
         """[FACT] /audit-dashboard serves an HTML compliance view."""
@@ -231,6 +234,50 @@ class TestAuditDashboardEndpoint:
             assert response.status_code == 200
             assert "text/html" in response.headers["content-type"]
             assert "Audit Trail Dashboard" in response.text
+
+
+class TestIncidentDashboardEndpoint:
+    """[FACT] Test operator incident API and HTML surface."""
+
+    def test_incident_api_structure(self) -> None:
+        with TestClient(app) as client:
+            response = client.get("/api/incidents")
+            assert response.status_code == 200
+            data = response.json()
+            assert "snapshot_at" in data
+            assert "summary" in data
+            assert "incidents" in data
+            assert "active_total" in data["summary"]
+            assert "all_clear" in data["summary"]
+
+    def test_incident_api_surfaces_active_signals(self, monkeypatch) -> None:
+        monkeypatch.setenv("HELIX_ENV", "production")
+        monkeypatch.setenv("SECURITY_ARTIFACT_ANALYSIS_STATUS", "unverified")
+        monkeypatch.setenv(
+            "SECURITY_ARTIFACT_IMAGE_URI",
+            "us-central1-docker.pkg.dev/helix-ai-deploy/helix-repo/constitutional-guardian@sha256:test",
+        )
+        patched_metrics = live_demo_server.LiveMetrics()
+        patched_metrics.record_auth_failure("operator")
+        monkeypatch.setattr(live_demo_server, "metrics", patched_metrics)
+        monkeypatch.setattr(standalone_live_demo_server, "metrics", patched_metrics)
+
+        with TestClient(app) as client:
+            response = client.get("/api/incidents")
+            assert response.status_code == 200
+            data = response.json()
+
+        incident_ids = {incident["id"] for incident in data["incidents"]}
+        assert "artifact-verification" in incident_ids
+        assert "operator-auth-failure" in incident_ids
+        assert data["summary"]["active_total"] >= 2
+
+    def test_incident_dashboard_page(self) -> None:
+        with TestClient(app) as client:
+            response = client.get("/incidents")
+            assert response.status_code == 200
+            assert "Operator Incident Board" in response.text
+            assert "/api/incidents" in response.text
 
 
 class TestGuardianOriginPolicy:

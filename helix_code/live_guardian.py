@@ -504,6 +504,168 @@ def _runtime_config_snapshot() -> dict[str, Any]:
     }
 
 
+def _incident_snapshot(
+    *,
+    runtime: dict[str, Any] | None = None,
+    audit: dict[str, Any] | None = None,
+    security: dict[str, Any] | None = None,
+    limit: int = 8,
+) -> dict[str, Any]:
+    """[FACT] Derive operator-facing incidents from current runtime, audit, and security signals."""
+    runtime = runtime or _runtime_config_snapshot()
+    audit = audit or _audit_dashboard_snapshot(limit=50)
+    security = security or _security_transparency_snapshot()
+
+    production_mode = os.getenv("HELIX_ENV", "").strip().lower() == "production"
+    incidents: list[dict[str, Any]] = []
+
+    def add_incident(
+        incident_id: str,
+        severity: str,
+        title: str,
+        details: str,
+        action: str,
+        *,
+        evidence: dict[str, Any] | None = None,
+    ) -> None:
+        incidents.append(
+            {
+                "id": incident_id,
+                "severity": severity,
+                "title": title,
+                "details": details,
+                "action": action,
+                "evidence": evidence or {},
+            }
+        )
+
+    artifact = security["artifact_analysis"]
+    if artifact["status"] != "clean":
+        add_incident(
+            "artifact-verification",
+            "warn" if artifact["status"] == "unverified" else "page",
+            "Live Artifact Verification Pending",
+            f"Artifact status is {artifact['status']} for the active image.",
+            "Scan the live Artifact Registry digest and promote runtime metadata to clean.",
+            evidence={
+                "image_uri": artifact["image_uri"],
+                "scan_timestamp": artifact["scan_timestamp"],
+            },
+        )
+
+    if production_mode and not runtime["auth"]["admin_token_enforced"]:
+        add_incident(
+            "operator-auth-enforcement",
+            "page",
+            "Operator Auth Enforcement Disabled",
+            "Protected operator surfaces are reachable without enforced admin auth.",
+            "Set HELIX_ENFORCE_ADMIN_TOKEN=true and verify HELIX_ADMIN_TOKEN is bound from Secret Manager.",
+        )
+
+    if production_mode and not runtime["auth"]["guardian_origin_enforced"]:
+        add_incident(
+            "guardian-origin-policy",
+            "page",
+            "Guardian Origin Enforcement Disabled",
+            "Browser Guardian WebSocket traffic is not restricted by origin policy.",
+            "Set HELIX_ALLOWED_ORIGINS to trusted UI origins and verify guardian_origin_enforced stays true.",
+        )
+
+    storage = audit["storage"]
+    if production_mode and (storage.get("backend") != "gcs+local" or storage.get("mode") != "dual"):
+        add_incident(
+            "receipt-storage-posture",
+            "page",
+            "Receipt Storage Posture Drift",
+            f"Receipt storage is {storage.get('backend')} with mode {storage.get('mode')}.",
+            "Restore dual-mode persistence and verify the GCS receipt bucket is writable.",
+            evidence={
+                "backend": storage.get("backend"),
+                "mode": storage.get("mode"),
+                "gcs_bucket": storage.get("gcs_bucket"),
+            },
+        )
+
+    receipt_summary = audit["receipts"]
+    if receipt_summary["interventions"] > 0:
+        top_drift = max(audit["drift_counts"].items(), key=lambda item: item[1])[0]
+        add_incident(
+            "constitutional-interventions",
+            "warn",
+            "Interventions Recorded In Active Receipt Window",
+            f"{receipt_summary['interventions']} intervention receipts are currently retained.",
+            "Review the latest intervention receipts and confirm the drift pattern is expected before customer impact widens.",
+            evidence={
+                "interventions": receipt_summary["interventions"],
+                "compliance_rate": receipt_summary["compliance_rate"],
+                "top_drift_code": top_drift,
+            },
+        )
+
+    metrics_data = audit["metrics"]
+    if metrics_data["error_count"] > 0:
+        add_incident(
+            "runtime-errors",
+            "warn",
+            "Runtime Errors Recorded",
+            f"{metrics_data['error_count']} runtime errors were recorded since process start.",
+            "Inspect logs around the current revision and verify error_count returns to zero on the next clean interval.",
+            evidence={"error_count": metrics_data["error_count"]},
+        )
+
+    security_events = metrics_data.get("security_events", {})
+    for event_name, title, action in [
+        (
+            "operator_auth_failure_count",
+            "Operator Auth Failures Observed",
+            "Review operator access logs and confirm failures map to expected invalid-token attempts.",
+        ),
+        (
+            "websocket_auth_failure_count",
+            "WebSocket Auth Failures Observed",
+            "Inspect browser and audio websocket traffic to confirm rejections are expected and not a live probing pattern.",
+        ),
+        (
+            "operator_rate_limit_count",
+            "Operator API Rate Limits Triggered",
+            "Check whether an operator client or scraper is misconfigured against the protected APIs.",
+        ),
+        (
+            "audio_rate_limit_count",
+            "Audio Ingress Rate Limits Triggered",
+            "Inspect reconnect behavior on audio clients and confirm ingress budgets are correctly tuned.",
+        ),
+    ]:
+        count = int(security_events.get(event_name, 0))
+        if count > 0:
+            add_incident(
+                event_name.removesuffix("_count").replace("_", "-"),
+                "warn",
+                title,
+                f"{count} events recorded since the current revision started.",
+                action,
+                evidence={"count": count},
+            )
+
+    incidents = incidents[: max(1, min(limit, 50))]
+    severity_counts = {
+        "page": sum(1 for incident in incidents if incident["severity"] == "page"),
+        "warn": sum(1 for incident in incidents if incident["severity"] == "warn"),
+    }
+    severity_counts["total"] = len(incidents)
+
+    return {
+        "snapshot_at": datetime.utcnow().isoformat(),
+        "summary": {
+            "active_total": len(incidents),
+            "page_total": severity_counts["page"],
+            "warn_total": severity_counts["warn"],
+            "all_clear": len(incidents) == 0,
+        },
+        "incidents": incidents,
+    }
+
+
 def _audit_dashboard_snapshot(limit: int = 50) -> dict[str, Any]:
     """[FACT] Build audit dashboard payload from in-memory receipt + metrics stores."""
     from live_demo_server import metrics, receipt_store
@@ -523,7 +685,7 @@ def _audit_dashboard_snapshot(limit: int = 50) -> dict[str, Any]:
     if all_receipts:
         compliance_rate = round((valid_count / len(all_receipts)) * 100, 2)
 
-    return {
+    snapshot = {
         "snapshot_at": datetime.utcnow().isoformat(),
         "receipts": {
             "total": len(all_receipts),
@@ -545,6 +707,8 @@ def _audit_dashboard_snapshot(limit: int = 50) -> dict[str, Any]:
             for r in recent_receipts
         ],
     }
+    snapshot["incidents"] = _incident_snapshot(audit=snapshot, limit=8)
+    return snapshot
 
 
 def _prometheus_label_value(value: Any) -> str:
@@ -812,6 +976,8 @@ async def api_info() -> JSONResponse:
                 "security_transparency_api": "/api/security-transparency",
                 "audit_dashboard": "/audit-dashboard",
                 "audit_dashboard_api": "/api/audit-dashboard",
+                "incident_board": "/incidents",
+                "incident_api": "/api/incidents",
                 "metrics": "/metrics",
             },
         },
@@ -917,6 +1083,14 @@ async def audit_dashboard_api(request: Request, limit: int = 50) -> JSONResponse
     return JSONResponse(status_code=200, content=_audit_dashboard_snapshot(limit=limit))
 
 
+@app.get("/api/incidents")
+async def incidents_api(request: Request, limit: int = 8) -> JSONResponse:
+    """[FACT] Operator incident summary derived from runtime, audit, and security telemetry."""
+    _enforce_operator_rate_limit(request)
+    _require_admin_token(request)
+    return JSONResponse(status_code=200, content=_incident_snapshot(limit=limit))
+
+
 @app.get("/metrics", response_class=PlainTextResponse)
 async def prometheus_metrics(request: Request) -> PlainTextResponse:
     """[FACT] Authenticated Prometheus-style metrics for production observability."""
@@ -994,6 +1168,148 @@ async def audit_dashboard_page(request: Request) -> HTMLResponse:
 
         refreshDashboard();
         setInterval(refreshDashboard, 5000);
+      </script>
+    </body>
+    </html>
+    """
+    response = HTMLResponse(content=html)
+    _set_admin_session_cookie(response, request, gate)
+    return response
+
+
+@app.get("/incidents", response_class=HTMLResponse)
+async def incident_dashboard_page(request: Request) -> HTMLResponse:
+    """[FACT] Human-friendly incident board for operator triage."""
+    _enforce_operator_rate_limit(request)
+    gate = _guard_html_page(request, "/incidents")
+    if isinstance(gate, HTMLResponse):
+        return gate
+    html = """
+    <!DOCTYPE html>
+    <html lang='en'>
+    <head>
+      <meta charset='utf-8' />
+      <meta name='viewport' content='width=device-width, initial-scale=1' />
+      <title>Operator Incident Board</title>
+      <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; background: #06111c; color: #e2e8f0; }
+        .wrap { max-width: 1180px; margin: 0 auto; padding: 28px 18px 36px; }
+        .hero { display: flex; justify-content: space-between; gap: 16px; align-items: flex-start; margin-bottom: 18px; }
+        .hero h1 { margin: 0; font-size: 34px; }
+        .hero p { margin: 6px 0 0; color: #94a3b8; }
+        .nav { display: flex; gap: 10px; flex-wrap: wrap; }
+        .nav a { color: #93c5fd; text-decoration: none; font-weight: 600; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-bottom: 18px; }
+        .card, .incident, .supporting { background: #0f172a; border: 1px solid #1e293b; border-radius: 12px; box-shadow: 0 12px 28px rgba(2, 6, 23, 0.35); }
+        .card { padding: 14px; }
+        .label { font-size: 12px; color: #94a3b8; text-transform: uppercase; letter-spacing: .06em; }
+        .value { font-size: 28px; font-weight: 700; margin-top: 6px; }
+        .value.ok { color: #4ade80; }
+        .value.warn { color: #fbbf24; }
+        .value.page { color: #f87171; }
+        .incidents { display: grid; gap: 12px; margin-bottom: 18px; }
+        .incident { padding: 16px; }
+        .incident.page { border-color: #7f1d1d; }
+        .incident.warn { border-color: #854d0e; }
+        .incident-header { display: flex; justify-content: space-between; gap: 12px; align-items: center; margin-bottom: 8px; }
+        .incident h2 { margin: 0; font-size: 18px; }
+        .badge { padding: 4px 9px; border-radius: 999px; font-size: 12px; font-weight: 700; text-transform: uppercase; }
+        .badge.page { background: rgba(248, 113, 113, 0.18); color: #fecaca; }
+        .badge.warn { background: rgba(251, 191, 36, 0.18); color: #fde68a; }
+        .incident p { margin: 0 0 10px; color: #cbd5e1; line-height: 1.45; }
+        .incident dl { margin: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 8px 12px; }
+        .incident dt { font-size: 11px; color: #94a3b8; text-transform: uppercase; }
+        .incident dd { margin: 2px 0 0; font-size: 14px; color: #f8fafc; }
+        .supporting { padding: 16px; }
+        .supporting h2 { margin: 0 0 12px; font-size: 18px; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 9px 10px; border-bottom: 1px solid #1e293b; text-align: left; font-size: 14px; }
+        th { color: #94a3b8; font-weight: 600; }
+        .empty { padding: 24px; text-align: center; color: #94a3b8; }
+      </style>
+    </head>
+    <body>
+      <div class='wrap'>
+        <div class='hero'>
+          <div>
+            <h1>Operator Incident Board</h1>
+            <p>Active production incidents derived from runtime controls, audit evidence, and security telemetry.</p>
+          </div>
+          <div class='nav'>
+            <a href='/audit-dashboard'>Audit Dashboard</a>
+            <a href='/security-transparency'>Security Transparency</a>
+            <a href='/api/incidents'>JSON API</a>
+          </div>
+        </div>
+        <div class='grid'>
+          <div class='card'><div class='label'>Active Incidents</div><div id='active' class='value ok'>0</div></div>
+          <div class='card'><div class='label'>Page-Level</div><div id='page-total' class='value page'>0</div></div>
+          <div class='card'><div class='label'>Warnings</div><div id='warn-total' class='value warn'>0</div></div>
+          <div class='card'><div class='label'>Status</div><div id='status' class='value ok'>All Clear</div></div>
+        </div>
+        <div id='incidents' class='incidents'></div>
+        <div class='supporting'>
+          <h2>Recent Receipt Evidence</h2>
+          <table>
+            <thead><tr><th>Timestamp</th><th>Receipt</th><th>Status</th><th>Drift Code</th></tr></thead>
+            <tbody id='receipts'></tbody>
+          </table>
+        </div>
+      </div>
+      <script>
+        function renderEvidence(evidence) {
+          const entries = Object.entries(evidence || {});
+          if (!entries.length) return '';
+          return `<dl>${entries.map(([key, value]) => `<div><dt>${key.replaceAll('_', ' ')}</dt><dd>${value}</dd></div>`).join('')}</dl>`;
+        }
+
+        async function refreshIncidentBoard() {
+          const [incidentRes, auditRes] = await Promise.all([
+            fetch('/api/incidents?limit=12', { credentials: 'same-origin' }),
+            fetch('/api/audit-dashboard?limit=8', { credentials: 'same-origin' }),
+          ]);
+          const incidentData = await incidentRes.json();
+          const auditData = await auditRes.json();
+
+          document.getElementById('active').textContent = incidentData.summary.active_total;
+          document.getElementById('page-total').textContent = incidentData.summary.page_total;
+          document.getElementById('warn-total').textContent = incidentData.summary.warn_total;
+          const statusNode = document.getElementById('status');
+          statusNode.textContent = incidentData.summary.all_clear ? 'All Clear' : 'Attention';
+          statusNode.className = 'value ' + (incidentData.summary.all_clear ? 'ok' : (incidentData.summary.page_total ? 'page' : 'warn'));
+
+          const board = document.getElementById('incidents');
+          board.innerHTML = '';
+          if (!incidentData.incidents.length) {
+            board.innerHTML = "<div class='empty incident'><strong>No active incidents.</strong><p>The current runtime, storage, and security posture is stable.</p></div>";
+          } else {
+            for (const incident of incidentData.incidents) {
+              const node = document.createElement('div');
+              node.className = `incident ${incident.severity}`;
+              node.innerHTML = `
+                <div class='incident-header'>
+                  <h2>${incident.title}</h2>
+                  <span class='badge ${incident.severity}'>${incident.severity}</span>
+                </div>
+                <p>${incident.details}</p>
+                <p><strong>Operator action:</strong> ${incident.action}</p>
+                ${renderEvidence(incident.evidence)}
+              `;
+              board.appendChild(node);
+            }
+          }
+
+          const rows = document.getElementById('receipts');
+          rows.innerHTML = '';
+          for (const receipt of auditData.recent_receipts.slice().reverse()) {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `<td>${receipt.timestamp}</td><td>${receipt.receipt_id || ''}</td><td>${receipt.valid ? 'PASS' : 'INTERVENTION'}</td><td>${receipt.drift_code || ''}</td>`;
+            rows.appendChild(tr);
+          }
+        }
+
+        refreshIncidentBoard();
+        setInterval(refreshIncidentBoard, 5000);
       </script>
     </body>
     </html>
