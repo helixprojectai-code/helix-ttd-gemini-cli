@@ -5,7 +5,7 @@
 **Deadline:** March 14, 2026
 **Target Length:** 2-3 minutes
 **Upload To:** YouTube (Unlisted)
-**Current Release:** `v1.4.6`
+**Current Release:** `v1.4.7`
 
 ---
 

@@ -7,25 +7,25 @@
 [![Ruff](https://img.shields.io/badge/lint-ruff-261230?labelColor=grey)](https://github.com/astral-sh/ruff)
 [![Black](https://img.shields.io/badge/format-black-000000?labelColor=grey)](https://github.com/psf/black)
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue)](LICENSE)
-[![PyPI](https://img.shields.io/badge/PyPI-1.4.6-blue)](https://pypi.org/project/helix-ttd-gemini/)
+[![PyPI](https://img.shields.io/badge/PyPI-1.4.7-blue)](https://pypi.org/project/helix-ttd-gemini/)
 
-<img src="https://raw.githubusercontent.com/helixprojectai-code/helix-ttd-gemini-cli/main/assets/helix-ttd-gemini.png" alt="Constitutional Guardian Overview" width="100%">
+![Constitutional Guardian Overview](https://raw.githubusercontent.com/helixprojectai-code/helix-ttd-gemini-cli/main/assets/helix-ttd-gemini.png)
 
 **[FACT]** Real-time AI governance for the Gemini Live API.
 **[HYPOTHESIS]** Intercepting voice and text drift at the edge prevents misaligned AI behavior from reaching the user.
 
 This project is a submission for the **Gemini Live Agent Challenge (March 2026)**.
 
-**Current Release:** `v1.4.6`
+**Current Release:** `v1.4.7`
 
-## Operational Hardening In v1.4.6
+## Production Stabilization In v1.4.7
 
-- **Vault-Aware Secret Resolution:** Gemini credentials can now resolve through Vault with environment fallback for local and Cloud Run-safe operation.
-- **Protected Operator Surfaces:** Runtime config, security transparency, audit dashboard, and receipts APIs can be locked behind `HELIX_ADMIN_TOKEN`.
-- **Durable Receipt Persistence:** Validation receipts can persist to local JSONL storage and optionally archive/restore through GCS.
-- **Audit Dashboard:** Dedicated `/audit-dashboard` and `/api/audit-dashboard` surfaces now expose compliance and storage telemetry for operators.
-- **Artifact Analysis Visibility:** Security transparency surfaces can now show verified image scan status, scan timestamp, and image digest.
-- **Authenticated Observability:** Prometheus-style `/metrics` export is available behind operator auth for production scraping and post-deploy verification, including auth-failure and rate-limit counters.
+- **GCP-Native Production Monitoring:** The scheduled production checker now runs as a Cloud Run Job with Cloud Scheduler and Cloud Logging integration instead of GitHub Actions.
+- **Alert Signal Cleanup:** Missing credentials no longer inflate operator or websocket auth-failure counters; only explicit invalid credentials are counted.
+- **Release-Ready Monitor State:** Production monitoring now reports `overall_status=pass`, `monitor_integrity_status=ok`, and a clean live artifact attestation.
+- **Operator Enforcement Baseline:** Admin auth, origin enforcement, authenticated metrics, and `gcs+local` dual receipt persistence remain active in production.
+- **Artifact Verification Workflow:** Live images are scanned and promoted to `clean` against Artifact Registry digests after deploy.
+- **Operational Proof Refresh:** README traction, archived release notes, and proof assets were rotated into the current documentation layout.
 
 ## 🚀 Key Features
 
@@ -165,7 +165,7 @@ curl http://localhost:8180/api/security-transparency
 curl -H "X-Helix-Admin-Token: $env:HELIX_ADMIN_TOKEN" http://localhost:8180/metrics
 ```
 
-**Current security verification record:** `RELEASE_NOTES_v1.4.6.md` and `SECURITY_VERIFICATION_2026-03-08.md` capture the March 8, 2026 clean Artifact Analysis result for the live Cloud Run digest.
+**Current security verification record:** `RELEASE_NOTES_v1.4.7.md` and `SECURITY_VERIFICATION_2026-03-09.md` capture the March 9, 2026 clean Artifact Analysis result for the live Cloud Run digest.
 
 **Production alerting baseline:** `PRODUCTION_ALERTING_SPEC_2026-03-08.md` defines the first authenticated-metrics alert set for artifact verification, auth failures, rate limiting, and receipt persistence posture.
 
