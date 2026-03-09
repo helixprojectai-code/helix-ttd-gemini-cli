@@ -13,6 +13,8 @@ Node: GCS-GUARDIAN (Google Cloud Run)
 
 from __future__ import annotations
 
+import hashlib
+import json
 import os
 import sys
 import threading
@@ -21,6 +23,7 @@ from contextlib import asynccontextmanager
 from datetime import datetime
 from http.cookies import SimpleCookie
 from pathlib import Path
+from tempfile import gettempdir
 from typing import Any, cast
 from urllib.parse import parse_qs
 
@@ -39,6 +42,8 @@ from federation_receipts import FederationReceiptManager
 from gemini_text_client import create_gemini_text_client
 
 try:
+    import gcp_integrations
+    from google.api_core.exceptions import GoogleAPICallError as _GoogleAPICallError
     from request_limits import SlidingWindowRateLimiter
     from secret_resolver import (
         active_secret_backend,
@@ -48,6 +53,7 @@ try:
         vault_is_configured,
     )
 except ImportError:  # pragma: no cover
+    from . import gcp_integrations
     from .request_limits import SlidingWindowRateLimiter
     from .secret_resolver import (
         active_secret_backend,
@@ -57,6 +63,8 @@ except ImportError:  # pragma: no cover
         vault_is_configured,
     )
 
+    _GoogleAPICallError = RuntimeError
+
 # [FACT] Import demo components
 
 # [FACT] Global state (initialized on startup)
@@ -65,8 +73,6 @@ receipts: FederationReceiptManager | None = None
 telemetry: DriftTelemetry | None = None
 operator_rate_limiter = SlidingWindowRateLimiter()
 auth_rate_limiter = SlidingWindowRateLimiter()
-_incident_triage_lock = threading.Lock()
-_incident_triage_state: dict[str, dict[str, str]] = {}
 _INCIDENT_TRIAGE_MAX_ENTRIES = 1000
 _ALLOWED_INCIDENT_TRIAGE_STATUSES = {"open", "acknowledged"}
 
@@ -98,46 +104,170 @@ def _csv_env_values(name: str) -> list[str]:
     return [value.strip() for value in raw.split(",") if value.strip()]
 
 
+def _default_incident_triage_path() -> Path:
+    """[FACT] Resolve the local incident triage persistence path."""
+    configured_path = (os.getenv("HELIX_INCIDENT_TRIAGE_STORE_PATH", "") or "").strip()
+    if configured_path:
+        return Path(configured_path)
+    return Path(gettempdir()) / "helix-guardian" / "incident-triage-state.json"
+
+
+class LocalIncidentTriageLedger:
+    """[FACT] Persist incident triage state as a local JSON document."""
+
+    def __init__(self, path: Path):
+        self.path = path
+
+    def load(self) -> dict[str, dict[str, str]]:
+        if not self.path.exists():
+            return {}
+
+        payload = json.loads(self.path.read_text(encoding="utf-8"))
+        if not isinstance(payload, dict):
+            return {}
+        return {
+            str(incident_id): {
+                "status": str(state.get("status", "open")),
+                "updated_at": str(state.get("updated_at", "")),
+            }
+            for incident_id, state in payload.items()
+            if isinstance(state, dict)
+        }
+
+    def save(self, triage_state: dict[str, dict[str, str]]) -> None:
+        self.path.parent.mkdir(parents=True, exist_ok=True)
+        self.path.write_text(json.dumps(triage_state, indent=2, sort_keys=True), encoding="utf-8")
+
+
+class IncidentTriagePersistenceManager:
+    """[FACT] Coordinate shared durable incident triage persistence across instances."""
+
+    def __init__(
+        self,
+        *,
+        local_path: Path | None = None,
+        gcs_bucket: str | None = None,
+        gcs_object: str | None = None,
+    ) -> None:
+        self.local_ledger = LocalIncidentTriageLedger(local_path or _default_incident_triage_path())
+        self.gcs_bucket = (
+            gcs_bucket
+            if gcs_bucket is not None
+            else (os.getenv("GCS_RECEIPT_BUCKET", "") or "").strip() or None
+        )
+        self.gcs_object = (
+            gcs_object
+            if gcs_object is not None
+            else (
+                (os.getenv("HELIX_INCIDENT_TRIAGE_OBJECT", "") or "").strip()
+                or "ops/incident-triage-state.json"
+            )
+        )
+        self._gcs_client = None
+        if self.gcs_bucket and getattr(gcp_integrations, "GCP_AVAILABLE", False):
+            try:
+                self._gcs_client = gcp_integrations.storage.Client()
+            except Exception:
+                self._gcs_client = None
+
+    def load(self) -> dict[str, dict[str, str]]:
+        if self._gcs_client is not None and self.gcs_bucket:
+            try:
+                blob = self._gcs_client.bucket(self.gcs_bucket).blob(self.gcs_object)
+                if blob.exists():
+                    payload = json.loads(blob.download_as_text())
+                    if isinstance(payload, dict):
+                        self.local_ledger.save(cast(dict[str, dict[str, str]], payload))
+                        return cast(dict[str, dict[str, str]], payload)
+            except (_GoogleAPICallError, OSError, TypeError, ValueError):
+                return self.local_ledger.load()
+        return self.local_ledger.load()
+
+    def save(self, triage_state: dict[str, dict[str, str]]) -> None:
+        self.local_ledger.save(triage_state)
+        if self._gcs_client is not None and self.gcs_bucket:
+            blob = self._gcs_client.bucket(self.gcs_bucket).blob(self.gcs_object)
+            blob.upload_from_string(
+                json.dumps(triage_state, indent=2, sort_keys=True),
+                content_type="application/json",
+            )
+
+
+class IncidentTriageStore:
+    """[FACT] Shared incident triage store with local cache and durable backing."""
+
+    def __init__(
+        self,
+        max_entries: int = _INCIDENT_TRIAGE_MAX_ENTRIES,
+        persistence: IncidentTriagePersistenceManager | None = None,
+    ) -> None:
+        self.max_entries = max_entries
+        self.persistence = persistence or IncidentTriagePersistenceManager()
+        self._lock = threading.Lock()
+
+    def snapshot(self) -> dict[str, dict[str, str]]:
+        with self._lock:
+            return self.persistence.load()
+
+    def fields(
+        self, incident_id: str, triage_state: dict[str, dict[str, str]] | None = None
+    ) -> dict[str, Any]:
+        current = triage_state if triage_state is not None else self.snapshot()
+        triage_entry = current.get(incident_id)
+        if not triage_entry:
+            return {"triage_status": "open", "triaged_at": None}
+        return {
+            "triage_status": triage_entry.get("status", "open"),
+            "triaged_at": triage_entry.get("updated_at") or None,
+        }
+
+    def set_status(self, incident_id: str, status: str) -> dict[str, Any]:
+        if status not in _ALLOWED_INCIDENT_TRIAGE_STATUSES:
+            raise ValueError(f"Unsupported incident triage status: {status}")
+
+        with self._lock:
+            triage_state = self.persistence.load()
+            if status == "open":
+                triage_state.pop(incident_id, None)
+            else:
+                if incident_id not in triage_state:
+                    while len(triage_state) >= self.max_entries:
+                        triage_state.pop(next(iter(triage_state)))
+                triage_state[incident_id] = {
+                    "status": status,
+                    "updated_at": datetime.utcnow().isoformat(),
+                }
+            self.persistence.save(triage_state)
+            return self.fields(incident_id, triage_state)
+
+    def reset(self) -> None:
+        with self._lock:
+            self.persistence.save({})
+
+
+incident_triage_store = IncidentTriageStore()
+
+
 def _incident_triage_snapshot() -> dict[str, dict[str, str]]:
-    """[FACT] Return a copy of in-memory operator triage state for active incidents."""
-    with _incident_triage_lock:
-        return {incident_id: state.copy() for incident_id, state in _incident_triage_state.items()}
+    """[FACT] Return a copy of durable operator triage state for active incidents."""
+    return incident_triage_store.snapshot()
 
 
-def _incident_triage_fields(incident_id: str) -> dict[str, Any]:
+def _incident_triage_fields(
+    incident_id: str, triage_state: dict[str, dict[str, str]] | None = None
+) -> dict[str, Any]:
     """[FACT] Return the current operator triage metadata for an incident."""
-    triage_state = _incident_triage_snapshot().get(incident_id)
-    if not triage_state:
-        return {"triage_status": "open", "triaged_at": None}
-    return {
-        "triage_status": triage_state.get("status", "open"),
-        "triaged_at": triage_state.get("updated_at"),
-    }
+    return incident_triage_store.fields(incident_id, triage_state)
 
 
 def _set_incident_triage_status(incident_id: str, status: str) -> dict[str, Any]:
     """[FACT] Update operator triage state for an active incident."""
-    if status not in _ALLOWED_INCIDENT_TRIAGE_STATUSES:
-        raise ValueError(f"Unsupported incident triage status: {status}")
-
-    with _incident_triage_lock:
-        if status == "open":
-            _incident_triage_state.pop(incident_id, None)
-        else:
-            if incident_id not in _incident_triage_state:
-                while len(_incident_triage_state) >= _INCIDENT_TRIAGE_MAX_ENTRIES:
-                    _incident_triage_state.pop(next(iter(_incident_triage_state)))
-            _incident_triage_state[incident_id] = {
-                "status": status,
-                "updated_at": datetime.utcnow().isoformat(),
-            }
-    return _incident_triage_fields(incident_id)
+    return incident_triage_store.set_status(incident_id, status)
 
 
 def _reset_incident_triage_state() -> None:
-    """[FACT] Clear in-memory incident triage state for tests and operator resets."""
-    with _incident_triage_lock:
-        _incident_triage_state.clear()
+    """[FACT] Clear durable incident triage state for tests and operator resets."""
+    incident_triage_store.reset()
 
 
 def _guardian_allowed_origins() -> list[str]:
@@ -551,6 +681,53 @@ def _runtime_config_snapshot() -> dict[str, Any]:
     }
 
 
+def _normalize_incident_evidence(evidence: dict[str, Any] | None) -> dict[str, Any]:
+    """[FACT] Normalize incident evidence into a stable, JSON-safe mapping."""
+    normalized: dict[str, Any] = {}
+    for key, value in sorted((evidence or {}).items()):
+        if value is None or isinstance(value, str | int | float | bool):
+            normalized[key] = value
+        else:
+            normalized[key] = str(value)
+    return normalized
+
+
+def _incident_fingerprint(
+    incident_key: str,
+    severity: str,
+    category: str,
+    details: str,
+    action: str,
+    evidence: dict[str, Any],
+) -> str:
+    """[FACT] Build a deterministic fingerprint that changes when incident state materially changes."""
+    payload = {
+        "incident_key": incident_key,
+        "severity": severity,
+        "category": category,
+        "details": details,
+        "action": action,
+        "evidence": evidence,
+    }
+    digest = hashlib.sha256(
+        json.dumps(payload, sort_keys=True, separators=(",", ":")).encode("utf-8")
+    ).hexdigest()
+    return digest[:12]
+
+
+def _incident_identity(
+    incident_key: str,
+    severity: str,
+    category: str,
+    details: str,
+    action: str,
+    evidence: dict[str, Any],
+) -> str:
+    """[FACT] Build the externally visible incident identifier from a stable key and state fingerprint."""
+    safe_key = gcp_integrations.sanitize_receipt_id(incident_key)
+    return f"{safe_key}:{_incident_fingerprint(incident_key, severity, category, details, action, evidence)}"
+
+
 def _incident_snapshot(
     *,
     runtime: dict[str, Any] | None = None,
@@ -565,6 +742,7 @@ def _incident_snapshot(
 
     production_mode = os.getenv("HELIX_ENV", "").strip().lower() == "production"
     incidents: list[dict[str, Any]] = []
+    triage_state = _incident_triage_snapshot()
     intervention_receipt_ids = [
         receipt["receipt_id"]
         for receipt in reversed(audit["recent_receipts"])
@@ -572,7 +750,7 @@ def _incident_snapshot(
     ]
 
     def add_incident(
-        incident_id: str,
+        incident_key: str,
         severity: str,
         category: str,
         title: str,
@@ -583,16 +761,26 @@ def _incident_snapshot(
         investigate_url: str = "/audit-dashboard",
         investigate_label: str = "Open Audit Dashboard",
     ) -> None:
-        triage = _incident_triage_fields(incident_id)
+        normalized_evidence = _normalize_incident_evidence(evidence)
+        incident_id = _incident_identity(
+            incident_key,
+            severity,
+            category,
+            details,
+            action,
+            normalized_evidence,
+        )
+        triage = _incident_triage_fields(incident_id, triage_state)
         incidents.append(
             {
                 "id": incident_id,
+                "incident_key": incident_key,
                 "severity": severity,
                 "category": category,
                 "title": title,
                 "details": details,
                 "action": action,
-                "evidence": evidence or {},
+                "evidence": normalized_evidence,
                 "investigate_url": investigate_url,
                 "investigate_label": investigate_label,
                 "triage_status": triage["triage_status"],
@@ -1625,9 +1813,7 @@ async def validate_text(text: str) -> dict:
         drift_code=(
             "DRIFT-E"
             if not compliant and epistemic_count == 0
-            else "DRIFT-A"
-            if not compliant
-            else None
+            else "DRIFT-A" if not compliant else None
         ),
     )
     receipt_store.add(receipt)

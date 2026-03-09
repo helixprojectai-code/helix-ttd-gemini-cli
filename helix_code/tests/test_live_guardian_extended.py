@@ -4,6 +4,8 @@
 [ASSUMPTION] FastAPI TestClient allows synchronous testing of async endpoints.
 """
 
+from pathlib import Path
+
 import live_demo_server as standalone_live_demo_server
 from fastapi.testclient import TestClient
 
@@ -271,12 +273,15 @@ class TestIncidentDashboardEndpoint:
             assert response.status_code == 200
             data = response.json()
 
-        incident_ids = {incident["id"] for incident in data["incidents"]}
-        assert "artifact-verification" in incident_ids
-        assert "operator-auth-failure" in incident_ids
+        incident_keys = {incident["incident_key"] for incident in data["incidents"]}
+        assert "artifact-verification" in incident_keys
+        assert "operator-auth-failure" in incident_keys
         artifact = next(
-            incident for incident in data["incidents"] if incident["id"] == "artifact-verification"
+            incident
+            for incident in data["incidents"]
+            if incident["incident_key"] == "artifact-verification"
         )
+        assert artifact["id"].startswith("artifact-verification:")
         assert artifact["category"] == "security"
         assert artifact["investigate_url"] == "/security-transparency"
         assert data["summary"]["active_total"] >= 2
@@ -301,7 +306,16 @@ class TestIncidentDashboardEndpoint:
         live_guardian._reset_incident_triage_state()
 
         with TestClient(app) as client:
-            acknowledge = client.post("/api/incidents/artifact-verification/acknowledge")
+            incidents = client.get("/api/incidents")
+            assert incidents.status_code == 200
+            artifact = next(
+                incident
+                for incident in incidents.json()["incidents"]
+                if incident["incident_key"] == "artifact-verification"
+            )
+            artifact_id = artifact["id"]
+
+            acknowledge = client.post(f"/api/incidents/{artifact_id}/acknowledge")
             assert acknowledge.status_code == 200
             acknowledged = acknowledge.json()
             assert acknowledged["incident"]["triage_status"] == "acknowledged"
@@ -313,12 +327,12 @@ class TestIncidentDashboardEndpoint:
             artifact = next(
                 incident
                 for incident in incidents.json()["incidents"]
-                if incident["id"] == "artifact-verification"
+                if incident["incident_key"] == "artifact-verification"
             )
             assert artifact["triage_status"] == "acknowledged"
             assert artifact["triaged_at"] is not None
 
-            reopen = client.post("/api/incidents/artifact-verification/reopen")
+            reopen = client.post(f"/api/incidents/{artifact_id}/reopen")
             assert reopen.status_code == 200
             reopened = reopen.json()
             assert reopened["incident"]["triage_status"] == "open"
@@ -334,21 +348,63 @@ class TestIncidentDashboardEndpoint:
         else:
             raise AssertionError("Expected ValueError for unsupported triage status")
 
-    def test_incident_triage_entry_limit(self) -> None:
-        live_guardian._reset_incident_triage_state()
-        previous_limit = live_guardian._INCIDENT_TRIAGE_MAX_ENTRIES
-        live_guardian._INCIDENT_TRIAGE_MAX_ENTRIES = 3
-        try:
-            for index in range(4):
-                live_guardian._set_incident_triage_status(f"incident-{index}", "acknowledged")
+    def test_incident_triage_entry_limit(self, tmp_path: Path) -> None:
+        persistence = live_guardian.IncidentTriagePersistenceManager(
+            local_path=tmp_path / "triage.json", gcs_bucket=""
+        )
+        store = live_guardian.IncidentTriageStore(max_entries=3, persistence=persistence)
+        store.reset()
 
-            snapshot = live_guardian._incident_triage_snapshot()
-            assert len(snapshot) == 3
-            assert "incident-0" not in snapshot
-            assert "incident-3" in snapshot
-        finally:
-            live_guardian._INCIDENT_TRIAGE_MAX_ENTRIES = previous_limit
-            live_guardian._reset_incident_triage_state()
+        for index in range(4):
+            store.set_status(f"incident-{index}", "acknowledged")
+
+        snapshot = store.snapshot()
+        assert len(snapshot) == 3
+        assert "incident-0" not in snapshot
+        assert "incident-3" in snapshot
+
+    def test_incident_id_changes_when_state_changes(self, monkeypatch) -> None:
+        monkeypatch.setenv("HELIX_ENV", "production")
+        monkeypatch.setenv("SECURITY_ARTIFACT_ANALYSIS_STATUS", "clean")
+        patched_metrics = live_demo_server.LiveMetrics()
+        patched_metrics.record_auth_failure("operator")
+        monkeypatch.setattr(live_demo_server, "metrics", patched_metrics)
+        monkeypatch.setattr(standalone_live_demo_server, "metrics", patched_metrics)
+        first = live_guardian._incident_snapshot(limit=20)
+        first_auth = next(
+            incident
+            for incident in first["incidents"]
+            if incident["incident_key"] == "operator-auth-failure"
+        )
+
+        patched_metrics.record_auth_failure("operator")
+        second = live_guardian._incident_snapshot(limit=20)
+        second_auth = next(
+            incident
+            for incident in second["incidents"]
+            if incident["incident_key"] == "operator-auth-failure"
+        )
+
+        assert first_auth["id"] != second_auth["id"]
+
+    def test_incident_triage_persists_across_store_instances(self, tmp_path: Path) -> None:
+        local_path = tmp_path / "triage.json"
+        first_store = live_guardian.IncidentTriageStore(
+            persistence=live_guardian.IncidentTriagePersistenceManager(
+                local_path=local_path, gcs_bucket=""
+            )
+        )
+        first_store.reset()
+        fields = first_store.set_status("incident-persisted", "acknowledged")
+        assert fields["triage_status"] == "acknowledged"
+
+        second_store = live_guardian.IncidentTriageStore(
+            persistence=live_guardian.IncidentTriagePersistenceManager(
+                local_path=local_path, gcs_bucket=""
+            )
+        )
+        restored = second_store.snapshot()
+        assert restored["incident-persisted"]["status"] == "acknowledged"
 
 
 class TestGuardianOriginPolicy:
