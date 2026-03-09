@@ -98,7 +98,7 @@ curl -X POST "https://.../validate?text=I%20will%20handle%20that%20for%20you"
 ### Steps
 1. **Record terminal segments** - Use your terminal with font size 16+
 2. **Record GCP Console** - Log into console.cloud.google.com
-3. **Record architecture** - Show ARCHITECTURE_CG.png in full screen
+3. **Record architecture** - Show `assets/ARCHITECTURE_CG.png` in full screen
 4. **Edit together** - Use the script above as guide
 5. **Add captions** - For accessibility
 

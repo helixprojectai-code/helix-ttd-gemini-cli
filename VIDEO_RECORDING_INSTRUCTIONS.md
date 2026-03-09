@@ -67,7 +67,7 @@
 ## Video Script (3 Minutes)
 
 ### Scene 1: Opening (15 seconds)
-**Visual:** Full-screen architecture diagram (`ARCHITECTURE_CG.png`)
+**Visual:** Full-screen architecture diagram (`assets/ARCHITECTURE_CG.png`)
 **Script:**
 > "Hi, I'm presenting Constitutional Guardian for the Gemini Live Agent Challenge. It's a real-time AI safety layer that validates voice conversations using epistemic markers — FACT, HYPOTHESIS, and ASSUMPTION."
 

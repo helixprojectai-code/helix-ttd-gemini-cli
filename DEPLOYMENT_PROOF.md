@@ -464,7 +464,7 @@ Expected view:
 
 ## 7. Architecture Diagram
 
-![Constitutional Guardian GCP Architecture](architecture.png)
+![Constitutional Guardian GCP Architecture](assets/architecture.png)
 
 **Components:**
 1. **User** → Audio stream to Gemini Live API
