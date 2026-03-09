@@ -72,16 +72,16 @@ function Add-Result {
 function Write-AlertSummary {
     param(
         [string]$OutputPath,
-        [datetime]$EvaluatedAt,
-        [string]$BaseUrl,
-        [string]$OverallStatus,
-        [string]$ArtifactStatus = 'missing',
-        [string]$ArtifactImage = 'missing',
-        [string]$StorageBackend = 'missing',
-        [string]$StorageMode = 'missing',
-        [object[]]$PageFailures = @(),
-        [object[]]$WarnFailures = @(),
-        [object[]]$Checks = @()
+        $EvaluatedAt,
+        $BaseUrl,
+        $OverallStatus,
+        $ArtifactStatus = 'missing',
+        $ArtifactImage = 'missing',
+        $StorageBackend = 'missing',
+        $StorageMode = 'missing',
+        $PageFailures = @(),
+        $WarnFailures = @(),
+        $Checks = @()
     )
 
     if (-not $OutputPath) {
