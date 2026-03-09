@@ -1,0 +1,16 @@
+# [FACT] Cloud Build configuration for the production monitoring job.
+# [HYPOTHESIS] Reusing the main application image reduces drift between the app and the checker.
+
+steps:
+  - name: 'gcr.io/cloud-builders/gcloud'
+    id: 'deploy-monitor-job'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        set -euo pipefail
+        IMAGE_TAG="$${COMMIT_SHA:-latest}"
+        IMAGE_BASE="us-central1-docker.pkg.dev/$PROJECT_ID/helix-repo/constitutional-guardian"
+        gcloud run jobs deploy constitutional-guardian-monitor           --image "$$IMAGE_BASE:$$IMAGE_TAG"           --region us-central1           --tasks 1           --max-retries 0           --task-timeout 300           --set-env-vars "GOOGLE_CLOUD_PROJECT=$PROJECT_ID"           --set-secrets "HELIX_ADMIN_TOKEN=HELIX_ADMIN_TOKEN:latest"           --command python           --args tools/cloud_check_production.py,--service-url=https://constitutional-guardian-231586465188.us-central1.run.app,--state-gcs-uri=gs://helix-ai-deploy-receipts/ops/production-alert-state.json,--log-name=helix-production-alerts
+
+timeout: 900s

@@ -290,32 +290,64 @@ Recommended schedule:
 - every 5 minutes for production polling
 - keep the same state file path across runs so burst detection works
 
-Repo-managed schedule:
+GCP-native production polling:
 
-- `.github/workflows/production-alert-check.yml`
+- checker entrypoint: `tools/cloud_check_production.py`
+- deployment config: `cloudbuild-monitoring-job.yaml`
 
-This workflow:
+Direction change:
 
-- authenticates with the existing GitHub deploy identity
-- restores the prior checker state from `gs://helix-ai-deploy-receipts/ops/production-alert-state.json`
-- validates the `HELIX_ADMIN_TOKEN` repo secret against `/api/runtime-config` before full alert evaluation
-- runs `tools/check-production-alerts.ps1`
-- publishes the JSON summary to Cloud Logging under `helix-production-alerts`
-- writes the updated state file back to GCS so burst detection survives runner resets
-- stays green for alert conditions and only hard-fails when the monitor itself cannot authenticate or scrape production
+- GitHub Actions is no longer the production polling substrate
+- the production monitor should run as a Cloud Run Job on Google Cloud infrastructure
+- GitHub remains appropriate for CI, release, and manual diagnostics, but not for recurring production alert polling
 
-Prerequisites:
+Cloud Run Job deployment:
 
-- repo secret: `HELIX_ADMIN_TOKEN`
-- deploy identity access to:
-  - `gs://helix-ai-deploy-receipts/ops/production-alert-state.json`
-  - Cloud Logging write
+```powershell
+& $GCLOUD builds submit Z:\codex\helix-ttd-gemini-cli `
+  --project helix-ai-deploy `
+  --config Z:\codex\helix-ttd-gemini-cli\cloudbuild-monitoring-job.yaml
+```
 
-Publisher helper:
+This deploys a job named `constitutional-guardian-monitor` using the same Artifact Registry image lineage as production.
+
+The job:
+
+- authenticates to the live service with `HELIX_ADMIN_TOKEN` from Secret Manager
+- scrapes `/api/runtime-config`, `/metrics`, and `/api/security-transparency`
+- restores and updates burst-detection state in `gs://helix-ai-deploy-receipts/ops/production-alert-state.json`
+- writes a structured summary to Cloud Logging under `helix-production-alerts`
+- exits non-zero only when the monitor itself cannot authenticate or scrape production, unless `--fail-on-alert` is explicitly used
+
+Cloud Scheduler trigger:
+
+Use Cloud Scheduler to invoke the Cloud Run Jobs API on a 5-minute cadence. The caller service account must be allowed to execute the job. Example shape:
+
+```powershell
+& $GCLOUD scheduler jobs create http constitutional-guardian-monitor-schedule `
+  --project helix-ai-deploy `
+  --location us-central1 `
+  --schedule "*/5 * * * *" `
+  --uri "https://us-central1-run.googleapis.com/apis/run.googleapis.com/v1/namespaces/helix-ai-deploy/jobs/constitutional-guardian-monitor:run" `
+  --http-method POST `
+  --oauth-service-account-email github-deployer@helix-ai-deploy.iam.gserviceaccount.com `
+  --oauth-token-scope https://www.googleapis.com/auth/cloud-platform
+```
+
+Cloud Logging review:
+
+- log name: `helix-production-alerts`
+- filter on `jsonPayload.overall_status` and `jsonPayload.monitor_integrity_status`
+
+Manual execution for debugging:
+
+```powershell
+python tools/cloud_check_production.py --admin-token $ADMIN_TOKEN
+```
+
+Publisher helper retained for manual or offline summary publishing:
 
 - `tools/publish-monitoring-snapshot.py`
-
-This reads the alert checker JSON summary and emits a structured Cloud Logging entry keyed by the current overall status.
 
 ## Deployment Verification Script
 

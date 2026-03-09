@@ -12,7 +12,7 @@ Current baseline:
 - Rate limiting is active on operator, auth, and audio ingress surfaces.
 - Durable receipt persistence is live in `gcs+local` / `dual` mode and restart-verified.
 - `/metrics` is authenticated and exports security, storage, and artifact-verification state.
-- Production alert checking is available both as a local operator script and as a scheduled GitHub workflow path.
+- Production alert checking is available as a local operator script and a GCP-native Cloud Run Job path.
 
 This is a sufficient production platform baseline for returning to product execution.
 

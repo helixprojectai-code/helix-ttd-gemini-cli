@@ -128,10 +128,10 @@ python helix_code/live_demo_server.py
 - Optional security transparency envs: `SECURITY_ARTIFACT_ANALYSIS_STATUS`, `SECURITY_ARTIFACT_ANALYSIS_TIMESTAMP`, `SECURITY_ARTIFACT_IMAGE_URI`
 - Deployment verification helper: `powershell -ExecutionPolicy Bypass -File tools/verify-production-deploy.ps1 [-AdminToken <token>]`
 - Scheduled alert checker: `powershell -ExecutionPolicy Bypass -File tools/check-production-alerts.ps1 -AdminToken <token>`
-- Scheduled production polling workflow: `.github/workflows/production-alert-check.yml`
-- Workflow includes operator-token preflight validation so stale GitHub secrets fail with a direct auth diagnosis
-- Scheduled workflow is report-only for alert conditions; it hard-fails only when the monitor itself cannot authenticate or scrape production
+- Production monitoring direction changed: scheduled polling has moved off GitHub Actions and onto a GCP-native Cloud Run Job + Cloud Scheduler path
 - Cloud Logging sink publisher: `python tools/publish-monitoring-snapshot.py --input <summary.json>`
+- Cloud Run Job checker entrypoint: `python tools/cloud_check_production.py`
+- Cloud Build job deployment config: `cloudbuild-monitoring-job.yaml`
 - Authenticated metrics endpoint: `GET /metrics` using bearer token, `X-Helix-Admin-Token`, or the operator session cookie
 - Deployment automation preserves optional operator secret bindings by using secret updates rather than replacing the full secret set
 
