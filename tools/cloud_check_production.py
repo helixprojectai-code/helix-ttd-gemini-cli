@@ -237,7 +237,8 @@ def build_failure_summary(now: datetime, service_url: str, details: str) -> dict
 
 def main() -> int:
     args = parse_args()
-    if not args.admin_token:
+    admin_token = args.admin_token.strip()
+    if not admin_token:
         summary = build_failure_summary(
             utcnow(),
             args.service_url,
@@ -247,7 +248,7 @@ def main() -> int:
         publish_summary(summary, args.log_name, args.component)
         return 1
 
-    headers = {"X-Helix-Admin-Token": args.admin_token}
+    headers = {"X-Helix-Admin-Token": admin_token}
     now = utcnow()
 
     try:
