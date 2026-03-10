@@ -529,6 +529,11 @@ def _admin_auth_enabled() -> bool:
     return bool(_configured_admin_token()) or _env_flag("HELIX_ENFORCE_ADMIN_TOKEN")
 
 
+def _public_demo_enabled() -> bool:
+    """[FACT] Optional public demo mode opens only the hackathon demo surface."""
+    return _env_flag("HELIX_PUBLIC_DEMO")
+
+
 def _require_admin_token(request: Request) -> str:
     """[FACT] Enforce admin auth on protected request handlers."""
     required_token = _configured_admin_token()
@@ -640,6 +645,7 @@ def _runtime_config_snapshot() -> dict[str, Any]:
             "audio_audit_allowed_origins": allowed_origins,
             "admin_token_required": bool(resolve_admin_token(refresh=True)),
             "admin_token_enforced": _env_flag("HELIX_ENFORCE_ADMIN_TOKEN"),
+            "public_demo_enabled": _public_demo_enabled(),
             "guardian_allowed_origins": _guardian_allowed_origins(),
             "guardian_origin_enforced": _guardian_origin_enforced(),
         },
@@ -1207,15 +1213,18 @@ async def health_check() -> JSONResponse:
 @app.get("/", response_class=HTMLResponse)
 async def root(request: Request) -> HTMLResponse:
     """[FACT] Root endpoint serves the interactive demo dashboard."""
-    gate = _guard_html_page(request, "/")
-    if isinstance(gate, HTMLResponse):
-        return gate
+    gate: str | HTMLResponse = ""
+    if not _public_demo_enabled():
+        gate = _guard_html_page(request, "/")
+        if isinstance(gate, HTMLResponse):
+            return gate
 
     # Import demo HTML from live_demo_server_html
     from live_demo_server_html import DEMO_HTML
 
     response = HTMLResponse(content=DEMO_HTML)
-    _set_admin_session_cookie(response, request, gate)
+    if gate:
+        _set_admin_session_cookie(response, request, gate)
     return response
 
 

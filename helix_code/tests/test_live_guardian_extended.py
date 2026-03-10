@@ -526,6 +526,32 @@ class TestProtectedOperationalEndpoints:
             assert response.status_code == 401
             assert "Admin Access Required" in response.text
 
+    def test_root_demo_page_can_be_public_when_enabled(self, monkeypatch) -> None:
+        """[FACT] Public demo mode opens only the root demo surface."""
+        monkeypatch.setenv("HELIX_ADMIN_TOKEN", "secret-token")
+        monkeypatch.setenv("HELIX_PUBLIC_DEMO", "true")
+
+        with TestClient(app) as client:
+            response = client.get("/")
+
+        assert response.status_code == 200
+        assert "CONSTITUTIONAL GUARDIAN" in response.text
+        assert "LIVE v1.4.8" in response.text
+
+    def test_runtime_config_reports_public_demo_flag(self, monkeypatch) -> None:
+        """[FACT] Runtime config reports whether public demo mode is enabled."""
+        monkeypatch.setenv("HELIX_ADMIN_TOKEN", "secret-token")
+        monkeypatch.setenv("HELIX_PUBLIC_DEMO", "true")
+
+        with TestClient(app) as client:
+            response = client.get(
+                "/api/runtime-config",
+                headers={"X-Helix-Admin-Token": "secret-token"},
+            )
+
+        assert response.status_code == 200
+        assert response.json()["auth"]["public_demo_enabled"] is True
+
     def test_receipts_api_accepts_custom_admin_header(self, monkeypatch) -> None:
         """[FACT] Receipts API accepts custom admin header."""
         monkeypatch.setenv("HELIX_ADMIN_TOKEN", "secret-token")

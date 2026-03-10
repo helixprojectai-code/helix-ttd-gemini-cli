@@ -121,6 +121,7 @@ python helix_code/live_demo_server.py
 - Audit dashboard endpoints: `GET /audit-dashboard` and `GET /api/audit-dashboard`
 - Optional operator auth: `HELIX_ADMIN_TOKEN` for runtime, security, dashboard, and receipt surfaces
 - Recommended production operator posture: set `HELIX_ADMIN_TOKEN` and `HELIX_ENFORCE_ADMIN_TOKEN=true`
+- Hackathon/demo posture: set `HELIX_PUBLIC_DEMO=true` to open only `/` and `/demo-live` while keeping operator surfaces under admin auth
 - Recommended production throttling posture: keep operator APIs on `HELIX_OPERATOR_RATE_LIMIT_MAX_REQUESTS=120` / `HELIX_OPERATOR_RATE_LIMIT_WINDOW_SECONDS=60` and audio ingress on `HELIX_AUDIO_INGRESS_MAX_CONNECTIONS=12` / `HELIX_AUDIO_INGRESS_RATE_LIMIT_WINDOW_SECONDS=60` unless measured load requires adjustment
 - Recommended production browser posture: set `HELIX_ALLOWED_ORIGINS` to the exact trusted UI origins; otherwise Guardian WebSockets default to same-origin-only in production
 - Optional durable receipt envs: `HELIX_RECEIPT_PERSISTENCE`, `HELIX_RECEIPT_STORE_PATH`, `GCS_RECEIPT_BUCKET`
