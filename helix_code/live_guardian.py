@@ -534,6 +534,11 @@ def _public_demo_enabled() -> bool:
     return _env_flag("HELIX_PUBLIC_DEMO")
 
 
+def _demo_requires_admin_auth() -> bool:
+    """[FACT] The hackathon demo stays public only when explicitly enabled."""
+    return _admin_auth_enabled() and not _public_demo_enabled()
+
+
 def _require_admin_token(request: Request) -> str:
     """[FACT] Enforce admin auth on protected request handlers."""
     required_token = _configured_admin_token()
@@ -1899,7 +1904,7 @@ async def demo_websocket(websocket: WebSocket) -> None:
             print(f"[WARN] WebSocket origin rejected for: {client_host}")
             await websocket.close(code=1008)
             return
-        if _admin_auth_enabled() and not _require_admin_websocket(websocket.headers):
+        if _demo_requires_admin_auth() and not _require_admin_websocket(websocket.headers):
             print(f"[WARN] WebSocket admin auth rejected for: {client_host}")
             await websocket.close(code=1008)
             return

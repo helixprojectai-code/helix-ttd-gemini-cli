@@ -552,6 +552,13 @@ class TestProtectedOperationalEndpoints:
         assert response.status_code == 200
         assert response.json()["auth"]["public_demo_enabled"] is True
 
+    def test_public_demo_disables_demo_websocket_admin_gate(self, monkeypatch) -> None:
+        """[FACT] Public demo mode removes admin auth from the demo websocket only."""
+        monkeypatch.setenv("HELIX_ADMIN_TOKEN", "secret-token")
+        monkeypatch.setenv("HELIX_PUBLIC_DEMO", "true")
+
+        assert live_guardian._demo_requires_admin_auth() is False
+
     def test_receipts_api_accepts_custom_admin_header(self, monkeypatch) -> None:
         """[FACT] Receipts API accepts custom admin header."""
         monkeypatch.setenv("HELIX_ADMIN_TOKEN", "secret-token")
