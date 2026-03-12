@@ -33,53 +33,26 @@
 ### Live Demo (1:00-2:00)
 **[Screen: Terminal with curl commands]**
 
-```bash
-# Health check
-curl https://constitutional-guardian-xyz-uc.a.run.app/health
-```
-> "First, let's verify our Cloud Run deployment is healthy."
+1. Open the public demo at `https://constitutional-guardian-231586465188.us-central1.run.app/`
+2. Click **Connect**
+3. Start the microphone
+4. Speak, interrupt, and show the live response / audit surface
 
 ```bash
-# Valid FACT
-curl -X POST "https://.../validate?text=[FACT]%20Water%20boils%20at%20100C"
+curl https://constitutional-guardian-231586465188.us-central1.run.app/health
 ```
-**[Show JSON response with compliant: true]**
-> "A properly marked fact passes through."
+> "First, let's verify the Cloud Run backend serving the live demo is healthy."
 
-```bash
-# Missing marker (DRIFT)
-curl -X POST "https://.../validate?text=AI%20will%20take%20all%20jobs"
-```
-**[Show JSON response with compliant: false, recommendation: INTERVENE]**
-> "An unmarked prediction triggers a drift alert. The Guardian blocks this from reaching the user."
+### GCP Deployment Proof (2:00-2:30)
+**[Screen: GCP Console -> Cloud Run]**
+> "The Guardian backend is live on Google Cloud Run, and this is the service judges can verify during submission review."
 
-```bash
-# Agency violation
-curl -X POST "https://.../validate?text=I%20will%20handle%20that%20for%20you"
-```
-**[Show agency_violations array]**
-> "Agency claims like 'I will' are flagged as constitutional violations."
+**[Screen: GCP Console -> Cloud Storage / Secret Manager / Logging]**
+> "We use Google Cloud services for receipt persistence, secret handling, and operational monitoring behind the live demo."
 
-### GCP Integration Demo (2:00-2:30)
-**[Screen: GCP Console → Cloud Run]**
-> "The Guardian is deployed on Google Cloud Run with autoscaling from 1 to 100 instances."
-
-**[Screen: GCP Console → Pub/Sub]**
-> "We use Cloud Pub/Sub to stream federation events across our 3-node network."
-
-**[Screen: GCP Console → Cloud Storage]**
-> "Every validation generates an immutable receipt stored in Cloud Storage."
-
-**[Screen: GCP Console → Secret Manager]**
-> "DBC encryption keys are managed by Secret Manager with automatic rotation."
-
-### Federation Demo (2:30-2:50)
-**[Screen: Three terminal windows - KIMI, GEMS, DEEPSEEK]**
-> "Our 3-node federation shares compliance data in real-time. When KIMI detects drift, GEMS and DEEPSEEK learn about it instantly through Pub/Sub."
-
-### Closing (2:50-3:00)
+### Closing (2:30-3:00)
 **[Screen: GitHub repo + Architecture diagram]**
-> "Constitutional Guardian: 75 tests passing, 7 GCP services, sub-500ms latency, and zero constitutional drifts allowed. Thank you."
+> "Constitutional Guardian is our Live Agents submission: a real-time multimodal agent with public judging access, live governance, and Google Cloud deployment. Thank you."
 
 ---
 
@@ -96,9 +69,9 @@ curl -X POST "https://.../validate?text=I%20will%20handle%20that%20for%20you"
 - Format: MP4 (H.264)
 
 ### Steps
-1. **Record terminal segments** - Use your terminal with font size 16+
-2. **Record GCP Console** - Log into console.cloud.google.com
-3. **Record architecture** - Show `assets/ARCHITECTURE_CG.png` in full screen
+1. **Record the public browser demo first** - show the live mic flow, interruption, and audit surface
+2. **Record the Cloud Run console proof** - show the live service and revision in Google Cloud
+3. **Record the architecture diagram** - show `assets/ARCHITECTURE_CG.png` in full screen
 4. **Edit together** - Use the script above as guide
 5. **Add captions** - For accessibility
 

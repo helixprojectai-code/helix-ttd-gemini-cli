@@ -536,7 +536,7 @@ class TestProtectedOperationalEndpoints:
 
         assert response.status_code == 200
         assert "CONSTITUTIONAL GUARDIAN" in response.text
-        assert "LIVE v1.4.8" in response.text
+        assert "LIVE v1.5.0" in response.text
 
     def test_runtime_config_reports_public_demo_flag(self, monkeypatch) -> None:
         """[FACT] Runtime config reports whether public demo mode is enabled."""

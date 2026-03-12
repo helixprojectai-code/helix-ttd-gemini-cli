@@ -3,16 +3,17 @@
 *Complete guide for recording Devpost submission video*
 
 **Deadline:** March 14, 2026
-**Target Length:** 2-3 minutes
+**Target Length:** <4 minutes
 **Upload To:** YouTube (Unlisted)
-**Current Release:** `v1.4.7`
+**Current Release:** `v1.5.0`
+**Hackathon Release:** `v1.5.0`
 
 ---
 
 ## Quick Start Checklist
 
 - [ ] Install OBS Studio (or use Loom)
-- [ ] Record 3-minute demo
+- [ ] Record a <4 minute multimodal demo
 - [ ] Upload to YouTube as Unlisted
 - [ ] Add link to Devpost submission
 
@@ -64,7 +65,7 @@
 
 ---
 
-## Video Script (3 Minutes)
+## Video Script (<4 Minutes)
 
 ### Scene 1: Opening (15 seconds)
 **Visual:** Full-screen architecture diagram (`assets/ARCHITECTURE_CG.png`)
@@ -82,47 +83,36 @@
 > "Constitutional Guardian sits between the user and Gemini Live. Every utterance flows through our FastAPI server on Google Cloud Run. We validate for three epistemic markers: FACT for verifiable claims, HYPOTHESIS for predictions, and ASSUMPTION for explicit constraints. We also persist receipts and expose an audit dashboard for operator review. If an utterance lacks markers, we intervene before the user hears it."
 
 ### Scene 4: Live Demo (60 seconds)
-**Visual:** Terminal window
+**Visual:** Public demo at `/` in the browser
 **Actions:**
+1. Open the live app at the public root URL
+2. Click **Connect**
+3. Start the microphone and speak naturally
+4. Briefly interrupt yourself mid-utterance to show live interaction
+5. Call out the real-time audit / intervention panel
 
-```bash
-# Command 1 - Health check (should show healthy)
-curl https://constitutional-guardian-b25t5w6zva-uc.a.run.app/health
-```
-**Say:** "First, let's verify our Cloud Run deployment is healthy."
+**Say:** "This is the public judging surface. The user can speak naturally, interrupt, and receive live responses while the guardian validates the interaction in real time."
 
+**Optional terminal proof:**
 ```bash
-# Command 2 - Valid FACT (should pass)
-curl -X POST "https://constitutional-guardian-b25t5w6zva-uc.a.run.app/validate?text=[FACT]%20Water%20boils%20at%20100C"
+curl https://constitutional-guardian-231586465188.us-central1.run.app/health
 ```
-**Say:** "A properly marked fact passes through with compliant true."
-
-```bash
-# Command 3 - Missing marker (should fail)
-curl -X POST "https://constitutional-guardian-b25t5w6zva-uc.a.run.app/validate?text=AI%20will%20take%20all%20jobs"
-```
-**Say:** "An unmarked prediction triggers a drift alert. The Guardian blocks this from reaching the user."
-
-```bash
-# Command 4 - Agency violation
-curl -X POST "https://constitutional-guardian-b25t5w6zva-uc.a.run.app/validate?text=I%20will%20handle%20that%20for%20you"
-```
-**Say:** "Agency claims like 'I will' are flagged as constitutional violations."
+**Say:** "The backend serving this interaction is live on Google Cloud Run at https://constitutional-guardian-231586465188.us-central1.run.app/."
 
 ### Scene 5: GCP Proof (30 seconds)
 **Visual:** Google Cloud Console
 **Actions:**
-1. Open https://console.cloud.google.com/run/detail/us-central1/constitutional-guardian
-2. Show service URL
-3. Show traffic at 100%
-4. Show metrics/request count
+1. Open https://console.cloud.google.com/run/detail/us-central1/constitutional-guardian?project=helix-ai-deploy
+2. Show the `constitutional-guardian` service
+3. Show the live URL and current revision
+4. Show traffic / metrics briefly
 
-**Say:** "The Guardian is deployed on Google Cloud Run with autoscaling from 1 to 100 instances. This is the live console showing real traffic."
+**Say:** "The agent backend is hosted on Google Cloud Run. This satisfies the deployment requirement and shows the live infrastructure behind the demo."
 
 ### Scene 6: Closing (30 seconds)
 **Visual:** GitHub repo or architecture diagram
 **Script:**
-> "Constitutional Guardian: 75 tests passing, 7 GCP services integrated, sub-500ms latency, and zero constitutional drifts allowed. Live at constitutional-guardian-b25t5w6zva-uc.a.run.app. Thank you."
+> "Constitutional Guardian is our Live Agents submission: interruption-safe voice interaction, public demo access for judges, Google Cloud deployment, and operator-grade governance controls behind the scenes. Live at https://constitutional-guardian-231586465188.us-central1.run.app. Thank you."
 
 ---
 
@@ -148,7 +138,7 @@ https://studio.youtube.com
   • Deployed on Google Cloud Run with 7 GCP services
   • 75 tests passing, sub-500ms latency
 
-  Live Demo: https://constitutional-guardian-b25t5w6zva-uc.a.run.app
+  Live Demo: https://constitutional-guardian-231586465188.us-central1.run.app
   GitHub: https://github.com/helixprojectai-code/helix-ttd-gemini-cli
 
   Built for the Gemini Live Agent Challenge.
@@ -197,7 +187,7 @@ Click **"Publish"** or **"Save"**
 - Use dark mode for reduced eye strain
 
 ### File Size
-- Target: 50-100MB for 3 minutes
+- Target: 50-120MB for a <4 minute video
 - OBS: Reduce bitrate if file too large
 - Settings → Output → Video Bitrate: 4000 Kbps
 
@@ -222,9 +212,9 @@ If Loom is easier:
 ## Verification Checklist
 
 Before submitting:
-- [ ] Video is 2-3 minutes long
-- [ ] Shows live API working
-- [ ] Shows GCP Console proof
+- [ ] Video is under 4 minutes
+- [ ] Shows the public live demo working in real time
+- [ ] Shows Google Cloud deployment proof
 - [ ] Audio is clear
 - [ ] Uploaded to YouTube as Unlisted
 - [ ] Link copied and saved
@@ -236,9 +226,9 @@ Before submitting:
 
 | Resource | URL |
 |----------|-----|
-| Live Demo | https://constitutional-guardian-b25t5w6zva-uc.a.run.app |
+| Live Demo | https://constitutional-guardian-231586465188.us-central1.run.app |
 | GitHub Repo | https://github.com/helixprojectai-code/helix-ttd-gemini-cli |
-| Cloud Run Console | https://console.cloud.google.com/run/detail/us-central1/constitutional-guardian |
+| Cloud Run Console | https://console.cloud.google.com/run/detail/us-central1/constitutional-guardian?project=helix-ai-deploy |
 | OBS Download | https://obsproject.com/download |
 | YouTube Studio | https://studio.youtube.com |
 | Loom | https://loom.com |
@@ -248,9 +238,9 @@ Before submitting:
 ## Emergency: No Time to Record?
 
 If you can't record video before deadline:
-1. **Use the LIVE demo URL** as proof: https://constitutional-guardian-b25t5w6zva-uc.a.run.app
+1. **Use the LIVE demo URL** as proof: https://constitutional-guardian-231586465188.us-central1.run.app
 2. **Add screenshots** of Cloud Run console to Devpost
-3. **Reference the code** in `DEPLOYMENT_RUNBOOK.md`
+3. **Reference the code** in `DEPLOYMENT_PROOF.md`
 4. **Explain in Devpost description** that live URL proves deployment
 
 Video is optional but strongly recommended for full points.

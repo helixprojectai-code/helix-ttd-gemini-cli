@@ -286,7 +286,7 @@ app = FastAPI(
     lifespan=lifespan,
     title="Constitutional Guardian",
     description="Real-time constitutional compliance for Gemini Live API. Validates epistemic integrity using [FACT]/[HYPOTHESIS]/[ASSUMPTION] markers.",
-    version="1.4.8",
+    version="1.5.0",
     docs_url="/docs",
     redoc_url="/redoc",
 )
@@ -1209,7 +1209,7 @@ async def health_check() -> JSONResponse:
         content={
             "status": "healthy",
             "node_id": os.getenv("HELIX_NODE_ID", "GCS-GUARDIAN"),
-            "version": "1.4.8",
+            "version": "1.5.0",
             "compliance_ready": compliance is not None,
         },
     )

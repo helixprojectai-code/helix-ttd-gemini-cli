@@ -31,7 +31,7 @@
 
 ### 1. Introduction (The UI)
 -   Show the dashboard with **0 Receipts / 0 Drifts**.
--   Highlight the **"LIVE v1.4.8"** branding and the **Pulse-Green** header.
+-   Highlight the **"LIVE v1.5.0"** branding and the **Pulse-Green** header.
 
 ### 2. Live Audio Demo (The Waveform)
 -   Click **"Start Live Mic"**.
