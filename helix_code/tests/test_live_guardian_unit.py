@@ -321,6 +321,34 @@ async def test_bridge_finalize_audio_turn_uses_audio_stream_end() -> None:
 
 
 @pytest.mark.anyio
+async def test_bridge_finalize_audio_turn_preserves_transcripts_until_response() -> None:
+    """[FACT] Explicit turn finalization keeps buffered transcripts until Gemini completes the turn."""
+    bridge = GeminiLiveBridge(api_key="test_key")
+    bridge.client = None
+
+    session = await bridge.create_session("test_session")
+    session.gemini_session = _DummyGeminiSession()
+    session.input_transcript_parts = ["[FACT] buffered input transcript"]
+
+    await bridge.finalize_audio_turn(session, reason="mic_stop")
+
+    assert session.input_transcript_parts == ["[FACT] buffered input transcript"]
+
+    result = await bridge.handle_gemini_response(
+        session,
+        {
+            "server_content": {
+                "input_transcription": {"finished": True},
+                "turn_complete": True,
+            }
+        },
+    )
+
+    assert result is not None
+    assert result["original"] == "[FACT] buffered input transcript"
+
+
+@pytest.mark.anyio
 async def test_bridge_merges_partial_transcripts_until_turn_complete() -> None:
     """[FACT] Partial transcript chunks are buffered and emitted once per completed turn."""
     bridge = GeminiLiveBridge(api_key="test_key")

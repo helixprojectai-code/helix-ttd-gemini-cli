@@ -802,7 +802,7 @@ class GeminiLiveBridge:
                     await session.gemini_session.send_realtime_input(audio_stream_end=True)
                 else:
                     await session.gemini_session.send("", end_of_turn=True)
-            self._reset_turn_state(session)
+            self._reset_turn_state(session, clear_transcripts=False)
             return
 
         if self.enable_simulation_fallback and session.client_ws:
@@ -852,12 +852,13 @@ class GeminiLiveBridge:
             return True, "silence_window"
         return False, None
 
-    def _reset_turn_state(self, session: LiveSession) -> None:
+    def _reset_turn_state(self, session: LiveSession, *, clear_transcripts: bool = True) -> None:
         session.audio_turn_ms = 0.0
         session.silent_chunk_streak = 0
         session.last_chunk_ts = None
-        session.transcript_parts.clear()
-        session.input_transcript_parts.clear()
+        if clear_transcripts:
+            session.transcript_parts.clear()
+            session.input_transcript_parts.clear()
 
     async def _simulate_gemini_response(
         self,
