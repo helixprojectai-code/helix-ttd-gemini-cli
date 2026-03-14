@@ -57,3 +57,13 @@ Date: 2026-03-11
 4. **[FACT]** Commit, tag, and publish `v1.5.0`.
 5. **[FACT]** Deploy to Cloud Run.
 6. **[FACT]** Re-scan the live image and promote artifact status to `clean`.
+
+## Post-Release Follow-Ups
+
+- **[FACT]** `safetycli` is still surfacing the `v1.0.0` changelog and needs to be updated to the current release line.
+
+## Post-Release Production Updates
+
+- **[FACT]** Model Armor integration landed across the text path, live path, receipts, metrics, audit dashboard, and incident board.
+- **[FACT]** Continuous-mic turn finalization was fixed so buffered live transcripts survive `audio_stream_end` until Gemini completes the turn.
+- **[FACT]** The current production revision remains on `v1.5.0`; these updates were deployed as post-release production hardening and live-path correctness fixes.
