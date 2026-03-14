@@ -535,7 +535,9 @@ async def _record_live_validated_response(session: Any, payload: dict[str, Any])
     else:
         metrics.record_receipt()
 
-    receipt_id = str(payload.get("receipt_id") or f"live_{session.session_id}_{int(time.time() * 1000)}")
+    receipt_id = str(
+        payload.get("receipt_id") or f"live_{session.session_id}_{int(time.time() * 1000)}"
+    )
     payload["receipt_id"] = receipt_id
     receipt_store.add(
         Receipt(
@@ -545,7 +547,9 @@ async def _record_live_validated_response(session: Any, payload: dict[str, Any])
             valid=bool(payload.get("valid", False)),
             drift_code=payload.get("drift_code"),
             session_id=str(getattr(session, "session_id", "")),
-            model_armor=payload.get("model_armor") if isinstance(payload.get("model_armor"), dict) else None,
+            model_armor=(
+                payload.get("model_armor") if isinstance(payload.get("model_armor"), dict) else None
+            ),
         )
     )
 

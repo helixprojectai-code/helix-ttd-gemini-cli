@@ -254,9 +254,7 @@ class TestBridgeAuditPersistence:
             "intervention": False,
             "drift_code": None,
             "timestamp": "2026-03-13T01:00:00",
-            "model_armor": {
-                "output": {"blocked": False, "action": "allow", "findings": []}
-            },
+            "model_armor": {"output": {"blocked": False, "action": "allow", "findings": []}},
         }
 
         await _record_live_validated_response(StubSession(), payload)

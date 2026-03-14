@@ -50,17 +50,15 @@ class ModelArmorClient:
     ) -> None:
         env_enabled = os.getenv("HELIX_MODEL_ARMOR_ENABLED", "false").lower() == "true"
         self._enabled = env_enabled if enabled is None else enabled
-        self.enforcement = enforcement or os.getenv(
-            "HELIX_MODEL_ARMOR_ENFORCEMENT", "inspect"
-        ).lower()
-        self.failure_mode = failure_mode or os.getenv(
-            "HELIX_MODEL_ARMOR_FAILURE_MODE", "open"
-        ).lower()
+        self.enforcement = (
+            enforcement or os.getenv("HELIX_MODEL_ARMOR_ENFORCEMENT", "inspect").lower()
+        )
+        self.failure_mode = (
+            failure_mode or os.getenv("HELIX_MODEL_ARMOR_FAILURE_MODE", "open").lower()
+        )
         self.endpoint = endpoint or os.getenv("HELIX_MODEL_ARMOR_ENDPOINT")
         self.input_template = input_template or os.getenv("HELIX_MODEL_ARMOR_TEMPLATE_INPUT")
-        self.output_template = output_template or os.getenv(
-            "HELIX_MODEL_ARMOR_TEMPLATE_OUTPUT"
-        )
+        self.output_template = output_template or os.getenv("HELIX_MODEL_ARMOR_TEMPLATE_OUTPUT")
         self.timeout_ms = timeout_ms or int(
             os.getenv("HELIX_MODEL_ARMOR_TIMEOUT_MS", str(_DEFAULT_TIMEOUT_MS))
         )
