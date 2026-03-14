@@ -18,8 +18,10 @@ from typing import Any
 import httpx
 
 try:
+    from model_armor_client import ModelArmorClient
     from secret_resolver import resolve_gemini_api_key
 except ImportError:  # pragma: no cover
+    from .model_armor_client import ModelArmorClient
     from .secret_resolver import resolve_gemini_api_key
 
 logger = logging.getLogger(__name__)
@@ -35,17 +37,32 @@ class GeminiTextClient:
         self,
         api_key: str | None = None,
         model: str = os.getenv("GEMINI_TEXT_MODEL", "gemini-3.1-pro-preview"),
+        model_armor_client: ModelArmorClient | None = None,
     ):
         """[FACT] Initialize Gemini client with REST configuration."""
         self._explicit_api_key = api_key is not None
         self.api_key = api_key or resolve_gemini_api_key()
         self.model = model
         self.base_url = "https://generativelanguage.googleapis.com/v1beta"
+        self.model_armor = model_armor_client or ModelArmorClient()
 
         if self.api_key:
             logger.info(f"[FACT] Gemini REST client initialized with model: {self.model}")
         else:
             logger.warning("[WARNING] No GEMINI_API_KEY set. Text API unavailable.")
+
+    @staticmethod
+    def _serialize_model_armor_result(result: Any) -> dict[str, Any] | None:
+        if result is None:
+            return None
+        return {
+            "blocked": result.blocked,
+            "action": result.action,
+            "findings": result.findings,
+            "template": result.template,
+            "latency_ms": result.latency_ms,
+            "error": result.error,
+        }
 
     def is_available(self) -> bool:
         """[FACT] Check if API key is configured."""
@@ -72,6 +89,24 @@ class GeminiTextClient:
                 "error": "GEMINI_API_KEY not configured",
                 "model": self.model,
                 "tokens": None,
+                "model_armor": {"input": None, "output": None},
+            }
+
+        armor_input = self.model_armor.screen_input_text(
+            prompt,
+            context={"path": "text", "direction": "input", "model": self.model},
+        )
+        if armor_input.blocked:
+            return {
+                "success": False,
+                "text": None,
+                "error": "Blocked by Model Armor before Gemini request",
+                "model": self.model,
+                "tokens": None,
+                "model_armor": {
+                    "input": self._serialize_model_armor_result(armor_input),
+                    "output": None,
+                },
             }
 
         # [FACT] Keep API key out of request URLs to prevent accidental log leakage.
@@ -110,6 +145,17 @@ class GeminiTextClient:
                     "error": f"API Status {response.status_code}: {response.text}",
                     "model": self.model,
                     "tokens": None,
+                    "model_armor": {
+                        "input": {
+                            "blocked": armor_input.blocked,
+                            "action": armor_input.action,
+                            "findings": armor_input.findings,
+                            "template": armor_input.template,
+                            "latency_ms": armor_input.latency_ms,
+                            "error": armor_input.error,
+                        },
+                        "output": None,
+                    },
                 }
 
             data = response.json()
@@ -147,6 +193,34 @@ class GeminiTextClient:
                     "error": "Failed to parse API response",
                     "model": self.model,
                     "tokens": None,
+                    "model_armor": {
+                        "input": {
+                            "blocked": armor_input.blocked,
+                            "action": armor_input.action,
+                            "findings": armor_input.findings,
+                            "template": armor_input.template,
+                            "latency_ms": armor_input.latency_ms,
+                            "error": armor_input.error,
+                        },
+                        "output": None,
+                    },
+                }
+
+            armor_output = self.model_armor.screen_output_text(
+                text,
+                context={"path": "text", "direction": "output", "model": self.model},
+            )
+            if armor_output.blocked:
+                return {
+                    "success": False,
+                    "text": None,
+                    "error": "Blocked by Model Armor after Gemini response",
+                    "model": self.model,
+                    "tokens": None,
+                    "model_armor": {
+                        "input": self._serialize_model_armor_result(armor_input),
+                        "output": self._serialize_model_armor_result(armor_output),
+                    },
                 }
 
             # [FACT] Get token usage (including reasoning thoughts)
@@ -161,6 +235,10 @@ class GeminiTextClient:
                 "error": None,
                 "model": self.model,
                 "tokens": tokens,
+                "model_armor": {
+                    "input": self._serialize_model_armor_result(armor_input),
+                    "output": self._serialize_model_armor_result(armor_output),
+                },
             }
 
         except Exception as e:
@@ -172,6 +250,10 @@ class GeminiTextClient:
                 "error": error_msg,
                 "model": self.model,
                 "tokens": None,
+                "model_armor": {
+                    "input": self._serialize_model_armor_result(armor_input),
+                    "output": None,
+                },
             }
 
     def validate_constitutional_response(

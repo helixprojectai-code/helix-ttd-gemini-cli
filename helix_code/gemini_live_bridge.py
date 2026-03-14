@@ -39,8 +39,10 @@ except ImportError:
 from constitutional_compliance import ConstitutionalCompliance
 
 try:
+    from model_armor_client import ModelArmorClient
     from secret_resolver import resolve_gemini_api_key
 except ImportError:  # pragma: no cover
+    from .model_armor_client import ModelArmorClient
     from .secret_resolver import resolve_gemini_api_key
 
 
@@ -64,6 +66,7 @@ class LiveSession:
     connect_failures: int = 0
     next_connect_attempt_ts: float = 0.0
     transcript_parts: list[str] = field(default_factory=list)
+    input_transcript_parts: list[str] = field(default_factory=list)
 
     def to_dict(self) -> dict:
         return {
@@ -94,12 +97,18 @@ class GeminiLiveBridge:
     }
     AUDIO_LIVE_MODEL_PREFIXES = ("gemini-2.5-flash-native-audio",)
 
-    def __init__(self, api_key: str | None = None):
+    def __init__(
+        self,
+        api_key: str | None = None,
+        model_armor_client: ModelArmorClient | None = None,
+    ):
         self._explicit_api_key = api_key is not None
         self.api_key = api_key or resolve_gemini_api_key()
         self.sessions: dict[str, LiveSession] = {}
         self.on_intervention: Callable | None = None
+        self.on_validated_response: Callable | None = None
         self.client: Any = None
+        self.model_armor = model_armor_client or ModelArmorClient()
         self._alt_clients: dict[str, Any] = {}
         self.live_system_instruction = os.getenv(
             "HELIX_LIVE_SYSTEM_INSTRUCTION",
@@ -400,6 +409,78 @@ class GeminiLiveBridge:
 
         return result
 
+    @staticmethod
+    def _serialize_model_armor_result(result: Any) -> dict[str, Any] | None:
+        if result is None:
+            return None
+        return {
+            "blocked": result.blocked,
+            "action": result.action,
+            "findings": result.findings,
+            "template": result.template,
+            "latency_ms": result.latency_ms,
+            "error": result.error,
+        }
+
+    def _build_model_armor_context(
+        self,
+        session: LiveSession,
+        direction: str,
+        text_role: str,
+    ) -> dict[str, Any]:
+        return {
+            "path": "live",
+            "direction": direction,
+            "text_role": text_role,
+            "session_id": session.session_id,
+            "model": self.live_model,
+        }
+
+    def _generate_model_armor_intervention(
+        self,
+        original_text: str,
+        direction: str,
+    ) -> str:
+        role = "input" if direction == "input" else "output"
+        return (
+            "[CONSTITUTIONAL GUARDIAN: Model Armor blocked live "
+            f"{role} content before delivery.]\n\n{original_text}"
+        )
+
+    def _blocked_turn_result(
+        self,
+        original_text: str,
+        armor_input: Any | None,
+        armor_output: Any | None,
+        *,
+        direction: str,
+    ) -> dict[str, Any]:
+        return {
+            "type": "validated_response",
+            "original": original_text,
+            "delivered": self._generate_model_armor_intervention(original_text, direction),
+            "valid": False,
+            "receipt_id": None,
+            "intervention": True,
+            "drift_code": "MODEL-ARMOR",
+            "timestamp": datetime.utcnow().isoformat(),
+            "model_armor": {
+                "input": self._serialize_model_armor_result(armor_input),
+                "output": self._serialize_model_armor_result(armor_output),
+            },
+        }
+
+    async def _emit_validated_payload(
+        self,
+        session: LiveSession,
+        payload: dict[str, Any],
+    ) -> dict[str, Any]:
+        if self.on_validated_response:
+            maybe_result = self.on_validated_response(session, payload)
+            if asyncio.iscoroutine(maybe_result):
+                await maybe_result
+        return payload
+
     def _generate_intervention(self, original_text: str, drift_code: str) -> str:
         interventions = {
             "DRIFT-A": "[CONSTITUTIONAL GUARDIAN: Agency claim detected. AI is a non-agentic tool.]",
@@ -414,29 +495,82 @@ class GeminiLiveBridge:
         session: LiveSession,
         gemini_message: Any,
     ) -> dict[str, Any] | None:
-        text = self._extract_live_text(gemini_message)
-        if text:
-            self._update_transcript_parts(session, text)
+        input_text = self._extract_input_text(gemini_message)
+        if input_text:
+            self._update_transcript_buffer(session.input_transcript_parts, input_text)
+
+        output_text = self._extract_output_text(gemini_message)
+        if output_text:
+            self._update_transcript_buffer(session.transcript_parts, output_text)
 
         if not self._is_turn_complete(gemini_message):
             return None
 
-        full_text = self._normalize_epistemic_lead(self._compose_transcript(session))
+        finalized_input = self._compose_transcript_parts(session.input_transcript_parts)
+        finalized_output = self._normalize_epistemic_lead(
+            self._compose_transcript_parts(session.transcript_parts)
+        )
+        session.input_transcript_parts.clear()
         session.transcript_parts.clear()
-        if not full_text:
+
+        if not finalized_input and not finalized_output:
             return None
 
-        validation = await self.validate_gemini_response(session, full_text)
-        return {
-            "type": "validated_response",
-            "original": full_text,
-            "delivered": validation["modified_text"],
-            "valid": validation["valid"],
-            "receipt_id": validation.get("receipt_id"),
-            "intervention": validation["intervention_required"],
-            "drift_code": validation.get("drift_code"),
-            "timestamp": datetime.utcnow().isoformat(),
-        }
+        armor_input = None
+        if finalized_input:
+            armor_input = self.model_armor.screen_input_text(
+                finalized_input,
+                context=self._build_model_armor_context(session, "input", "user_transcript"),
+            )
+            if armor_input.blocked:
+                session.intervention_count += 1
+                return await self._emit_validated_payload(
+                    session,
+                    self._blocked_turn_result(
+                        finalized_input,
+                        armor_input,
+                        None,
+                        direction="input",
+                    ),
+                )
+
+        delivered_text = finalized_output or finalized_input
+        armor_output = None
+        if delivered_text:
+            armor_output = self.model_armor.screen_output_text(
+                delivered_text,
+                context=self._build_model_armor_context(session, "output", "model_response"),
+            )
+            if armor_output.blocked:
+                session.intervention_count += 1
+                return await self._emit_validated_payload(
+                    session,
+                    self._blocked_turn_result(
+                        delivered_text,
+                        armor_input,
+                        armor_output,
+                        direction="output",
+                    ),
+                )
+
+        validation = await self.validate_gemini_response(session, delivered_text)
+        return await self._emit_validated_payload(
+            session,
+            {
+                "type": "validated_response",
+                "original": delivered_text,
+                "delivered": validation["modified_text"],
+                "valid": validation["valid"],
+                "receipt_id": validation.get("receipt_id"),
+                "intervention": validation["intervention_required"],
+                "drift_code": validation.get("drift_code"),
+                "timestamp": datetime.utcnow().isoformat(),
+                "model_armor": {
+                    "input": self._serialize_model_armor_result(armor_input),
+                    "output": self._serialize_model_armor_result(armor_output),
+                },
+            },
+        )
 
     def _is_turn_complete(self, gemini_message: Any) -> bool:
         server_content = getattr(gemini_message, "server_content", None)
@@ -469,9 +603,9 @@ class GeminiLiveBridge:
         # [FACT] Non-live fallback responses are treated as complete single-turn messages.
         return True
 
-    def _compose_transcript(self, session: LiveSession) -> str:
+    def _compose_transcript_parts(self, transcript_parts: list[str]) -> str:
         transcript = ""
-        for part in session.transcript_parts:
+        for part in transcript_parts:
             token = part.strip()
             if not token:
                 continue
@@ -484,21 +618,27 @@ class GeminiLiveBridge:
                 transcript += f" {token}"
         return transcript.strip()
 
-    def _update_transcript_parts(self, session: LiveSession, text: str) -> None:
+    def _compose_transcript(self, session: LiveSession) -> str:
+        return self._compose_transcript_parts(session.transcript_parts)
+
+    def _update_transcript_buffer(self, transcript_parts: list[str], text: str) -> None:
         token = text.strip()
         if not token:
             return
-        if not session.transcript_parts:
-            session.transcript_parts.append(token)
+        if not transcript_parts:
+            transcript_parts.append(token)
             return
 
-        current = self._compose_transcript(session)
-        if token == current or token == session.transcript_parts[-1]:
+        current = self._compose_transcript_parts(transcript_parts)
+        if token == current or token == transcript_parts[-1]:
             return
         if token.startswith(current):
-            session.transcript_parts = [token]
+            transcript_parts[:] = [token]
             return
-        session.transcript_parts.append(token)
+        transcript_parts.append(token)
+
+    def _update_transcript_parts(self, session: LiveSession, text: str) -> None:
+        self._update_transcript_buffer(session.transcript_parts, text)
 
     def _normalize_epistemic_lead(self, text: str) -> str:
         candidate = text.strip()
@@ -517,14 +657,27 @@ class GeminiLiveBridge:
             return f"[{label}]"
         return f"[{label}] {remainder}"
 
-    def _extract_live_text(self, gemini_message: Any) -> str:
-        """[FACT] Extract transcript/model text from Live server message variants."""
+    def _extract_input_text(self, gemini_message: Any) -> str:
         server_content = getattr(gemini_message, "server_content", None)
         if server_content is not None:
             input_tx = getattr(server_content, "input_transcription", None)
             tx_text = getattr(input_tx, "text", None)
             if isinstance(tx_text, str) and tx_text.strip():
                 return tx_text.strip()
+
+        if isinstance(gemini_message, dict):
+            server_dict = gemini_message.get("server_content", {})
+            if isinstance(server_dict, dict):
+                input_tx = server_dict.get("input_transcription", {})
+                if isinstance(input_tx, dict):
+                    tx_text = input_tx.get("text")
+                    if isinstance(tx_text, str) and tx_text.strip():
+                        return tx_text.strip()
+        return ""
+
+    def _extract_output_text(self, gemini_message: Any) -> str:
+        server_content = getattr(gemini_message, "server_content", None)
+        if server_content is not None:
             output_tx = getattr(server_content, "output_transcription", None)
             out_text = getattr(output_tx, "text", None)
             if isinstance(out_text, str) and out_text.strip():
@@ -537,11 +690,6 @@ class GeminiLiveBridge:
         if isinstance(gemini_message, dict):
             server_dict = gemini_message.get("server_content", {})
             if isinstance(server_dict, dict):
-                input_tx = server_dict.get("input_transcription", {})
-                if isinstance(input_tx, dict):
-                    tx_text = input_tx.get("text")
-                    if isinstance(tx_text, str) and tx_text.strip():
-                        return tx_text.strip()
                 output_tx = server_dict.get("output_transcription", {})
                 if isinstance(output_tx, dict):
                     out_text = output_tx.get("text")
@@ -551,6 +699,10 @@ class GeminiLiveBridge:
             if isinstance(text_value, str) and text_value.strip():
                 return text_value.strip()
         return ""
+
+    def _extract_live_text(self, gemini_message: Any) -> str:
+        """[FACT] Extract transcript/model text from Live server message variants."""
+        return self._extract_output_text(gemini_message) or self._extract_input_text(gemini_message)
 
     async def stream_audio_to_gemini(
         self,
@@ -704,6 +856,8 @@ class GeminiLiveBridge:
         session.audio_turn_ms = 0.0
         session.silent_chunk_streak = 0
         session.last_chunk_ts = None
+        session.transcript_parts.clear()
+        session.input_transcript_parts.clear()
 
     async def _simulate_gemini_response(
         self,
@@ -721,16 +875,20 @@ class GeminiLiveBridge:
             return result
 
         validation = await self.validate_gemini_response(session, simulated)
-        return {
-            "type": "validated_response",
-            "original": simulated,
-            "delivered": validation["modified_text"],
-            "valid": validation["valid"],
-            "receipt_id": validation.get("receipt_id"),
-            "intervention": validation["intervention_required"],
-            "drift_code": validation.get("drift_code"),
-            "timestamp": datetime.utcnow().isoformat(),
-        }
+        return await self._emit_validated_payload(
+            session,
+            {
+                "type": "validated_response",
+                "original": simulated,
+                "delivered": validation["modified_text"],
+                "valid": validation["valid"],
+                "receipt_id": validation.get("receipt_id"),
+                "intervention": validation["intervention_required"],
+                "drift_code": validation.get("drift_code"),
+                "timestamp": datetime.utcnow().isoformat(),
+                "model_armor": {"input": None, "output": None},
+            },
+        )
 
     async def close_session(self, session_id: str) -> None:
         session = self.sessions.pop(session_id, None)
@@ -744,5 +902,8 @@ class GeminiLiveBridge:
                 await task
 
 
-def create_gemini_bridge(api_key: str | None = None) -> GeminiLiveBridge:
-    return GeminiLiveBridge(api_key=api_key)
+def create_gemini_bridge(
+    api_key: str | None = None,
+    model_armor_client: ModelArmorClient | None = None,
+) -> GeminiLiveBridge:
+    return GeminiLiveBridge(api_key=api_key, model_armor_client=model_armor_client)

@@ -6,6 +6,8 @@
 
 from typing import Any
 
+import pytest
+
 import helix_code.live_demo_server as live_demo_server
 from helix_code.live_demo_server import (
     LiveMetrics,
@@ -14,6 +16,8 @@ from helix_code.live_demo_server import (
     _check_audio_ingress_rate_limit,
     _generate_session_id,
     _is_audio_audit_authorized,
+    _record_live_validated_response,
+    bridge,
     get_gemini_text_client,
 )
 from helix_code.request_limits import SlidingWindowRateLimiter
@@ -112,6 +116,31 @@ class TestLiveMetrics:
         assert data["security_events"]["operator_auth_failure_count"] == 1
         assert data["security_events"]["websocket_auth_failure_count"] == 1
 
+    def test_model_armor_metrics(self) -> None:
+        """[FACT] Tracks Model Armor request, block, and finding counters."""
+        metrics = LiveMetrics()
+        metrics.record_model_armor_payload(
+            {
+                "input": {
+                    "blocked": False,
+                    "action": "inspect",
+                    "findings": [{"category": "prompt_injection"}],
+                },
+                "output": {
+                    "blocked": True,
+                    "action": "error_block",
+                    "findings": [{"category": "sensitive_data"}],
+                },
+            }
+        )
+
+        data = metrics.to_dict()
+        assert data["model_armor"]["request_count"] == 2
+        assert data["model_armor"]["block_count"] == 1
+        assert data["model_armor"]["fail_closed_count"] == 1
+        assert data["model_armor"]["findings"]["prompt_injection"] == 1
+        assert data["model_armor"]["findings"]["sensitive_data"] == 1
+
 
 class TestReceiptStore:
     """[FACT] Test suite for ReceiptStore."""
@@ -198,6 +227,48 @@ class TestReceiptStore:
         assert store.get_by_id("r2") is not None
 
 
+class TestBridgeAuditPersistence:
+    """[FACT] Test live bridge validated-response persistence hooks."""
+
+    def test_bridge_registers_live_validation_callback(self) -> None:
+        """[FACT] Shared bridge installs the live validation persistence callback."""
+        assert bridge.on_validated_response is _record_live_validated_response
+
+    @pytest.mark.anyio
+    async def test_record_live_validated_response_persists_receipt(self, monkeypatch: Any) -> None:
+        """[FACT] Live bridge responses update metrics and durable receipts."""
+        patched_metrics = LiveMetrics()
+        patched_store = ReceiptStore(max_receipts=10)
+        monkeypatch.setattr(live_demo_server, "metrics", patched_metrics)
+        monkeypatch.setattr(live_demo_server, "receipt_store", patched_store)
+
+        class StubSession:
+            session_id = "live-session"
+
+        payload = {
+            "type": "validated_response",
+            "original": "[FACT] Safe live output",
+            "delivered": "[FACT] Safe live output",
+            "valid": True,
+            "receipt_id": None,
+            "intervention": False,
+            "drift_code": None,
+            "timestamp": "2026-03-13T01:00:00",
+            "model_armor": {
+                "output": {"blocked": False, "action": "allow", "findings": []}
+            },
+        }
+
+        await _record_live_validated_response(StubSession(), payload)
+
+        assert payload["receipt_id"].startswith("live_live-session_")
+        assert patched_metrics.request_count == 1
+        assert patched_metrics.receipt_count == 1
+        stored = patched_store.get_by_id(payload["receipt_id"])
+        assert stored is not None
+        assert stored.model_armor == payload["model_armor"]
+
+
 class TestGeminiTextClientCache:
     """[FACT] Test suite for client caching logic."""
 
@@ -259,6 +330,21 @@ class TestReceiptDataclass:
         assert r.valid is False
         assert r.drift_code == "DRIFT-A"
         assert r.session_id == "s1"
+
+    def test_receipt_model_armor_round_trip(self) -> None:
+        """[FACT] Receipt preserves Model Armor annotations through serialization."""
+        receipt = Receipt(
+            "r1",
+            "2024-01-01",
+            "Content",
+            True,
+            None,
+            "s1",
+            {"output": {"blocked": True, "action": "error_block"}},
+        )
+
+        restored = Receipt.from_dict(receipt.to_dict())
+        assert restored.model_armor == {"output": {"blocked": True, "action": "error_block"}}
 
 
 class TestAudioIngressRateLimiting:

@@ -689,6 +689,20 @@ def _runtime_config_snapshot() -> dict[str, Any]:
             "local_store_path_configured": bool(os.getenv("HELIX_RECEIPT_STORE_PATH", "").strip()),
             "gcs_bucket_configured": bool(os.getenv("GCS_RECEIPT_BUCKET", "").strip()),
         },
+        "model_armor": {
+            "enabled": _env_flag("HELIX_MODEL_ARMOR_ENABLED"),
+            "enforcement": os.getenv("HELIX_MODEL_ARMOR_ENFORCEMENT", "inspect").strip()
+            or "inspect",
+            "failure_mode": os.getenv("HELIX_MODEL_ARMOR_FAILURE_MODE", "open").strip() or "open",
+            "timeout_ms": _env_int("HELIX_MODEL_ARMOR_TIMEOUT_MS", 2000),
+            "endpoint_configured": bool(os.getenv("HELIX_MODEL_ARMOR_ENDPOINT", "").strip()),
+            "input_template_configured": bool(
+                os.getenv("HELIX_MODEL_ARMOR_TEMPLATE_INPUT", "").strip()
+            ),
+            "output_template_configured": bool(
+                os.getenv("HELIX_MODEL_ARMOR_TEMPLATE_OUTPUT", "").strip()
+            ),
+        },
     }
 
 
@@ -895,6 +909,7 @@ def _incident_snapshot(
         )
 
     security_events = metrics_data.get("security_events", {})
+    model_armor = audit.get("model_armor", metrics_data.get("model_armor", {}))
     for event_name, title, action in [
         (
             "operator_auth_failure_count",
@@ -930,6 +945,39 @@ def _incident_snapshot(
                 investigate_url="/metrics",
                 investigate_label="Inspect Metrics",
             )
+
+    block_count = int(model_armor.get("block_count", 0))
+    if block_count > 0:
+        add_incident(
+            "model-armor-blocks",
+            "warn",
+            "security",
+            "Model Armor Blocks Observed",
+            f"{block_count} Model Armor screening events blocked model traffic in the active metrics window.",
+            "Review the blocked payload class and confirm the enforcement mode matches the current deployment intent.",
+            evidence={
+                "block_count": block_count,
+                "request_count": int(model_armor.get("request_count", 0)),
+            },
+            investigate_url="/audit-dashboard",
+            investigate_label="Review Audit Dashboard",
+        )
+
+    for category, count in sorted(model_armor.get("findings", {}).items()):
+        finding_count = int(count)
+        if finding_count <= 0:
+            continue
+        add_incident(
+            f"model-armor-{str(category).replace('_', '-')}",
+            "warn",
+            "security",
+            "Model Armor Findings Recorded",
+            f"{finding_count} Model Armor findings were recorded for category {category}.",
+            "Inspect recent receipts and decide whether the category should remain inspect-only or move to an enforced mode.",
+            evidence={"category": category, "count": finding_count},
+            investigate_url="/audit-dashboard",
+            investigate_label="Review Audit Dashboard",
+        )
 
     incidents = incidents[: max(1, min(limit, 50))]
     severity_counts = {
@@ -979,6 +1027,17 @@ def _audit_dashboard_snapshot(limit: int = 50) -> dict[str, Any]:
     compliance_rate = 100.0
     if all_receipts:
         compliance_rate = round((valid_count / len(all_receipts)) * 100, 2)
+    metrics_snapshot = metrics.to_dict()
+    model_armor_metrics = metrics_snapshot.get("model_armor", {})
+    blocked_receipt_ids = [
+        r.receipt_id
+        for r in recent_receipts
+        if isinstance(r.model_armor, dict)
+        and any(
+            isinstance(result, dict) and bool(result.get("blocked"))
+            for result in r.model_armor.values()
+        )
+    ]
 
     snapshot = {
         "snapshot_at": datetime.utcnow().isoformat(),
@@ -989,7 +1048,16 @@ def _audit_dashboard_snapshot(limit: int = 50) -> dict[str, Any]:
             "compliance_rate": compliance_rate,
         },
         "drift_counts": drift_counts,
-        "metrics": metrics.to_dict(),
+        "metrics": metrics_snapshot,
+        "model_armor": {
+            "request_count": int(model_armor_metrics.get("request_count", 0)),
+            "block_count": int(model_armor_metrics.get("block_count", 0)),
+            "fail_open_count": int(model_armor_metrics.get("fail_open_count", 0)),
+            "fail_closed_count": int(model_armor_metrics.get("fail_closed_count", 0)),
+            "findings": dict(model_armor_metrics.get("findings", {})),
+            "blocked_receipt_count": len(blocked_receipt_ids),
+            "recent_blocked_receipt_ids": blocked_receipt_ids[:5],
+        },
         "storage": receipt_store.get_stats(),
         "recent_receipts": [
             {
@@ -998,6 +1066,7 @@ def _audit_dashboard_snapshot(limit: int = 50) -> dict[str, Any]:
                 "valid": r.valid,
                 "drift_code": r.drift_code,
                 "session_id": r.session_id,
+                "model_armor": r.model_armor,
             }
             for r in recent_receipts
         ],
@@ -1033,6 +1102,7 @@ def _metrics_snapshot_text() -> str:
     audit = _audit_dashboard_snapshot(limit=50)
     security = _security_transparency_snapshot()
     metrics_data = audit["metrics"]
+    model_armor = audit.get("model_armor", metrics_data.get("model_armor", {}))
     receipt_data = audit["receipts"]
     voice_pipe = metrics_data["voice_pipe"]
     categories = metrics_data["categories"]
@@ -1097,6 +1167,36 @@ def _metrics_snapshot_text() -> str:
         "# HELP helix_receipt_storage_enabled Whether durable receipt storage is active.",
         "# TYPE helix_receipt_storage_enabled gauge",
         _prometheus_metric("helix_receipt_storage_enabled", 1 if storage["enabled"] else 0),
+        "# HELP helix_model_armor_enabled Whether Model Armor screening is enabled for this revision.",
+        "# TYPE helix_model_armor_enabled gauge",
+        _prometheus_metric(
+            "helix_model_armor_enabled",
+            1 if runtime["model_armor"]["enabled"] else 0,
+        ),
+        "# HELP helix_model_armor_requests_total Total Model Armor screening requests processed.",
+        "# TYPE helix_model_armor_requests_total counter",
+        _prometheus_metric(
+            "helix_model_armor_requests_total",
+            model_armor.get("request_count", 0),
+        ),
+        "# HELP helix_model_armor_blocks_total Total Model Armor screening blocks observed.",
+        "# TYPE helix_model_armor_blocks_total counter",
+        _prometheus_metric(
+            "helix_model_armor_blocks_total",
+            model_armor.get("block_count", 0),
+        ),
+        "# HELP helix_model_armor_fail_open_total Total Model Armor failures that allowed traffic.",
+        "# TYPE helix_model_armor_fail_open_total counter",
+        _prometheus_metric(
+            "helix_model_armor_fail_open_total",
+            model_armor.get("fail_open_count", 0),
+        ),
+        "# HELP helix_model_armor_fail_closed_total Total Model Armor failures that blocked traffic.",
+        "# TYPE helix_model_armor_fail_closed_total counter",
+        _prometheus_metric(
+            "helix_model_armor_fail_closed_total",
+            model_armor.get("fail_closed_count", 0),
+        ),
         "# HELP helix_receipt_storage_backend Active receipt storage backend and mode.",
         "# TYPE helix_receipt_storage_backend gauge",
         _prometheus_metric(
@@ -1168,6 +1268,20 @@ def _metrics_snapshot_text() -> str:
             labels={"event": event_name.removesuffix("_count")},
         )
         for event_name, count in sorted(voice_pipe.items())
+    )
+    lines.extend(
+        [
+            "# HELP helix_model_armor_findings_total Total Model Armor findings by category.",
+            "# TYPE helix_model_armor_findings_total counter",
+        ]
+    )
+    lines.extend(
+        _prometheus_metric(
+            "helix_model_armor_findings_total",
+            count,
+            labels={"category": category},
+        )
+        for category, count in sorted(model_armor.get("findings", {}).items())
     )
     lines.extend(
         [

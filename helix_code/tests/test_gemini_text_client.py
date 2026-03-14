@@ -10,6 +10,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 
 from helix_code.gemini_text_client import GeminiTextClient, create_gemini_text_client
+from helix_code.model_armor_client import ModelArmorClient, ModelArmorScreenResult
 
 
 @pytest.fixture(autouse=True)
@@ -247,8 +248,110 @@ class TestGeminiTextClient:
         assert result["drift_code"] == "DRIFT-E"
         assert "Epistemic markers missing" in result["delivered"]
 
+    @pytest.mark.anyio
+    async def test_generate_response_returns_model_armor_metadata(self) -> None:
+        """[FACT] Successful responses include Model Armor metadata."""
+        client = GeminiTextClient(
+            api_key="test_key",
+            model_armor_client=StubModelArmorClient(ALLOW_RESULT, ALLOW_RESULT),
+        )
+
+        mock_response = MagicMock()
+        mock_response.status_code = 200
+        mock_response.json.return_value = {
+            "candidates": [
+                {"content": {"parts": [{"text": "[FACT] Safe output."}]}, "finishReason": "STOP"}
+            ],
+            "usageMetadata": {"totalTokenCount": 10},
+        }
+
+        with patch("httpx.AsyncClient.post", new_callable=AsyncMock) as mock_post:
+            mock_post.return_value = mock_response
+            result = await client.generate_response("Hello")
+
+        assert result["success"]
+        assert result["model_armor"]["input"]["action"] == "allow"
+        assert result["model_armor"]["output"]["action"] == "allow"
+
+    @pytest.mark.anyio
+    async def test_generate_response_blocks_before_gemini_request(self) -> None:
+        """[FACT] Blocked inbound text short-circuits before Gemini call."""
+        client = GeminiTextClient(
+            api_key="test_key",
+            model_armor_client=StubModelArmorClient(BLOCK_RESULT, ALLOW_RESULT),
+        )
+
+        with patch("httpx.AsyncClient.post", new_callable=AsyncMock) as mock_post:
+            result = await client.generate_response("Attack prompt")
+
+        mock_post.assert_not_called()
+        assert not result["success"]
+        assert result["error"] == "Blocked by Model Armor before Gemini request"
+        assert result["model_armor"]["input"]["blocked"]
+
+    @pytest.mark.anyio
+    async def test_generate_response_blocks_after_gemini_response(self) -> None:
+        """[FACT] Blocked outbound text suppresses Gemini output."""
+        client = GeminiTextClient(
+            api_key="test_key",
+            model_armor_client=StubModelArmorClient(ALLOW_RESULT, BLOCK_RESULT),
+        )
+
+        mock_response = MagicMock()
+        mock_response.status_code = 200
+        mock_response.json.return_value = {
+            "candidates": [
+                {"content": {"parts": [{"text": "Unsafe output"}]}, "finishReason": "STOP"}
+            ],
+            "usageMetadata": {"totalTokenCount": 10},
+        }
+
+        with patch("httpx.AsyncClient.post", new_callable=AsyncMock) as mock_post:
+            mock_post.return_value = mock_response
+            result = await client.generate_response("Hello")
+
+        assert not result["success"]
+        assert result["error"] == "Blocked by Model Armor after Gemini response"
+        assert result["model_armor"]["output"]["blocked"]
+
     def test_create_gemini_text_client_factory(self) -> None:
         """[FACT] Factory function creates client instance."""
         client = create_gemini_text_client(api_key="factory_test_key")
         assert isinstance(client, GeminiTextClient)
         assert client.api_key == "factory_test_key"
+
+
+class StubModelArmorClient(ModelArmorClient):
+    def __init__(self, input_result: ModelArmorScreenResult, output_result: ModelArmorScreenResult):
+        super().__init__(enabled=False)
+        self.input_result = input_result
+        self.output_result = output_result
+
+    def screen_input_text(
+        self, text: str, context: dict[str, Any] | None = None
+    ) -> ModelArmorScreenResult:
+        return self.input_result
+
+    def screen_output_text(
+        self, text: str, context: dict[str, Any] | None = None
+    ) -> ModelArmorScreenResult:
+        return self.output_result
+
+
+ALLOW_RESULT = ModelArmorScreenResult(
+    blocked=False,
+    action="allow",
+    findings=[],
+    template="input-template",
+    latency_ms=1.0,
+    failure_mode="open",
+)
+
+BLOCK_RESULT = ModelArmorScreenResult(
+    blocked=True,
+    action="block",
+    findings=[{"category": "prompt_injection"}],
+    template="input-template",
+    latency_ms=1.0,
+    failure_mode="open",
+)

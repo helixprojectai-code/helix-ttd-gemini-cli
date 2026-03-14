@@ -159,6 +159,8 @@ class TestRuntimeConfigEndpoint:
             assert "vault_configured" in data["secrets"]
             assert "receipts" in data
             assert "persistence_mode" in data["receipts"]
+            assert "model_armor" in data
+            assert data["model_armor"]["enabled"] is False
 
     def test_runtime_config_reflects_env(self, monkeypatch) -> None:
         """[FACT] Runtime config reflects safe env overrides."""
@@ -171,6 +173,13 @@ class TestRuntimeConfigEndpoint:
         )
         monkeypatch.setenv("HELIX_MAX_AUDIO_CHUNK_BYTES", "262144")
         monkeypatch.setenv("HELIX_ALLOWED_ORIGINS", "https://console.helixprojectai.com")
+        monkeypatch.setenv("HELIX_MODEL_ARMOR_ENABLED", "true")
+        monkeypatch.setenv("HELIX_MODEL_ARMOR_ENFORCEMENT", "soft_block")
+        monkeypatch.setenv("HELIX_MODEL_ARMOR_FAILURE_MODE", "closed")
+        monkeypatch.setenv("HELIX_MODEL_ARMOR_TIMEOUT_MS", "4321")
+        monkeypatch.setenv("HELIX_MODEL_ARMOR_ENDPOINT", "https://modelarmor.example")
+        monkeypatch.setenv("HELIX_MODEL_ARMOR_TEMPLATE_INPUT", "projects/test/input")
+        monkeypatch.setenv("HELIX_MODEL_ARMOR_TEMPLATE_OUTPUT", "projects/test/output")
 
         with TestClient(app) as client:
             response = client.get("/api/runtime-config")
@@ -183,6 +192,13 @@ class TestRuntimeConfigEndpoint:
             ]
             assert data["auth"]["guardian_origin_enforced"] is True
             assert data["limits"]["max_audio_chunk_bytes"] == 262144
+            assert data["model_armor"]["enabled"] is True
+            assert data["model_armor"]["enforcement"] == "soft_block"
+            assert data["model_armor"]["failure_mode"] == "closed"
+            assert data["model_armor"]["timeout_ms"] == 4321
+            assert data["model_armor"]["endpoint_configured"] is True
+            assert data["model_armor"]["input_template_configured"] is True
+            assert data["model_armor"]["output_template_configured"] is True
 
 
 class TestSecurityTransparencyEndpoint:
@@ -225,6 +241,7 @@ class TestAuditDashboardEndpoint:
             assert "receipts" in data
             assert "drift_counts" in data
             assert "metrics" in data
+            assert "model_armor" in data
             assert "storage" in data
             assert "recent_receipts" in data
             assert "incidents" in data
@@ -236,6 +253,56 @@ class TestAuditDashboardEndpoint:
             assert response.status_code == 200
             assert "text/html" in response.headers["content-type"]
             assert "Audit Trail Dashboard" in response.text
+
+    def test_audit_dashboard_exposes_model_armor_summary(self, monkeypatch) -> None:
+        """[FACT] Audit dashboard reports Model Armor metrics and blocked receipts."""
+        patched_metrics = live_demo_server.LiveMetrics()
+        patched_metrics.record_model_armor_payload(
+            {
+                "input": {
+                    "blocked": False,
+                    "action": "inspect",
+                    "findings": [{"category": "prompt_injection"}],
+                },
+                "output": {
+                    "blocked": True,
+                    "action": "error_block",
+                    "findings": [{"category": "prompt_injection"}],
+                },
+            }
+        )
+        patched_store = live_demo_server.ReceiptStore(max_receipts=10)
+        patched_store.add(
+            live_demo_server.Receipt(
+                "ma-1",
+                "2026-03-13T00:00:00",
+                "blocked",
+                False,
+                "DRIFT-A",
+                "session-1",
+                {
+                    "output": {
+                        "blocked": True,
+                        "action": "error_block",
+                        "findings": [{"category": "prompt_injection"}],
+                    }
+                },
+            )
+        )
+        monkeypatch.setattr(live_demo_server, "metrics", patched_metrics)
+        monkeypatch.setattr(standalone_live_demo_server, "metrics", patched_metrics)
+        monkeypatch.setattr(live_demo_server, "receipt_store", patched_store)
+        monkeypatch.setattr(standalone_live_demo_server, "receipt_store", patched_store)
+
+        with TestClient(app) as client:
+            response = client.get("/api/audit-dashboard")
+            assert response.status_code == 200
+            data = response.json()
+
+        assert data["model_armor"]["block_count"] == 1
+        assert data["model_armor"]["blocked_receipt_count"] == 1
+        assert data["model_armor"]["findings"]["prompt_injection"] == 2
+        assert data["recent_receipts"][-1]["model_armor"]["output"]["blocked"] is True
 
 
 class TestIncidentDashboardEndpoint:
@@ -295,6 +362,25 @@ class TestIncidentDashboardEndpoint:
             assert "Selected Incident" in response.text
             assert "Acknowledge Incident" in response.text
             assert "data-filter='warn'" in response.text
+
+    def test_incident_api_surfaces_model_armor_signals(self, monkeypatch) -> None:
+        patched_metrics = live_demo_server.LiveMetrics()
+        patched_metrics.record_model_armor_payload(
+            {
+                "input": {
+                    "blocked": True,
+                    "action": "error_block",
+                    "findings": [{"category": "prompt_injection"}],
+                }
+            }
+        )
+        monkeypatch.setattr(live_demo_server, "metrics", patched_metrics)
+        monkeypatch.setattr(standalone_live_demo_server, "metrics", patched_metrics)
+
+        snapshot = live_guardian._incident_snapshot(limit=20)
+        incident_keys = {incident["incident_key"] for incident in snapshot["incidents"]}
+        assert "model-armor-blocks" in incident_keys
+        assert "model-armor-prompt-injection" in incident_keys
 
     def test_incident_acknowledge_and_reopen_flow(self, monkeypatch) -> None:
         monkeypatch.setenv("HELIX_ENV", "production")
@@ -586,8 +672,25 @@ class TestProtectedOperationalEndpoints:
             "SECURITY_ARTIFACT_IMAGE_URI",
             "us-central1-docker.pkg.dev/helix-ai-deploy/helix-repo/constitutional-guardian@sha256:test",
         )
-        live_demo_server.metrics.record_rate_limit("operator")
-        live_demo_server.metrics.record_auth_failure("operator")
+        patched_metrics = live_demo_server.LiveMetrics()
+        patched_metrics.record_rate_limit("operator")
+        patched_metrics.record_auth_failure("operator")
+        patched_metrics.record_model_armor_payload(
+            {
+                "input": {
+                    "blocked": False,
+                    "action": "inspect",
+                    "findings": [{"category": "prompt_injection"}],
+                },
+                "output": {
+                    "blocked": True,
+                    "action": "error_block",
+                    "findings": [{"category": "sensitive_data"}],
+                },
+            }
+        )
+        monkeypatch.setattr(live_demo_server, "metrics", patched_metrics)
+        monkeypatch.setattr(standalone_live_demo_server, "metrics", patched_metrics)
 
         with TestClient(app) as client:
             response = client.get(
@@ -601,6 +704,10 @@ class TestProtectedOperationalEndpoints:
         assert "helix_receipt_storage_backend" in response.text
         assert 'helix_security_events_total{event="operator_auth_failure"}' in response.text
         assert 'helix_security_events_total{event="operator_rate_limit"}' in response.text
+        assert "helix_model_armor_requests_total 2" in response.text
+        assert "helix_model_armor_blocks_total 1" in response.text
+        assert 'helix_model_armor_findings_total{category="prompt_injection"} 1' in response.text
+        assert 'helix_model_armor_findings_total{category="sensitive_data"} 1' in response.text
         assert (
             'helix_artifact_analysis_state{image_uri="us-central1-docker.pkg.dev/helix-ai-deploy/helix-repo/constitutional-guardian@sha256:test",status="clean"} 1'
             in response.text

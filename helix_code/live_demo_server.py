@@ -147,6 +147,11 @@ class LiveMetrics:
     audio_rate_limit_count: int = 0
     operator_auth_failure_count: int = 0
     websocket_auth_failure_count: int = 0
+    model_armor_request_count: int = 0
+    model_armor_block_count: int = 0
+    model_armor_fail_open_count: int = 0
+    model_armor_fail_closed_count: int = 0
+    model_armor_findings: dict[str, int] = field(default_factory=dict)
 
     def record_request(self, latency_ms: float) -> None:
         """[FACT] Record a single request and its latency."""
@@ -196,6 +201,31 @@ class LiveMetrics:
         else:
             self.operator_auth_failure_count += 1
 
+    def record_model_armor_payload(self, payload: dict[str, Any] | None) -> None:
+        """[FACT] Track normalized Model Armor outcomes emitted by Gemini text flows."""
+        if not payload:
+            return
+        for direction in ("input", "output"):
+            result = payload.get(direction)
+            if not isinstance(result, dict):
+                continue
+            self.model_armor_request_count += 1
+            if result.get("blocked"):
+                self.model_armor_block_count += 1
+            action = str(result.get("action", ""))
+            if action == "error_allow":
+                self.model_armor_fail_open_count += 1
+            elif action == "error_block":
+                self.model_armor_fail_closed_count += 1
+            findings = result.get("findings", [])
+            if isinstance(findings, list):
+                for finding in findings:
+                    if isinstance(finding, dict):
+                        category = str(finding.get("category", "unknown"))
+                        self.model_armor_findings[category] = (
+                            self.model_armor_findings.get(category, 0) + 1
+                        )
+
     def _calculate_percentile(self, percentile: float) -> float:
         """[FACT] Calculate latency percentile from history."""
         if not self.latency_history:
@@ -238,6 +268,13 @@ class LiveMetrics:
                 "operator_auth_failure_count": self.operator_auth_failure_count,
                 "websocket_auth_failure_count": self.websocket_auth_failure_count,
             },
+            "model_armor": {
+                "request_count": self.model_armor_request_count,
+                "block_count": self.model_armor_block_count,
+                "fail_open_count": self.model_armor_fail_open_count,
+                "fail_closed_count": self.model_armor_fail_closed_count,
+                "findings": dict(sorted(self.model_armor_findings.items())),
+            },
         }
 
 
@@ -254,6 +291,7 @@ class Receipt:
     valid: bool
     drift_code: str | None = None
     session_id: str = ""
+    model_armor: dict[str, Any] | None = None
 
     def to_dict(self) -> dict[str, Any]:
         """[FACT] Serialize receipt for durable storage backends."""
@@ -269,6 +307,7 @@ class Receipt:
             valid=bool(payload.get("valid", False)),
             drift_code=payload.get("drift_code"),
             session_id=str(payload.get("session_id", "")),
+            model_armor=payload.get("model_armor"),
         )
 
 
@@ -472,6 +511,46 @@ class ReceiptStore:
 
 
 receipt_store = ReceiptStore()
+
+
+def _intervention_category_from_drift(drift_code: str | None) -> str:
+    """[FACT] Map drift codes into the existing operator intervention categories."""
+    if drift_code == "DRIFT-A":
+        return "Agency"
+    if drift_code == "DRIFT-P":
+        return "Prediction"
+    return "Epistemic"
+
+
+async def _record_live_validated_response(session: Any, payload: dict[str, Any]) -> None:
+    """[FACT] Persist live-bridge validated responses into shared metrics and receipt stores."""
+    if payload.get("type") != "validated_response":
+        return
+
+    metrics.record_request(0.0)
+    metrics.record_model_armor_payload(payload.get("model_armor"))
+
+    if payload.get("intervention"):
+        metrics.record_intervention(_intervention_category_from_drift(payload.get("drift_code")))
+    else:
+        metrics.record_receipt()
+
+    receipt_id = str(payload.get("receipt_id") or f"live_{session.session_id}_{int(time.time() * 1000)}")
+    payload["receipt_id"] = receipt_id
+    receipt_store.add(
+        Receipt(
+            receipt_id=receipt_id,
+            timestamp=str(payload.get("timestamp") or datetime.utcnow().isoformat()),
+            content=str(payload.get("original") or ""),
+            valid=bool(payload.get("valid", False)),
+            drift_code=payload.get("drift_code"),
+            session_id=str(getattr(session, "session_id", "")),
+            model_armor=payload.get("model_armor") if isinstance(payload.get("model_armor"), dict) else None,
+        )
+    )
+
+
+bridge.on_validated_response = _record_live_validated_response
 
 ADMIN_COOKIE_NAME = "helix_admin_session"
 
@@ -732,6 +811,8 @@ async def demo_websocket_handler(websocket: WebSocket) -> None:
                             f"[DEBUG] Gemini result - success: {gemini_result['success']}, text length: {len(gemini_result.get('text') or '')}, error: {gemini_result.get('error')}"
                         )
 
+                        metrics.record_model_armor_payload(gemini_result.get("model_armor"))
+
                         if gemini_result["success"]:
                             content = gemini_result["text"]
                             await websocket.send_json(
@@ -786,6 +867,11 @@ async def demo_websocket_handler(websocket: WebSocket) -> None:
                         valid=validation["valid"],
                         drift_code=validation.get("drift_code"),
                         session_id=session_id,
+                        model_armor=(
+                            gemini_result.get("model_armor")
+                            if isinstance(gemini_result, dict)
+                            else None
+                        ),
                     )
                     receipt_store.add(receipt)
 
@@ -843,6 +929,8 @@ async def demo_websocket_handler(websocket: WebSocket) -> None:
                             temperature=0.7,
                         )
 
+                        metrics.record_model_armor_payload(gemini_result.get("model_armor"))
+
                         if gemini_result["success"]:
                             content = gemini_result["text"]
                             await websocket.send_json(
@@ -887,6 +975,11 @@ async def demo_websocket_handler(websocket: WebSocket) -> None:
                         valid=validation["valid"],
                         drift_code=validation.get("drift_code"),
                         session_id=session_id,
+                        model_armor=(
+                            gemini_result.get("model_armor")
+                            if isinstance(gemini_result, dict)
+                            else None
+                        ),
                     )
                     receipt_store.add(receipt)
 
